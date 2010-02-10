@@ -18,10 +18,10 @@ import javax.swing.event.DocumentListener;
 
 import sun.awt.VerticalBagLayout;
 
+import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
-import com.digero.maestro.project.AbcPart;
 
 @SuppressWarnings("serial")
 public class PartPanel extends JPanel {

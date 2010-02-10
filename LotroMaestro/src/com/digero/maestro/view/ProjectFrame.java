@@ -26,10 +26,10 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TimeSignature;
-import com.digero.maestro.project.AbcPart;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants {

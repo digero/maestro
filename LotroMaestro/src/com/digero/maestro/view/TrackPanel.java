@@ -32,13 +32,13 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
-import com.digero.maestro.project.AbcPart;
 
 @SuppressWarnings("serial")
 public class TrackPanel extends JPanel implements TableLayoutConstants {
