@@ -3,7 +3,6 @@ package com.digero.maestro.view;
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -23,11 +22,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.sound.midi.Sequence;
+import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -47,12 +48,12 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 	// 0 | [X]                | +----^-+ |  | (note graph) |  |
 	//   |      Instrument(s) | +----v-+ |  +--------------+  |
 	//   +--------------------+----------+--------------------+
-	private static final int TITLE_WIDTH = 192;
+	private static final int TITLE_WIDTH = 160;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, 48, FILL
+			TITLE_WIDTH, 48, FILL, 1
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-		64
+			4, PREFERRED, 4
 	};
 
 	private ProjectFrame project;
@@ -66,6 +67,9 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 
 	public TrackPanel(ProjectFrame project, TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
+		setBackground(Color.WHITE);
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
+
 		this.project = project;
 		this.trackInfo = info;
 		this.seq = sequencer;
@@ -75,8 +79,10 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		tableLayout.setHGap(4);
 
 		checkBox = new JCheckBox();
+		checkBox.setOpaque(false);
+		checkBox.setSelected(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
 
-		String title = trackInfo.getName();
+		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
 		String instr = trackInfo.getInstrumentNames();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
@@ -87,29 +93,61 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		checkBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				abcPart.setTrackEnabled(trackInfo.getTrackNumber(), checkBox.isSelected());
+				noteGraph.repaint();
 			}
 		});
 
-		JLabel octaveLabel = new JLabel("octave");
+		JLabel octaveLabel = new JLabel("octave", SwingConstants.RIGHT);
+		octaveLabel.setOpaque(false);
 		octaveLabel.setFont(octaveLabel.getFont().deriveFont(Font.ITALIC));
 
 		int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
-		transposeSpinner = new JSpinner(new SpinnerNumberModel(currentTranspose, -47, 47, 12));
+		transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
+		transposeSpinner.setToolTipText("Transpose this track by octaves (12 semitones)");
+
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				abcPart.setTrackTranspose(trackInfo.getTrackNumber(), (Integer) transposeSpinner.getValue());
+				int track = trackInfo.getTrackNumber();
+				int value = (Integer) transposeSpinner.getValue();
+				if (value % 12 != 0) {
+					value = (abcPart.getTrackTranspose(track) / 12) * 12;
+					transposeSpinner.setValue(value);
+				}
+				else {
+					abcPart.setTrackTranspose(trackInfo.getTrackNumber(), value);
+				}
+				noteGraph.repaint();
 			}
 		});
 
-		JPanel octavePanel = new JPanel(new BorderLayout());
-		octavePanel.add(octaveLabel, BorderLayout.NORTH);
-		octavePanel.add(transposeSpinner, BorderLayout.CENTER);
+//		JPanel octavePanel = new JPanel(new BorderLayout());
+//		octavePanel.setOpaque(false);
+//		octavePanel.add(octaveLabel, BorderLayout.NORTH);
+//		octavePanel.add(transposeSpinner, BorderLayout.CENTER);
 
 		noteGraph = new NoteGraph();
 
-		add(checkBox, "0, 0, f, c");
-		add(octavePanel, "1, 0, f, c");
-		add(noteGraph, "2, 0, f, f");
+		add(checkBox, "0, 1");
+//		add(octaveLabel, "1, 1, f, b");
+		add(transposeSpinner, "1, 1, f, c");
+		add(noteGraph, "2, 1");
+	}
+
+	private class TrackTransposeModel extends SpinnerNumberModel {
+		public TrackTransposeModel(int value, int minimum, int maximum, int stepSize) {
+			super(value, minimum, maximum, stepSize);
+		}
+
+		@Override
+		public void setValue(Object value) {
+			if (!(value instanceof Integer))
+				throw new IllegalArgumentException();
+
+			if ((Integer) value % 12 != 0)
+				throw new IllegalArgumentException();
+
+			super.setValue(value);
+		}
 	}
 
 	public static final String ELLIPSIS = "...";
@@ -211,6 +249,8 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 				return;
 
 			Graphics2D g2 = (Graphics2D) g;
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
 			AffineTransform xform = getTransform();
 			double minLength = NOTE_WIDTH_PX / xform.getScaleX();
 			double height = Math.abs(NOTE_HEIGHT_PX / xform.getScaleY());
@@ -221,13 +261,11 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 
-			if (!trackEnabled) {
-				g2.setColor(Color.DARK_GRAY);
-				g2.fillRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE);
-			}
+			g2.setColor(trackEnabled ? Color.BLACK : Color.DARK_GRAY);
+			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+//			g2.fillRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE);
 
 			g2.transform(xform);
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 			ArrayList<Rectangle2D> notesPlaying = new ArrayList<Rectangle2D>();
 

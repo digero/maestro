@@ -53,7 +53,7 @@ public class TrackInfo implements MidiConstants {
 						Note note = Note.fromId(m.getData1());
 						if (note != null) {
 							long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-							NoteEvent ne = new NoteEvent(note, trackNumber, micros);
+							NoteEvent ne = new NoteEvent(note, micros);
 							if (drums) {
 								if (noteEvents.isEmpty())
 									instruments.clear();

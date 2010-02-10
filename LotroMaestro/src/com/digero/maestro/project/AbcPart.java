@@ -13,7 +13,8 @@ public class AbcPart {
 	private boolean[] trackDisabled;
 
 	public AbcPart(SequenceInfo sequenceInfo, int partNumber) {
-		this(sequenceInfo, partNumber, LotroInstrument.LUTE.toString(), LotroInstrument.LUTE, true);
+		this(sequenceInfo, partNumber, sequenceInfo.getTitle() + " - " + LotroInstrument.LUTE.toString(),
+				LotroInstrument.LUTE, true);
 	}
 
 	public AbcPart(SequenceInfo sequenceInfo, int partNumber, String name, LotroInstrument instrument, boolean enabled) {
@@ -41,7 +42,7 @@ public class AbcPart {
 
 	@Override
 	public String toString() {
-		return getName();
+		return getPartNumber() + ". " + getName();
 	}
 
 	public void setName(String name) {
