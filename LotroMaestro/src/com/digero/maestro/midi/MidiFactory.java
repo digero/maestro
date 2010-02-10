@@ -1,0 +1,81 @@
+package com.digero.maestro.midi;
+
+import java.io.UnsupportedEncodingException;
+
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiEvent;
+import javax.sound.midi.ShortMessage;
+
+
+/**
+ * Provides static methods to create MidiEvents.
+ */
+public class MidiFactory implements MidiConstants {
+	/**
+	 * @param mpqn Microseconds per quarter note
+	 */
+	public static MidiEvent createTempoEvent(int mpqn, int ticks) {
+		try {
+			byte[] data = new byte[3];
+			data[0] = (byte) ((mpqn >>> 16) & 0xFF);
+			data[1] = (byte) ((mpqn >>> 8) & 0xFF);
+			data[2] = (byte) (mpqn & 0xFF);
+
+			MetaMessage msg = new MetaMessage();
+			msg.setMessage(META_TEMPO, data, data.length);
+			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static MidiEvent createTrackNameEvent(String name) {
+		try {
+			byte[] data = name.getBytes("US-ASCII");
+			MetaMessage msg = new MetaMessage();
+			msg.setMessage(META_TRACK_NAME, data, data.length);
+			return new MidiEvent(msg, 0);
+		}
+		catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static MidiEvent createProgramChangeEvent(int patch, int channel, int ticks) {
+		try {
+			ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.PROGRAM_CHANGE, channel, patch, 0);
+			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static MidiEvent createNoteOnEvent(int id, int channel, int ticks) {
+		try {
+			ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.NOTE_ON, channel, id, 96);
+			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static MidiEvent createNoteOffEvent(int id, int channel, int ticks) {
+		try {
+			ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, 96);
+			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+}
