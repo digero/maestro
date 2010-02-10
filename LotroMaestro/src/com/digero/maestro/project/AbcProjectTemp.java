@@ -16,7 +16,7 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TimeSignature;
 
-public class AbcProject {
+public class AbcProjectTemp {
 	private File saveFile;
 
 	private SequenceInfo sequenceInfo;
@@ -28,10 +28,10 @@ public class AbcProject {
 	private TimeSignature timeSignature = TimeSignature.FOUR_FOUR;
 	private KeySignature keySignature = KeySignature.C_MAJOR;
 
-	public static AbcProject newFromMidi(File midiFile) throws InvalidMidiDataException, IOException {
+	public static AbcProjectTemp newFromMidi(File midiFile) throws InvalidMidiDataException, IOException {
 		SequenceInfo sequenceInfo = new SequenceInfo(midiFile);
 
-		AbcProject project = new AbcProject();
+		AbcProjectTemp project = new AbcProjectTemp();
 		project.sequenceInfo = sequenceInfo;
 		project.saveFile = null;
 		project.partsModel.add(new AbcPart(project));
@@ -39,12 +39,12 @@ public class AbcProject {
 		return project;
 	}
 
-	public static AbcProject loadFromFile(File projectFile) throws IOException {
+	public static AbcProjectTemp loadFromFile(File projectFile) throws IOException {
 		// TODO loadFromFile
 		throw new NotImplementedException();
 	}
 
-	private AbcProject() {
+	private AbcProjectTemp() {
 	}
 
 	public SequenceInfo getSequenceInfo() {

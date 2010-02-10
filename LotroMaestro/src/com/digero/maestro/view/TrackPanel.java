@@ -55,6 +55,7 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		64
 	};
 
+	private ProjectFrame project;
 	private TrackInfo trackInfo;
 	private SequencerWrapper seq;
 	private AbcPart abcPart;
@@ -63,8 +64,9 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 	private JSpinner transposeSpinner;
 	private NoteGraph noteGraph;
 
-	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
+	public TrackPanel(ProjectFrame project, TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
+		this.project = project;
 		this.trackInfo = info;
 		this.seq = sequencer;
 		this.abcPart = part;
@@ -91,11 +93,11 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		JLabel octaveLabel = new JLabel("octave");
 		octaveLabel.setFont(octaveLabel.getFont().deriveFont(Font.ITALIC));
 
-		int currentTranspose = abcPart.getOctaveTranspose(trackInfo.getTrackNumber());
+		int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
 		transposeSpinner = new JSpinner(new SpinnerNumberModel(currentTranspose, -47, 47, 12));
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				abcPart.setOctaveTranspose(trackInfo.getTrackNumber(), (Integer) transposeSpinner.getValue());
+				abcPart.setTrackTranspose(trackInfo.getTrackNumber(), (Integer) transposeSpinner.getValue());
 			}
 		});
 
@@ -108,14 +110,6 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		add(checkBox, "0, 0, f, c");
 		add(octavePanel, "1, 0, f, c");
 		add(noteGraph, "2, 0, f, f");
-
-		abcPart.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				int track = trackInfo.getTrackNumber();
-				checkBox.setSelected(abcPart.isTrackEnabled(track));
-				transposeSpinner.setValue(abcPart.getOctaveTranspose(track));
-			}
-		});
 	}
 
 	public static final String ELLIPSIS = "...";
@@ -186,7 +180,8 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		private static final double NOTE_HEIGHT_PX = 2;
 
 		public NoteGraph() {
-			abcPart.addChangeListener(myChangeListener);
+			// TODO Monitor changes
+//			abcPart.addChangeListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
 
 			setPreferredSize(new Dimension(300, 24));
@@ -222,7 +217,7 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 
 			boolean trackEnabled = seq.isTrackActive(trackInfo.getTrackNumber());
 			long songPos = seq.getPosition();
-			int transpose = abcPart.getTranspose(trackInfo.getTrackNumber());
+			int transpose = abcPart.getTrackTranspose(trackInfo.getTrackNumber()) + project.getTranspose();
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 

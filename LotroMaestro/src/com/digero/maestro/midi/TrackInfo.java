@@ -17,10 +17,12 @@ import com.sun.media.sound.MidiUtils;
 
 public class TrackInfo implements MidiConstants {
 	private SequenceInfo sequenceInfo;
-	
+
 	private Track track;
 	private int trackNumber;
 	private String name;
+	private TimeSignature timeSignature = null;
+	private KeySignature keySignature = null;
 	private List<Integer> instruments = new ArrayList<Integer>();
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
@@ -29,7 +31,7 @@ public class TrackInfo implements MidiConstants {
 		this.sequenceInfo = parent;
 		this.track = track;
 		this.trackNumber = trackNumber;
-		
+
 		Sequence song = sequenceInfo.getSequence();
 
 		noteEvents = new ArrayList<NoteEvent>();
@@ -43,64 +45,81 @@ public class TrackInfo implements MidiConstants {
 
 			if (msg instanceof ShortMessage) {
 				ShortMessage m = (ShortMessage) msg;
-				int cmd = m.getCommand();
-				int noteId = m.getData1();
-				int speed = m.getData2();
-				if (cmd == ShortMessage.NOTE_ON && speed != 0) {
-					Note note = Note.fromId(noteId);
-					if (note != null) {
-						long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-						NoteEvent ne = new NoteEvent(note, trackNumber, micros);
-						if (m.getChannel() == DRUM_CHANNEL) {
-							if (noteEvents.isEmpty())
-								instruments.clear();
-							drumEvents.add(ne);
-							drumsOn.add(ne);
-						}
-						else {
-							noteEvents.add(ne);
-							notesOn.add(ne);
+				boolean drums = (m.getChannel() == DRUM_CHANNEL);
+
+				switch (m.getCommand()) {
+				case ShortMessage.NOTE_ON:
+					if (m.getData2()/* speed */!= 0) {
+						Note note = Note.fromId(m.getData1());
+						if (note != null) {
+							long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
+							NoteEvent ne = new NoteEvent(note, trackNumber, micros);
+							if (drums) {
+								if (noteEvents.isEmpty())
+									instruments.clear();
+								drumEvents.add(ne);
+								drumsOn.add(ne);
+							}
+							else {
+								noteEvents.add(ne);
+								notesOn.add(ne);
+							}
 						}
 					}
-				}
-				else if (cmd == ShortMessage.NOTE_OFF) {
-					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-					Iterator<NoteEvent> iter = (m.getChannel() == DRUM_CHANNEL) ? drumsOn.iterator() : notesOn
-							.iterator();
+					break;
+
+				case ShortMessage.NOTE_OFF:
+					Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn.iterator();
 					while (iter.hasNext()) {
 						NoteEvent ne = iter.next();
-						if (ne.note.id == noteId) {
+						if (ne.note.id == m.getData1()) {
 							iter.remove();
-							ne.endMicros = micros;
+							ne.endMicros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 							break;
 						}
 					}
-				}
-				else if (cmd == ShortMessage.PROGRAM_CHANGE && m.getChannel() != DRUM_CHANNEL) {
-					if (noteEvents.isEmpty())
-						instruments.clear();
+					break;
 
-					int instrument = m.getData1();
-					if (!instruments.contains(instrument)) {
-						instruments.add(instrument);
+				case ShortMessage.PROGRAM_CHANGE:
+					if (!drums) {
+						if (noteEvents.isEmpty())
+							instruments.clear();
+
+						int instrument = m.getData1();
+						if (!instruments.contains(instrument)) {
+							instruments.add(instrument);
+						}
 					}
+					break;
 				}
 			}
 			else if (msg instanceof MetaMessage) {
 				MetaMessage m = (MetaMessage) msg;
-				try {
-					if (m.getType() == META_TRACK_NAME) {
+
+				switch (m.getType()) {
+				case META_TRACK_NAME:
+					try {
 						byte[] data = m.getData();
 						String nameTmp = new String(data, 0, data.length, "US-ASCII").trim();
 						if (name != null)
 							name += " " + nameTmp;
 						else
 							name = nameTmp;
-						break;
 					}
-				}
-				catch (UnsupportedEncodingException ex) {
-					throw new RuntimeException(ex);
+					catch (UnsupportedEncodingException ex) {
+						throw new RuntimeException(ex);
+					}
+					break;
+
+				case META_KEY_SIGNATURE:
+					if (keySignature == null)
+						keySignature = new KeySignature(m);
+					break;
+
+				case META_TIME_SIGNATURE:
+					if (timeSignature == null)
+						timeSignature = new TimeSignature(m);
+					break;
 				}
 			}
 		}
@@ -112,11 +131,10 @@ public class TrackInfo implements MidiConstants {
 		for (NoteEvent ne : drumsOn)
 			ne.endMicros = song.getMicrosecondLength();
 
-
 		noteEvents = Collections.unmodifiableList(noteEvents);
 		drumEvents = Collections.unmodifiableList(drumEvents);
 	}
-	
+
 	public SequenceInfo getSequenceInfo() {
 		return sequenceInfo;
 	}
@@ -137,6 +155,14 @@ public class TrackInfo implements MidiConstants {
 		if (name == null)
 			return "Track " + trackNumber;
 		return name;
+	}
+	
+	public KeySignature getKeySignature() {
+		return keySignature;
+	}
+	
+	public TimeSignature getTimeSignature() {
+		return timeSignature;
 	}
 
 	@Override
@@ -164,7 +190,7 @@ public class TrackInfo implements MidiConstants {
 	public int getNoteCount() {
 		return noteEvents.size();
 	}
-	
+
 	public int getDrumCount() {
 		return drumEvents.size();
 	}

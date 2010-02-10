@@ -24,7 +24,6 @@ package com.digero.maestro.abc;
 
 import com.digero.maestro.midi.Note;
 
-
 public enum LotroInstrument {
 	LUTE(Note.C2, Note.C5, false, 24), //
 	HARP(Note.C2, Note.C5, false, 46), //
@@ -34,6 +33,10 @@ public enum LotroInstrument {
 	FLUTE(Note.C2, Note.C5, true, 73), //
 	HORN(Note.Cs2, Note.C5, true, 69), //
 	DRUMS(Note.C2, Note.C5, false, 118);
+
+	public static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
+			LUTE, HARP, THEORBO, BAGPIPE, CLARINET, FLUTE, HORN
+	};
 
 	public final Note lowestPlayable;
 	public final Note highestPlayable;

@@ -2,6 +2,11 @@ package com.digero.maestro.midi;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -13,6 +18,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.sun.media.sound.MidiUtils;
+import com.sun.media.sound.MidiUtils.TempoCache;
 
 /**
  * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
@@ -21,7 +27,9 @@ import com.sun.media.sound.MidiUtils;
 public class SequenceInfo implements MidiConstants {
 	private Sequence sequence;
 	private String title;
+	private int tempo;
 	private TrackInfo[] trackInfo;
+	private List<TrackInfo> trackInfoList;
 
 	public SequenceInfo(File midiFile) throws InvalidMidiDataException, IOException {
 		sequence = MidiSystem.getSequence(midiFile);
@@ -39,9 +47,12 @@ public class SequenceInfo implements MidiConstants {
 
 		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
 		trackInfo = new TrackInfo[tracks.length];
+		trackInfoList = Collections.unmodifiableList(Arrays.asList(trackInfo));
 		for (int i = 0; i < tracks.length; i++) {
 			trackInfo[i] = new TrackInfo(this, tracks[i], i, tempoCache);
 		}
+
+		tempo = findMainTempo(sequence, tempoCache);
 
 		if (trackInfo[0].hasName()) {
 			title = trackInfo[0].getName();
@@ -69,10 +80,79 @@ public class SequenceInfo implements MidiConstants {
 	public TrackInfo getTrackInfo(int track) {
 		return trackInfo[track];
 	}
+	
+	public List<TrackInfo> getTrackList(){
+		return trackInfoList;
+	}
+
+	public int getTempo() {
+		return tempo;
+	}
+
+	public KeySignature getKeySignature() {
+		for (TrackInfo track : trackInfo) {
+			if (track.getKeySignature() != null)
+				return track.getKeySignature();
+		}
+		return KeySignature.C_MAJOR;
+	}
+	
+	public TimeSignature getTimeSignature() {
+		for (TrackInfo track : trackInfo) {
+			if (track.getTimeSignature() != null)
+				return track.getTimeSignature();
+		}
+		return TimeSignature.FOUR_FOUR;
+	}
 
 	@Override
 	public String toString() {
 		return getTitle();
+	}
+
+	public static int findMainTempo(Sequence sequence, TempoCache tempoCache) {
+		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
+
+		long bestTempoLength = 0;
+		int bestTempoBPM = 120;
+
+		long curTempoStart = 0;
+		int curTempoBPM = 120;
+
+		Track track0 = sequence.getTracks()[0];
+		int c = track0.size();
+		for (int i = 0; i < c; i++) {
+			MidiEvent evt = track0.get(i);
+			MidiMessage msg = evt.getMessage();
+			if (MidiUtils.isMetaTempo(msg)) {
+				long nextTempoStart = MidiUtils.tick2microsecond(sequence, evt.getTick(), tempoCache);
+
+				Long lengthObj = tempoLengths.get(curTempoBPM);
+				long length = (lengthObj == null) ? 0 : lengthObj;
+				length += nextTempoStart - curTempoStart;
+
+				if (length > bestTempoLength) {
+					bestTempoLength = length;
+					bestTempoBPM = curTempoBPM;
+				}
+
+				tempoLengths.put(curTempoBPM, length);
+
+				curTempoBPM = (int) (MidiUtils.convertTempo(MidiUtils.getTempoMPQ(msg)) + 0.5);
+				curTempoStart = nextTempoStart;
+			}
+		}
+
+		Long lengthObj = tempoLengths.get(curTempoBPM);
+		long length = (lengthObj == null) ? 0 : lengthObj;
+		length += sequence.getMicrosecondLength() - curTempoStart;
+
+		if (length > bestTempoLength) {
+			bestTempoLength = length;
+			bestTempoBPM = curTempoBPM;
+		}
+
+		return bestTempoBPM;
 	}
 
 	/**

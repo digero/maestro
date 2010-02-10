@@ -5,8 +5,11 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
 public class SequencerWrapper {
@@ -17,6 +20,10 @@ public class SequencerWrapper {
 	private Timer updateTimer;
 
 	private List<SequencerListener> listeners = null;
+
+	public SequencerWrapper() {
+		this(getDefaultSequencer());
+	}
 
 	public SequencerWrapper(Sequencer sequencer) {
 		this.sequencer = sequencer;
@@ -165,6 +172,21 @@ public class SequencerWrapper {
 			for (SequencerListener l : listeners) {
 				l.propertyChanged(e);
 			}
+		}
+	}
+
+	private static Sequencer getDefaultSequencer() {
+		try {
+			Sequencer sequencer = MidiSystem.getSequencer(false);
+			sequencer.open();
+			sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
+			return sequencer;
+		}
+		catch (MidiUnavailableException e) {
+			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.",
+					"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
+			return null;
 		}
 	}
 }
