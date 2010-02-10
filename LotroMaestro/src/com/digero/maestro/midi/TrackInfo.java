@@ -65,9 +65,10 @@ public class TrackInfo implements MidiConstants {
 								notesOn.add(ne);
 							}
 						}
+						break;
 					}
-					break;
 
+					// Fall through to NOTE_OFF for 0-speed NOTE_ON events:
 				case ShortMessage.NOTE_OFF:
 					Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn.iterator();
 					while (iter.hasNext()) {
@@ -98,16 +99,14 @@ public class TrackInfo implements MidiConstants {
 
 				switch (m.getType()) {
 				case META_TRACK_NAME:
-					try {
+					if (name != null) {
 						byte[] data = m.getData();
-						String nameTmp = new String(data, 0, data.length, "US-ASCII").trim();
-						if (name != null)
-							name += " " + nameTmp;
-						else
-							name = nameTmp;
-					}
-					catch (UnsupportedEncodingException ex) {
-						throw new RuntimeException(ex);
+						try {
+							name = new String(data, 0, data.length, "US-ASCII").trim();
+						}
+						catch (UnsupportedEncodingException ex) {
+							throw new RuntimeException(ex);
+						}
 					}
 					break;
 
@@ -156,11 +155,11 @@ public class TrackInfo implements MidiConstants {
 			return "Track " + trackNumber;
 		return name;
 	}
-	
+
 	public KeySignature getKeySignature() {
 		return keySignature;
 	}
-	
+
 	public TimeSignature getTimeSignature() {
 		return timeSignature;
 	}

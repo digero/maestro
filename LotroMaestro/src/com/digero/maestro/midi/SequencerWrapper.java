@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
@@ -58,6 +59,10 @@ public class SequencerWrapper {
 			sequencer.setMicrosecondPosition(position);
 			fireChangeEvent(source, SequencerProperty.POSITION);
 		}
+	}
+
+	public long getLength() {
+		return sequencer.getMicrosecondLength();
 	}
 
 	public boolean isRunning() {
@@ -188,5 +193,13 @@ public class SequencerWrapper {
 			System.exit(1);
 			return null;
 		}
+	}
+
+	public void setSequence(Sequence sequence) throws InvalidMidiDataException {
+		sequencer.setSequence(sequence);
+	}
+
+	public Sequence getSequence() {
+		return sequencer.getSequence();
 	}
 }

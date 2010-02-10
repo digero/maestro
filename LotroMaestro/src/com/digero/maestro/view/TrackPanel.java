@@ -4,6 +4,7 @@ import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -13,9 +14,12 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -26,9 +30,11 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -86,14 +92,13 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		String instr = trackInfo.getInstrumentNames();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
-		title = ellipsis(title, TITLE_WIDTH - 48, checkBox.getFont().deriveFont(Font.BOLD));
-		instr = ellipsis(instr, TITLE_WIDTH - 48, checkBox.getFont());
+		title = ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
+		instr = ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
 		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
 		checkBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				abcPart.setTrackEnabled(trackInfo.getTrackNumber(), checkBox.isSelected());
-				noteGraph.repaint();
 			}
 		});
 
@@ -116,7 +121,6 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 				else {
 					abcPart.setTrackTranspose(trackInfo.getTrackNumber(), value);
 				}
-				noteGraph.repaint();
 			}
 		});
 
@@ -207,21 +211,23 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 	private static final Color NOTE_ON = Color.WHITE;
 	private static final Color NOTE_DISABLED = Color.GRAY;
 	private static final Color XNOTE_DISABLED = Color.LIGHT_GRAY;
-	private static final Color INDICATOR_COLOR = new Color(0x66FFFFFF, true);
+	private static final Color INDICATOR_COLOR = new Color(0xAAFFFFFF, true);
 
 	private static final int MIN_RENDERED = Note.C2.id - 12;
 	private static final int MAX_RENDERED = Note.C5.id + 12;
 
 	private class NoteGraph extends JPanel {
-		private static final int BORDER_SIZE = 1;
+		private static final int BORDER_SIZE = 0;
 		private static final double NOTE_WIDTH_PX = 4;
 		private static final double NOTE_HEIGHT_PX = 2;
 
 		public NoteGraph() {
-			// TODO Monitor changes
-//			abcPart.addChangeListener(myChangeListener);
+			abcPart.addChangeListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
 
+			MyMouseListener mouseListener = new MyMouseListener();
+			addMouseListener(mouseListener);
+			addMouseMotionListener(mouseListener);
 			setPreferredSize(new Dimension(300, 24));
 		}
 
@@ -257,12 +263,12 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 
 			boolean trackEnabled = seq.isTrackActive(trackInfo.getTrackNumber());
 			long songPos = seq.getPosition();
-			int transpose = abcPart.getTrackTranspose(trackInfo.getTrackNumber()) + project.getTranspose();
+			int transpose = abcPart.getTrackTranspose(trackInfo.getTrackNumber()) + abcPart.getBaseTranspose();
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 
 			g2.setColor(trackEnabled ? Color.BLACK : Color.DARK_GRAY);
-			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
 //			g2.fillRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE);
 
 			g2.transform(xform);
@@ -304,13 +310,11 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 			}
 
 			// Draw the indicator line
-			if (seq.isRunning()) {
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-				g2.setColor(INDICATOR_COLOR);
-				long thumbPos = seq.getThumbPosition();
-				lineTmp.setLine(thumbPos, MIN_RENDERED, thumbPos, MAX_RENDERED);
-				g2.draw(lineTmp);
-			}
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g2.setColor(INDICATOR_COLOR);
+			long thumbPos = seq.getThumbPosition();
+			lineTmp.setLine(thumbPos, MIN_RENDERED - height, thumbPos, MAX_RENDERED + height);
+			g2.draw(lineTmp);
 		}
 
 		/**
@@ -323,9 +327,9 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 				return new AffineTransform();
 
 			double scrnX = BORDER_SIZE;
-			double scrnY = BORDER_SIZE;
+			double scrnY = BORDER_SIZE + NOTE_HEIGHT_PX;
 			double scrnW = getWidth() - 2 * BORDER_SIZE;
-			double scrnH = getHeight() - 2 * BORDER_SIZE;
+			double scrnH = getHeight() - 2 * BORDER_SIZE - NOTE_HEIGHT_PX;
 
 			double noteX = 0;
 			double noteY = MAX_RENDERED;
@@ -347,6 +351,68 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 			scrnXForm.concatenate(noteXForm);
 
 			return scrnXForm;
+		}
+
+		private class MyMouseListener extends MouseAdapter {
+			private long positionFromEvent(MouseEvent e) {
+				AffineTransform xform = getTransform();
+				Point2D.Double pt = new Point2D.Double(e.getX(), e.getY());
+				try {
+					xform.inverseTransform(pt, pt);
+					long ret = (long) pt.x;
+					if (ret < 0)
+						ret = 0;
+					if (ret >= seq.getLength())
+						ret = seq.getLength() - 1;
+					return ret;
+				}
+				catch (NoninvertibleTransformException e1) {
+					e1.printStackTrace();
+					return 0;
+				}
+			}
+
+			private boolean isDragCanceled(MouseEvent e) {
+				int x = e.getX();
+				if (x < -32 || x > getWidth() + 32)
+					return true;
+
+				Component ancestor = SwingUtilities.getAncestorOfClass(JScrollPane.class, NoteGraph.this);
+				if (ancestor == null)
+					ancestor = SwingUtilities.getRoot(NoteGraph.this);
+
+				int y = SwingUtilities.convertPoint(NoteGraph.this, e.getPoint(), ancestor).y;
+				int h = ancestor.getHeight();
+				return y < -32 || y > h + 32;
+			}
+
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					seq.setDragging(true, this);
+					seq.setDragPosition(positionFromEvent(e), this);
+				}
+			}
+
+			public void mouseDragged(MouseEvent e) {
+				if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
+					if (!isDragCanceled(e)) {
+						seq.setDragging(true, this);
+						seq.setDragPosition(positionFromEvent(e), this);
+					}
+					else {
+						seq.setDragging(false, this);
+					}
+				}
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					seq.setDragging(false, this);
+					if (!isDragCanceled(e)) {
+						seq.setPosition(positionFromEvent(e), this);
+					}
+				}
+			}
 		}
 	}
 }

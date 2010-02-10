@@ -37,12 +37,12 @@ public class PartPanel extends JPanel {
 
 	private JPanel trackListPanel;
 
-	public PartPanel(ProjectFrame project) {
+	public PartPanel(ProjectFrame project, SequencerWrapper sequencer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		this.project = project;
 
-		sequencer = new SequencerWrapper();
+		this.sequencer = sequencer;
 
 		numberSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 9999, 1));
 		numberSpinner.addChangeListener(new ChangeListener() {
@@ -95,9 +95,20 @@ public class PartPanel extends JPanel {
 		setAbcPart(null);
 	}
 
+	private ChangeListener partChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+		}
+	};
+
 	public void setAbcPart(AbcPart abcPart) {
-		this.abcPart = null;
-		
+		if (this.abcPart == abcPart)
+			return;
+
+		if (this.abcPart != null) {
+			this.abcPart.removeChangeListener(partChangeListener);
+			this.abcPart = null;
+		}
+
 		if (abcPart == null) {
 			numberSpinner.setEnabled(false);
 			nameTextField.setEnabled(false);
@@ -108,7 +119,8 @@ public class PartPanel extends JPanel {
 			instrumentComboBox.setSelectedIndex(0);
 
 			trackListPanel.removeAll();
-			trackListPanel.validate();
+			validate();
+			repaint();
 		}
 		else {
 			numberSpinner.setEnabled(true);
@@ -125,9 +137,13 @@ public class PartPanel extends JPanel {
 					trackListPanel.add(new TrackPanel(project, track, sequencer, abcPart));
 				}
 			}
-			trackListPanel.validate();
+			validate();
+			repaint();
 		}
-		
+
 		this.abcPart = abcPart;
+		if (this.abcPart != null) {
+			this.abcPart.addChangeListener(partChangeListener);
+		}
 	}
 }
