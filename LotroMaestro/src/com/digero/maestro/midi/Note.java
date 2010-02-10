@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Note {
-	Rest(-1), //
+	REST(-1), //
 	CX, CsX, DbX(CsX), DX, DsX, EbX(DsX), EX, FX, FsX, GbX(FsX), GX, GsX, AbX(GsX), AX, AsX, BbX(AsX), BX, //
 	C0, Cs0, Db0(Cs0), D0, Ds0, Eb0(Ds0), E0, F0, Fs0, Gb0(Fs0), G0, Gs0, Ab0(Gs0), A0, As0, Bb0(As0), B0, //
 	C1, Cs1, Db1(Cs1), D1, Ds1, Eb1(Ds1), E1, F1, Fs1, Gb1(Fs1), G1, Gs1, Ab1(Gs1), A1, As1, Bb1(As1), B1, //
@@ -61,10 +61,13 @@ public enum Note {
 	}
 
 	public static Note fromId(int id) {
+		if (id == REST.id)
+			return REST;
+
 		if (lookupId == null) {
 			lookupId = new Note[B9.id + 1];
 			for (Note n : values()) {
-				if (lookupId[n.id] == null)
+				if (n != REST && lookupId[n.id] == null)
 					lookupId[n.id] = n;
 			}
 		}
