@@ -25,7 +25,7 @@ package com.digero.maestro.midi;
 import java.util.ArrayList;
 import java.util.List;
 
-class Chord {
+public class Chord {
 	public static final int MAX_CHORD_NOTES = 6;
 
 	private long startMicros;
@@ -87,7 +87,7 @@ class Chord {
 		return true;
 	}
 
-	private NoteEvent remove(int i) {
+	public NoteEvent remove(int i) {
 		if (size() <= 1)
 			return null;
 

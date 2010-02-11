@@ -7,6 +7,7 @@ import javax.sound.midi.MetaMessage;
  * Representation of a MIDI time signature.
  */
 public class TimeSignature implements MidiConstants {
+	public static final int MAX_DENOMINATOR = 16;
 	public static final TimeSignature FOUR_FOUR = new TimeSignature(4, 4);
 
 	public final int numerator;
@@ -37,10 +38,18 @@ public class TimeSignature implements MidiConstants {
 			throw new IllegalArgumentException("Midi message is not a time signature event");
 		}
 
-		this.numerator = data[0];
-		this.denominator = 1 << data[1];
-		this.metronome = data[2];
-		this.thirtySecondNotes = data[3];
+		if ((1 << data[1]) > MAX_DENOMINATOR) {
+			this.numerator = 4;
+			this.denominator = 4;
+			this.metronome = 24;
+			this.thirtySecondNotes = 8;
+		}
+		else {
+			this.numerator = data[0];
+			this.denominator = 1 << data[1];
+			this.metronome = data[2];
+			this.thirtySecondNotes = data[3];
+		}
 	}
 
 	public TimeSignature(String str) {
@@ -53,7 +62,7 @@ public class TimeSignature implements MidiConstants {
 		int numerator = Integer.parseInt(parts[0]);
 		int denominator = Integer.parseInt(parts[1]);
 		verifyData(numerator, denominator);
-		
+
 		this.numerator = numerator;
 		this.denominator = denominator;
 		this.metronome = 24;
@@ -63,6 +72,9 @@ public class TimeSignature implements MidiConstants {
 	private static void verifyData(int numerator, int denominator) {
 		if (denominator == 0 || denominator != (1 << floorLog2(denominator))) {
 			throw new IllegalArgumentException("The denominator of the time signature must be a power of 2");
+		}
+		if (denominator > MAX_DENOMINATOR) {
+			throw new IllegalArgumentException("The denominator must be less than or equal to " + MAX_DENOMINATOR);
 		}
 		if (numerator > 255) {
 			throw new IllegalArgumentException("The numerator of the time signature must be less than 256");

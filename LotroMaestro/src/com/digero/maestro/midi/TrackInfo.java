@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
@@ -27,7 +28,8 @@ public class TrackInfo implements MidiConstants {
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
 
-	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache) {
+	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache)
+			throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
 		this.track = track;
 		this.trackNumber = trackNumber;
@@ -45,90 +47,87 @@ public class TrackInfo implements MidiConstants {
 
 			if (msg instanceof ShortMessage) {
 				ShortMessage m = (ShortMessage) msg;
+				int cmd = m.getCommand();
 				boolean drums = (m.getChannel() == DRUM_CHANNEL);
 
-				switch (m.getCommand()) {
-				case ShortMessage.NOTE_ON:
-					if (m.getData2()/* speed */!= 0) {
-						Note note = Note.fromId(m.getData1());
-						if (note != null) {
-							long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-							NoteEvent ne = new NoteEvent(note, micros);
-							if (drums) {
-								if (noteEvents.isEmpty())
-									instruments.clear();
-								drumEvents.add(ne);
-								drumsOn.add(ne);
+				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
+					int noteId = m.getData1();
+					int velocity = m.getData2();
+					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
+
+					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
+						Note note = Note.fromId(noteId);
+						if (note == null)
+							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
+
+						NoteEvent ne = new NoteEvent(note, micros);
+						if (drums) {
+							if (noteEvents.isEmpty())
+								instruments.clear();
+							drumEvents.add(ne);
+							drumsOn.add(ne);
+						}
+						else {
+							noteEvents.add(ne);
+							notesOn.add(ne);
+						}
+					}
+					else {
+						Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn.iterator();
+						while (iter.hasNext()) {
+							NoteEvent ne = iter.next();
+							if (ne.note.id == m.getData1()) {
+								iter.remove();
+								ne.endMicros = micros;
+								break;
 							}
-							else {
-								noteEvents.add(ne);
-								notesOn.add(ne);
-							}
-						}
-						break;
-					}
-
-					// Fall through to NOTE_OFF for 0-speed NOTE_ON events:
-				case ShortMessage.NOTE_OFF:
-					Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn.iterator();
-					while (iter.hasNext()) {
-						NoteEvent ne = iter.next();
-						if (ne.note.id == m.getData1()) {
-							iter.remove();
-							ne.endMicros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-							break;
 						}
 					}
-					break;
+				}
+				else if (cmd == ShortMessage.PROGRAM_CHANGE && !drums) {
+					int instrument = m.getData1();
 
-				case ShortMessage.PROGRAM_CHANGE:
-					if (!drums) {
-						if (noteEvents.isEmpty())
-							instruments.clear();
+					if (noteEvents.isEmpty())
+						instruments.clear();
 
-						int instrument = m.getData1();
-						if (!instruments.contains(instrument)) {
-							instruments.add(instrument);
-						}
-					}
-					break;
+					if (!instruments.contains(instrument))
+						instruments.add(instrument);
 				}
 			}
 			else if (msg instanceof MetaMessage) {
 				MetaMessage m = (MetaMessage) msg;
+				int type = m.getType();
 
-				switch (m.getType()) {
-				case META_TRACK_NAME:
-					if (name != null) {
+				if (type == META_TRACK_NAME && name == null) {
+					try {
 						byte[] data = m.getData();
-						try {
-							name = new String(data, 0, data.length, "US-ASCII").trim();
-						}
-						catch (UnsupportedEncodingException ex) {
-							throw new RuntimeException(ex);
-						}
+						String tmp = new String(data, 0, data.length, "US-ASCII").trim();
+						if (tmp.length() > 0)
+							name = tmp;
 					}
-					break;
-
-				case META_KEY_SIGNATURE:
-					if (keySignature == null)
-						keySignature = new KeySignature(m);
-					break;
-
-				case META_TIME_SIGNATURE:
-					if (timeSignature == null)
-						timeSignature = new TimeSignature(m);
-					break;
+					catch (UnsupportedEncodingException ex) {
+						// Ignore.  This should never happen...
+					}
+				}
+				else if (type == META_KEY_SIGNATURE && keySignature == null) {
+					keySignature = new KeySignature(m);
+				}
+				else if (type == META_TIME_SIGNATURE && timeSignature == null) {
+					timeSignature = new TimeSignature(m);
 				}
 			}
 		}
 
 		// Turn off notes that are on at the end of the song.  This shouldn't happen...
-		for (NoteEvent ne : notesOn)
-			ne.endMicros = song.getMicrosecondLength();
+		if (notesOn.size() > 0 || drumsOn.size() > 0) {
+			System.err.println((notesOn.size() + drumsOn.size()) + " notes not turned off at the end of the track.");
 
-		for (NoteEvent ne : drumsOn)
-			ne.endMicros = song.getMicrosecondLength();
+			for (NoteEvent ne : notesOn)
+				ne.endMicros = song.getMicrosecondLength();
+
+			for (NoteEvent ne : drumsOn)
+				ne.endMicros = song.getMicrosecondLength();
+		}
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
 		drumEvents = Collections.unmodifiableList(drumEvents);
@@ -203,7 +202,9 @@ public class TrackInfo implements MidiConstants {
 
 	public String getInstrumentNames() {
 		if (instruments.size() == 0) {
-			if (hasDrums())
+			if (hasDrums() && hasNotes())
+				return "Drums, " + MIDI_INSTRUMENTS[0];
+			else if (hasDrums())
 				return "Drums";
 			else if (hasNotes())
 				return MIDI_INSTRUMENTS[0];
@@ -220,6 +221,10 @@ public class TrackInfo implements MidiConstants {
 			names = "Drums, " + names;
 
 		return names;
+	}
+
+	public int getInstrumentCount() {
+		return instruments.size();
 	}
 
 	public static String getInstrumentName(int id) {

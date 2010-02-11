@@ -7,7 +7,6 @@ import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 
-
 /**
  * Provides static methods to create MidiEvents.
  */
@@ -15,7 +14,7 @@ public class MidiFactory implements MidiConstants {
 	/**
 	 * @param mpqn Microseconds per quarter note
 	 */
-	public static MidiEvent createTempoEvent(int mpqn, int ticks) {
+	public static MidiEvent createTempoEvent(int mpqn, long ticks) {
 		try {
 			byte[] data = new byte[3];
 			data[0] = (byte) ((mpqn >>> 16) & 0xFF);
@@ -46,7 +45,7 @@ public class MidiFactory implements MidiConstants {
 		}
 	}
 
-	public static MidiEvent createProgramChangeEvent(int patch, int channel, int ticks) {
+	public static MidiEvent createProgramChangeEvent(int patch, int channel, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
 			msg.setMessage(ShortMessage.PROGRAM_CHANGE, channel, patch, 0);
@@ -57,7 +56,7 @@ public class MidiFactory implements MidiConstants {
 		}
 	}
 
-	public static MidiEvent createNoteOnEvent(int id, int channel, int ticks) {
+	public static MidiEvent createNoteOnEvent(int id, int channel, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
 			msg.setMessage(ShortMessage.NOTE_ON, channel, id, 96);
@@ -68,7 +67,7 @@ public class MidiFactory implements MidiConstants {
 		}
 	}
 
-	public static MidiEvent createNoteOffEvent(int id, int channel, int ticks) {
+	public static MidiEvent createNoteOffEvent(int id, int channel, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
 			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, 96);

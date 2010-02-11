@@ -180,7 +180,7 @@ public class SequencerWrapper {
 		}
 	}
 
-	private static Sequencer getDefaultSequencer() {
+	public static Sequencer getDefaultSequencer() {
 		try {
 			Sequencer sequencer = MidiSystem.getSequencer(false);
 			sequencer.open();

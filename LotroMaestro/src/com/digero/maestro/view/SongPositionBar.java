@@ -43,8 +43,8 @@ import com.digero.maestro.midi.SequencerWrapper;
 
 @SuppressWarnings("serial")
 public class SongPositionBar extends JPanel implements SequencerListener {
-	private static final int PTR_WIDTH = 12; // 6;
-	private static final int PTR_HEIGHT = 12; // 16;
+	private static final int PTR_WIDTH = 12;
+	private static final int PTR_HEIGHT = 12;
 	private static final int BAR_HEIGHT = 8;
 	private static final int SIDE_PAD = PTR_WIDTH / 2;
 	private static final int ROUND = 8;

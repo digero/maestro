@@ -21,6 +21,13 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.Sequencer;
+import javax.sound.midi.Soundbank;
+import javax.sound.midi.Synthesizer;
+import javax.sound.midi.Track;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -42,11 +49,16 @@ import javax.swing.event.ListSelectionListener;
 
 import sun.awt.shell.ShellFolder;
 
+import com.digero.maestro.MaestroMain;
+import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.KeySignature;
+import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.util.SaveData;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants {
@@ -61,6 +73,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private File saveFile;
 	private SequenceInfo sequenceInfo;
 	private SequencerWrapper sequencer;
+	private SequencerWrapper previewSeq;
 	private DefaultListModel parts = new DefaultListModel();
 
 	private JPanel content;
@@ -68,6 +81,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private JSpinner tempoSpinner;
 	private JFormattedTextField keySignatureField;
 	private JFormattedTextField timeSignatureField;
+	private JButton exportButton;
+	private JButton previewButton;
 
 	private JList partsList;
 	private JButton newPartButton;
@@ -81,7 +96,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private SongPositionBar songPositionBar;
 
 	public ProjectFrame(SequenceInfo sequenceInfo) {
-		this(sequenceInfo, 0, sequenceInfo.getTempo(), sequenceInfo.getTimeSignature(), sequenceInfo.getKeySignature());
+		this(sequenceInfo, 0, sequenceInfo.getTempoBPM(), sequenceInfo.getTimeSignature(), sequenceInfo
+				.getKeySignature());
 	}
 
 	public ProjectFrame(SequenceInfo sequenceInfo, int transpose, int tempoBPM, TimeSignature timeSignature,
@@ -91,6 +107,34 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 		this.sequenceInfo = sequenceInfo;
 		this.sequencer = new SequencerWrapper();
+
+		try {
+			lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
+					.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
+
+			Sequencer seq = MidiSystem.getSequencer(false);
+			Synthesizer synth = MidiSystem.getSynthesizer();
+			seq.getTransmitter().setReceiver(synth.getReceiver());
+			seq.open();
+			synth.open();
+			synth.unloadAllInstruments(lotroSoundbank);
+			synth.loadAllInstruments(lotroSoundbank);
+
+			this.previewSeq = new SequencerWrapper(seq);
+		}
+		catch (MidiUnavailableException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		catch (InvalidMidiDataException e3) {
+			// TODO Auto-generated catch block
+			e3.printStackTrace();
+		}
+		catch (IOException e4) {
+			// TODO Auto-generated catch block
+			e4.printStackTrace();
+		}
+
 		try {
 			this.sequencer.setSequence(this.sequenceInfo.getSequence());
 		}
@@ -112,20 +156,70 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		setContentPane(content);
 
 		keySignatureField = new MyFormattedTextField(keySignature, 5);
+		keySignatureField.setToolTipText("<html>Adjust the key signature of the ABC file. "
+				+ "This only affects the display, not the sound of the exported file.<br>"
+				+ "Examples: C maj, Eb maj, F# min</html>");
 
 		timeSignatureField = new MyFormattedTextField(timeSignature, 5);
+		timeSignatureField.setToolTipText("<html>Adjust the time signature of the ABC file. "
+				+ "This only affects the display, not the sound of the exported file.<br>"
+				+ "Examples: 4/4, 3/8, 2/2</html>");
 
 		transposeSpinner = new JSpinner(new SpinnerNumberModel(transpose, -48, 48, 1));
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
+				int transpose = getTranspose();
 				for (int i = 0; i < parts.getSize(); i++) {
 					AbcPart part = (AbcPart) parts.getElementAt(i);
-					part.setBaseTranspose(getTranspose());
+					part.setBaseTranspose(transpose);
 				}
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(tempoBPM, 1, 600, 2));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(tempoBPM, 8, 960, 2));
+
+		exportButton = new JButton("Export ABC");
+		exportButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				for (int i = 0; i < parts.getSize(); i++) {
+					AbcPart part = (AbcPart) parts.get(i);
+					try {
+						TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+						part.exportToAbc(tm, getKeySignature(), System.out);
+					}
+					catch (AbcConversionException e1) {
+						e1.printStackTrace();
+					}
+					System.out.println();
+					System.out.println();
+				}
+			}
+		});
+
+		previewButton = new JButton("Play Preview");
+		previewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!previewSeq.isRunning()) {
+					Sequence song = createPreviewSequence();
+					if (song == null)
+						return;
+					try {
+						previewSeq.setSequence(song);
+					}
+					catch (InvalidMidiDataException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+						return;
+					}
+					previewSeq.start(ProjectFrame.this);
+					previewButton.setText("Pause Preview");
+				}
+				else {
+					previewSeq.stop(ProjectFrame.this);
+					previewButton.setText("Play Preview");
+				}
+			}
+		});
 
 		partsList = new JList(parts);
 		partsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -149,6 +243,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 				newPart.addChangeListener(partChangeListener);
 				parts.addElement(newPart);
 				partsList.setSelectedIndex(parts.indexOf(newPart));
+				newPartButton.setEnabled(parts.getSize() < 15);
 			}
 		});
 
@@ -162,6 +257,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					AbcPart oldPart = (AbcPart) parts.remove(partsList.getSelectedIndex());
 					oldPart.removeChangeListener(partChangeListener);
 				}
+				newPartButton.setEnabled(parts.getSize() < 15);
 			}
 		});
 
@@ -177,7 +273,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		TableLayout settingsLayout = new TableLayout(new double[] {
 				/* Cols */PREFERRED, PREFERRED, FILL
 		}, new double[] {
-				/* Rows */PREFERRED, PREFERRED, PREFERRED, PREFERRED
+				/* Rows */PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED
 		});
 		settingsLayout.setVGap(VGAP);
 		settingsLayout.setHGap(HGAP);
@@ -192,6 +288,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		settingsPanel.add(tempoSpinner, "1, 1");
 		settingsPanel.add(timeSignatureField, "1, 2, 2, 2, L, F");
 		settingsPanel.add(keySignatureField, "1, 3, 2, 3, L, F");
+		settingsPanel.add(exportButton, "0, 4, 2, 4, C, F");
+		settingsPanel.add(previewButton, "0, 5, 2, 5, C, F");
 
 		playIcon = new ImageIcon(ProjectFrame.class.getResource("icons/play.png"));
 		pauseIcon = new ImageIcon(ProjectFrame.class.getResource("icons/pause.png"));
@@ -227,7 +325,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		add(partPanel, "1, 0, 1, 1");
 		add(playPanel, "1, 2");
 
-		new DropTarget(this, new MyDropListener());
+		new DropTarget(this, new MidiDropListener());
 		newPartButton.doClick();
 	}
 
@@ -241,6 +339,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 		}
 	};
+	private Soundbank lotroSoundbank;
 
 	public int getTranspose() {
 		return (Integer) transposeSpinner.getValue();
@@ -318,8 +417,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 			parts.clear();
 
-			this.sequenceInfo = new SequenceInfo(midiFile);
+			sequenceInfo = new SequenceInfo(midiFile);
+
 			sequencer.setSequence(sequenceInfo.getSequence());
+			transposeSpinner.setValue(0);
+			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
+			keySignatureField.setValue(sequenceInfo.getKeySignature());
+			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
+
 			newPartButton.doClick();
 		}
 		catch (InvalidMidiDataException e) {
@@ -332,11 +437,56 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 	}
 
+	private void save() {
+		SaveData data = new SaveData();
+		data.setString("project.midiFile", sequenceInfo.getMidiFile().getPath());
+		data.setInt("project.transpose", getTranspose());
+		data.setInt("project.tempo", getTempo());
+		data.setKeySignature("project.keySignature", getKeySignature());
+		data.setTimeSignature("project.timeSignature", getTimeSignature());
+	}
+
+	private Sequence createPreviewSequence() {
+		try {
+			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+			Sequence out = new Sequence(Sequence.PPQ, tm.getMidiResolution());
+
+			long startMicros = Long.MAX_VALUE;
+			for (int i = 0; i < parts.getSize(); i++) {
+				AbcPart part = (AbcPart) parts.get(i);
+
+				long firstNoteStart = part.firstNoteStart();
+				if (firstNoteStart < startMicros)
+					startMicros = firstNoteStart;
+			}
+
+			// Track 0: Title and meta info
+			Track track = out.createTrack();
+			track.add(MidiFactory.createTrackNameEvent(sequenceInfo.getTitle()));
+			track.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
+
+			for (int i = 0; i < parts.getSize(); i++) {
+				AbcPart part = (AbcPart) parts.get(i);
+				part.exportToMidi(out, tm, startMicros, Long.MAX_VALUE);
+			}
+
+			return out;
+		}
+		catch (InvalidMidiDataException e) {
+			return null;
+		}
+		catch (AbcConversionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return null;
+		}
+	}
+
 	/**
 	 * Slight modification to JFormattedTextField to select the contents when it
 	 * receives focus.
 	 */
-	private class MyFormattedTextField extends JFormattedTextField {
+	private static class MyFormattedTextField extends JFormattedTextField {
 		public MyFormattedTextField(Object value, int columns) {
 			super(value);
 			setColumns(columns);
@@ -350,7 +500,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 	}
 
-	private class MyDropListener implements DropTargetListener {
+	private class MidiDropListener implements DropTargetListener {
 		private File draggingFile = null;
 
 		public void dragEnter(DropTargetDragEvent dtde) {

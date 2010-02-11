@@ -46,11 +46,22 @@ public enum Note {
 	public final int id;
 	/** The ABC notation for this file. */
 	public final String abc;
-	/** True if this note is a sharp or flat. */
-	public final boolean isAccented;
 	/** The ID of the natural of this note, if it's accented */
 	public final int naturalId;
 	public final int octave;
+
+	public boolean isSharp() {
+		return id > naturalId;
+	}
+
+	public boolean isFlat() {
+		return id < naturalId;
+	}
+
+	/** Returns true if this note is a sharp or flat. */
+	public boolean isAccented() {
+		return id != naturalId;
+	}
 
 	public static boolean isPlayable(Note n) {
 		return isPlayable(n.id);
@@ -114,7 +125,6 @@ public enum Note {
 
 		if (id == -1) {
 			this.abc = "z";
-			isAccented = false;
 			naturalId = id;
 			octave = 0;
 		}
@@ -129,17 +139,14 @@ public enum Note {
 
 			if (s.indexOf('s') == 1) {
 				abc.append('^');
-				isAccented = true;
 				naturalId = id - 1;
 			}
 			else if (s.indexOf('b') == 1) {
 				abc.append('_');
-				isAccented = true;
 				naturalId = id + 1;
 			}
 			else {
 				//abc.append('=');
-				isAccented = false;
 				naturalId = id;
 			}
 

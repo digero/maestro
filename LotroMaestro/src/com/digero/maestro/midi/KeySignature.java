@@ -8,6 +8,10 @@ import javax.sound.midi.MetaMessage;
 public class KeySignature implements MidiConstants {
 	public static final KeySignature C_MAJOR = new KeySignature(0, true);
 
+	public enum Accidental {
+		NONE, FLAT, NATURAL, SHARP
+	};
+
 	public final byte sharpsFlats;
 	public final boolean major;
 
@@ -44,36 +48,84 @@ public class KeySignature implements MidiConstants {
 			keyPart = str.substring(0, 1);
 		}
 
-		String[] keys;
 		String suffix = str.substring(keyPart.length()).trim();
 		if (suffix.length() > 3)
 			suffix = suffix.substring(0, 3);
 
-		if (suffix.equals("M") || suffix.equalsIgnoreCase("MAJ") || suffix.length() == 0) {
-			keys = MAJOR_KEYS;
+		final int MAJOR = 0x01;
+		final int MINOR = 0x02;
+		final int BOTH = MAJOR | MINOR;
+		int keys = 0;
+
+		if (suffix.length() == 0) {
+			keys = BOTH; // Try to find a major key match, then a minor key
 		}
-		else if (suffix.equals("m") || suffix.equalsIgnoreCase("MIN")) {
-			keys = MINOR_KEYS;
+		else if (suffix.equals("M") || suffix.equalsIgnoreCase("maj")) {
+			keys = MAJOR;
 		}
-		else {
-			throw new IllegalArgumentException("Invalid key signature: " + str);
+		else if (suffix.equals("m") || suffix.equalsIgnoreCase("min")) {
+			keys = MINOR;
 		}
 
-		for (int i = 0; i < keys.length; i++) {
-			if (keys[i].equalsIgnoreCase(keyPart)) {
-				this.sharpsFlats = (byte) (i - 7);
-				this.major = (keys == MAJOR_KEYS);
-				return;
+		if ((keys & MAJOR) != 0) {
+			for (int i = 0; i < MAJOR_KEYS.length; i++) {
+				if (MAJOR_KEYS[i].equalsIgnoreCase(keyPart)) {
+					this.sharpsFlats = (byte) (i - 7);
+					this.major = true;
+					return;
+				}
+			}
+		}
+
+		if ((keys & MINOR) != 0) {
+			for (int i = 0; i < MINOR_KEYS.length; i++) {
+				if (MINOR_KEYS[i].equalsIgnoreCase(keyPart)) {
+					this.sharpsFlats = (byte) (i - 7);
+					this.major = false;
+					return;
+				}
 			}
 		}
 
 		throw new IllegalArgumentException("Invalid key signature: " + str);
 	}
 
+	public KeySignature transpose(int semitones) {
+		if (semitones % 12 == 0)
+			return this;
+
+		int x = (semitones * -5) % 12;
+
+		if (x > 6) {
+			x -= 12;
+		}
+		else if (x < -6) {
+			x += 12;
+		}
+
+		return new KeySignature(x, this.major);
+	}
+
+	public Accidental getAccidental(Note note) {
+		int id = (note.id - Note.CX.id) % 12;
+
+		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
+			if (SHARPS[sharp] == note.naturalId)
+				return note.isAccented ? null : Accidental.SHARP;
+		}
+
+		for (int flat = 0; flat < -sharpsFlats; flat++) {
+			if (FLATS[flat] == note.naturalId)
+				return note.isAccented ? null : Accidental.FLAT;
+		}
+
+		return note.isAccented ? null : Accidental.NATURAL;
+	}
+
 	@Override
 	public String toString() {
 		if (major)
-			return MAJOR_KEYS[sharpsFlats + 7] + " maj";
+			return MAJOR_KEYS[sharpsFlats + 7];
 		else
 			return MINOR_KEYS[sharpsFlats + 7] + " min";
 	}
@@ -102,5 +154,13 @@ public class KeySignature implements MidiConstants {
 			"Ab", "Eb", "Bb", "F", "C", "G", "D", //
 			"A", //
 			"E", "B", "F#", "C#", "G#", "D#", "A#"
+	};
+
+	private static final int[] SHARPS = new int[] {
+			Note.FX.id, Note.CX.id, Note.GX.id, Note.DX.id, Note.AX.id, Note.EX.id, Note.BX.id
+	};
+
+	private static final int[] FLATS = new int[] {
+			Note.BX.id, Note.EX.id, Note.AX.id, Note.DX.id, Note.GX.id, Note.CX.id, Note.FX.id
 	};
 }

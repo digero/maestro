@@ -25,13 +25,15 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  * type 1.
  */
 public class SequenceInfo implements MidiConstants {
+	private File midiFile;
 	private Sequence sequence;
 	private String title;
-	private int tempo;
+	private int tempoBPM;
 	private TrackInfo[] trackInfo;
 	private List<TrackInfo> trackInfoList;
 
 	public SequenceInfo(File midiFile) throws InvalidMidiDataException, IOException {
+		this.midiFile = midiFile;
 		sequence = MidiSystem.getSequence(midiFile);
 
 		// Since the drum track merge is only applicable to type 1 midi sequences, 
@@ -52,7 +54,7 @@ public class SequenceInfo implements MidiConstants {
 			trackInfo[i] = new TrackInfo(this, tracks[i], i, tempoCache);
 		}
 
-		tempo = findMainTempo(sequence, tempoCache);
+		tempoBPM = findMainTempo(sequence, tempoCache);
 
 		if (trackInfo[0].hasName()) {
 			title = trackInfo[0].getName();
@@ -65,6 +67,10 @@ public class SequenceInfo implements MidiConstants {
 		}
 	}
 
+	public File getMidiFile() {
+		return midiFile;
+	}
+	
 	public Sequence getSequence() {
 		return sequence;
 	}
@@ -80,13 +86,13 @@ public class SequenceInfo implements MidiConstants {
 	public TrackInfo getTrackInfo(int track) {
 		return trackInfo[track];
 	}
-	
-	public List<TrackInfo> getTrackList(){
+
+	public List<TrackInfo> getTrackList() {
 		return trackInfoList;
 	}
 
-	public int getTempo() {
-		return tempo;
+	public int getTempoBPM() {
+		return tempoBPM;
 	}
 
 	public KeySignature getKeySignature() {
@@ -96,7 +102,7 @@ public class SequenceInfo implements MidiConstants {
 		}
 		return KeySignature.C_MAJOR;
 	}
-	
+
 	public TimeSignature getTimeSignature() {
 		for (TrackInfo track : trackInfo) {
 			if (track.getTimeSignature() != null)

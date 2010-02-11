@@ -22,11 +22,11 @@
 
 package com.digero.maestro.midi;
 
-
 public class NoteEvent implements Comparable<NoteEvent> {
 	public long startMicros;
 	public long endMicros;
 	public Note note;
+	public NoteEvent tiesTo = null;
 
 	public NoteEvent(Note note, long startMicros) {
 		this.note = note;
@@ -46,6 +46,17 @@ public class NoteEvent implements Comparable<NoteEvent> {
 
 	public void setLength(long length) {
 		endMicros = startMicros + length;
+	}
+
+	public long getTiedLength() {
+		return getTiedEnd() - startMicros;
+	}
+
+	public long getTiedEnd() {
+		if (tiesTo == null)
+			return endMicros;
+		assert tiesTo.endMicros > this.endMicros;
+		return endMicros + tiesTo.getTiedEnd();
 	}
 
 	@Override
