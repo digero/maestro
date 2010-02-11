@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -72,7 +73,7 @@ public class PartPanel extends JPanel {
 			}
 		});
 
-		instrumentComboBox = new JComboBox(LotroInstrument.NON_DRUMS);
+		instrumentComboBox = new JComboBox();
 		instrumentComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (abcPart != null)
@@ -129,6 +130,7 @@ public class PartPanel extends JPanel {
 
 			numberSpinner.setValue(abcPart.getPartNumber());
 			nameTextField.setText(abcPart.getTitle());
+			instrumentComboBox.setModel(new DefaultComboBoxModel(abcPart.getSupportedInstruments()));
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
 
 			trackListPanel.removeAll();
@@ -141,8 +143,11 @@ public class PartPanel extends JPanel {
 					gray = !gray;
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListPanel.add(trackPanel);
+					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber), this);
 				}
-				sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber), this);
+				else {
+					sequencer.setTrackMute(trackNumber, true, this);
+				}
 				sequencer.setTrackSolo(trackNumber, false, this);
 			}
 

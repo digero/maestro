@@ -15,7 +15,7 @@ import javax.swing.event.ChangeListener;
 
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.KeySignature;
-import com.digero.maestro.midi.MidiConstants;
+import com.digero.maestro.midi.IMidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
@@ -69,7 +69,7 @@ public class AbcPart {
 
 		List<Chord> chords = combineAndQuantize(tm, songStartMicros, songEndMicros);
 		int channel = out.getTracks().length;
-		if (channel >= MidiConstants.DRUM_CHANNEL)
+		if (channel >= IMidiConstants.DRUM_CHANNEL)
 			channel++;
 		Track track = out.createTrack();
 
@@ -256,7 +256,7 @@ public class AbcPart {
 					if (ne.endMicros <= songStartMicros || ne.startMicros >= songEndMicros)
 						continue;
 
-					Note mappedNote = mapNote(ne.note.id, t);
+					Note mappedNote = mapNote(t, ne.note.id);
 					assert mappedNote.id >= instrument.lowestPlayable.id : mappedNote;
 					assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 					if (mappedNote != null) {
@@ -434,7 +434,7 @@ public class AbcPart {
 	 * Maps from a MIDI note to an ABC note. If no mapping is available, returns
 	 * <code>null</code>.
 	 */
-	protected Note mapNote(int noteId, int track) {
+	protected Note mapNote(int track, int noteId) {
 		noteId += getBaseTranspose() + getTrackTranspose(track);
 		while (noteId < instrument.lowestPlayable.id)
 			noteId += 12;
@@ -449,7 +449,7 @@ public class AbcPart {
 		for (int t = 0; t < getTrackCount(); t++) {
 			if (!trackDisabled[t]) {
 				for (NoteEvent ne : getTrackEvents(t)) {
-					if (mapNote(ne.note.id, t) != null) {
+					if (mapNote(t, ne.note.id) != null) {
 						if (ne.startMicros < start)
 							start = ne.startMicros;
 						break;
@@ -486,6 +486,10 @@ public class AbcPart {
 			this.title = name;
 			fireChangeEvent();
 		}
+	}
+	
+	public LotroInstrument[] getSupportedInstruments() {
+		return LotroInstrument.NON_DRUMS;
 	}
 
 	public LotroInstrument getInstrument() {

@@ -24,7 +24,7 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
  * type 1.
  */
-public class SequenceInfo implements MidiConstants {
+public class SequenceInfo implements IMidiConstants {
 	private File midiFile;
 	private Sequence sequence;
 	private String title;

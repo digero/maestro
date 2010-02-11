@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -16,7 +18,7 @@ import javax.sound.midi.Track;
 
 import com.sun.media.sound.MidiUtils;
 
-public class TrackInfo implements MidiConstants {
+public class TrackInfo implements IMidiConstants {
 	private SequenceInfo sequenceInfo;
 
 	private Track track;
@@ -27,6 +29,7 @@ public class TrackInfo implements MidiConstants {
 	private List<Integer> instruments = new ArrayList<Integer>();
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
+	private SortedSet<Integer> drumsInUse;
 
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache)
 			throws InvalidMidiDataException {
@@ -38,6 +41,7 @@ public class TrackInfo implements MidiConstants {
 
 		noteEvents = new ArrayList<NoteEvent>();
 		drumEvents = new ArrayList<NoteEvent>();
+		drumsInUse = new TreeSet<Integer>();
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 		List<NoteEvent> drumsOn = new ArrayList<NoteEvent>();
 
@@ -65,6 +69,7 @@ public class TrackInfo implements MidiConstants {
 							if (noteEvents.isEmpty())
 								instruments.clear();
 							drumEvents.add(ne);
+							drumsInUse.add(ne.note.id);
 							drumsOn.add(ne);
 						}
 						else {
@@ -131,6 +136,7 @@ public class TrackInfo implements MidiConstants {
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
 		drumEvents = Collections.unmodifiableList(drumEvents);
+		drumsInUse = Collections.unmodifiableSortedSet(drumsInUse);
 	}
 
 	public SequenceInfo getSequenceInfo() {
@@ -183,6 +189,10 @@ public class TrackInfo implements MidiConstants {
 
 	public List<NoteEvent> getDrumEvents() {
 		return drumEvents;
+	}
+	
+	public SortedSet<Integer> getDrumsInUse() {
+		return drumsInUse;
 	}
 
 	public int getNoteCount() {

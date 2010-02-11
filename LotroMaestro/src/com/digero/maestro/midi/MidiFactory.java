@@ -10,7 +10,7 @@ import javax.sound.midi.ShortMessage;
 /**
  * Provides static methods to create MidiEvents.
  */
-public class MidiFactory implements MidiConstants {
+public class MidiFactory implements IMidiConstants {
 	/**
 	 * @param mpqn Microseconds per quarter note
 	 */
