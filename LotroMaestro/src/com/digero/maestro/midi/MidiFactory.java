@@ -59,7 +59,7 @@ public class MidiFactory implements IMidiConstants {
 	public static MidiEvent createNoteOnEvent(int id, int channel, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.NOTE_ON, channel, id, 96);
+			msg.setMessage(ShortMessage.NOTE_ON, channel, id, 112);
 			return new MidiEvent(msg, ticks);
 		}
 		catch (InvalidMidiDataException e) {
@@ -70,7 +70,7 @@ public class MidiFactory implements IMidiConstants {
 	public static MidiEvent createNoteOffEvent(int id, int channel, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, 96);
+			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, 112);
 			return new MidiEvent(msg, ticks);
 		}
 		catch (InvalidMidiDataException e) {

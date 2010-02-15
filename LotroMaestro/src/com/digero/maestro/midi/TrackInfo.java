@@ -190,7 +190,7 @@ public class TrackInfo implements IMidiConstants {
 	public List<NoteEvent> getDrumEvents() {
 		return drumEvents;
 	}
-	
+
 	public SortedSet<Integer> getDrumsInUse() {
 		return drumsInUse;
 	}
@@ -213,18 +213,18 @@ public class TrackInfo implements IMidiConstants {
 	public String getInstrumentNames() {
 		if (instruments.size() == 0) {
 			if (hasDrums() && hasNotes())
-				return "Drums, " + MIDI_INSTRUMENTS[0];
+				return "Drums, " + MidiConstants.getInstrumentName(0);
 			else if (hasDrums())
 				return "Drums";
 			else if (hasNotes())
-				return MIDI_INSTRUMENTS[0];
+				return MidiConstants.getInstrumentName(0);
 			else
 				return "<None>";
 		}
 
-		String names = getInstrumentName(instruments.get(0));
+		String names = MidiConstants.getInstrumentName(instruments.get(0));
 		for (int i = 1; i < instruments.size(); i++) {
-			names += ", " + getInstrumentName(instruments.get(i));
+			names += ", " + MidiConstants.getInstrumentName(instruments.get(i));
 		}
 
 		if (hasDrums())
@@ -235,12 +235,5 @@ public class TrackInfo implements IMidiConstants {
 
 	public int getInstrumentCount() {
 		return instruments.size();
-	}
-
-	public static String getInstrumentName(int id) {
-		if (id < 0 || id >= MIDI_INSTRUMENTS.length) {
-			return "Unknown";
-		}
-		return MIDI_INSTRUMENTS[id];
 	}
 }

@@ -8,10 +8,6 @@ import javax.sound.midi.MetaMessage;
 public class KeySignature implements IMidiConstants {
 	public static final KeySignature C_MAJOR = new KeySignature(0, true);
 
-	public enum Accidental {
-		NONE, FLAT, NATURAL, SHARP
-	};
-
 	public final byte sharpsFlats;
 	public final boolean major;
 
@@ -106,21 +102,21 @@ public class KeySignature implements IMidiConstants {
 		return new KeySignature(x, this.major);
 	}
 
-	public Accidental getAccidental(Note note) {
-		int id = (note.id - Note.CX.id) % 12;
-
-		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
-			if (SHARPS[sharp] == note.naturalId)
-				return note.isAccented ? null : Accidental.SHARP;
-		}
-
-		for (int flat = 0; flat < -sharpsFlats; flat++) {
-			if (FLATS[flat] == note.naturalId)
-				return note.isAccented ? null : Accidental.FLAT;
-		}
-
-		return note.isAccented ? null : Accidental.NATURAL;
-	}
+//	public Accidental getAccidental(Note note) {
+//		int id = (note.id - Note.CX.id) % 12;
+//
+//		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
+//			if (SHARPS[sharp] == note.naturalId)
+//				return note.isAccented ? null : Accidental.SHARP;
+//		}
+//
+//		for (int flat = 0; flat < -sharpsFlats; flat++) {
+//			if (FLATS[flat] == note.naturalId)
+//				return note.isAccented ? null : Accidental.FLAT;
+//		}
+//
+//		return note.isAccented ? null : Accidental.NATURAL;
+//	}
 
 	@Override
 	public String toString() {
@@ -163,4 +159,36 @@ public class KeySignature implements IMidiConstants {
 	private static final int[] FLATS = new int[] {
 			Note.BX.id, Note.EX.id, Note.AX.id, Note.DX.id, Note.GX.id, Note.CX.id, Note.FX.id
 	};
+
+	public static void main(String[] args) {
+		System.out.println("Sharps");
+		for (int id : SHARPS) {
+			System.out.print(id + ", ");
+		}
+		System.out.println();
+		for (int i = 0; i <= 7; i++) {
+			int id = (i * 7 /*- 1*/) % 12;
+			if (id < 0)
+				id += 12;
+			Note note = Note.fromId(id);
+			String n = note.toString().replace("X", "").replace('s', '#');
+			System.out.print(n + ", ");
+		}
+
+		System.out.println();
+		System.out.println();
+		System.out.println("Flats");
+		for (int id : FLATS) {
+			System.out.print(id + ", ");
+		}
+		System.out.println();
+		for (int i = -1; i >= -7; i--) {
+			int id = (i * 7 /* + 5 */) % 12;
+			if (id < 0)
+				id += 12;
+			Note note = Note.fromId(id);
+			String n = note.toString().replace("X", "").replace('s', '#');
+			System.out.print(n + ", ");
+		}
+	}
 }

@@ -40,6 +40,8 @@ public class PartPanel extends JPanel {
 
 	private JPanel trackListPanel;
 
+	private LotroInstrument lastSelectedInstrument = null;
+
 	public PartPanel(ProjectFrame project, SequencerWrapper sequencer) {
 		super(new BorderLayout(HGAP, VGAP));
 
@@ -76,8 +78,14 @@ public class PartPanel extends JPanel {
 		instrumentComboBox = new JComboBox();
 		instrumentComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (abcPart != null)
-					abcPart.setInstrument((LotroInstrument) instrumentComboBox.getSelectedItem());
+				if (abcPart != null) {
+					LotroInstrument newInstrument = (LotroInstrument) instrumentComboBox.getSelectedItem();
+					abcPart.setInstrument(newInstrument);
+					String title = abcPart.getTitle();
+					title = title.replace(lastSelectedInstrument.toString(), newInstrument.toString());
+					nameTextField.setText(title);
+					lastSelectedInstrument = newInstrument;
+				}
 			}
 		});
 
@@ -120,6 +128,7 @@ public class PartPanel extends JPanel {
 			numberSpinner.setValue(0);
 			nameTextField.setText("");
 			instrumentComboBox.setSelectedIndex(0);
+			lastSelectedInstrument = null;
 
 			trackListPanel.removeAll();
 		}
@@ -132,6 +141,7 @@ public class PartPanel extends JPanel {
 			nameTextField.setText(abcPart.getTitle());
 			instrumentComboBox.setModel(new DefaultComboBoxModel(abcPart.getSupportedInstruments()));
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
+			lastSelectedInstrument = abcPart.getInstrument();
 
 			trackListPanel.removeAll();
 			boolean gray = false;

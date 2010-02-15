@@ -3,20 +3,26 @@ package com.digero.maestro.abc;
 import com.digero.maestro.midi.TimeSignature;
 
 public class TimingInfo {
+	public static final int ONE_SECOND_MICROS = 1000000;
+	public static final int ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
+	public static final int SHORTEST_NOTE_MICROS = ONE_SECOND_MICROS / 16;
+	public static final int LONGEST_NOTE_MICROS = 8 * ONE_SECOND_MICROS;
+	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
+	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
+
 	public final int tempo;
 	public final TimeSignature meter;
 
-	public final int defaultNoteLength;
 	public final int defaultDivisor;
 	public final int minNoteLength;
-	public final int shortestDivisor;
+	public final int minNoteDivisor;
 	public final int maxNoteLength;
 	public final int barLength;
 
 	public TimingInfo(int tempo, TimeSignature meter) throws AbcConversionException {
-		if (tempo > AbcPart.MAX_TEMPO || tempo < AbcPart.MIN_TEMPO) {
-			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between "
-					+ AbcPart.MIN_TEMPO + " and " + AbcPart.MAX_TEMPO + ".");
+		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO) {
+			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between " + MIN_TEMPO
+					+ " and " + MAX_TEMPO + ".");
 		}
 
 		this.tempo = tempo;
@@ -28,24 +34,41 @@ public class TimingInfo {
 		// otherwise it is an eighth note. For example, 2/4 = 0.5, so the
 		// default note length is a sixteenth note, while 4/4 = 1.0 or
 		// 6/8 = 0.75, so the default is an eighth note.
-		defaultNoteLength = AbcPart.ONE_MINUTE_MICROS / tempo;
-		defaultDivisor = ((double) meter.numerator / meter.denominator < 0.75) ? 16 : 8;
-		int minNoteLength = defaultNoteLength;
-		int shortestDivisor = 1;
-		while (minNoteLength >= AbcPart.SHORTEST_NOTE_MICROS * 2) {
-			minNoteLength /= 2;
-			shortestDivisor *= 2;
-		}
-		this.minNoteLength = minNoteLength;
-		this.shortestDivisor = shortestDivisor;
+		this.defaultDivisor = (((double) meter.numerator / meter.denominator < 0.75) ? 16 : 8) * 4 / meter.denominator;
 
-		maxNoteLength = defaultNoteLength * (AbcPart.LONGEST_NOTE_MICROS / defaultNoteLength);
-//		barLength = defaultDivisor * defaultNoteLength * meter.numerator / meter.denominator;
-		barLength = Integer.MAX_VALUE;
+		{
+			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (defaultDivisor / 4);
+			int minNoteDivisor = defaultDivisor;
+			while (minNoteLength < SHORTEST_NOTE_MICROS) {
+				minNoteLength *= 2;
+				minNoteDivisor /= 2;
+			}
+
+			assert minNoteDivisor > 0;
+
+			while (minNoteLength >= SHORTEST_NOTE_MICROS * 2) {
+				minNoteLength /= 2;
+				minNoteDivisor *= 2;
+			}
+
+			if (meter.denominator > minNoteDivisor) {
+				throw new AbcConversionException("The denominator of the meter must be no greater than "
+						+ minNoteDivisor);
+			}
+
+			this.minNoteLength = minNoteLength;
+			this.minNoteDivisor = minNoteDivisor;
+		}
+
+		this.maxNoteLength = this.minNoteLength * (LONGEST_NOTE_MICROS / this.minNoteLength);
+		this.barLength = this.minNoteDivisor * this.minNoteLength * meter.numerator / meter.denominator;
+
+		assert barLength % this.minNoteLength == 0 : barLength + " % " + this.minNoteLength + " != 0";
+//		barLength = Integer.MAX_VALUE;
 	}
 
 	public int getBPM() {
-		return tempo * 4 / defaultDivisor;
+		return tempo / (defaultDivisor / 4);
 	}
 
 	public int getMPQN() {
@@ -53,10 +76,18 @@ public class TimingInfo {
 	}
 
 	public int getMidiResolution() {
-		return shortestDivisor * defaultDivisor / 4;
+		return minNoteDivisor / 4;
 	}
 
 	public long getMidiTicks(long micros) {
 		return (long) ((double) micros * getMidiResolution() / getMPQN());
+	}
+
+	public long getBarStart(long micros) {
+		return (micros / barLength) * barLength;
+	}
+
+	public long getBarEnd(long micros) {
+		return (micros / barLength + 1) * barLength;
 	}
 }

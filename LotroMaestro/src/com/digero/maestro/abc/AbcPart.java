@@ -15,20 +15,13 @@ import javax.swing.event.ChangeListener;
 
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.KeySignature;
-import com.digero.maestro.midi.IMidiConstants;
+import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 
 public class AbcPart {
-	public static final int ONE_SECOND_MICROS = 1000000;
-	public static final int ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
-	public static final int SHORTEST_NOTE_MICROS = ONE_SECOND_MICROS / 16;
-	public static final int LONGEST_NOTE_MICROS = 8 * ONE_SECOND_MICROS;
-	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
-	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
-
 	private SequenceInfo sequenceInfo;
 	private boolean enabled;
 	private int partNumber;
@@ -67,9 +60,9 @@ public class AbcPart {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
 
-		List<Chord> chords = combineAndQuantize(tm, songStartMicros, songEndMicros);
+		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros);
 		int channel = out.getTracks().length;
-		if (channel >= IMidiConstants.DRUM_CHANNEL)
+		if (channel >= MidiConstants.DRUM_CHANNEL)
 			channel++;
 		Track track = out.createTrack();
 
@@ -86,29 +79,29 @@ public class AbcPart {
 				Iterator<NoteEvent> onIter = notesOn.iterator();
 				while (onIter.hasNext()) {
 					NoteEvent on = onIter.next();
+
 					if (on.endMicros < ne.startMicros) {
 						// This note has already been turned off
 						onIter.remove();
 						track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
 					}
 					else if (on.note.id == ne.note.id) {
-						// Shorten the note that's
-						// currently on to end at the same time that the next one starts
+						// Shorten the note that's currently on to end at the same time that the next one starts
 						on.endMicros = ne.startMicros;
 						onIter.remove();
 					}
 				}
 
 				if (!instrument.isSustainable(ne.note.id))
-					ne.endMicros = ne.startMicros + ONE_SECOND_MICROS;
+					ne.endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
 
 				track.add(MidiFactory.createNoteOnEvent(ne.note.id, channel, tm.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
 		}
-		
+
 		for (NoteEvent on : notesOn) {
-			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
+			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.getTieEnd().endMicros)));
 		}
 	}
 
@@ -129,7 +122,7 @@ public class AbcPart {
 
 	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros, OutputStream os)
 			throws AbcConversionException {
-		List<Chord> chords = combineAndQuantize(tm, songStartMicros, songEndMicros);
+		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros);
 
 		if (key.sharpsFlats != 0)
 			throw new AbcConversionException("Only C major and A minor are currently supported");
@@ -138,19 +131,20 @@ public class AbcPart {
 		out.println("X: " + partNumber);
 		out.println("T: " + title);
 		out.println("M: " + tm.meter);
+//		out.println("L: 1/4");
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
 		out.println();
 
 		// Keep track of which notes have been sharped or flatted so 
 		// we can naturalize them the next time they show up.
-		boolean[] accented = new boolean[Note.C5.id + 1];
+		boolean[] accidentals = new boolean[Note.C5.id + 1];
 
 		// Write out ABC notation
 		final int LINE_LENGTH = 80;
 		int lineLength = 0;
 		long barNumber = 0;
-		StringBuilder bar = new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 		for (Chord c : chords) {
 			if (c.size() == 0) {
 				System.err.println("Chord has no notes!");
@@ -158,19 +152,31 @@ public class AbcPart {
 			}
 
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
-				if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH) {
-					out.println();              
+				if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
+					out.println();
 					lineLength = 0;
 				}
-				out.print(bar);
-				out.print("|");
-				lineLength += bar.length();
-				bar.setLength(0);
+
+				// Insert line breaks
+				for (int i = LINE_LENGTH; i < sb.length(); i += LINE_LENGTH) {
+					for (int j = 0; j < LINE_LENGTH - 1; j++, i--) {
+						if (sb.charAt(i) == ' ') {
+							sb.replace(i, i + 1, "\r\n");
+							i++;
+							break;
+						}
+					}
+				}
+
+				out.print(sb);
+				out.print("| ");
+				lineLength += sb.length() + 2;
+				sb.setLength(0);
 				barNumber = c.getStartMicros() / tm.barLength;
 			}
 
 			if (c.size() > 1) {
-				bar.append('[');
+				sb.append('[');
 			}
 
 			int notesWritten = 0;
@@ -182,30 +188,33 @@ public class AbcPart {
 				}
 
 				if (evt.note != Note.REST) {
-					if (evt.note.isAccented()) {
-						accented[evt.note.naturalId] = true;
+					if (evt.note.hasAccidental()) {
+						accidentals[evt.note.naturalId] = true;
 					}
-					else if (accented[evt.note.id]) {
-						accented[evt.note.id] = false;
-						bar.append('=');
+					else if (accidentals[evt.note.id]) {
+						accidentals[evt.note.id] = false;
+						sb.append('=');
 					}
 				}
 
-				bar .append(evt.note.abc);
-				int numerator = (int) (evt.getLength() / tm.minNoteLength);
-				int denominator = tm.shortestDivisor;
+				sb.append(evt.note.abc);
+				int numerator = (int) (evt.getLength() / tm.minNoteLength)*tm.defaultDivisor;
+				int denominator = tm.minNoteDivisor;
 				// Reduce the fraction
 				int gcd = gcd(numerator, denominator);
 				numerator /= gcd;
 				denominator /= gcd;
 				if (numerator != 1) {
-					bar .append(numerator);
+					sb.append(numerator);
 				}
 				if (denominator != 1) {
-					bar.append('/');
+					sb.append('/');
 					if (numerator != 1 || denominator != 2)
-						bar .append( denominator);
+						sb.append(denominator);
 				}
+
+				if (evt.tiesTo != null)
+					sb.append('-');
 
 				notesWritten++;
 			}
@@ -213,38 +222,40 @@ public class AbcPart {
 			if (c.size() > 1) {
 				if (notesWritten == 0) {
 					// Remove the [
-					bar.delete(bar.length() - 1, bar.length());
+					sb.delete(sb.length() - 1, sb.length());
 				}
 				else {
-					bar.append(']');
+					sb.append(']');
 				}
 			}
 
-			bar.append(' ');
+			sb.append(' ');
 		}
 
 		// Insert line breaks
-		for (int i = LINE_LENGTH; i < bar.length(); i += LINE_LENGTH) {
+		for (int i = LINE_LENGTH; i < sb.length(); i += LINE_LENGTH) {
 			for (int j = 0; j < LINE_LENGTH - 1; j++, i--) {
-				if (bar.charAt(i) == ' ') {
-					bar.replace(i, i + 1, "\r\n");
+				if (sb.charAt(i) == ' ') {
+					sb.replace(i, i + 1, "\r\n");
 					i++;
 					break;
 				}
 			}
 		}
-		
-		if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH)
+
+		if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH)
 			out.println();
-		out.print(bar);
+		out.print(sb);
 		out.print("|]");
+		out.println();
+		out.println();
 	}
 
 	/**
 	 * Combine the tracks into one, quantize the note lengths, separate into
 	 * chords.
 	 */
-	private List<Chord> combineAndQuantize(TimingInfo tm, long songStartMicros, long songEndMicros)
+	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, long songStartMicros, long songEndMicros)
 			throws AbcConversionException {
 
 		// Combine the events from the enabled tracks
@@ -322,19 +333,19 @@ public class AbcPart {
 			notesOn.add(ne);
 		}
 
-		breakAndTieNotes(events, tm.maxNoteLength, tm.barLength);
+		breakLongNotes(events, tm, addTies);
 
 		List<Chord> chords = new ArrayList<Chord>(events.size() / 2);
 		List<NoteEvent> tmpEvents = new ArrayList<NoteEvent>();
 
 		// Combine notes that play at the same time into chords
-		Chord currentChord = new Chord(events.get(0));
-		chords.add(currentChord);
+		Chord curChord = new Chord(events.get(0));
+		chords.add(curChord);
 		for (int i = 1; i < events.size(); i++) {
 			NoteEvent ne = events.get(i);
-			if (currentChord.getStartMicros() == ne.startMicros) {
+			if (curChord.getStartMicros() == ne.startMicros) {
 				// This note starts at the same time as the rest of the notes in the chord
-				currentChord.add(ne);
+				curChord.add(ne);
 			}
 			else {
 				// Create a new chord
@@ -344,75 +355,83 @@ public class AbcPart {
 				// the current chord is finished, so we may need to add a rest inside the chord to
 				// shorten it, or a rest after the chord to add a pause.
 
-				if (currentChord.getEndMicros() > nextChord.getStartMicros()) {
+				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
 					// Make sure there's room to add the rest
-					while (currentChord.size() >= Chord.MAX_CHORD_NOTES) {
-						currentChord.remove(currentChord.size() - 1);
+					while (curChord.size() >= Chord.MAX_CHORD_NOTES) {
+						curChord.remove(curChord.size() - 1);
 					}
 				}
 
 				// Check the chord length again, since removing a note might have changed its length
-				if (currentChord.getEndMicros() > nextChord.getStartMicros()) {
+				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
 					// If the chord is too long, add a short rest in the chord to shorten it
-					currentChord
-							.add(new NoteEvent(Note.REST, currentChord.getStartMicros(), nextChord.getStartMicros()));
+					curChord.add(new NoteEvent(Note.REST, curChord.getStartMicros(), nextChord.getStartMicros()));
 				}
-				else if (currentChord.getEndMicros() < nextChord.getStartMicros()) {
+				else if (curChord.getEndMicros() < nextChord.getStartMicros()) {
 					// If the chord is too short, insert a rest to fill the gap
 					tmpEvents.clear();
-					tmpEvents.add(new NoteEvent(Note.REST, currentChord.getEndMicros(), nextChord.getStartMicros()));
-					breakAndTieNotes(tmpEvents, tm.maxNoteLength, tm.barLength);
+					tmpEvents.add(new NoteEvent(Note.REST, curChord.getEndMicros(), nextChord.getStartMicros()));
+					breakLongNotes(tmpEvents, tm, addTies);
 
-					for (NoteEvent restEvent : tmpEvents) {
-						restEvent.tiesTo = null;
+					for (NoteEvent restEvent : tmpEvents)
 						chords.add(new Chord(restEvent));
-					}
 				}
 
 				chords.add(nextChord);
-				currentChord = nextChord;
+				curChord = nextChord;
 			}
 		}
 
 		return chords;
 	}
 
-	private void breakAndTieNotes(List<NoteEvent> events, int maxNoteLength, int barLength) {
-		// Break long notes
+	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean addTies) {
 		for (int i = 0; i < events.size(); i++) {
 			NoteEvent ne = events.get(i);
-			long endMicros = ne.endMicros;
-			while (ne.getLength() > maxNoteLength) {
-				ne.setLength(maxNoteLength);
 
-				if (!instrument.isSustainable(ne.note.id))
-					break;
+			// Make a hard break for notes that are longer than LotRO can play
+			long maxNoteEnd = ne.startMicros + tm.maxNoteLength;
+			if (ne.endMicros > maxNoteEnd) {
+				// Align with a bar boundary if it extends across 1 or more   
+				// full bars.
+				if (tm.getBarEnd(ne.startMicros) < tm.getBarStart(maxNoteEnd)) {
+					maxNoteEnd = tm.getBarStart(maxNoteEnd);
+					assert ne.endMicros > maxNoteEnd;
+				}
 
-				ne = new NoteEvent(ne.note, ne.endMicros, endMicros);
-				int ins = Collections.binarySearch(events, ne);
-				if (ins < 0)
-					ins = -ins - 1;
-				assert (ins > i);
-				events.add(ins, ne);
+				// If the note is a rest or sustainable, add another one after 
+				// this ends to keep it going...
+				if (ne.note == Note.REST || instrument.isSustainable(ne.note.id)) {
+					NoteEvent next = new NoteEvent(ne.note, maxNoteEnd, ne.endMicros);
+					int ins = Collections.binarySearch(events, next);
+					if (ins < 0)
+						ins = -ins - 1;
+					assert (ins > i);
+					events.add(ins, next);
+				}
+
+				ne.endMicros = maxNoteEnd;
 			}
-		}
 
-		// Break and tie notes that cross bar boundaries
-		for (int i = 0; i < events.size(); i++) {
-			NoteEvent ne = events.get(i);
-			long endMicros = ne.endMicros;
-			long barEnd;
-			while ((barEnd = (ne.startMicros / barLength + 1) * barLength) < endMicros) {
-				ne.endMicros = barEnd;
+			if (addTies) {
+				// Make a soft break (tie) for notes that cross bar boundaries
+				long barEnd = tm.getBarEnd(ne.startMicros);
+				if (ne.endMicros > barEnd) {
+					NoteEvent next = new NoteEvent(ne.note, barEnd, ne.endMicros);
+					int ins = Collections.binarySearch(events, next);
+					if (ins < 0)
+						ins = -ins - 1;
+					assert (ins > i);
+					events.add((ins < 0) ? (-ins - 1) : ins, next);
 
-				ne.tiesTo = new NoteEvent(ne.note, ne.endMicros, endMicros);
-				ne = ne.tiesTo;
+					// Rests don't need to be tied
+					if (ne.note != Note.REST) {
+						next.tiesFrom = ne;
+						ne.tiesTo = next;
+					}
 
-				int ins = Collections.binarySearch(events, ne);
-				if (ins < 0)
-					ins = -ins - 1;
-				assert (ins > i);
-				events.add((ins < 0) ? (-ins - 1) : ins, ne);
+					ne.endMicros = barEnd;
+				}
 			}
 		}
 	}
@@ -424,6 +443,11 @@ public class AbcPart {
 			a = t;
 		}
 		return a;
+	}
+
+	public void dispose() {
+		changeListeners.clear();
+		sequenceInfo = null;
 	}
 
 	protected List<NoteEvent> getTrackEvents(int track) {
@@ -487,7 +511,7 @@ public class AbcPart {
 			fireChangeEvent();
 		}
 	}
-	
+
 	public LotroInstrument[] getSupportedInstruments() {
 		return LotroInstrument.NON_DRUMS;
 	}

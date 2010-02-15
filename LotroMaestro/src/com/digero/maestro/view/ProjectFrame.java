@@ -17,6 +17,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,6 +34,7 @@ import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -181,18 +184,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		exportButton = new JButton("Export ABC");
 		exportButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for (int i = 0; i < parts.getSize(); i++) {
-					AbcPart part = (AbcPart) parts.get(i);
-					try {
-						TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
-						part.exportToAbc(tm, getKeySignature(), System.out);
-					}
-					catch (AbcConversionException e1) {
-						e1.printStackTrace();
-					}
-					System.out.println();
-					System.out.println();
-				}
+				exportAbc();
 			}
 		});
 
@@ -408,12 +400,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	}
 
 	private void openSong(File midiFile) {
+		saveFile = null;
 		stop();
 
 		try {
 			for (int i = 0; i < parts.size(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				part.removeChangeListener(partChangeListener);
+				part.dispose();
 			}
 			parts.clear();
 
@@ -479,6 +472,66 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			return null;
+		}
+	}
+
+	private void exportAbc() {
+		long startMicros = Long.MAX_VALUE;
+		for (int i = 0; i < parts.size(); i++) {
+			AbcPart part = (AbcPart) parts.get(i);
+
+			long firstNoteStart = part.firstNoteStart();
+			if (firstNoteStart < startMicros)
+				startMicros = firstNoteStart;
+		}
+
+		if (saveFile == null) {
+			String fileName = this.sequenceInfo.getMidiFile().getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot > 0)
+				fileName = fileName.substring(0, dot);
+			fileName = fileName.replace(' ', '_') + ".abc";
+
+			JFileChooser jfc = new JFileChooser();
+			// TODO Generalize save path
+			jfc.setSelectedFile(new File("C:/Users/Ben/Documents/The Lord of the Rings Online/Music/" + fileName));
+
+			int result = jfc.showSaveDialog(this);
+			if (result != JFileChooser.APPROVE_OPTION)
+				return;
+
+			saveFile = jfc.getSelectedFile();
+		}
+
+		FileOutputStream out;
+		try {
+			out = new FileOutputStream(saveFile);
+		}
+		catch (FileNotFoundException e) {
+			JOptionPane.showMessageDialog(this, "Failed to create file!\n" + e.getMessage(), "Failed to create file",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		try {
+			for (int i = 0; i < parts.getSize(); i++) {
+				AbcPart part = (AbcPart) parts.get(i);
+				TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+				part.exportToAbc(tm, getKeySignature(), startMicros, Long.MAX_VALUE, out);
+			}
+		}
+		catch (AbcConversionException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		}
+		finally {
+			try {
+				out.close();
+			}
+			catch (IOException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 		}
 	}
 

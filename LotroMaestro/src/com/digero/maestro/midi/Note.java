@@ -46,7 +46,7 @@ public enum Note {
 	public final int id;
 	/** The ABC notation for this file. */
 	public final String abc;
-	/** The ID of the natural of this note, if it's accented */
+	/** The ID of the natural of this note, if it's sharp or flat */
 	public final int naturalId;
 	public final int octave;
 
@@ -58,8 +58,12 @@ public enum Note {
 		return id < naturalId;
 	}
 
-	/** Returns true if this note is a sharp or flat. */
-	public boolean isAccented() {
+	/**
+	 * Returns true if this note has an accidental.
+	 * 
+	 * TODO make this work with keys other than C major.
+	 */
+	public boolean hasAccidental() {
 		return id != naturalId;
 	}
 

@@ -26,6 +26,7 @@ public class NoteEvent implements Comparable<NoteEvent> {
 	public long startMicros;
 	public long endMicros;
 	public Note note;
+	public NoteEvent tiesFrom = null;
 	public NoteEvent tiesTo = null;
 
 	public NoteEvent(Note note, long startMicros) {
@@ -48,15 +49,22 @@ public class NoteEvent implements Comparable<NoteEvent> {
 		endMicros = startMicros + length;
 	}
 
-	public long getTiedLength() {
-		return getTiedEnd() - startMicros;
+	public long getTieLength() {
+		return getTieEnd().endMicros - getTieStart().startMicros;
 	}
 
-	public long getTiedEnd() {
+	public NoteEvent getTieStart() {
+		if (tiesFrom == null)
+			return this;
+		assert tiesFrom.startMicros < this.startMicros;
+		return tiesFrom.getTieStart();
+	}
+
+	public NoteEvent getTieEnd() {
 		if (tiesTo == null)
-			return endMicros;
+			return this;
 		assert tiesTo.endMicros > this.endMicros;
-		return endMicros + tiesTo.getTiedEnd();
+		return tiesTo.getTieEnd();
 	}
 
 	@Override

@@ -7,7 +7,7 @@ import javax.sound.midi.MetaMessage;
  * Representation of a MIDI time signature.
  */
 public class TimeSignature implements IMidiConstants {
-	public static final int MAX_DENOMINATOR = 16;
+	public static final int MAX_DENOMINATOR = 8;
 	public static final TimeSignature FOUR_FOUR = new TimeSignature(4, 4);
 
 	public final int numerator;

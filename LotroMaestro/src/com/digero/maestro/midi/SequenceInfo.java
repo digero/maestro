@@ -2,7 +2,7 @@ package com.digero.maestro.midi;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +29,6 @@ public class SequenceInfo implements IMidiConstants {
 	private Sequence sequence;
 	private String title;
 	private int tempoBPM;
-	private TrackInfo[] trackInfo;
 	private List<TrackInfo> trackInfoList;
 
 	public SequenceInfo(File midiFile) throws InvalidMidiDataException, IOException {
@@ -48,16 +47,15 @@ public class SequenceInfo implements IMidiConstants {
 		}
 
 		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
-		trackInfo = new TrackInfo[tracks.length];
-		trackInfoList = Collections.unmodifiableList(Arrays.asList(trackInfo));
+		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
 		for (int i = 0; i < tracks.length; i++) {
-			trackInfo[i] = new TrackInfo(this, tracks[i], i, tempoCache);
+			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache));
 		}
 
 		tempoBPM = findMainTempo(sequence, tempoCache);
 
-		if (trackInfo[0].hasName()) {
-			title = trackInfo[0].getName();
+		if (trackInfoList.get(0).hasName()) {
+			title = trackInfoList.get(0).getName();
 		}
 		else {
 			title = midiFile.getName();
@@ -65,12 +63,14 @@ public class SequenceInfo implements IMidiConstants {
 			if (dot > 0)
 				title = title.substring(0, dot);
 		}
+
+		trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
 	public File getMidiFile() {
 		return midiFile;
 	}
-	
+
 	public Sequence getSequence() {
 		return sequence;
 	}
@@ -80,11 +80,11 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	public int getTrackCount() {
-		return trackInfo.length;
+		return trackInfoList.size();
 	}
 
 	public TrackInfo getTrackInfo(int track) {
-		return trackInfo[track];
+		return trackInfoList.get(track);
 	}
 
 	public List<TrackInfo> getTrackList() {
@@ -96,7 +96,7 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	public KeySignature getKeySignature() {
-		for (TrackInfo track : trackInfo) {
+		for (TrackInfo track : trackInfoList) {
 			if (track.getKeySignature() != null)
 				return track.getKeySignature();
 		}
@@ -104,7 +104,7 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	public TimeSignature getTimeSignature() {
-		for (TrackInfo track : trackInfo) {
+		for (TrackInfo track : trackInfoList) {
 			if (track.getTimeSignature() != null)
 				return track.getTimeSignature();
 		}

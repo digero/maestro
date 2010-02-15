@@ -131,6 +131,17 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 
 		noteGraph = new NoteGraph();
 		noteGraph.setOpaque(false);
+		noteGraph.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3)
+					seq.setTrackSolo(trackInfo.getTrackNumber(), true, TrackPanel.this);
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3)
+					seq.setTrackSolo(trackInfo.getTrackNumber(), false, TrackPanel.this);
+			}
+		});
 
 		add(checkBox, "0, 1");
 //		add(octaveLabel, "1, 1, f, b");
