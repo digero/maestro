@@ -18,6 +18,6 @@ public class DrumPanel extends JPanel implements TableLayoutConstants {
 	};
 
 	public DrumPanel(TrackInfo info, SequencerWrapper sequencer, DrumPart part, int drumId) {
-
+		
 	}
 }

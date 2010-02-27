@@ -121,7 +121,7 @@ public class KeySignature implements IMidiConstants {
 	@Override
 	public String toString() {
 		if (major)
-			return MAJOR_KEYS[sharpsFlats + 7];
+			return MAJOR_KEYS[sharpsFlats + 7] + " maj";
 		else
 			return MINOR_KEYS[sharpsFlats + 7] + " min";
 	}
