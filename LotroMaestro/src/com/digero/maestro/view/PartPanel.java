@@ -2,6 +2,7 @@ package com.digero.maestro.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -23,12 +24,12 @@ import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
 public class PartPanel extends JPanel {
 	private static final int HGAP = 4, VGAP = 4;
 
-	private ProjectFrame project;
 	private AbcPart abcPart;
 	private SequencerWrapper sequencer;
 
@@ -42,10 +43,8 @@ public class PartPanel extends JPanel {
 
 	private LotroInstrument lastSelectedInstrument = null;
 
-	public PartPanel(ProjectFrame project, SequencerWrapper sequencer) {
+	public PartPanel(SequencerWrapper sequencer) {
 		super(new BorderLayout(HGAP, VGAP));
-
-		this.project = project;
 
 		this.sequencer = sequencer;
 
@@ -130,7 +129,7 @@ public class PartPanel extends JPanel {
 			instrumentComboBox.setSelectedIndex(0);
 			lastSelectedInstrument = null;
 
-			trackListPanel.removeAll();
+			clearTrackListPanel();
 		}
 		else {
 			numberSpinner.setEnabled(true);
@@ -143,22 +142,34 @@ public class PartPanel extends JPanel {
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
 			lastSelectedInstrument = abcPart.getInstrument();
 
-			trackListPanel.removeAll();
+			clearTrackListPanel();
+
 			boolean gray = false;
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
 				int trackNumber = track.getTrackNumber();
 				if (track.hasNotes()) {
-					TrackPanel trackPanel = new TrackPanel(project, track, sequencer, abcPart);
+					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart);
 					trackPanel.setBackground(gray ? Color.LIGHT_GRAY : Color.WHITE);
 					gray = !gray;
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListPanel.add(trackPanel);
+
 					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber), this);
 				}
-				else {
+				else if (!track.hasDrums()) {
 					sequencer.setTrackMute(trackNumber, true, this);
 				}
 				sequencer.setTrackSolo(trackNumber, false, this);
+			}
+
+			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
+				if (track.hasDrums()) {
+					for (int drumId : track.getDrumsInUse()) {
+						DrumPanel drumPanel = new DrumPanel(track, sequencer, abcPart, drumId);
+//						drumPanel.setBackground(gray ? Color.LIGHT_GRAY : Color.WHITE);
+						trackListPanel.add(drumPanel);
+					}
+				}
 			}
 
 		}
@@ -170,5 +181,14 @@ public class PartPanel extends JPanel {
 
 		validate();
 		repaint();
+	}
+
+	private void clearTrackListPanel() {
+		for (Component child : trackListPanel.getComponents()) {
+			if (child instanceof IDisposable) {
+				((IDisposable) child).dispose();
+			}
+		}
+		trackListPanel.removeAll();
 	}
 }

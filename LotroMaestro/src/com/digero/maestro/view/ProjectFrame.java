@@ -57,6 +57,7 @@ import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.TimingInfo;
+import com.digero.maestro.midi.DrumFilterTransceiver;
 import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.SequenceInfo;
@@ -68,7 +69,7 @@ import com.digero.maestro.util.SaveData;
 public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] {
-			192, FILL
+			220, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
 			FILL, PREFERRED, PREFERRED
@@ -110,11 +111,21 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		setBounds(200, 200, 800, 600);
 
 		this.sequenceInfo = sequenceInfo;
-		this.sequencer = new SequencerWrapper();
+
+		try {
+			this.sequencer = new SequencerWrapper(new DrumFilterTransceiver());
+		}
+		catch (MidiUnavailableException e) {
+			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.",
+					"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
+			return;
+		}
 
 		try {
 			lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
 					.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
+			lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class.getResourceAsStream("midi/synth/LotroDrums.sf2"));
 
 			Sequencer seq = MidiSystem.getSequencer(false);
 			Synthesizer synth = MidiSystem.getSynthesizer();
@@ -123,6 +134,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			synth.open();
 			synth.unloadAllInstruments(lotroSoundbank);
 			synth.loadAllInstruments(lotroSoundbank);
+			synth.unloadAllInstruments(lotroDrumbank);
+			synth.loadAllInstruments(lotroDrumbank);
 
 			this.previewSeq = new SequencerWrapper(seq);
 		}
@@ -149,7 +162,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-		partPanel = new PartPanel(this, sequencer);
+		partPanel = new PartPanel(sequencer);
 		partPanel.setBorder(BorderFactory.createTitledBorder("Part Settings"));
 
 		TableLayout tableLayout = new TableLayout(LAYOUT_COLS, LAYOUT_ROWS);
@@ -219,10 +232,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				int idx = partsList.getSelectedIndex();
-				if (idx != -1)
-					partPanel.setAbcPart((AbcPart) parts.getElementAt(idx));
-				else
+				if (idx != -1) {
+					AbcPart abcPart = (AbcPart) parts.getElementAt(idx);
+					sequencer.getDrumFilter().setAbcPart(abcPart);
+					partPanel.setAbcPart(abcPart);
+				}
+				else {
+					sequencer.getDrumFilter().setAbcPart(null);
 					partPanel.setAbcPart(null);
+				}
 			}
 		});
 
@@ -333,6 +351,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 	};
 	private Soundbank lotroSoundbank;
+	private Soundbank lotroDrumbank;
 
 	public int getTranspose() {
 		return (Integer) transposeSpinner.getValue();
@@ -441,8 +460,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 		for (int i = 0; i < parts.getSize(); i++) {
 			AbcPart part = (AbcPart) parts.getElementAt(i);
-			
-			
+
 		}
 	}
 

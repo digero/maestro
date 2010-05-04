@@ -36,7 +36,7 @@ public class AbcToMidi {
 		AbcToMidi a2m = new AbcToMidi();
 
 		FileInputStream in = new FileInputStream(
-				"C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\lionking" + ".abc");
+				"C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\banana-drum-test" + ".abc");
 
 		boolean useLotroInstruments = true;
 		Sequence song = a2m.convert(in, useLotroInstruments);
@@ -49,11 +49,15 @@ public class AbcToMidi {
 		if (useLotroInstruments) {
 			Soundbank lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
 					.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
+			Soundbank lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class
+					.getResourceAsStream("midi/synth/LotroDrums.sf2"));
 			synth = MidiSystem.getSynthesizer();
 			sequencer.getTransmitter().setReceiver(synth.getReceiver());
 			synth.open();
 			synth.unloadAllInstruments(lotroSoundbank);
 			synth.loadAllInstruments(lotroSoundbank);
+			synth.unloadAllInstruments(lotroDrumbank);
+			synth.loadAllInstruments(lotroDrumbank);
 		}
 		else {
 			sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
@@ -324,8 +328,8 @@ public class AbcToMidi {
 
 							Matcher tupletMatcher = TUPLET_PATTERN.matcher(line);
 							if (!tupletMatcher.find(i) || tupletMatcher.start() != i) {
-								throw new ParseException("Unexpected '" + ch + "' or invalid tuplet (slurs are not supported)",
-										lineNumber, i);
+								throw new ParseException("Unexpected '" + ch
+										+ "' or invalid tuplet (slurs are not supported)", lineNumber, i);
 							}
 
 							tupletP = Integer.parseInt(tupletMatcher.group(TUPLET_P));

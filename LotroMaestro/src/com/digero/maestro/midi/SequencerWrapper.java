@@ -12,11 +12,11 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
 public class SequencerWrapper {
 	private Sequencer sequencer;
+	private DrumFilterTransceiver drumFilter;
 	private long dragPosition;
 	private boolean isDragging;
 
@@ -24,18 +24,43 @@ public class SequencerWrapper {
 
 	private List<SequencerListener> listeners = null;
 
-	public SequencerWrapper() {
+	public SequencerWrapper() throws MidiUnavailableException {
 		this(getDefaultSequencer());
+	}
+
+	public SequencerWrapper(DrumFilterTransceiver drumFilter) throws MidiUnavailableException {
+		this((Sequencer) null);
+		this.sequencer = getDefaultSequencer(drumFilter);
+		this.drumFilter = drumFilter;
 	}
 
 	public SequencerWrapper(Sequencer sequencer) {
 		this.sequencer = sequencer;
+		this.drumFilter = null;
 
 		dragPosition = 0;
 		isDragging = false;
 
 		updateTimer = new Timer(50, timerTick);
 		updateTimer.start();
+	}
+
+	public DrumFilterTransceiver getDrumFilter() {
+		return drumFilter;
+	}
+
+	public void setDrumSolo(int drumId, boolean solo, Object source) {
+		if (drumFilter != null && solo != getDrumSolo(drumId)) {
+			drumFilter.setDrumSolo(drumId, solo);
+			fireChangeEvent(source, SequencerProperty.TRACK_ACTIVE);
+		}
+	}
+
+	public boolean getDrumSolo(int drumId) {
+		if (drumFilter == null)
+			return false;
+
+		return drumFilter.getDrumSolo(drumId);
 	}
 
 	private ActionListener timerTick = new ActionListener() {
@@ -160,6 +185,10 @@ public class SequencerWrapper {
 		return !sequencer.getTrackMute(track);
 	}
 
+	public boolean isDrumActive(int track, int drumId) {
+		return isTrackActive(track) && (drumFilter == null || drumFilter.isDrumActive(drumId));
+	}
+
 	/**
 	 * If dragging, returns the drag position. Otherwise returns the song
 	 * position.
@@ -211,19 +240,19 @@ public class SequencerWrapper {
 		}
 	}
 
-	public static Sequencer getDefaultSequencer() {
-		try {
-			Sequencer sequencer = MidiSystem.getSequencer(false);
-			sequencer.open();
-			sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
-			return sequencer;
-		}
-		catch (MidiUnavailableException e) {
-			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.",
-					"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
-			return null;
-		}
+	public static Sequencer getDefaultSequencer() throws MidiUnavailableException {
+		Sequencer sequencer = MidiSystem.getSequencer(false);
+		sequencer.open();
+		sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
+		return sequencer;
+	}
+
+	public static Sequencer getDefaultSequencer(DrumFilterTransceiver drumFilter) throws MidiUnavailableException {
+		Sequencer sequencer = MidiSystem.getSequencer(false);
+		sequencer.open();
+		sequencer.getTransmitter().setReceiver(drumFilter);
+		drumFilter.setReceiver(MidiSystem.getReceiver());
+		return sequencer;
 	}
 
 	public void setSequence(Sequence sequence) throws InvalidMidiDataException {

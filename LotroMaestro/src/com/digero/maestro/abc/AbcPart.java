@@ -5,8 +5,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
@@ -268,9 +272,9 @@ public class AbcPart {
 						continue;
 
 					Note mappedNote = mapNote(t, ne.note.id);
-					assert mappedNote.id >= instrument.lowestPlayable.id : mappedNote;
-					assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 					if (mappedNote != null) {
+						assert mappedNote.id >= instrument.lowestPlayable.id : mappedNote;
+						assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 						long start = Math.max(ne.startMicros, songStartMicros) - songStartMicros;
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
 						events.add(new NoteEvent(mappedNote, start, end));
@@ -475,7 +479,10 @@ public class AbcPart {
 	}
 
 	protected List<NoteEvent> getTrackEvents(int track) {
-		return sequenceInfo.getTrackInfo(track).getNoteEvents();
+		if (isDrumPart())
+			return sequenceInfo.getTrackInfo(track).getDrumEvents();
+		else
+			return sequenceInfo.getTrackInfo(track).getNoteEvents();
 	}
 
 	/**
@@ -483,12 +490,21 @@ public class AbcPart {
 	 * <code>null</code>.
 	 */
 	protected Note mapNote(int track, int noteId) {
-		noteId += getBaseTranspose() + getTrackTranspose(track);
-		while (noteId < instrument.lowestPlayable.id)
-			noteId += 12;
-		while (noteId > instrument.highestPlayable.id)
-			noteId -= 12;
-		return Note.fromId(noteId);
+		if (isDrumPart()) {
+			if (!isDrumEnabled(noteId))
+				return null;
+
+			int dstNote = getDrumMapping(noteId);
+			return (dstNote == DISABLED_DRUM_ID) ? null : Note.fromId(dstNote);
+		}
+		else {
+			noteId += getBaseTranspose() + getTrackTranspose(track);
+			while (noteId < instrument.lowestPlayable.id)
+				noteId += 12;
+			while (noteId > instrument.highestPlayable.id)
+				noteId -= 12;
+			return Note.fromId(noteId);
+		}
 	}
 
 	public long firstNoteStart() {
@@ -537,7 +553,8 @@ public class AbcPart {
 	}
 
 	public LotroInstrument[] getSupportedInstruments() {
-		return LotroInstrument.getNonDrumInstruments();
+		//return LotroInstrument.getNonDrumInstruments();
+		return LotroInstrument.values();
 	}
 
 	public LotroInstrument getInstrument() {
@@ -566,7 +583,7 @@ public class AbcPart {
 	}
 
 	public int getBaseTranspose() {
-		return baseTranspose;
+		return isDrumPart() ? 0 : baseTranspose;
 	}
 
 	public void setBaseTranspose(int baseTranspose) {
@@ -577,7 +594,7 @@ public class AbcPart {
 	}
 
 	public int getTrackTranspose(int track) {
-		return trackTranspose[track];
+		return isDrumPart() ? 0 : trackTranspose[track];
 	}
 
 	public void setTrackTranspose(int track, int transpose) {
@@ -623,6 +640,47 @@ public class AbcPart {
 			for (ChangeListener l : changeListeners) {
 				l.stateChanged(e);
 			}
+		}
+	}
+
+	//
+	// DRUMS
+	//
+
+	public boolean isDrumPart() {
+		return instrument == LotroInstrument.DRUMS;
+	}
+
+	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;
+	private Map<Integer, Integer> drumNoteMap = new HashMap<Integer, Integer>();
+	private Set<Integer> drumsDisabled = new HashSet<Integer>();
+
+	public void setDrumMapping(int srcNote, int dstNote) {
+		if (getDrumMapping(srcNote) != dstNote) {
+			if (dstNote == DISABLED_DRUM_ID)
+				drumNoteMap.remove(srcNote);
+			else
+				drumNoteMap.put(srcNote, dstNote);
+			fireChangeEvent();
+		}
+	}
+
+	public int getDrumMapping(int srcNote) {
+		Integer dstNote = drumNoteMap.get(srcNote);
+		return (dstNote == null) ? DISABLED_DRUM_ID : dstNote;
+	}
+
+	public boolean isDrumEnabled(int noteId) {
+		return !drumsDisabled.contains(noteId);
+	}
+
+	public void setDrumEnabled(int noteId, boolean enabled) {
+		if (isDrumEnabled(noteId) != enabled) {
+			if (enabled)
+				drumsDisabled.remove(noteId);
+			else
+				drumsDisabled.add(noteId);
+			fireChangeEvent();
 		}
 	}
 }

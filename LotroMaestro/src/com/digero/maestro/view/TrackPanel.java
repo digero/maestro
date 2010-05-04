@@ -7,11 +7,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -22,9 +20,8 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.sound.midi.Sequence;
 import javax.swing.BorderFactory;
@@ -46,24 +43,26 @@ import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.IDisposable;
+import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
-public class TrackPanel extends JPanel implements TableLayoutConstants {
+public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   |      TRACK NAME    | octave   |  +--------------+  |
 	// 0 | [X]                | +----^-+ |  | (note graph) |  |
 	//   |      Instrument(s) | +----v-+ |  +--------------+  |
 	//   +--------------------+----------+--------------------+
-	private static final int TITLE_WIDTH = 160;
+	static final int TITLE_WIDTH = 160;
+	static final int SPINNER_WIDTH = 48;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, 48, FILL, 1
+			TITLE_WIDTH, SPINNER_WIDTH, FILL, 1
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
 			4, 48, 4
 	};
 
-	private ProjectFrame project;
 	private TrackInfo trackInfo;
 	private SequencerWrapper seq;
 	private AbcPart abcPart;
@@ -72,13 +71,12 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 	private JSpinner transposeSpinner;
 	private NoteGraph noteGraph;
 
-	public TrackPanel(ProjectFrame project, TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
+	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 		setBackground(Color.WHITE);
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.DARK_GRAY));
 //		setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.LIGHT_GRAY, Color.GRAY));
 
-		this.project = project;
 		this.trackInfo = info;
 		this.seq = sequencer;
 		this.abcPart = part;
@@ -94,8 +92,8 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		String instr = trackInfo.getInstrumentNames();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
-		title = ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
-		instr = ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
+		title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
+		instr = Util.ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
 		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
 		checkBox.addActionListener(new ActionListener() {
@@ -149,6 +147,10 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		add(noteGraph, "2, 1");
 	}
 
+	public void dispose() {
+		noteGraph.dispose();
+	}
+
 	private class TrackTransposeModel extends SpinnerNumberModel {
 		public TrackTransposeModel(int value, int minimum, int maximum, int stepSize) {
 			super(value, minimum, maximum, stepSize);
@@ -166,83 +168,10 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 		}
 	}
 
-	public static final String ELLIPSIS = "...";
-
-	@SuppressWarnings("deprecation")
-	public static String ellipsis(String text, float maxWidth, Font font) {
-		FontMetrics metrics = Toolkit.getDefaultToolkit().getFontMetrics(font);
-		Pattern prevWord = Pattern.compile("\\w*\\W*$");
-		Matcher matcher = prevWord.matcher(text);
-
-		float width = metrics.stringWidth(text);
-		if (width < maxWidth)
-			return text;
-
-		int len = 0;
-		int seg = text.length();
-		String fit = "";
-
-		// find the longest string that fits into
-		// the control boundaries using bisection method 
-		while (seg > 1) {
-			seg -= seg / 2;
-
-			int left = len + seg;
-			int right = text.length();
-
-			if (left > right)
-				continue;
-
-			// trim at a word boundary using regular expressions 
-			matcher.region(0, left);
-			if (matcher.find())
-				left = matcher.start();
-
-			// build and measure a candidate string with ellipsis
-			String tst = text.substring(0, left) + ELLIPSIS;
-
-			width = metrics.stringWidth(tst);
-
-			// candidate string fits into boundaries, try a longer string
-			// stop when seg <= 1
-			if (width <= maxWidth) {
-				len += seg;
-				fit = tst;
-			}
-		}
-
-		// string can't fit
-		if (len == 0)
-			return ELLIPSIS;
-
-		return fit;
-	}
-
-	private static Color grayscale(Color orig) {
-		float[] hsb = Color.RGBtoHSB(orig.getRed(), orig.getGreen(), orig.getBlue(), null);
-		return Color.getHSBColor(0.0f, 0.0f, hsb[2]);
-	}
-
-	private static final Color NOTE = new Color(29, 95, 255);
-	private static final Color XNOTE = Color.RED;
-	private static final Color NOTE_DISABLED = grayscale(NOTE).darker(); // Color.GRAY;
-	private static final Color XNOTE_DISABLED = grayscale(XNOTE); // Color.LIGHT_GRAY;
-	private static final Color NOTE_ON = Color.WHITE;
-	private static final Color BKGD_COLOR = Color.BLACK;
-	private static final Color BKGD_DISABLED = Color.DARK_GRAY.darker();
-	private static final Color BORDER_COLOR = Color.DARK_GRAY;
-	private static final Color BORDER_DISABLED = Color.DARK_GRAY;
-
-	private static final Color INDICATOR_COLOR = new Color(0xAAFFFFFF, true);
-
 	private static final int MIN_RENDERED = Note.C2.id - 12;
 	private static final int MAX_RENDERED = Note.C5.id + 12;
 
-	private class NoteGraph extends JPanel {
-		private static final int BORDER_SIZE = 2;
-		private static final double NOTE_WIDTH_PX = 3;
-		private static final double NOTE_HEIGHT_PX = 2;
-
+	private class NoteGraph extends JPanel implements IDisposable, NoteGraphConstants {
 		public NoteGraph() {
 			abcPart.addChangeListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
@@ -250,8 +179,16 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 			MyMouseListener mouseListener = new MyMouseListener();
 			addMouseListener(mouseListener);
 			addMouseMotionListener(mouseListener);
+			
 			setPreferredSize(new Dimension(200, 24));
 		}
+
+		public void dispose() {
+			abcPart.removeChangeListener(myChangeListener);
+			seq.removeChangeListener(myChangeListener);
+		}
+
+		private MyChangeListener myChangeListener = new MyChangeListener();
 
 		private class MyChangeListener implements ChangeListener, SequencerListener {
 			public void stateChanged(ChangeEvent e) {
@@ -262,8 +199,6 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 				repaint();
 			}
 		}
-
-		private MyChangeListener myChangeListener = new MyChangeListener();
 
 		private Rectangle2D.Double rectTmp = new Rectangle2D.Double();
 		private Line2D.Double lineTmp = new Line2D.Double();
@@ -289,9 +224,9 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 
-			g2.setColor(trackEnabled ? BORDER_COLOR : BORDER_DISABLED);
+			g2.setColor(trackEnabled && trackInfo.hasNotes() ? BORDER_COLOR : BORDER_DISABLED);
 			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-			g2.setColor(trackEnabled ? BKGD_COLOR : BKGD_DISABLED);
+			g2.setColor(trackEnabled && trackInfo.hasNotes() ? BKGD_COLOR : BKGD_DISABLED);
 			g2.fillRoundRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE, 5,
 					5);
 
@@ -304,19 +239,28 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
 			g2.setColor(trackEnabled ? NOTE : NOTE_DISABLED);
-			for (NoteEvent evt : trackInfo.getNoteEvents()) {
-				int id = evt.note.id + transpose;
+
+			Iterator<NoteEvent> noteEventIter = trackInfo.getNoteEvents().iterator();
+			Iterator<NoteEvent> drumEventIter = trackInfo.getDrumEvents().iterator();
+
+			while (noteEventIter.hasNext() || drumEventIter.hasNext()) {
+				boolean drums;
+				NoteEvent evt = (drums = drumEventIter.hasNext()) ? drumEventIter.next() : noteEventIter.next();
+
+				int id = evt.note.id;
+				if (!drums)
+					id += transpose;
 				double width = Math.max(minLength, evt.getLength());
 				double y;
 				boolean playable;
 
 				if (id < minPlayable) {
 					y = Math.max(id, MIN_RENDERED);
-					playable = false;
+					playable = drums;
 				}
 				else if (id > maxPlayable) {
 					y = Math.min(id, MAX_RENDERED);
-					playable = false;
+					playable = drums;
 				}
 				else {
 					y = id;
@@ -330,6 +274,11 @@ public class TrackPanel extends JPanel implements TableLayoutConstants {
 					notesUnplayable.add(new Rectangle2D.Double(evt.startMicros, y, width, height));
 				}
 				else {
+					if (drums)
+						g2.setColor(trackEnabled ? NOTE_DRUM : NOTE_DRUM_DISABLED);
+					else
+						g2.setColor(trackEnabled ? NOTE : NOTE_DISABLED);
+
 					rectTmp.setRect(evt.startMicros, y, width, height);
 					g2.fill(rectTmp);
 				}
