@@ -6,6 +6,15 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.TimeSignature;
 
 public class SaveData extends Properties {
+	public static void main(String[] args) throws Exception {
+		SaveData data = new SaveData();
+		data.setBoolean("bool", true);
+		data.setString("str", "hello, test=world");
+
+		data.store(System.out, null);
+//		System.out.println(data);
+	}
+
 	public void setString(String key, String value) {
 		setProperty(key, value);
 	}

@@ -102,4 +102,8 @@ public class Chord {
 		}
 		return ne;
 	}
+	
+	public boolean remove(NoteEvent ne) {
+		return notes.remove(ne);
+	}
 }

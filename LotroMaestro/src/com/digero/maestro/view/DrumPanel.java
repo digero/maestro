@@ -2,6 +2,7 @@ package com.digero.maestro.view;
 
 import info.clearthought.layout.TableLayoutConstants;
 
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import com.digero.maestro.abc.DrumPart;
@@ -9,7 +10,7 @@ import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 public class DrumPanel extends JPanel implements TableLayoutConstants {
-	private static final int TITLE_WIDTH = 160;
+	private static final int TITLE_WIDTH = 120;
 	private static final double[] LAYOUT_COLS = new double[] {
 			TITLE_WIDTH, 48, FILL, 1
 	};
@@ -18,6 +19,7 @@ public class DrumPanel extends JPanel implements TableLayoutConstants {
 	};
 
 	public DrumPanel(TrackInfo info, SequencerWrapper sequencer, DrumPart part, int drumId) {
-		
+//		JCheckBoxMenuItem
+		JComboBox b;
 	}
 }

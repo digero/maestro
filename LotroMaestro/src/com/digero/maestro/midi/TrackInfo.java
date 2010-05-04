@@ -3,8 +3,10 @@ package com.digero.maestro.midi;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -26,13 +28,13 @@ public class TrackInfo implements IMidiConstants {
 	private String name;
 	private TimeSignature timeSignature = null;
 	private KeySignature keySignature = null;
-	private List<Integer> instruments = new ArrayList<Integer>();
+	private Set<Integer> instruments = new HashSet<Integer>();
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
 	private SortedSet<Integer> drumsInUse;
 
-	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache)
-			throws InvalidMidiDataException {
+	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
+			InstrumentChangeCache instrumentCache) throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
 		this.track = track;
 		this.trackNumber = trackNumber;
@@ -44,8 +46,10 @@ public class TrackInfo implements IMidiConstants {
 		drumsInUse = new TreeSet<Integer>();
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 		List<NoteEvent> drumsOn = new ArrayList<NoteEvent>();
+		int notesNotTurnedOff = 0;
 
 		for (int j = 0, sz = track.size(); j < sz; j++) {
+			int pitchBend = 8192;
 			MidiEvent evt = track.get(j);
 			MidiMessage msg = evt.getMessage();
 
@@ -65,6 +69,18 @@ public class TrackInfo implements IMidiConstants {
 							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
 
 						NoteEvent ne = new NoteEvent(note, micros);
+
+						Iterator<NoteEvent> onIter = (drums ? drumsOn : notesOn).iterator();
+						while (onIter.hasNext()) {
+							NoteEvent on = onIter.next();
+							if (on.note.id == ne.note.id) {
+								onIter.remove();
+								(drums ? drumEvents : noteEvents).remove(on);
+								notesNotTurnedOff++;
+								break;
+							}
+						}
+
 						if (drums) {
 							if (noteEvents.isEmpty())
 								instruments.clear();
@@ -75,6 +91,7 @@ public class TrackInfo implements IMidiConstants {
 						else {
 							noteEvents.add(ne);
 							notesOn.add(ne);
+							instruments.add(instrumentCache.getInstrument(evt.getTick(), m.getChannel()));
 						}
 					}
 					else {
@@ -125,13 +142,16 @@ public class TrackInfo implements IMidiConstants {
 
 		// Turn off notes that are on at the end of the song.  This shouldn't happen...
 		if (notesOn.size() > 0 || drumsOn.size() > 0) {
-			System.err.println((notesOn.size() + drumsOn.size()) + " notes not turned off at the end of the track.");
+			System.err.println((notesOn.size() + drumsOn.size() + notesNotTurnedOff)
+					+ " note(s) not turned off at the end of the track.");
 
-			for (NoteEvent ne : notesOn)
-				ne.endMicros = song.getMicrosecondLength();
-
-			for (NoteEvent ne : drumsOn)
-				ne.endMicros = song.getMicrosecondLength();
+			noteEvents.removeAll(notesOn);
+			drumEvents.removeAll(drumsOn);
+//			for (NoteEvent ne : notesOn)
+//				ne.endMicros = song.getMicrosecondLength();
+//
+//			for (NoteEvent ne : drumsOn)
+//				ne.endMicros = song.getMicrosecondLength();
 		}
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
@@ -222,9 +242,15 @@ public class TrackInfo implements IMidiConstants {
 				return "<None>";
 		}
 
-		String names = MidiConstants.getInstrumentName(instruments.get(0));
-		for (int i = 1; i < instruments.size(); i++) {
-			names += ", " + MidiConstants.getInstrumentName(instruments.get(i));
+		String names = "";
+		boolean first = true;
+		for (int i : instruments) {
+			if (!first)
+				names += ", ";
+			else
+				first = false;
+
+			names += MidiConstants.getInstrumentName(i);
 		}
 
 		if (hasDrums())

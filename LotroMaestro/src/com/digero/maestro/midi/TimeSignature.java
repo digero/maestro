@@ -53,20 +53,34 @@ public class TimeSignature implements IMidiConstants {
 	}
 
 	public TimeSignature(String str) {
-		String[] parts = str.trim().split("[/:| ]");
-		if (parts.length != 2) {
-			throw new IllegalArgumentException("The string: \"" + str
-					+ "\" is not a valid time signature (expected format: 4/4)");
+		str = str.trim();
+		if (str.equals("C")) {
+			this.numerator = 4;
+			this.denominator = 4;
 		}
-
-		int numerator = Integer.parseInt(parts[0]);
-		int denominator = Integer.parseInt(parts[1]);
-		verifyData(numerator, denominator);
-
-		this.numerator = numerator;
-		this.denominator = denominator;
+		else if (str.equals("C|")) {
+			this.numerator = 2;
+			this.denominator = 2;
+		}
+		else {
+			String[] parts = str.split("[/:| ]");
+			if (parts.length != 2) {
+				throw new IllegalArgumentException("The string: \"" + str
+						+ "\" is not a valid time signature (expected format: 4/4)");
+			}
+			this.numerator = Integer.parseInt(parts[0]);
+			this.denominator = Integer.parseInt(parts[1]);
+		}
+		verifyData(this.numerator, this.denominator);
 		this.metronome = 24;
 		this.thirtySecondNotes = 8;
+	}
+
+	/**
+	 * A best-guess as to whether this time signature represents compound meter.
+	 */
+	public boolean isCompound() {
+		return (numerator % 3) == 0;
 	}
 
 	private static void verifyData(int numerator, int denominator) {

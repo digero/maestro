@@ -130,8 +130,8 @@ public class AbcPart {
 		PrintStream out = new PrintStream(os);
 		out.println("X: " + partNumber);
 		out.println("T: " + title);
+		out.println("I: " + instrument);
 		out.println("M: " + tm.meter);
-//		out.println("L: 1/4");
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
 		out.println();
@@ -198,7 +198,7 @@ public class AbcPart {
 				}
 
 				sb.append(evt.note.abc);
-				int numerator = (int) (evt.getLength() / tm.minNoteLength)*tm.defaultDivisor;
+				int numerator = (int) (evt.getLength() / tm.minNoteLength) * tm.defaultDivisor;
 				int denominator = tm.minNoteDivisor;
 				// Reduce the fraction
 				int gcd = gcd(numerator, denominator);
@@ -345,7 +345,10 @@ public class AbcPart {
 			NoteEvent ne = events.get(i);
 			if (curChord.getStartMicros() == ne.startMicros) {
 				// This note starts at the same time as the rest of the notes in the chord
-				curChord.add(ne);
+				if (!curChord.add(ne)) {
+					// Couldn't add the note (too many notes in the chord)
+					removeNote(events, i);
+				}
 			}
 			else {
 				// Create a new chord
@@ -358,7 +361,7 @@ public class AbcPart {
 				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
 					// Make sure there's room to add the rest
 					while (curChord.size() >= Chord.MAX_CHORD_NOTES) {
-						curChord.remove(curChord.size() - 1);
+						removeNote(events, curChord.remove(curChord.size() - 1));
 					}
 				}
 
@@ -434,6 +437,27 @@ public class AbcPart {
 				}
 			}
 		}
+	}
+
+	/** Removes a note and breaks any ties the note has. */
+	private void removeNote(List<NoteEvent> events, int i) {
+		NoteEvent ne = events.remove(i);
+
+		// If the note is tied from another (previous) note, break the incoming tie
+		if (ne.tiesFrom != null) {
+			ne.tiesFrom.tiesTo = null;
+			ne.tiesFrom = null;
+		}
+
+		// Remove the remainder of the notes that this is tied to (if any)
+		for (NoteEvent neTie = ne.tiesTo; neTie != null; neTie = neTie.tiesTo) {
+			events.remove(neTie);
+		}
+	}
+
+	/** Removes a note and breaks any ties the note has. */
+	private void removeNote(List<NoteEvent> events, NoteEvent ne) {
+		removeNote(events, events.indexOf(ne));
 	}
 
 	private static int gcd(int a, int b) {
@@ -513,7 +537,7 @@ public class AbcPart {
 	}
 
 	public LotroInstrument[] getSupportedInstruments() {
-		return LotroInstrument.NON_DRUMS;
+		return LotroInstrument.getNonDrumInstruments();
 	}
 
 	public LotroInstrument getInstrument() {

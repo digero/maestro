@@ -25,29 +25,35 @@ package com.digero.maestro.abc;
 import com.digero.maestro.midi.Note;
 
 public enum LotroInstrument {
-	LUTE(Note.C2, Note.C5, false, 24), //
-	HARP(Note.C2, Note.C5, false, 46), //
-	THEORBO(Note.C2, Note.C5, false, 32), //
-	BAGPIPE(Note.C2, Note.C5, true, 109), //
-	CLARINET(Note.D2, Note.C5, true, 71), //
-	FLUTE(Note.C2, Note.C5, true, 73), //
-	HORN(Note.Cs2, Note.C5, true, 69), //
-	DRUMS(Note.C2, Note.C5, false, 118);
+	LUTE(Note.C2, Note.C5, false, 24, 0), //
+	HARP(Note.C2, Note.C5, false, 46, 0), //
+	THEORBO(Note.C2, Note.C5, false, 32, -1), //
+	BAGPIPE(Note.C2, Note.C5, true, 109, 0), //
+	CLARINET(Note.D2, Note.C5, true, 71, 1), //
+	FLUTE(Note.C2, Note.C5, true, 73, 2), //
+	HORN(Note.Cs2, Note.C5, true, 69, 0), //
+	DRUMS(Note.C2, Note.C5, false, 118, 0);
 
-	public static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
+	private static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
 			LUTE, HARP, THEORBO, BAGPIPE, CLARINET, FLUTE, HORN
 	};
+
+	public static final LotroInstrument[] getNonDrumInstruments() {
+		return NON_DRUMS;
+	}
 
 	public final Note lowestPlayable;
 	public final Note highestPlayable;
 	public final boolean sustainable;
 	public final int midiProgramId;
+	public final int octaveDelta; 
 
-	private LotroInstrument(Note low, Note high, boolean sustainable, int midiProgramId) {
+	private LotroInstrument(Note low, Note high, boolean sustainable, int midiProgramId, int octaveDelta) {
 		this.lowestPlayable = low;
 		this.highestPlayable = high;
 		this.sustainable = sustainable;
 		this.midiProgramId = midiProgramId;
+		this.octaveDelta = octaveDelta;
 	}
 
 	public boolean isSustainable(int noteId) {

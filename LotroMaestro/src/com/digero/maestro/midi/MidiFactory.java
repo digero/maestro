@@ -57,9 +57,13 @@ public class MidiFactory implements IMidiConstants {
 	}
 
 	public static MidiEvent createNoteOnEvent(int id, int channel, long ticks) {
+		return createNoteOnEventEx(id, channel, 112, ticks);
+	}
+
+	public static MidiEvent createNoteOnEventEx(int id, int channel, int velocity, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.NOTE_ON, channel, id, 112);
+			msg.setMessage(ShortMessage.NOTE_ON, channel, id, velocity);
 			return new MidiEvent(msg, ticks);
 		}
 		catch (InvalidMidiDataException e) {
@@ -68,9 +72,13 @@ public class MidiFactory implements IMidiConstants {
 	}
 
 	public static MidiEvent createNoteOffEvent(int id, int channel, long ticks) {
+		return createNoteOffEventEx(id, channel, 112, ticks);
+	}
+
+	public static MidiEvent createNoteOffEventEx(int id, int channel, int velocity, long ticks) {
 		try {
 			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, 112);
+			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, velocity);
 			return new MidiEvent(msg, ticks);
 		}
 		catch (InvalidMidiDataException e) {

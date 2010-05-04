@@ -148,9 +148,9 @@ public class MidiConstants implements IMidiConstants {
 	};
 
 	private static final String[] DRUM_NAMES = {
-			"Acoustic Bass Drum", // 35
+			"Acou. Bass Drum", // 35
 			"Bass Drum 1", // 36
-			"Rim Shot (Side Stick)", // 37
+			"Rim Shot", // 37
 			"Acoustic Snare", // 38
 			"Hand Clap", // 39
 			"Electric Snare", // 40

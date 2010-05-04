@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -364,7 +365,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private void playPause() {
 		if (!sequencer.isRunning()) {
 			if (sequencer.getPosition() >= sequencer.getLength()) {
-				sequencer.setPosition(0, this);
+				sequencer.reset(this);
 			}
 
 			sequencer.start(this);
@@ -378,8 +379,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	}
 
 	private void stop() {
-		sequencer.stop(this);
-		sequencer.setPosition(0, this);
+		sequencer.reset(this);
 		stopButton.setEnabled(false);
 		playButton.setIcon(playIcon);
 	}
@@ -437,6 +437,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		data.setInt("project.tempo", getTempo());
 		data.setKeySignature("project.keySignature", getKeySignature());
 		data.setTimeSignature("project.timeSignature", getTimeSignature());
+		data.setInt("project.partCount", parts.getSize());
+
+		for (int i = 0; i < parts.getSize(); i++) {
+			AbcPart part = (AbcPart) parts.getElementAt(i);
+			
+			
+		}
 	}
 
 	private Sequence createPreviewSequence() {
@@ -476,32 +483,32 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	}
 
 	private void exportAbc() {
-		long startMicros = Long.MAX_VALUE;
-		for (int i = 0; i < parts.size(); i++) {
-			AbcPart part = (AbcPart) parts.get(i);
 
-			long firstNoteStart = part.firstNoteStart();
-			if (firstNoteStart < startMicros)
-				startMicros = firstNoteStart;
-		}
-
+		JFileChooser jfc = new JFileChooser();
+		String fileName;
+		int dot;
 		if (saveFile == null) {
-			String fileName = this.sequenceInfo.getMidiFile().getName();
-			int dot = fileName.lastIndexOf('.');
+			fileName = this.sequenceInfo.getMidiFile().getName();
+			dot = fileName.lastIndexOf('.');
 			if (dot > 0)
 				fileName = fileName.substring(0, dot);
 			fileName = fileName.replace(' ', '_') + ".abc";
 
-			JFileChooser jfc = new JFileChooser();
 			// TODO Generalize save path
-			jfc.setSelectedFile(new File("C:/Users/Ben/Documents/The Lord of the Rings Online/Music/" + fileName));
-
-			int result = jfc.showSaveDialog(this);
-			if (result != JFileChooser.APPROVE_OPTION)
-				return;
-
-			saveFile = jfc.getSelectedFile();
+			saveFile = new File("C:/Users/Ben/Documents/The Lord of the Rings Online/Music/" + fileName);
 		}
+		jfc.setSelectedFile(saveFile);
+
+		int result = jfc.showSaveDialog(this);
+		if (result != JFileChooser.APPROVE_OPTION || jfc.getSelectedFile() == null)
+			return;
+
+		fileName = jfc.getSelectedFile().getName();
+		dot = fileName.lastIndexOf('.');
+		if (dot <= 0 || !fileName.substring(dot).equalsIgnoreCase(".abc"))
+			fileName += ".abc";
+
+		saveFile = new File(jfc.getSelectedFile().getParent(), fileName);
 
 		FileOutputStream out;
 		try {
@@ -513,10 +520,28 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			return;
 		}
 
+		if (parts.getSize() > 1) {
+			PrintStream outWriter = new PrintStream(out);
+			outWriter.println("% " + parts.getSize() + " parts");
+			outWriter.println();
+		}
 		try {
+			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+
+			// Remove silent bars before the song starts
+			long startMicros = Long.MAX_VALUE;
+			for (int i = 0; i < parts.size(); i++) {
+				AbcPart part = (AbcPart) parts.get(i);
+
+				long firstNoteStart = part.firstNoteStart();
+				if (firstNoteStart < startMicros) {
+					// Remove integral number of bars
+					startMicros = tm.barLength * (firstNoteStart / tm.barLength);
+				}
+			}
+
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
 				part.exportToAbc(tm, getKeySignature(), startMicros, Long.MAX_VALUE, out);
 			}
 		}

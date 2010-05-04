@@ -8,8 +8,10 @@ import java.util.List;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.sound.midi.ShortMessage;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
@@ -49,6 +51,35 @@ public class SequencerWrapper {
 			}
 		}
 	};
+
+	public void reset(Object source) {
+		stop(source);
+		setPosition(0, source);
+
+		// Reset the instruments
+		boolean isOpen = sequencer.isOpen();
+		Receiver rec = null;
+		try {
+			if (!isOpen)
+				sequencer.open();
+			rec = sequencer.getReceiver();
+			ShortMessage msg = new ShortMessage();
+			for (int i = 0; i < 16; i++) {
+				msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+				rec.send(msg, -1);
+			}
+		}
+		catch (MidiUnavailableException e) {
+			// Ignore
+		}
+		catch (InvalidMidiDataException e) {
+			// Ignore
+		}
+		if (rec != null)
+			rec.close();
+		if (!isOpen)
+			sequencer.close();
+	}
 
 	public long getPosition() {
 		return sequencer.getMicrosecondPosition();
