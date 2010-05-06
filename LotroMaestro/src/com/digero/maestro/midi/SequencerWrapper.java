@@ -12,6 +12,7 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
 public class SequencerWrapper {
@@ -63,15 +64,27 @@ public class SequencerWrapper {
 		return drumFilter.getDrumSolo(drumId);
 	}
 
-	private ActionListener timerTick = new ActionListener() {
+	private TimerActionListener timerTick = new TimerActionListener();
+
+	private class TimerActionListener implements ActionListener {
 		private long lastUpdatePosition = -1;
+		private boolean lastRunning = false;
 
 		public void actionPerformed(ActionEvent e) {
 			if (sequencer != null) {
 				long songPos = sequencer.getMicrosecondPosition();
-				if (lastUpdatePosition != songPos) {
+				boolean running = sequencer.isRunning();
+				if (songPos >= getLength()) {
+					setPosition(0, updateTimer);
+					lastUpdatePosition = songPos;
+				}
+				else if (lastUpdatePosition != songPos) {
 					lastUpdatePosition = songPos;
 					fireChangeEvent(updateTimer, SequencerProperty.POSITION);
+				}
+				if (lastRunning != running) {
+					lastRunning = running;
+					fireChangeEvent(updateTimer, SequencerProperty.IS_RUNNING);
 				}
 			}
 		}
@@ -131,6 +144,7 @@ public class SequencerWrapper {
 				sequencer.start();
 			else
 				sequencer.stop();
+			timerTick.lastRunning = isRunning;
 			fireChangeEvent(source, SequencerProperty.IS_RUNNING);
 		}
 	}
@@ -255,11 +269,30 @@ public class SequencerWrapper {
 		return sequencer;
 	}
 
-	public void setSequence(Sequence sequence) throws InvalidMidiDataException {
-		sequencer.setSequence(sequence);
+	public void setSequence(Sequence sequence, Object source) throws InvalidMidiDataException {
+		if (sequencer.getSequence() != sequence) {
+			sequencer.setSequence(sequence);
+			fireChangeEvent(source, SequencerProperty.LENGTH);
+		}
 	}
 
 	public Sequence getSequence() {
 		return sequencer.getSequence();
+	}
+
+	public Transmitter getTransmitter() throws MidiUnavailableException {
+		return sequencer.getTransmitter();
+	}
+
+	public Receiver getReceiver() throws MidiUnavailableException {
+		return sequencer.getReceiver();
+	}
+
+	public void open() throws MidiUnavailableException {
+		sequencer.open();
+	}
+
+	public void close() {
+		sequencer.close();
 	}
 }

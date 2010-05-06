@@ -1,7 +1,7 @@
 package com.digero.maestro.midi;
 
 public enum SequencerProperty {
-	POSITION, DRAG_POSITION, IS_DRAGGING, IS_RUNNING, TRACK_ACTIVE;
+	POSITION, LENGTH, DRAG_POSITION, IS_DRAGGING, IS_RUNNING, TRACK_ACTIVE;
 
 	public final int mask;
 

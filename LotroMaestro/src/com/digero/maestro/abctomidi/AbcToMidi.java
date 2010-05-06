@@ -1,4 +1,4 @@
-package com.digero.maestro.util;
+package com.digero.maestro.abctomidi;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -30,6 +30,7 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
 	public static void main(String[] args) throws Exception {
@@ -108,26 +109,39 @@ public class AbcToMidi {
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
 
+	public static List<String> readLines(InputStream stream) throws IOException {
+		ArrayList<String> lines = new ArrayList<String>();
+		BufferedReader rdr = new BufferedReader(new InputStreamReader(stream));
+		String line;
+		while ((line = rdr.readLine()) != null) {
+			lines.add(line);
+		}
+		return lines;
+	}
+
 	public Sequence convert(InputStream abcStream, boolean useLotroInstruments) throws IOException, ParseException {
+		return convert(readLines(abcStream), useLotroInstruments, null);
+	}
+
+	public Sequence convert(Iterable<String> lines, boolean useLotroInstruments,
+			Map<Integer, LotroInstrument> instrumentOverrideMap) throws ParseException {
 		TuneInfo info = new TuneInfo();
 		Sequence seq = null;
 		Track track = null;
 
-		BufferedReader rdr = new BufferedReader(new InputStreamReader(abcStream));
-		String line;
 		int lineNumber = 0;
 		int partStartLine = 0;
 		int channel = 0;
+		int trackNumber = 0;
 
 		long chordStartTick = 0;
 		long chordEndTick = 0;
 		long PPQN = 0;
 		long MPQN = 0;
-//		Set<Integer> tiedNotes = new HashSet<Integer>();
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
-		while ((line = rdr.readLine()) != null) {
+		for (String line : lines) {
 			lineNumber++;
 
 			int comment = line.indexOf('%');
@@ -151,17 +165,24 @@ public class AbcToMidi {
 
 						accidentals.clear();
 						noteOffEvents.clear();
-						info.newPart();
+
+						info.newPart(Integer.parseInt(value));
+						trackNumber++;
 						partStartLine = lineNumber;
 						chordStartTick = 0;
 						track = null; // Will create a new track after the header is done
+						if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
+							info.setInstrument(instrumentOverrideMap.get(trackNumber));
+						}
 						break;
 					case 'T':
 						if (track != null)
 							throw new ParseException("Can't specify the title in the middle of a part", lineNumber, 0);
 
 						info.setTitle(value);
-						info.findInstrumentName(value);
+						if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+							info.findInstrumentName(value);
+						}
 						break;
 					case 'K':
 						info.setKey(value);
@@ -186,7 +207,9 @@ public class AbcToMidi {
 							throw new ParseException("The tempo can't change during the song", lineNumber);
 						break;
 					case 'I':
-						info.findInstrumentName(value);
+						if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+							info.findInstrumentName(value);
+						}
 						break;
 					}
 				}
@@ -224,15 +247,8 @@ public class AbcToMidi {
 								partStartLine);
 					track = seq.createTrack();
 
-					track.add(MidiFactory.createTrackNameEvent(info.getTitle()));
+					track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
 					track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
-
-					dbgout("T: " + info.getTitle());
-					dbgout("I: " + info.getInstrument());
-					dbgout("M: " + info.getMeter());
-					dbgout("Q: " + info.getTempo());
-					dbgout("K: " + info.getKey());
-					dbgout("");
 				}
 
 				Matcher m = NOTE_PATTERN.matcher(line);
@@ -545,6 +561,7 @@ public class AbcToMidi {
 	}
 
 	private static class TuneInfo {
+		private int partNumber;
 		private String title;
 		private KeySignature key;
 		private int noteDivisor;
@@ -563,7 +580,8 @@ public class AbcToMidi {
 			dynamics = Dynamics.mf;
 		}
 
-		public void newPart() {
+		public void newPart(int partNumber) {
+			this.partNumber = partNumber;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
 		}
@@ -626,8 +644,16 @@ public class AbcToMidi {
 			return false;
 		}
 
+		public void setInstrument(LotroInstrument instrument) {
+			this.instrument = instrument;
+		}
+
 		public void setDynamics(String str) {
 			dynamics = Dynamics.valueOf(str);
+		}
+
+		public int getPartNumber() {
+			return partNumber;
 		}
 
 		public String getTitle() {

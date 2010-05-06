@@ -5,14 +5,7 @@ import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -21,7 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -50,8 +42,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
-import sun.awt.shell.ShellFolder;
 
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
@@ -153,7 +143,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 
 		try {
-			this.sequencer.setSequence(this.sequenceInfo.getSequence());
+			this.sequencer.setSequence(this.sequenceInfo.getSequence(), this);
 		}
 		catch (InvalidMidiDataException e1) {
 			// TODO Auto-generated catch block
@@ -210,7 +200,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					if (song == null)
 						return;
 					try {
-						previewSeq.setSequence(song);
+						previewSeq.setSequence(song, ProjectFrame.this);
 					}
 					catch (InvalidMidiDataException e1) {
 						// TODO Auto-generated catch block
@@ -336,7 +326,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		add(partPanel, "1, 0, 1, 1");
 		add(playPanel, "1, 2");
 
-		new DropTarget(this, new MidiDropListener());
+		final FileTypeDropListener dropListener = new FileTypeDropListener("mid", "midi");
+		dropListener.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openSong(dropListener.getDroppedFile());
+			}
+		});
+		new DropTarget(this, dropListener);
 		newPartButton.doClick();
 	}
 
@@ -411,7 +407,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		parts.clear();
 
 		try {
-			sequencer.setSequence(null);
+			sequencer.setSequence(null, this);
 		}
 		catch (InvalidMidiDataException e) {
 			e.printStackTrace();
@@ -431,7 +427,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 			sequenceInfo = new SequenceInfo(midiFile);
 
-			sequencer.setSequence(sequenceInfo.getSequence());
+			sequencer.setSequence(sequenceInfo.getSequence(), this);
 			transposeSpinner.setValue(0);
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
@@ -593,79 +589,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			super.processFocusEvent(e);
 			if (e.getID() == FocusEvent.FOCUS_GAINED)
 				selectAll();
-		}
-	}
-
-	private class MidiDropListener implements DropTargetListener {
-		private File draggingFile = null;
-
-		public void dragEnter(DropTargetDragEvent dtde) {
-			draggingFile = getMidiFile(dtde.getTransferable());
-			if (draggingFile != null) {
-				dtde.acceptDrag(DnDConstants.ACTION_COPY);
-			}
-			else {
-				dtde.rejectDrag();
-			}
-		}
-
-		public void dragExit(DropTargetEvent dte) {
-		}
-
-		public void dragOver(DropTargetDragEvent dtde) {
-		}
-
-		public void drop(DropTargetDropEvent dtde) {
-			if (draggingFile != null) {
-				dtde.acceptDrop(DnDConstants.ACTION_COPY);
-				openSong(draggingFile);
-				draggingFile = null;
-			}
-			else {
-				dtde.rejectDrop();
-			}
-		}
-
-		public void dropActionChanged(DropTargetDragEvent dtde) {
-			draggingFile = getMidiFile(dtde.getTransferable());
-			if (draggingFile != null) {
-				dtde.acceptDrag(DnDConstants.ACTION_COPY);
-			}
-			else {
-				dtde.rejectDrag();
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		private File getMidiFile(Transferable t) {
-			if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
-				List<File> files;
-				try {
-					files = (List<File>) t.getTransferData(DataFlavor.javaFileListFlavor);
-				}
-				catch (Exception e) {
-					return null;
-				}
-				if (files.size() >= 1) {
-					File file = files.get(0);
-					String name = file.getName().toLowerCase();
-
-					if (name.endsWith(".lnk")) {
-						try {
-							file = ShellFolder.getShellFolder(file).getLinkLocation();
-							name = file.getName();
-						}
-						catch (Throwable e) {
-							return null;
-						}
-					}
-
-					if (name.endsWith(".mid") || name.endsWith(".midi")) {
-						return file;
-					}
-				}
-			}
-			return null;
 		}
 	}
 
