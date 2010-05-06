@@ -36,7 +36,7 @@ public class AbcToMidi {
 		AbcToMidi a2m = new AbcToMidi();
 
 		FileInputStream in = new FileInputStream(
-				"C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\banana-drum-test" + ".abc");
+				"C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\jesujoy" + ".abc");
 
 		boolean useLotroInstruments = true;
 		Sequence song = a2m.convert(in, useLotroInstruments);
@@ -105,11 +105,6 @@ public class AbcToMidi {
 	private static final int NOTE_LEN_DOUBLECUT = 7;
 	private static final int NOTE_TIE = 8;
 
-	private static final Pattern TUPLET_PATTERN = Pattern.compile("\\((\\d)\\:?(\\d)?\\:?(\\d)?");
-	private static final int TUPLET_P = 1;
-	private static final int TUPLET_Q = 2;
-	private static final int TUPLET_R = 3;
-
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
 
@@ -129,8 +124,8 @@ public class AbcToMidi {
 		long PPQN = 0;
 		long MPQN = 0;
 //		Set<Integer> tiedNotes = new HashSet<Integer>();
-		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>();
-		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>();
+		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
+		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
 		while ((line = rdr.readLine()) != null) {
 			lineNumber++;
@@ -149,14 +144,11 @@ public class AbcToMidi {
 				try {
 					switch (type) {
 					case 'X':
-						if (tiedNotes.size() > 0) {
-							for (int lineAndColumn : tiedNotes.values()) {
-								throw new ParseException("Tied note does not connect to another note",
-										lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
-							}
-//							throw new ParseException(tiedNotes.size() + " unresolved note tie(s) "
-//									+ "in the part beginning on line " + partStartLine, lineNumber);
+						for (int lineAndColumn : tiedNotes.values()) {
+							throw new ParseException("Tied note does not connect to another note",
+									lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
 						}
+
 						accidentals.clear();
 						noteOffEvents.clear();
 						info.newPart();
@@ -179,7 +171,7 @@ public class AbcToMidi {
 						}
 						break;
 					case 'L':
-						info.setDefaultNoteDivisor(value);
+						info.setNoteDivisor(value);
 						break;
 					case 'M':
 						TimeSignature meter = info.getMeter();
@@ -207,8 +199,8 @@ public class AbcToMidi {
 
 				if (seq == null) {
 					try {
-						PPQN = DEFAULT_NOTE_PULSES * 16 / info.getDefaultNoteDivisor();
-						MPQN = TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
+						PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
+						MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
 						seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
 						// Track 0: Title and meta info
@@ -219,7 +211,7 @@ public class AbcToMidi {
 						track = null;
 					}
 					catch (InvalidMidiDataException mde) {
-						throw new ParseException(mde.getMessage());
+						throw new ParseException("Midi Error: " + mde.getMessage());
 					}
 				}
 
@@ -227,8 +219,9 @@ public class AbcToMidi {
 					channel = seq.getTracks().length;
 					if (channel >= MidiConstants.DRUM_CHANNEL)
 						channel++;
-					if (channel > 15)
-						throw new ParseException("Too many parts (max = 15)", partStartLine);
+					if (channel > MidiConstants.CHANNEL_COUNT - 1)
+						throw new ParseException("Too many parts (max = " + (MidiConstants.CHANNEL_COUNT - 1) + ")",
+								partStartLine);
 					track = seq.createTrack();
 
 					track.add(MidiFactory.createTrackNameEvent(info.getTitle()));
@@ -245,7 +238,8 @@ public class AbcToMidi {
 				Matcher m = NOTE_PATTERN.matcher(line);
 				int i = 0;
 				boolean inChord = false;
-				int tupletP = 0, tupletQ = 0, tupletR = 0;
+//				int tupletP = 0, tupletQ = 0, tupletR = 0;
+				Tuplet tuplet = null;
 				while (true) {
 					boolean found = m.find(i);
 					int parseEnd = found ? m.start() : line.length();
@@ -255,8 +249,6 @@ public class AbcToMidi {
 						if (Character.isWhitespace(ch)) {
 							if (inChord)
 								throw new ParseException("Unexpected whitespace inside a chord", lineNumber, i);
-							if (tupletR != 0)
-								throw new ParseException("Tuplet doesn't contain enough notes", lineNumber, i);
 							continue;
 						}
 
@@ -295,60 +287,23 @@ public class AbcToMidi {
 							break;
 						}
 
-						case '(': {
-							// From http://abcnotation.com/abc2mtex/abc.txt:
-							//
-							//   Duplets, triplets, quadruplets, etc.
-							//   ====================================
-							// These can be simply coded with the notation (2ab  for  a  duplet,
-							// (3abc  for  a triplet or (4abcd for a quadruplet, etc., up to (9.
-							// The musical meanings are:
-							//
-							//  (2 2 notes in the time of 3
-							//  (3 3 notes in the time of 2
-							//  (4 4 notes in the time of 3
-							//  (5 5 notes in the time of n
-							//  (6 6 notes in the time of 2
-							//  (7 7 notes in the time of n
-							//  (8 8 notes in the time of 3
-							//  (9 9 notes in the time of n
-							//
-							// If the time signature is compound (3/8, 6/8, 9/8, 3/4, etc.) then
-							// n is three, otherwise n is two.
-							//
-							// More general tuplets can be specified  using  the  syntax  (p:q:r
-							// which  means  `put  p  notes  into  the  time of q for the next r
-							// notes'.  If q is not given, it defaults as above.  If  r  is  not
-							// given,  it  defaults  to p.  For example, (3:2:2 is equivalent to
-							// (3::2 and (3:2:3 is equivalent to (3:2 , (3 or even (3:: .   This
-							// can  be  useful  to  include  notes of different lengths within a
-							// tuplet, for example (3:2:2G4c2 or (3:2:4G2A2Bc and also describes
-							// more precisely how the simple syntax works in cases like (3D2E2F2
-							// or even (3D3EF2. The number written over the tuplet is p.
+						case '(':
+							if (tuplet != null)
+								throw new ParseException("Unexpected '" + ch + "' before end of tuplet", lineNumber, i);
 
-							Matcher tupletMatcher = TUPLET_PATTERN.matcher(line);
-							if (!tupletMatcher.find(i) || tupletMatcher.start() != i) {
-								throw new ParseException("Unexpected '" + ch
-										+ "' or invalid tuplet (slurs are not supported)", lineNumber, i);
+							try {
+								for (int j = i + 1; j < line.length(); j++) {
+									if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
+										tuplet = new Tuplet(line.substring(i + 1, j + 1), info.getMeter().isCompound());
+										i = j;
+										break;
+									}
+								}
 							}
-
-							tupletP = Integer.parseInt(tupletMatcher.group(TUPLET_P));
-							if (tupletP < 2 || tupletP > 9)
+							catch (IllegalArgumentException e) {
 								throw new ParseException("Invalid tuplet", lineNumber, i);
-
-							tupletQ = 2;
-							if (tupletMatcher.group(TUPLET_Q) != null)
-								tupletQ = Integer.parseInt(tupletMatcher.group(TUPLET_Q));
-							else if (tupletP == 2 || tupletP == 4 || tupletP == 8 || info.getMeter().isCompound())
-								tupletQ = 3;
-
-							tupletR = tupletP;
-							if (tupletMatcher.group(TUPLET_R) != null)
-								tupletR = Integer.parseInt(tupletMatcher.group(TUPLET_R));
-
-							i = tupletMatcher.end() - 1;
+							}
 							break;
-						}
 
 						default:
 							throw new ParseException("Unknown/unexpected character '" + ch + "'", lineNumber, i);
@@ -381,10 +336,12 @@ public class AbcToMidi {
 							denominator = Integer.parseInt(denom.substring(1));
 					}
 
-					if (tupletR > 0) {
-						tupletR--;
-						numerator *= tupletQ;
-						denominator *= tupletP;
+					if (tuplet != null) {
+						tuplet.r--;
+						numerator *= tuplet.q;
+						denominator *= tuplet.p;
+						if (tuplet.r == 0)
+							tuplet = null;
 					}
 
 					long noteEndTick = chordStartTick + DEFAULT_NOTE_PULSES * numerator / denominator;
@@ -497,6 +454,9 @@ public class AbcToMidi {
 					i = m.end();
 				}
 
+				if (tuplet != null)
+					throw new ParseException("Tuplet not finished by end of line", lineNumber, i);
+
 				if (inChord)
 					throw new ParseException("Chord not closed at end of line", lineNumber, i);
 			}
@@ -517,10 +477,77 @@ public class AbcToMidi {
 		System.out.println(text);
 	}
 
+	// From http://abcnotation.com/abc2mtex/abc.txt:
+	//
+	//   Duplets, triplets, quadruplets, etc.
+	//   ====================================
+	// These can be simply coded with the notation (2ab  for  a  duplet,
+	// (3abc  for  a triplet or (4abcd for a quadruplet, etc., up to (9.
+	// The musical meanings are:
+	//
+	//  (2 2 notes in the time of 3
+	//  (3 3 notes in the time of 2
+	//  (4 4 notes in the time of 3
+	//  (5 5 notes in the time of n
+	//  (6 6 notes in the time of 2
+	//  (7 7 notes in the time of n
+	//  (8 8 notes in the time of 3
+	//  (9 9 notes in the time of n
+	//
+	// If the time signature is compound (3/8, 6/8, 9/8, 3/4, etc.) then
+	// n is three, otherwise n is two.
+	//
+	// More general tuplets can be specified  using  the  syntax  (p:q:r
+	// which  means  `put  p  notes  into  the  time of q for the next r
+	// notes'.  If q is not given, it defaults as above.  If  r  is  not
+	// given,  it  defaults  to p.  For example, (3:2:2 is equivalent to
+	// (3::2 and (3:2:3 is equivalent to (3:2 , (3 or even (3:: .   This
+	// can  be  useful  to  include  notes of different lengths within a
+	// tuplet, for example (3:2:2G4c2 or (3:2:4G2A2Bc and also describes
+	// more precisely how the simple syntax works in cases like (3D2E2F2
+	// or even (3D3EF2. The number written over the tuplet is p.
+	private static class Tuplet {
+		public int p;
+		public int q;
+		public int r;
+
+		public Tuplet(String str, boolean compoundMeter) {
+			try {
+				String[] parts = str.split(":");
+				if (parts.length < 1 || parts.length > 3)
+					throw new IllegalArgumentException();
+
+				p = Integer.parseInt(parts[0]);
+
+				if (p < 2 || p > 9)
+					throw new IllegalArgumentException();
+
+				if (parts.length >= 2)
+					q = Integer.parseInt(parts[1]);
+				else if (p == 3 || p == 6)
+					q = 2;
+				else if (p == 2 || p == 4 || p == 8)
+					q = 3;
+				else if (p == 5 || p == 7 || p == 9)
+					q = compoundMeter ? 3 : 2;
+				else
+					throw new IllegalArgumentException();
+
+				if (parts.length >= 3)
+					r = Integer.parseInt(parts[2]);
+				else
+					r = p;
+			}
+			catch (NumberFormatException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
+	}
+
 	private static class TuneInfo {
 		private String title;
 		private KeySignature key;
-		private int defaultNoteDivisor;
+		private int noteDivisor;
 		private TimeSignature meter;
 		private int tempo;
 		private LotroInstrument instrument;
@@ -529,7 +556,7 @@ public class AbcToMidi {
 		public TuneInfo() {
 			title = "";
 			key = KeySignature.C_MAJOR;
-			defaultNoteDivisor = 8;
+			noteDivisor = 8;
 			meter = TimeSignature.FOUR_FOUR;
 			tempo = 120;
 			instrument = LotroInstrument.LUTE;
@@ -549,7 +576,7 @@ public class AbcToMidi {
 			this.key = new KeySignature(str);
 		}
 
-		public void setDefaultNoteDivisor(String str) {
+		public void setNoteDivisor(String str) {
 			String[] parts = str.trim().split("[/:| ]");
 			if (parts.length != 2) {
 				throw new IllegalArgumentException("The string: \"" + str
@@ -559,13 +586,12 @@ public class AbcToMidi {
 			int denominator = Integer.parseInt(parts[1]);
 			if (numerator != 1)
 				throw new IllegalArgumentException("The numerator of the default note length must be 1");
-			this.defaultNoteDivisor = denominator * 4;
+			this.noteDivisor = denominator;
 		}
 
 		public void setMeter(String str) {
 			this.meter = new TimeSignature(str);
-			this.defaultNoteDivisor = (((double) meter.numerator / meter.denominator < 0.75) ? 16 : 8) * 4
-					/ meter.denominator;
+			this.noteDivisor = (4 * meter.numerator / meter.denominator) < 3 ? 16 : 8;
 		}
 
 		public void setTempo(String str) {
@@ -612,8 +638,8 @@ public class AbcToMidi {
 			return key;
 		}
 
-		public int getDefaultNoteDivisor() {
-			return defaultNoteDivisor;
+		public int getNoteDivisor() {
+			return noteDivisor;
 		}
 
 		public TimeSignature getMeter() {
