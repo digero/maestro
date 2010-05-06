@@ -13,6 +13,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import com.digero.maestro.midi.Note;
 
@@ -28,12 +29,55 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		byCategory.get(DISABLED.category).add(DISABLED);
 		byId.put(DISABLED.note.id, DISABLED);
 
-		makeCategory("Rim Shot", Note.Ds3, Note.F3);
-		makeCategory("Pitch Bend", Note.D4, Note.E4, Note.F4);
-		makeCategory("Rattle", Note.G3, Note.A3, Note.B3, Note.C4);
-		makeCategory("Rattle Bells", Note.As2);
-		makeCategory("Rattle Short", Note.Cs2, Note.Fs2, Note.Gs2);
-		makeCategory("Bass Open", Note.Gs3, Note.As3);
+		Map<Note, String> drumNames = new HashMap<Note, String>();
+		drumNames.put(Note.C2, "Conga Open");
+		drumNames.put(Note.Cs2, "Rattle Short");
+		drumNames.put(Note.D2, "Muff");
+		drumNames.put(Note.Ds2, "Slap");
+		drumNames.put(Note.E2, "Slap");
+		drumNames.put(Note.F2, "Muted");
+		drumNames.put(Note.Fs2, "Rattle Short");
+		drumNames.put(Note.G2, "Tom High");
+		drumNames.put(Note.Gs2, "Rattle Short");
+		drumNames.put(Note.A2, "Tom High");
+		drumNames.put(Note.As2, "Rattle High");
+		drumNames.put(Note.B2, "Tom Mid");
+		drumNames.put(Note.C3, "Muted Mid");
+		drumNames.put(Note.Cs3, "Bass");
+		drumNames.put(Note.D3, "Bass Slap");
+		drumNames.put(Note.Ds3, "Rim Shot");
+		drumNames.put(Note.E3, "Slap");
+		drumNames.put(Note.F3, "Rim Shot");
+		drumNames.put(Note.Fs3, "Slap");
+		drumNames.put(Note.G3, "Rattle");
+		drumNames.put(Note.Gs3, "Bass");
+		drumNames.put(Note.A3, "Rattle");
+		drumNames.put(Note.As3, "Bass");
+		drumNames.put(Note.B3, "Rattle");
+		drumNames.put(Note.C4, "Rattle");
+		drumNames.put(Note.Cs4, "Muted");
+		drumNames.put(Note.D4, "Conga Bend");
+		drumNames.put(Note.Ds4, "Tom Mid");
+		drumNames.put(Note.E4, "Conga Bend");
+		drumNames.put(Note.F4, "Conga Bend");
+		drumNames.put(Note.Fs4, "Slap");
+		drumNames.put(Note.G4, "Conga Open");
+		drumNames.put(Note.Gs4, "Slap");
+		drumNames.put(Note.A4, "Conga Open");
+		drumNames.put(Note.As4, "Muff");
+		drumNames.put(Note.B4, "Conga Open");
+		drumNames.put(Note.C5, "Slap");
+
+		for (Entry<Note, String> entry : drumNames.entrySet()) {
+			add(entry.getValue(), entry.getKey());
+		}
+
+//		makeCategory("Rim Shot", Note.Ds3, Note.F3);
+//		makeCategory("Pitch Bend", Note.D4, Note.E4, Note.F4);
+//		makeCategory("Rattle", Note.G3, Note.A3, Note.B3, Note.C4);
+//		makeCategory("Rattle Bells", Note.As2);
+//		makeCategory("Rattle Short", Note.Cs2, Note.Fs2, Note.Gs2);
+//		makeCategory("Bass Open", Note.Gs3, Note.As3);
 
 		int noteCount = Note.MAX_PLAYABLE.id - Note.MIN_PLAYABLE.id + 1;
 		if (byId.keySet().size() < noteCount) {
