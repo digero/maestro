@@ -25,6 +25,7 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 
 import com.digero.maestro.MaestroMain;
+import com.digero.maestro.abc.Dynamics;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.KeySignature;
@@ -77,17 +78,6 @@ public class AbcToMidi {
 
 	public AbcToMidi() {
 
-	}
-
-	private enum Dynamics {
-		// Velocities referenced form http://en.wikipedia.org/wiki/Dynamics_(music)
-		ppp(16), pp(33), p(49), mp(64), mf(80), f(96), ff(112), fff(126);
-
-		public final int velocity;
-
-		private Dynamics(int velocity) {
-			this.velocity = velocity;
-		}
 	}
 
 	private static final Pattern INFO_PATTERN = Pattern.compile("^([A-Z]):\\s*(.*)\\s*$");

@@ -28,15 +28,18 @@ public class NoteEvent implements Comparable<NoteEvent> {
 	public Note note;
 	public NoteEvent tiesFrom = null;
 	public NoteEvent tiesTo = null;
+	public final int velocity;
 
-	public NoteEvent(Note note, long startMicros) {
+	public NoteEvent(Note note, int velocity, long startMicros) {
 		this.note = note;
+		this.velocity = velocity;
 		this.startMicros = startMicros;
 		this.endMicros = startMicros;
 	}
 
-	public NoteEvent(Note note, long startMicros, long endMicros) {
+	public NoteEvent(Note note, int velocity, long startMicros, long endMicros) {
 		this.note = note;
+		this.velocity = velocity;
 		this.startMicros = startMicros;
 		this.endMicros = endMicros;
 	}

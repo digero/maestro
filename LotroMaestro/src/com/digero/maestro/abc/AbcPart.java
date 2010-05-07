@@ -75,6 +75,9 @@ public class AbcPart {
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 
 		for (Chord chord : chords) {
+			Dynamics dynamics = chord.calcDynamics();
+			if (dynamics == null)
+				dynamics = Dynamics.DEFAULT;
 			for (int j = 0; j < chord.size(); j++) {
 				NoteEvent ne = chord.get(j);
 				if (ne.note == Note.REST)
@@ -90,7 +93,7 @@ public class AbcPart {
 						track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
 					}
 					else if (on.note.id == ne.note.id) {
-						// Shorten the note that's currently on to end at the same time that the next one starts
+						// Shorten the note that's currently on, to end at the same time that the next one starts
 						on.endMicros = ne.startMicros;
 						onIter.remove();
 					}
@@ -99,7 +102,8 @@ public class AbcPart {
 				if (!instrument.isSustainable(ne.note.id))
 					ne.endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
 
-				track.add(MidiFactory.createNoteOnEvent(ne.note.id, channel, tm.getMidiTicks(ne.startMicros)));
+				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.velocity, tm
+						.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
 		}
@@ -149,6 +153,8 @@ public class AbcPart {
 		int lineLength = 0;
 		long barNumber = 0;
 		StringBuilder sb = new StringBuilder();
+		Dynamics curDyn = Dynamics.DEFAULT;
+
 		for (Chord c : chords) {
 			if (c.size() == 0) {
 				System.err.println("Chord has no notes!");
@@ -177,6 +183,12 @@ public class AbcPart {
 				lineLength += sb.length() + 2;
 				sb.setLength(0);
 				barNumber = c.getStartMicros() / tm.barLength;
+			}
+
+			Dynamics newDyn = c.calcDynamics();
+			if (newDyn != null && newDyn != curDyn) {
+				sb.append('+').append(newDyn).append("+ ");
+				curDyn = newDyn;
 			}
 
 			if (c.size() > 1) {
@@ -277,7 +289,7 @@ public class AbcPart {
 						assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 						long start = Math.max(ne.startMicros, songStartMicros) - songStartMicros;
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
-						events.add(new NoteEvent(mappedNote, start, end));
+						events.add(new NoteEvent(mappedNote, ne.velocity, start, end));
 					}
 				}
 			}
@@ -372,12 +384,14 @@ public class AbcPart {
 				// Check the chord length again, since removing a note might have changed its length
 				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
 					// If the chord is too long, add a short rest in the chord to shorten it
-					curChord.add(new NoteEvent(Note.REST, curChord.getStartMicros(), nextChord.getStartMicros()));
+					curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, curChord.getStartMicros(),
+							nextChord.getStartMicros()));
 				}
 				else if (curChord.getEndMicros() < nextChord.getStartMicros()) {
 					// If the chord is too short, insert a rest to fill the gap
 					tmpEvents.clear();
-					tmpEvents.add(new NoteEvent(Note.REST, curChord.getEndMicros(), nextChord.getStartMicros()));
+					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, curChord.getEndMicros(),
+							nextChord.getStartMicros()));
 					breakLongNotes(tmpEvents, tm, addTies);
 
 					for (NoteEvent restEvent : tmpEvents)
@@ -409,7 +423,7 @@ public class AbcPart {
 				// If the note is a rest or sustainable, add another one after 
 				// this ends to keep it going...
 				if (ne.note == Note.REST || instrument.isSustainable(ne.note.id)) {
-					NoteEvent next = new NoteEvent(ne.note, maxNoteEnd, ne.endMicros);
+					NoteEvent next = new NoteEvent(ne.note, ne.velocity, maxNoteEnd, ne.endMicros);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
 						ins = -ins - 1;
@@ -424,7 +438,7 @@ public class AbcPart {
 				// Make a soft break (tie) for notes that cross bar boundaries
 				long barEnd = tm.getBarEnd(ne.startMicros);
 				if (ne.endMicros > barEnd) {
-					NoteEvent next = new NoteEvent(ne.note, barEnd, ne.endMicros);
+					NoteEvent next = new NoteEvent(ne.note, ne.velocity, barEnd, ne.endMicros);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
 						ins = -ins - 1;

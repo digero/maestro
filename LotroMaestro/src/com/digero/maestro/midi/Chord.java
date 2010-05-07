@@ -25,6 +25,8 @@ package com.digero.maestro.midi;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.digero.maestro.abc.Dynamics;
+
 public class Chord {
 	public static final int MAX_CHORD_NOTES = 6;
 
@@ -102,8 +104,21 @@ public class Chord {
 		}
 		return ne;
 	}
-	
+
 	public boolean remove(NoteEvent ne) {
 		return notes.remove(ne);
+	}
+
+	public Dynamics calcDynamics() {
+		int velocity = -1;
+		for (NoteEvent ne : notes) {
+			if (ne.note != Note.REST && ne.tiesFrom == null && ne.velocity > velocity)
+				velocity = ne.velocity;
+		}
+
+		if (velocity == -1)
+			return null;
+
+		return Dynamics.fromVelocity(velocity);
 	}
 }

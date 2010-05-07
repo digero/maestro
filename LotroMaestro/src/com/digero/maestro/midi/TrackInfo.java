@@ -72,7 +72,7 @@ public class TrackInfo implements IMidiConstants {
 						if (note == null)
 							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
 
-						NoteEvent ne = new NoteEvent(note, micros);
+						NoteEvent ne = new NoteEvent(note, velocity, micros);
 
 						Iterator<NoteEvent> onIter = (drums ? drumsOn : notesOn[c]).iterator();
 						while (onIter.hasNext()) {
@@ -115,14 +115,13 @@ public class TrackInfo implements IMidiConstants {
 					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
-					System.out.println("Pitch Bend: " + bendTmp + " (" + notesOn[c].size() + " notes)");
 					if (bendTmp != pitchBend[c]) {
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
 						for (NoteEvent ne : notesOn[c]) {
 							ne.endMicros = micros;
 
 							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
-							NoteEvent bne = new NoteEvent(bn, micros);
+							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros);
 							noteEvents.add(bne);
 							bentNotes.add(bne);
 						}
