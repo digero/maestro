@@ -44,10 +44,11 @@ public class TrackInfo implements IMidiConstants {
 		noteEvents = new ArrayList<NoteEvent>();
 		drumEvents = new ArrayList<NoteEvent>();
 		drumsInUse = new TreeSet<Integer>();
-		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
+		List<NoteEvent>[] notesOn = new List[16];
 		List<NoteEvent> drumsOn = new ArrayList<NoteEvent>();
 		int notesNotTurnedOff = 0;
 
+		int[] pitchBend = new int[16];
 		for (int j = 0, sz = track.size(); j < sz; j++) {
 			MidiEvent evt = track.get(j);
 			MidiMessage msg = evt.getMessage();
@@ -55,10 +56,14 @@ public class TrackInfo implements IMidiConstants {
 			if (msg instanceof ShortMessage) {
 				ShortMessage m = (ShortMessage) msg;
 				int cmd = m.getCommand();
-				boolean drums = (m.getChannel() == DRUM_CHANNEL);
+				int c = m.getChannel();
+				boolean drums = (c == DRUM_CHANNEL);
+
+				if (notesOn[c] == null)
+					notesOn[c] = new ArrayList<NoteEvent>();
 
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
-					int noteId = m.getData1();
+					int noteId = m.getData1() + (drums ? 0 : pitchBend[c]);
 					int velocity = m.getData2();
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
@@ -69,7 +74,7 @@ public class TrackInfo implements IMidiConstants {
 
 						NoteEvent ne = new NoteEvent(note, micros);
 
-						Iterator<NoteEvent> onIter = (drums ? drumsOn : notesOn).iterator();
+						Iterator<NoteEvent> onIter = (drums ? drumsOn : notesOn[c]).iterator();
 						while (onIter.hasNext()) {
 							NoteEvent on = onIter.next();
 							if (on.note.id == ne.note.id) {
@@ -89,20 +94,40 @@ public class TrackInfo implements IMidiConstants {
 						}
 						else {
 							noteEvents.add(ne);
-							notesOn.add(ne);
-							instruments.add(instrumentCache.getInstrument(evt.getTick(), m.getChannel()));
+							notesOn[c].add(ne);
+							instruments.add(instrumentCache.getInstrument(evt.getTick(), c));
 						}
 					}
 					else {
-						Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn.iterator();
+						Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn[c].iterator();
 						while (iter.hasNext()) {
 							NoteEvent ne = iter.next();
-							if (ne.note.id == m.getData1()) {
+							if (ne.note.id == noteId) {
 								iter.remove();
 								ne.endMicros = micros;
 								break;
 							}
 						}
+					}
+				}
+				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
+					final int STEP_SIZE = ((1 << 14) - 1) / 4;
+					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
+					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
+
+					System.out.println("Pitch Bend: " + bendTmp + " (" + notesOn[c].size() + " notes)");
+					if (bendTmp != pitchBend[c]) {
+						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
+						for (NoteEvent ne : notesOn[c]) {
+							ne.endMicros = micros;
+
+							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
+							NoteEvent bne = new NoteEvent(bn, micros);
+							noteEvents.add(bne);
+							bentNotes.add(bne);
+						}
+						notesOn[c] = bentNotes;
+						pitchBend[c] = bendTmp;
 					}
 				}
 			}
@@ -131,11 +156,19 @@ public class TrackInfo implements IMidiConstants {
 		}
 
 		// Turn off notes that are on at the end of the song.  This shouldn't happen...
-		if (notesOn.size() > 0 || drumsOn.size() > 0) {
-			System.err.println((notesOn.size() + drumsOn.size() + notesNotTurnedOff)
+		int ctNotesOn = 0;
+		for (List<NoteEvent> notesOnChannel : notesOn) {
+			if (notesOnChannel != null)
+				ctNotesOn += notesOnChannel.size();
+		}
+		if (ctNotesOn > 0 || drumsOn.size() > 0) {
+			System.err.println((ctNotesOn + drumsOn.size() + notesNotTurnedOff)
 					+ " note(s) not turned off at the end of the track.");
 
-			noteEvents.removeAll(notesOn);
+			for (List<NoteEvent> notesOnChannel : notesOn) {
+				if (notesOnChannel != null)
+					noteEvents.removeAll(notesOnChannel);
+			}
 			drumEvents.removeAll(drumsOn);
 //			for (NoteEvent ne : notesOn)
 //				ne.endMicros = song.getMicrosecondLength();
