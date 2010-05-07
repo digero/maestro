@@ -10,13 +10,15 @@ import java.awt.FlowLayout;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -34,10 +36,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 
 import com.digero.maestro.MaestroMain;
@@ -47,8 +54,10 @@ import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.util.ExtensionFileFilter;
 import com.digero.maestro.util.ParseException;
-import com.digero.maestro.view.FileTypeDropListener;
+import com.digero.maestro.util.Util;
+import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
 
@@ -81,17 +90,24 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	private ImageIcon playIcon, pauseIcon, stopIcon;
 	private JButton playButton, stopButton;
 
-	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
+	private JMenuItem exportMidiMenuItem;
 
-	private List<String> abcLines;
+	private JFileChooser openFileDialog;
+	private JFileChooser exportFileDialog;
+
+	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
+	private Map<File, List<String>> abcData;
+
+	private Preferences prefs = Preferences.userNodeForPackage(AbcPreviewer.class);
+	private Preferences windowPrefs = prefs.node("window");
 
 	public AbcPreviewer() {
 		super("LotRO ABC Previewer");
 
-		final FileTypeDropListener dropListener = new FileTypeDropListener("abc", "txt");
+		final FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				openSong(dropListener.getDroppedFile());
+				openSong(dropListener.getDroppedFiles().toArray(new File[0]));
 			}
 		});
 		new DropTarget(this, dropListener);
@@ -104,10 +120,11 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 			if (useLotroInstruments) {
 				try {
+//					InputStream soundbankStream = ;
 					Soundbank lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
-							.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
+							.getResource("midi/synth/LotroInstruments.sf2"));
 					Soundbank lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class
-							.getResourceAsStream("midi/synth/LotroDrums.sf2"));
+							.getResource("midi/synth/LotroDrums.sf2"));
 					synth = MidiSystem.getSynthesizer();
 					synth.open();
 					synth.unloadAllInstruments(lotroSoundbank);
@@ -117,6 +134,11 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 					receiver = synth.getReceiver();
 				}
 				catch (IOException e) {
+					JOptionPane.showMessageDialog(this, "There was an error loading the LotRO instrument sounds. "
+							+ "Playback will use MIDI instruments instead "
+							+ "(drums do not sound good in this mode).\n\n" + e.getMessage(),
+							"Failed to load LotRO instruments", JOptionPane.ERROR_MESSAGE);
+
 					if (synth != null)
 						synth.close();
 					if (receiver != null)
@@ -163,6 +185,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		stopIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/stop.png"));
 
 		playButton = new JButton(playIcon);
+		playButton.setEnabled(false);
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (sequencer.isRunning())
@@ -173,6 +196,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		});
 
 		stopButton = new JButton(stopIcon);
+		stopButton.setEnabled(false);
 		stopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				stop();
@@ -182,7 +206,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
 				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
-					playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
+					updateButtonStates();
 				}
 			}
 		});
@@ -194,6 +218,49 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		add(trackListScroller, "0, 0, 2, 0");
 		add(songPositionPanel, "1, 2");
 		add(buttonPanel, "1, 3");
+
+		initMenu();
+
+		updateButtonStates();
+	}
+
+	private void initMenu() {
+		JMenuBar mainMenu = new JMenuBar();
+		setJMenuBar(mainMenu);
+
+		JMenu fileMenu = mainMenu.add(new JMenu("File"));
+		fileMenu.setMnemonic(KeyEvent.VK_F);
+
+		JMenuItem open = fileMenu.add(new JMenuItem("Open ABC File..."));
+		open.setMnemonic(KeyEvent.VK_O);
+		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
+		open.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openSongDialog();
+			}
+		});
+
+		exportMidiMenuItem = fileMenu.add(new JMenuItem("Export MIDI..."));
+		exportMidiMenuItem.setMnemonic(KeyEvent.VK_M);
+		exportMidiMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		exportMidiMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportMidi();
+			}
+		});
+
+		fileMenu.addSeparator();
+
+		JMenuItem exit = fileMenu.add(new JMenuItem("Exit"));
+		exit.setMnemonic(KeyEvent.VK_X);
+		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_DOWN_MASK));
+		exit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+
+		// TODO
 	}
 
 	private void closeMidi() {
@@ -207,45 +274,140 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 			receiver.close();
 	}
 
-	private void openSong(File abcFile) {
-		stop();
+	private void openSongDialog() {
+		if (openFileDialog == null) {
+			openFileDialog = new JFileChooser(prefs.get("openFileDialog.currentDirectory", Util
+					.getLotroMusicPath(false).getAbsolutePath()));
+
+			openFileDialog.setMultiSelectionEnabled(true);
+			openFileDialog.setFileFilter(new ExtensionFileFilter("ABC Files", "abc", "txt"));
+		}
+
+		int result = openFileDialog.showOpenDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			prefs.put("openFileDialog.currentDirectory", openFileDialog.getCurrentDirectory().getAbsolutePath());
+
+			openSong(openFileDialog.getSelectedFiles());
+		}
+	}
+
+	private void openSong(File... abcFiles) {
+		Map<File, List<String>> data = new HashMap<File, List<String>>();
+
+		try {
+			for (File abcFile : abcFiles) {
+				data.put(abcFile, AbcToMidi.readLines(abcFile));
+			}
+		}
+		catch (IOException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Failed to open file", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		openSong(data);
+	}
+
+	private void openSong(Map<File, List<String>> data) {
+		Sequence song;
+		try {
+			song = new AbcToMidi().convert(data, useLotroInstruments, instrumentOverrideMap);
+		}
+		catch (ParseException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		abcData = data;
+		instrumentOverrideMap.clear();
+
+		try {
+			stop();
+			sequencer.setSequence(song, this);
+		}
+		catch (InvalidMidiDataException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		for (int i = 0; i < 16; i++) {
 			sequencer.setTrackMute(i, false, this);
 			sequencer.setTrackSolo(i, false, this);
 		}
-		instrumentOverrideMap.clear();
-
-		FileInputStream in = null;
-		try {
-			abcLines = AbcToMidi.readLines(new FileInputStream(abcFile));
-			sequencer.setSequence(new AbcToMidi().convert(abcLines, useLotroInstruments, instrumentOverrideMap), this);
-		}
-		catch (IOException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Failed to open file", JOptionPane.ERROR_MESSAGE);
-		}
-		catch (ParseException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
-		}
-		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-		}
-		finally {
-			try {
-				if (in != null)
-					in.close();
-			}
-			catch (IOException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(), "Failed to close file", JOptionPane.ERROR_MESSAGE);
-			}
-		}
 
 		trackListPanel.songChanged();
+		updateButtonStates();
 	}
 
 	private void stop() {
 		sequencer.stop(AbcPreviewer.this);
 		sequencer.setPosition(0, AbcPreviewer.this);
+		updateButtonStates();
+	}
+
+	private void updateButtonStates() {
+		boolean loaded = (sequencer.getSequence() != null);
+		playButton.setEnabled(loaded);
+		playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
+		stopButton.setEnabled(loaded && (sequencer.isRunning() || sequencer.getPosition() != 0));
+
+		exportMidiMenuItem.setEnabled(loaded);
+	}
+
+	private void exportMidi() {
+		if (exportFileDialog == null) {
+			exportFileDialog = new JFileChooser(prefs.get("exportFileDialog.currentDirectory", Util.getUserMusicPath()
+					.getAbsolutePath()));
+
+			exportFileDialog.setFileFilter(new ExtensionFileFilter("MIDI Files", "mid", "midi"));
+		}
+
+		if (prefs.getBoolean("exportMidi.showConfirmDialog", true)) {
+			JCheckBox dontShowInFuture = new JCheckBox("Don't show me this message again");
+			Object[] confirmElements = new Object[] {
+					"Exported MIDI files will use standard MIDI instrument sounds \n"
+							+ "instead of LotRO instrument sounds. Drums will not sound \n"
+							+ "at all like LotRO's drums.\n\n" + "Do you want to export to MIDI anyways?", //
+					dontShowInFuture
+			};
+			int result = JOptionPane.showConfirmDialog(this, confirmElements, "Export to MIDI",
+					JOptionPane.YES_NO_OPTION);
+			prefs.putBoolean("exportMidi.showConfirmDialog", !dontShowInFuture.isSelected());
+			if (result != JOptionPane.YES_OPTION)
+				return;
+		}
+
+		int result = exportFileDialog.showSaveDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			prefs.put("exportFileDialog.currentDirectory", exportFileDialog.getCurrentDirectory().getAbsolutePath());
+
+			try {
+				Sequence midi = new AbcToMidi().convert(abcData, false, instrumentOverrideMap);
+
+				File saveFile = exportFileDialog.getSelectedFile();
+				if (saveFile.getName().indexOf('.') < 0) {
+					saveFile = new File(saveFile.getParent() + "/" + saveFile.getName() + ".mid");
+					exportFileDialog.setSelectedFile(saveFile);
+				}
+				if (saveFile.exists()) {
+					result = JOptionPane.showConfirmDialog(this, saveFile.getName() + " already exists. Overwrite?",
+							"Export to MIDI", JOptionPane.YES_NO_OPTION);
+					if (result != JOptionPane.YES_OPTION)
+						return;
+				}
+				MidiSystem.write(midi, 1, saveFile);
+			}
+			catch (ParseException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error converting ABC file",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			catch (IOException e) {
+				JOptionPane
+						.showMessageDialog(this, e.getMessage(), "Error saving MIDI file", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+		}
 	}
 
 	//
@@ -282,7 +444,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 			for (int i = layout.getNumRow() - 2; i >= 1; i--) {
 				layout.deleteRow(i);
 			}
-			invalidate();
+			revalidate();
 			repaint();
 		}
 
@@ -351,43 +513,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				}
 			}
 
-			validate();
+			revalidate();
 			repaint();
-		}
-
-		private void changeInstrument(Track track, int patch) {
-			long position = sequencer.getPosition();
-
-//			int channel = -1;
-//			for (int j = 0; j < track.size(); j++) {
-//				MidiEvent evt = track.get(j);
-//				if (evt.getMessage() instanceof ShortMessage) {
-//					ShortMessage m = (ShortMessage) evt.getMessage();
-//					if (m.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-//						channel = m.getChannel();
-//						track.remove(evt);
-//					}
-//					else if (m.getCommand() == ShortMessage.NOTE_ON) {
-//						channel = m.getChannel();
-//					}
-//				}
-//			}
-//
-//			if (channel != -1) {
-//				MidiEvent evt = MidiFactory.createProgramChangeEvent(patch, channel, 0);
-//				track.add(evt);
-//				receiver.send(evt.getMessage(), 0);
-//				ShortMessage noteOff = new ShortMessage();
-//				try {
-//					for (int i = 0; i < 128; i++) {
-//						noteOff.setMessage(ShortMessage.NOTE_OFF, channel, i, 127);
-//						receiver.send(noteOff, 0);
-//					}
-//				}
-//				catch (InvalidMidiDataException e) {
-//					e.printStackTrace();
-//				}
-//			}
 		}
 
 		@Override
@@ -401,20 +528,26 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				JComboBox comboBox = (JComboBox) evt.getSource();
 				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
 
+				long positon = sequencer.getPosition();
+				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
+				Sequence song;
+
 				try {
-					long positon = sequencer.getPosition();
-					instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
-					Sequence song = new AbcToMidi().convert(abcLines, useLotroInstruments, instrumentOverrideMap);
+					song = new AbcToMidi().convert(abcData, useLotroInstruments, instrumentOverrideMap);
+				}
+				catch (ParseException e) {
+					JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				try {
 					sequencer.setSequence(song, AbcPreviewer.this);
 					sequencer.setPosition(positon, AbcPreviewer.this);
 				}
 				catch (InvalidMidiDataException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
+					return;
 				}
 			}
 		}

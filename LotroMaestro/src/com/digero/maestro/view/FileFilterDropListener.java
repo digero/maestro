@@ -10,23 +10,27 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import sun.awt.shell.ShellFolder;
 
-public class FileTypeDropListener implements DropTargetListener {
-	private Pattern fileNameRegex;
-	private File draggingFile = null;
+import com.digero.maestro.util.ExtensionFileFilter;
+
+public class FileFilterDropListener implements DropTargetListener {
+	private FileFilter filter;
+	private boolean acceptMultiple;
+	private List<File> draggingFiles = null;
 	private List<ActionListener> listeners = null;
 
-	public FileTypeDropListener(String... fileTypes) {
-		String regex = ".*\\.(" + fileTypes[0];
-		for (int i = 1; i < fileTypes.length; i++)
-			regex += "|" + fileTypes[i];
-		regex += ")$";
-		fileNameRegex = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+	public FileFilterDropListener(boolean acceptMultiple, String... fileTypes) {
+		this(acceptMultiple, new ExtensionFileFilter("", fileTypes));
+	}
+
+	public FileFilterDropListener(boolean acceptMultiple, FileFilter filter) {
+		this.acceptMultiple = acceptMultiple;
+		this.filter = filter;
 	}
 
 	public void addActionListener(ActionListener l) {
@@ -42,12 +46,19 @@ public class FileTypeDropListener implements DropTargetListener {
 	}
 
 	public File getDroppedFile() {
-		return draggingFile;
+		if (draggingFiles == null || draggingFiles.isEmpty())
+			return null;
+
+		return draggingFiles.get(0);
+	}
+
+	public List<File> getDroppedFiles() {
+		return draggingFiles;
 	}
 
 	public void dragEnter(DropTargetDragEvent dtde) {
-		draggingFile = getMatchingFile(dtde.getTransferable());
-		if (draggingFile != null) {
+		draggingFiles = getMatchingFiles(dtde.getTransferable());
+		if (draggingFiles != null) {
 			dtde.acceptDrag(DnDConstants.ACTION_COPY);
 		}
 		else {
@@ -62,10 +73,10 @@ public class FileTypeDropListener implements DropTargetListener {
 	}
 
 	public void drop(DropTargetDropEvent dtde) {
-		if (draggingFile != null) {
+		if (draggingFiles != null) {
 			dtde.acceptDrop(DnDConstants.ACTION_COPY);
 			fireActionPerformed();
-			draggingFile = null;
+			draggingFiles = null;
 		}
 		else {
 			dtde.rejectDrop();
@@ -73,8 +84,8 @@ public class FileTypeDropListener implements DropTargetListener {
 	}
 
 	public void dropActionChanged(DropTargetDragEvent dtde) {
-		draggingFile = getMatchingFile(dtde.getTransferable());
-		if (draggingFile != null) {
+		draggingFiles = getMatchingFiles(dtde.getTransferable());
+		if (draggingFiles != null) {
 			dtde.acceptDrag(DnDConstants.ACTION_COPY);
 		}
 		else {
@@ -89,7 +100,7 @@ public class FileTypeDropListener implements DropTargetListener {
 	}
 
 	@SuppressWarnings("unchecked")
-	private File getMatchingFile(Transferable t) {
+	private List<File> getMatchingFiles(Transferable t) {
 		if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
 			List<File> files;
 			try {
@@ -98,25 +109,28 @@ public class FileTypeDropListener implements DropTargetListener {
 			catch (Exception e) {
 				return null;
 			}
-			if (files.size() >= 1) {
-				File file = files.get(0);
-				String name = file.getName().toLowerCase();
 
-				if (name.endsWith(".lnk")) {
+			if (files.isEmpty() || !acceptMultiple && files.size() > 1)
+				return null;
+
+			for (File file : files) {
+				if (file.getName().toLowerCase().endsWith(".lnk")) {
 					try {
 						file = ShellFolder.getShellFolder(file).getLinkLocation();
-						name = file.getName();
 					}
-					catch (Throwable e) {
+					catch (Exception e) {
 						return null;
 					}
 				}
 
-				if (fileNameRegex.matcher(name).matches()) {
-					return file;
-				}
+				if (file.isDirectory() || !filter.accept(file))
+					return null;
 			}
+
+			return files;
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 }

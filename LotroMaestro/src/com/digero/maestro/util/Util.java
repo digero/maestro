@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Toolkit;
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,5 +68,41 @@ public final class Util {
 			return ELLIPSIS;
 
 		return fit;
+	}
+
+	public static File getUserDocumentsPath() {
+		String userHome = System.getProperty("user.home", "");
+		File docs = new File(userHome + "/Documents");
+		if (docs.isDirectory())
+			return docs;
+		docs = new File(userHome + "/My Documents");
+		if (docs.isDirectory())
+			return docs;
+		return new File(userHome);
+	}
+
+	public static File getUserMusicPath() {
+		String userHome = System.getProperty("user.home", "");
+		File music = new File(userHome + "/Music");
+		if (music.isDirectory())
+			return music;
+		music = new File(userHome + "/My Documents/My Music");
+		if (music.isDirectory())
+			return music;
+
+		return getUserDocumentsPath();
+	}
+
+	public static File getLotroMusicPath(boolean create) {
+		File docs = getUserDocumentsPath();
+		File lotro = new File(docs.getAbsolutePath() + "/The Lord of the Rings Online");
+		if (lotro.isDirectory()) {
+			File music = new File(lotro.getAbsolutePath() + "/Music");
+			if (music.isDirectory() || create && music.mkdir())
+				return music;
+
+			return lotro;
+		}
+		return docs;
 	}
 }

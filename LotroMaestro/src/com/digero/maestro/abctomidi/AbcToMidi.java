@@ -1,15 +1,16 @@
 package com.digero.maestro.abctomidi;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,12 +37,10 @@ public class AbcToMidi {
 	public static void main(String[] args) throws Exception {
 		AbcToMidi a2m = new AbcToMidi();
 
-		FileInputStream in = new FileInputStream(
-				"C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\jesujoy" + ".abc");
+		File in = new File("C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\jesujoy" + ".abc");
 
 		boolean useLotroInstruments = true;
 		Sequence song = a2m.convert(in, useLotroInstruments);
-		in.close();
 
 		Sequencer sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
@@ -109,28 +108,44 @@ public class AbcToMidi {
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
 
-	public static List<String> readLines(InputStream stream) throws IOException {
-		ArrayList<String> lines = new ArrayList<String>();
-		BufferedReader rdr = new BufferedReader(new InputStreamReader(stream));
-		String line;
-		while ((line = rdr.readLine()) != null) {
-			lines.add(line);
+	public static List<String> readLines(File inputFile) throws IOException {
+		FileInputStream fileInputStream = null;
+		InputStreamReader inputStreamReader = null;
+		BufferedReader bufferedReader = null;
+		try {
+			fileInputStream = new FileInputStream(inputFile);
+			inputStreamReader = new InputStreamReader(fileInputStream);
+			bufferedReader = new BufferedReader(inputStreamReader);
+
+			String line;
+			ArrayList<String> lines = new ArrayList<String>();
+			while ((line = bufferedReader.readLine()) != null) {
+				lines.add(line);
+			}
+			return lines;
 		}
-		return lines;
+		finally {
+			if (fileInputStream != null)
+				fileInputStream.close();
+			if (inputStreamReader != null)
+				inputStreamReader.close();
+			if (bufferedReader != null)
+				bufferedReader.close();
+		}
 	}
 
-	public Sequence convert(InputStream abcStream, boolean useLotroInstruments) throws IOException, ParseException {
-		return convert(readLines(abcStream), useLotroInstruments, null);
+	public Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
+		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
+		tmpMap.put(abcFile, readLines(abcFile));
+		return convert(tmpMap, useLotroInstruments, null);
 	}
 
-	public Sequence convert(Iterable<String> lines, boolean useLotroInstruments,
+	public Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap) throws ParseException {
 		TuneInfo info = new TuneInfo();
 		Sequence seq = null;
 		Track track = null;
 
-		int lineNumber = 0;
-		int partStartLine = 0;
 		int channel = 0;
 		int trackNumber = 0;
 
@@ -141,349 +156,366 @@ public class AbcToMidi {
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
-		for (String line : lines) {
-			lineNumber++;
+		for (Entry<File, List<String>> fileData : filesData.entrySet()) {
+			String fileName = fileData.getKey().getName();
+			int lineNumber = 0;
+			int partStartLine = 0;
+			for (String line : fileData.getValue()) {
+				lineNumber++;
 
-			int comment = line.indexOf('%');
-			if (comment >= 0)
-				line = line.substring(0, comment);
-			if (line.trim().length() == 0)
-				continue;
+				int comment = line.indexOf('%');
+				if (comment >= 0)
+					line = line.substring(0, comment);
+				if (line.trim().length() == 0)
+					continue;
 
-			Matcher infoMatcher = INFO_PATTERN.matcher(line);
-			if (infoMatcher.matches()) {
-				char type = infoMatcher.group(INFO_TYPE).charAt(0);
-				String value = infoMatcher.group(INFO_VALUE).trim();
+				Matcher infoMatcher = INFO_PATTERN.matcher(line);
+				if (infoMatcher.matches()) {
+					char type = infoMatcher.group(INFO_TYPE).charAt(0);
+					String value = infoMatcher.group(INFO_VALUE).trim();
 
-				try {
-					switch (type) {
-					case 'X':
-						for (int lineAndColumn : tiedNotes.values()) {
-							throw new ParseException("Tied note does not connect to another note",
-									lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
-						}
-
-						accidentals.clear();
-						noteOffEvents.clear();
-
-						info.newPart(Integer.parseInt(value));
-						trackNumber++;
-						partStartLine = lineNumber;
-						chordStartTick = 0;
-						track = null; // Will create a new track after the header is done
-						if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
-							info.setInstrument(instrumentOverrideMap.get(trackNumber));
-						}
-						break;
-					case 'T':
-						if (track != null)
-							throw new ParseException("Can't specify the title in the middle of a part", lineNumber, 0);
-
-						info.setTitle(value);
-						if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-							info.findInstrumentName(value);
-						}
-						break;
-					case 'K':
-						info.setKey(value);
-						if (info.getKey().sharpsFlats != 0) {
-							throw new ParseException("Only C major and A minor are currently supported", lineNumber,
-									infoMatcher.start(INFO_VALUE));
-						}
-						break;
-					case 'L':
-						info.setNoteDivisor(value);
-						break;
-					case 'M':
-						TimeSignature meter = info.getMeter();
-						info.setMeter(value);
-						if (seq != null && !info.getMeter().equals(meter))
-							throw new ParseException("The meter can't change during the song", lineNumber);
-						break;
-					case 'Q':
-						int tempo = info.getTempo();
-						info.setTempo(value);
-						if (seq != null && info.getTempo() != tempo)
-							throw new ParseException("The tempo can't change during the song", lineNumber);
-						break;
-					case 'I':
-						if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-							info.findInstrumentName(value);
-						}
-						break;
-					}
-				}
-				catch (IllegalArgumentException iae) {
-					throw new ParseException(iae.getMessage(), lineNumber, infoMatcher.start(INFO_VALUE));
-				}
-			}
-			else {
-				// The line contains notes
-
-				if (seq == null) {
 					try {
-						PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
-						MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
-						seq = new Sequence(Sequence.PPQ, (int) PPQN);
+						switch (type) {
+						case 'X':
+							for (int lineAndColumn : tiedNotes.values()) {
+								throw new ParseException("Tied note does not connect to another note", fileName,
+										lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
+							}
 
-						// Track 0: Title and meta info
-						Track track0 = seq.createTrack();
-						track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
-						track0.add(MidiFactory.createTempoEvent((int) MPQN, 0));
-
-						track = null;
-					}
-					catch (InvalidMidiDataException mde) {
-						throw new ParseException("Midi Error: " + mde.getMessage());
-					}
-				}
-
-				if (track == null) {
-					channel = seq.getTracks().length;
-					if (channel >= MidiConstants.DRUM_CHANNEL)
-						channel++;
-					if (channel > MidiConstants.CHANNEL_COUNT - 1)
-						throw new ParseException("Too many parts (max = " + (MidiConstants.CHANNEL_COUNT - 1) + ")",
-								partStartLine);
-					track = seq.createTrack();
-
-					track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
-					track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
-				}
-
-				Matcher m = NOTE_PATTERN.matcher(line);
-				int i = 0;
-				boolean inChord = false;
-//				int tupletP = 0, tupletQ = 0, tupletR = 0;
-				Tuplet tuplet = null;
-				while (true) {
-					boolean found = m.find(i);
-					int parseEnd = found ? m.start() : line.length();
-					// Parse anything that's not a note
-					for (; i < parseEnd; i++) {
-						char ch = line.charAt(i);
-						if (Character.isWhitespace(ch)) {
-							if (inChord)
-								throw new ParseException("Unexpected whitespace inside a chord", lineNumber, i);
-							continue;
-						}
-
-						switch (ch) {
-						case '[': // Chord start
-							if (inChord)
-								throw new ParseException("Unexpected '" + ch + "' inside a chord", lineNumber, i);
-							inChord = true;
-							break;
-
-						case ']': // Chord end
-							if (!inChord)
-								throw new ParseException("Unexpected '" + ch + "'", lineNumber, i);
-							inChord = false;
-							chordStartTick = chordEndTick;
-							break;
-
-						case '|': // Bar line
 							accidentals.clear();
-							if (i + 1 < line.length() && line.charAt(i + 1) == ']')
-								i++; // Skip |]
-							break;
+							noteOffEvents.clear();
 
-						case '+': {
-							int j = line.indexOf('+', i + 1);
-							if (j < 0) {
-								throw new ParseException("There is no matching '+'", lineNumber, i);
-							}
-							try {
-								info.setDynamics(line.substring(i + 1, j));
-							}
-							catch (IllegalArgumentException iae) {
-								throw new ParseException("Unsupported +decoration+", lineNumber, i);
-							}
-							i = j;
-							break;
-						}
-
-						case '(':
-							if (tuplet != null)
-								throw new ParseException("Unexpected '" + ch + "' before end of tuplet", lineNumber, i);
-
-							try {
-								for (int j = i + 1; j < line.length(); j++) {
-									if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
-										tuplet = new Tuplet(line.substring(i + 1, j + 1), info.getMeter().isCompound());
-										i = j;
-										break;
-									}
-								}
-							}
-							catch (IllegalArgumentException e) {
-								throw new ParseException("Invalid tuplet", lineNumber, i);
+							info.newPart(Integer.parseInt(value));
+							trackNumber++;
+							partStartLine = lineNumber;
+							chordStartTick = 0;
+							track = null; // Will create a new track after the header is done
+							if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
+								info.setInstrument(instrumentOverrideMap.get(trackNumber));
 							}
 							break;
+						case 'T':
+							if (track != null)
+								throw new ParseException("Can't specify the title in the middle of a part", fileName,
+										lineNumber, 0);
 
-						default:
-							throw new ParseException("Unknown/unexpected character '" + ch + "'", lineNumber, i);
+							info.setTitle(value);
+							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+								info.findInstrumentName(value);
+							}
+							break;
+						case 'K':
+							info.setKey(value);
+							if (info.getKey().sharpsFlats != 0) {
+								throw new ParseException("Only C major and A minor are currently supported", fileName,
+										lineNumber, infoMatcher.start(INFO_VALUE));
+							}
+							break;
+						case 'L':
+							info.setNoteDivisor(value);
+							break;
+						case 'M':
+							TimeSignature meter = info.getMeter();
+							info.setMeter(value);
+							if (seq != null && !info.getMeter().equals(meter))
+								throw new ParseException("The meter must be the same for all parts of the song",
+										fileName, lineNumber);
+							break;
+						case 'Q':
+							int tempo = info.getTempo();
+							info.setTempo(value);
+							if (seq != null && info.getTempo() != tempo)
+								throw new ParseException("The tempo must be the same for all parts of the song",
+										fileName, lineNumber);
+							break;
+						case 'I':
+							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+								info.findInstrumentName(value);
+							}
+							break;
+						}
+					}
+					catch (IllegalArgumentException iae) {
+						throw new ParseException(iae.getMessage(), fileName, lineNumber, infoMatcher.start(INFO_VALUE));
+					}
+				}
+				else {
+					// The line contains notes
+
+					if (seq == null) {
+						try {
+							PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
+							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
+							seq = new Sequence(Sequence.PPQ, (int) PPQN);
+
+							// Track 0: Title and meta info
+							Track track0 = seq.createTrack();
+							track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
+							track0.add(MidiFactory.createTempoEvent((int) MPQN, 0));
+
+							track = null;
+						}
+						catch (InvalidMidiDataException mde) {
+							throw new ParseException("Midi Error: " + mde.getMessage(), fileName);
 						}
 					}
 
-					if (i >= line.length())
-						break;
+					if (track == null) {
+						channel = seq.getTracks().length;
+						if (channel >= MidiConstants.DRUM_CHANNEL)
+							channel++;
+						if (channel > MidiConstants.CHANNEL_COUNT - 1)
+							throw new ParseException(
+									"Too many parts (max = " + (MidiConstants.CHANNEL_COUNT - 1) + ")", fileName,
+									partStartLine);
+						track = seq.createTrack();
 
-					// The matcher might find +f+, +ff+, or +fff+ and think it's a note
-					if (i > m.start())
-						continue;
-
-					// Parse the note
-					int numerator;
-					int denominator;
-
-					if (m.group(NOTE_LEN_DOUBLECUT) != null) {
-						numerator = 1;
-						denominator = 4;
-					}
-					else {
-						numerator = (m.group(NOTE_LEN_NUMER) == null) ? 1 : Integer.parseInt(m.group(NOTE_LEN_NUMER));
-						String denom = m.group(NOTE_LEN_DENOM);
-						if (denom == null)
-							denominator = 1;
-						else if (denom.equals("/"))
-							denominator = 2;
-						else
-							denominator = Integer.parseInt(denom.substring(1));
+						track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
+						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 					}
 
-					if (tuplet != null) {
-						tuplet.r--;
-						numerator *= tuplet.q;
-						denominator *= tuplet.p;
-						if (tuplet.r == 0)
-							tuplet = null;
-					}
-
-					long noteEndTick = chordStartTick + DEFAULT_NOTE_PULSES * numerator / denominator;
-					// A chord is as long as its shortest note
-					if (chordEndTick == chordStartTick || noteEndTick < chordEndTick)
-						chordEndTick = noteEndTick;
-
-					char noteLetter = m.group(NOTE_LETTER).charAt(0);
-					String octaveStr = m.group(NOTE_OCTAVE);
-					if (octaveStr == null)
-						octaveStr = "";
-					if (noteLetter == 'z') {
-						if (m.group(NOTE_ACCIDENTAL) != null && m.group(NOTE_ACCIDENTAL).length() > 0) {
-							throw new ParseException("Unexpected accidental on a rest", lineNumber, m
-									.start(NOTE_ACCIDENTAL));
-						}
-						if (octaveStr.length() > 0) {
-							throw new ParseException("Unexpected octave indicator on a rest", lineNumber, m
-									.start(NOTE_OCTAVE));
-						}
-					}
-					else {
-						int octave;
-						if (Character.isUpperCase(noteLetter)) {
-							// Upper case letters: octaves 3 and below (with commas)
-							if (octaveStr.indexOf('\'') >= 0)
-								throw new ParseException("Invalid octave marker", lineNumber, m.start(NOTE_OCTAVE));
-							octave = 3 - octaveStr.length();
-						}
-						else {
-							// Lower case letters: octaves 4 and above (with apostrophes)
-							if (octaveStr.indexOf(',') >= 0)
-								throw new ParseException("Invalid octave marker", lineNumber, m.start(NOTE_OCTAVE));
-							octave = 4 + octaveStr.length();
-						}
-
-						int[] noteDelta = {
-								9, 11, 0, 2, 4, 5, 7
-						};
-
-						int noteId = (octave + 1) * 12 + noteDelta[Character.toLowerCase(noteLetter) - 'a'];
-
-						int lotroNoteId = noteId;
-						if (!useLotroInstruments)
-							noteId += 12 * info.getInstrument().octaveDelta;
-
-						if (m.group(NOTE_ACCIDENTAL) != null) {
-							if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
-								accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
-							else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
-								accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
-							else if (m.group(NOTE_ACCIDENTAL).equals("="))
-								accidentals.remove(noteId);
-						}
-
-						Integer accidental = accidentals.get(noteId);
-						if (accidental != null)
-							noteId += accidental;
-
-						// Check for overlapping notes, and remove extra note off events
-						Iterator<MidiEvent> noteOffIter = noteOffEvents.iterator();
-						while (noteOffIter.hasNext()) {
-							MidiEvent evt = noteOffIter.next();
-							if (evt.getTick() <= chordStartTick) {
-								noteOffIter.remove();
+					Matcher m = NOTE_PATTERN.matcher(line);
+					int i = 0;
+					boolean inChord = false;
+//				int tupletP = 0, tupletQ = 0, tupletR = 0;
+					Tuplet tuplet = null;
+					while (true) {
+						boolean found = m.find(i);
+						int parseEnd = found ? m.start() : line.length();
+						// Parse anything that's not a note
+						for (; i < parseEnd; i++) {
+							char ch = line.charAt(i);
+							if (Character.isWhitespace(ch)) {
+								if (inChord)
+									throw new ParseException("Unexpected whitespace inside a chord", fileName,
+											lineNumber, i);
 								continue;
 							}
 
-							int noteOffId = ((ShortMessage) evt.getMessage()).getData1();
-							if (noteOffId == noteId) {
-								track.remove(evt);
-								noteOffIter.remove();
+							switch (ch) {
+							case '[': // Chord start
+								if (inChord)
+									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+											lineNumber, i);
+								inChord = true;
+								break;
+
+							case ']': // Chord end
+								if (!inChord)
+									throw new ParseException("Unexpected '" + ch + "'", fileName, lineNumber, i);
+								inChord = false;
+								chordStartTick = chordEndTick;
+								break;
+
+							case '|': // Bar line
+								accidentals.clear();
+								if (i + 1 < line.length() && line.charAt(i + 1) == ']')
+									i++; // Skip |]
+								break;
+
+							case '+': {
+								int j = line.indexOf('+', i + 1);
+								if (j < 0) {
+									throw new ParseException("There is no matching '+'", fileName, lineNumber, i);
+								}
+								try {
+									info.setDynamics(line.substring(i + 1, j));
+								}
+								catch (IllegalArgumentException iae) {
+									throw new ParseException("Unsupported +decoration+", fileName, lineNumber, i);
+								}
+								i = j;
 								break;
 							}
+
+							case '(':
+								if (tuplet != null)
+									throw new ParseException("Unexpected '" + ch + "' before end of tuplet", fileName,
+											lineNumber, i);
+
+								try {
+									for (int j = i + 1; j < line.length(); j++) {
+										if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
+											tuplet = new Tuplet(line.substring(i + 1, j + 1), info.getMeter()
+													.isCompound());
+											i = j;
+											break;
+										}
+									}
+								}
+								catch (IllegalArgumentException e) {
+									throw new ParseException("Invalid tuplet", fileName, lineNumber, i);
+								}
+								break;
+
+							default:
+								throw new ParseException("Unknown/unexpected character '" + ch + "'", fileName,
+										lineNumber, i);
+							}
 						}
 
-						if (!tiedNotes.containsKey(noteId)) {
-							track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().velocity,
-									chordStartTick));
-						}
+						if (i >= line.length())
+							break;
 
-						if (m.group(NOTE_TIE) != null) {
-//							tiedNotes.add(noteId);
-							int lineAndColumn = lineNumber << 16 | m.start();
-							tiedNotes.put(noteId, lineAndColumn);
+						// The matcher might find +f+, +ff+, or +fff+ and think it's a note
+						if (i > m.start())
+							continue;
+
+						// Parse the note
+						int numerator;
+						int denominator;
+
+						if (m.group(NOTE_LEN_DOUBLECUT) != null) {
+							numerator = 1;
+							denominator = 4;
 						}
 						else {
-							// Increase the note length to a mininum amount
-							long noteEndTickTmp;
-							if (!info.getInstrument().isSustainable(lotroNoteId)) {
-								noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+							numerator = (m.group(NOTE_LEN_NUMER) == null) ? 1 : Integer.parseInt(m
+									.group(NOTE_LEN_NUMER));
+							String denom = m.group(NOTE_LEN_DENOM);
+							if (denom == null)
+								denominator = 1;
+							else if (denom.equals("/"))
+								denominator = 2;
+							else
+								denominator = Integer.parseInt(denom.substring(1));
+						}
+
+						if (tuplet != null) {
+							tuplet.r--;
+							numerator *= tuplet.q;
+							denominator *= tuplet.p;
+							if (tuplet.r == 0)
+								tuplet = null;
+						}
+
+						long noteEndTick = chordStartTick + DEFAULT_NOTE_PULSES * numerator / denominator;
+						// A chord is as long as its shortest note
+						if (chordEndTick == chordStartTick || noteEndTick < chordEndTick)
+							chordEndTick = noteEndTick;
+
+						char noteLetter = m.group(NOTE_LETTER).charAt(0);
+						String octaveStr = m.group(NOTE_OCTAVE);
+						if (octaveStr == null)
+							octaveStr = "";
+						if (noteLetter == 'z') {
+							if (m.group(NOTE_ACCIDENTAL) != null && m.group(NOTE_ACCIDENTAL).length() > 0) {
+								throw new ParseException("Unexpected accidental on a rest", fileName, lineNumber, m
+										.start(NOTE_ACCIDENTAL));
+							}
+							if (octaveStr.length() > 0) {
+								throw new ParseException("Unexpected octave indicator on a rest", fileName, lineNumber,
+										m.start(NOTE_OCTAVE));
+							}
+						}
+						else {
+							int octave;
+							if (Character.isUpperCase(noteLetter)) {
+								// Upper case letters: octaves 3 and below (with commas)
+								if (octaveStr.indexOf('\'') >= 0)
+									throw new ParseException("Invalid octave marker", fileName, lineNumber, m
+											.start(NOTE_OCTAVE));
+								octave = 3 - octaveStr.length();
 							}
 							else {
-								noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
-										+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
+								// Lower case letters: octaves 4 and above (with apostrophes)
+								if (octaveStr.indexOf(',') >= 0)
+									throw new ParseException("Invalid octave marker", fileName, lineNumber, m
+											.start(NOTE_OCTAVE));
+								octave = 4 + octaveStr.length();
 							}
 
-							MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel,
-									info.getDynamics().velocity, noteEndTickTmp);
-							track.add(noteOff);
+							int[] noteDelta = {
+									9, 11, 0, 2, 4, 5, 7
+							};
 
-							noteOffEvents.add(noteOff);
+							int noteId = (octave + 1) * 12 + noteDelta[Character.toLowerCase(noteLetter) - 'a'];
 
-							tiedNotes.remove((Integer) noteId);
+							int lotroNoteId = noteId;
+							if (!useLotroInstruments)
+								noteId += 12 * info.getInstrument().octaveDelta;
+
+							if (m.group(NOTE_ACCIDENTAL) != null) {
+								if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
+									accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
+									accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).equals("="))
+									accidentals.remove(noteId);
+							}
+
+							Integer accidental = accidentals.get(noteId);
+							if (accidental != null)
+								noteId += accidental;
+
+							// Check for overlapping notes, and remove extra note off events
+							Iterator<MidiEvent> noteOffIter = noteOffEvents.iterator();
+							while (noteOffIter.hasNext()) {
+								MidiEvent evt = noteOffIter.next();
+								if (evt.getTick() <= chordStartTick) {
+									noteOffIter.remove();
+									continue;
+								}
+
+								int noteOffId = ((ShortMessage) evt.getMessage()).getData1();
+								if (noteOffId == noteId) {
+									track.remove(evt);
+									noteOffIter.remove();
+									break;
+								}
+							}
+
+							if (!tiedNotes.containsKey(noteId)) {
+								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().velocity,
+										chordStartTick));
+							}
+
+							if (m.group(NOTE_TIE) != null) {
+//							tiedNotes.add(noteId);
+								int lineAndColumn = lineNumber << 16 | m.start();
+								tiedNotes.put(noteId, lineAndColumn);
+							}
+							else {
+								// Increase the note length to a mininum amount
+								long noteEndTickTmp;
+								if (!info.getInstrument().isSustainable(lotroNoteId)) {
+									noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+								}
+								else {
+									noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
+											+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
+								}
+
+								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
+										.getDynamics().velocity, noteEndTickTmp);
+								track.add(noteOff);
+
+								noteOffEvents.add(noteOff);
+
+								tiedNotes.remove((Integer) noteId);
+							}
 						}
+
+						if (!inChord)
+							chordStartTick = noteEndTick;
+						i = m.end();
 					}
 
-					if (!inChord)
-						chordStartTick = noteEndTick;
-					i = m.end();
+					if (tuplet != null)
+						throw new ParseException("Tuplet not finished by end of line", fileName, lineNumber, i);
+
+					if (inChord)
+						throw new ParseException("Chord not closed at end of line", fileName, lineNumber, i);
 				}
-
-				if (tuplet != null)
-					throw new ParseException("Tuplet not finished by end of line", lineNumber, i);
-
-				if (inChord)
-					throw new ParseException("Chord not closed at end of line", lineNumber, i);
 			}
-		}
 
-		if (seq == null)
-			throw new ParseException("The song contains no notes", lineNumber);
+			if (seq == null)
+				throw new ParseException("The song contains no notes", fileName, lineNumber);
 
-		if (tiedNotes.size() > 0) {
-			throw new ParseException(tiedNotes.size() + " unresolved note tie(s) " + "in the part beginning on line "
-					+ partStartLine, lineNumber);
+			if (tiedNotes.size() > 0) {
+				throw new ParseException(tiedNotes.size() + " unresolved note tie(s) "
+						+ "in the part beginning on line " + partStartLine, fileName, lineNumber);
+			}
 		}
 
 		return seq;

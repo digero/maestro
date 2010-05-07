@@ -326,7 +326,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		add(partPanel, "1, 0, 1, 1");
 		add(playPanel, "1, 2");
 
-		final FileTypeDropListener dropListener = new FileTypeDropListener("mid", "midi");
+		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi");
 		dropListener.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				openSong(dropListener.getDroppedFile());
