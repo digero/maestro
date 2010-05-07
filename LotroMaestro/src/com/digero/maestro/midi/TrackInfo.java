@@ -49,7 +49,6 @@ public class TrackInfo implements IMidiConstants {
 		int notesNotTurnedOff = 0;
 
 		for (int j = 0, sz = track.size(); j < sz; j++) {
-			int pitchBend = 8192;
 			MidiEvent evt = track.get(j);
 			MidiMessage msg = evt.getMessage();
 
@@ -105,15 +104,6 @@ public class TrackInfo implements IMidiConstants {
 							}
 						}
 					}
-				}
-				else if (cmd == ShortMessage.PROGRAM_CHANGE && !drums) {
-					int instrument = m.getData1();
-
-					if (noteEvents.isEmpty())
-						instruments.clear();
-
-					if (!instruments.contains(instrument))
-						instruments.add(instrument);
 				}
 			}
 			else if (msg instanceof MetaMessage) {
