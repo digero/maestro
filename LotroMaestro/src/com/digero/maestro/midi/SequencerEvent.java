@@ -5,17 +5,14 @@ import java.util.EventObject;
 @SuppressWarnings("serial")
 public class SequencerEvent extends EventObject {
 	private SequencerProperty property;
-	private SequencerWrapper sequencerWrapper;
 
-	public SequencerEvent(Object source, SequencerWrapper sequencerWrapper, SequencerProperty property) {
-		super(source);
-		this.sequencerWrapper = sequencerWrapper;
+	public SequencerEvent(SequencerWrapper sequencerWrapper, SequencerProperty property) {
+		super(sequencerWrapper);
 		this.property = property;
 	}
-	
-	
+
 	public SequencerWrapper getSequencerWrapper() {
-		return sequencerWrapper;
+		return (SequencerWrapper) getSource();
 	}
 
 	public SequencerProperty getProperty() {

@@ -27,6 +27,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
+import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
@@ -113,9 +114,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		new DropTarget(this, dropListener);
 
 		try {
-			sequencer = new SequencerWrapper(MidiSystem.getSequencer(false));
-			sequencer.open();
-			transmitter = sequencer.getTransmitter();
+			Sequencer seqTmp = MidiSystem.getSequencer(false);
+			transmitter = seqTmp.getTransmitter();
 			synth = null;
 
 			if (useLotroInstruments) {
@@ -152,6 +152,9 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				receiver = MidiSystem.getReceiver();
 			}
 			transmitter.setReceiver(receiver);
+			
+			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
+			sequencer.open();
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
@@ -189,9 +192,9 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (sequencer.isRunning())
-					sequencer.stop(AbcPreviewer.this);
+					sequencer.stop();
 				else
-					sequencer.start(AbcPreviewer.this);
+					sequencer.start();
 			}
 		});
 
@@ -322,7 +325,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 		try {
 			stop();
-			sequencer.setSequence(song, this);
+			sequencer.setSequence(song);
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
@@ -330,8 +333,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		}
 
 		for (int i = 0; i < 16; i++) {
-			sequencer.setTrackMute(i, false, this);
-			sequencer.setTrackSolo(i, false, this);
+			sequencer.setTrackMute(i, false);
+			sequencer.setTrackSolo(i, false);
 		}
 
 		trackListPanel.songChanged();
@@ -339,8 +342,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	}
 
 	private void stop() {
-		sequencer.stop(AbcPreviewer.this);
-		sequencer.setPosition(0, AbcPreviewer.this);
+		sequencer.stop();
+		sequencer.setPosition(0);
 		updateButtonStates();
 	}
 
@@ -522,7 +525,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 			if (evt.getSource() instanceof JCheckBox) {
 				JCheckBox checkBox = (JCheckBox) evt.getSource();
 				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
-				sequencer.setTrackMute(i, !checkBox.isSelected(), AbcPreviewer.this);
+				sequencer.setTrackMute(i, !checkBox.isSelected());
 			}
 			else if (evt.getSource() instanceof JComboBox) {
 				JComboBox comboBox = (JComboBox) evt.getSource();
@@ -542,8 +545,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				}
 
 				try {
-					sequencer.setSequence(song, AbcPreviewer.this);
-					sequencer.setPosition(positon, AbcPreviewer.this);
+					sequencer.setSequence(song);
+					sequencer.setPosition(positon);
 				}
 				catch (InvalidMidiDataException e) {
 					JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);

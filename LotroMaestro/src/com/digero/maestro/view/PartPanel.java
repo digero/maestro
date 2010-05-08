@@ -154,16 +154,16 @@ public class PartPanel extends JPanel {
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListPanel.add(trackPanel);
 
-					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber), this);
+					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
 				}
 
 				if (track.hasNotes() || track.hasDrums()) {
-					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber), this);
+					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
 				}
 				else {
-					sequencer.setTrackMute(trackNumber, true, this);
+					sequencer.setTrackMute(trackNumber, true);
 				}
-				sequencer.setTrackSolo(trackNumber, false, this);
+				sequencer.setTrackSolo(trackNumber, false);
 			}
 
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {

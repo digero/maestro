@@ -17,6 +17,8 @@ import javax.swing.Timer;
 
 public class SequencerWrapper {
 	private Sequencer sequencer;
+	private Receiver receiver;
+	private Transmitter transmitter;
 	private DrumFilterTransceiver drumFilter;
 	private long dragPosition;
 	private boolean isDragging;
@@ -26,21 +28,36 @@ public class SequencerWrapper {
 	private List<SequencerListener> listeners = null;
 
 	public SequencerWrapper() throws MidiUnavailableException {
-		this(getDefaultSequencer());
+		sequencer = MidiSystem.getSequencer(false);
+		sequencer.open();
+		transmitter = sequencer.getTransmitter();
+		receiver = MidiSystem.getReceiver();
+
+		transmitter.setReceiver(receiver);
+
+		updateTimer = new Timer(50, timerTick);
+		updateTimer.start();
 	}
 
 	public SequencerWrapper(DrumFilterTransceiver drumFilter) throws MidiUnavailableException {
-		this((Sequencer) null);
-		this.sequencer = getDefaultSequencer(drumFilter);
 		this.drumFilter = drumFilter;
+
+		sequencer = MidiSystem.getSequencer(false);
+		sequencer.open();
+		transmitter = sequencer.getTransmitter();
+		receiver = MidiSystem.getReceiver();
+
+		transmitter.setReceiver(drumFilter);
+		drumFilter.setReceiver(receiver);
+
+		updateTimer = new Timer(50, timerTick);
+		updateTimer.start();
 	}
 
-	public SequencerWrapper(Sequencer sequencer) {
+	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
 		this.sequencer = sequencer;
-		this.drumFilter = null;
-
-		dragPosition = 0;
-		isDragging = false;
+		this.transmitter = transmitter;
+		this.receiver = receiver;
 
 		updateTimer = new Timer(50, timerTick);
 		updateTimer.start();
@@ -50,10 +67,10 @@ public class SequencerWrapper {
 		return drumFilter;
 	}
 
-	public void setDrumSolo(int drumId, boolean solo, Object source) {
+	public void setDrumSolo(int drumId, boolean solo) {
 		if (drumFilter != null && solo != getDrumSolo(drumId)) {
 			drumFilter.setDrumSolo(drumId, solo);
-			fireChangeEvent(source, SequencerProperty.TRACK_ACTIVE);
+			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
@@ -75,36 +92,35 @@ public class SequencerWrapper {
 				long songPos = sequencer.getMicrosecondPosition();
 				boolean running = sequencer.isRunning();
 				if (songPos >= getLength()) {
-					setPosition(0, updateTimer);
+					setPosition(0);
 					lastUpdatePosition = songPos;
 				}
 				else if (lastUpdatePosition != songPos) {
 					lastUpdatePosition = songPos;
-					fireChangeEvent(updateTimer, SequencerProperty.POSITION);
+					fireChangeEvent(SequencerProperty.POSITION);
 				}
 				if (lastRunning != running) {
 					lastRunning = running;
-					fireChangeEvent(updateTimer, SequencerProperty.IS_RUNNING);
+					fireChangeEvent(SequencerProperty.IS_RUNNING);
 				}
 			}
 		}
 	};
 
-	public void reset(Object source) {
-		stop(source);
-		setPosition(0, source);
+	public void reset() {
+		stop();
+		setPosition(0);
 
 		// Reset the instruments
 		boolean isOpen = sequencer.isOpen();
-		Receiver rec = null;
 		try {
 			if (!isOpen)
 				sequencer.open();
-			rec = sequencer.getReceiver();
+
 			ShortMessage msg = new ShortMessage();
 			for (int i = 0; i < 16; i++) {
 				msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-				rec.send(msg, -1);
+				receiver.send(msg, -1);
 			}
 		}
 		catch (MidiUnavailableException e) {
@@ -113,8 +129,7 @@ public class SequencerWrapper {
 		catch (InvalidMidiDataException e) {
 			// Ignore
 		}
-		if (rec != null)
-			rec.close();
+
 		if (!isOpen)
 			sequencer.close();
 	}
@@ -123,10 +138,10 @@ public class SequencerWrapper {
 		return sequencer.getMicrosecondPosition();
 	}
 
-	public void setPosition(long position, Object source) {
+	public void setPosition(long position) {
 		if (position != getPosition()) {
 			sequencer.setMicrosecondPosition(position);
-			fireChangeEvent(source, SequencerProperty.POSITION);
+			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
 
@@ -138,33 +153,33 @@ public class SequencerWrapper {
 		return sequencer.isRunning();
 	}
 
-	public void setRunning(boolean isRunning, Object source) {
+	public void setRunning(boolean isRunning) {
 		if (isRunning != this.isRunning()) {
 			if (isRunning)
 				sequencer.start();
 			else
 				sequencer.stop();
 			timerTick.lastRunning = isRunning;
-			fireChangeEvent(source, SequencerProperty.IS_RUNNING);
+			fireChangeEvent(SequencerProperty.IS_RUNNING);
 		}
 	}
 
-	public void start(Object source) {
-		setRunning(true, source);
+	public void start() {
+		setRunning(true);
 	}
 
-	public void stop(Object source) {
-		setRunning(false, source);
+	public void stop() {
+		setRunning(false);
 	}
 
 	public boolean getTrackMute(int track) {
 		return sequencer.getTrackMute(track);
 	}
 
-	public void setTrackMute(int track, boolean mute, Object source) {
+	public void setTrackMute(int track, boolean mute) {
 		if (mute != this.getTrackMute(track)) {
 			sequencer.setTrackMute(track, mute);
-			fireChangeEvent(source, SequencerProperty.TRACK_ACTIVE);
+			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
@@ -172,10 +187,10 @@ public class SequencerWrapper {
 		return sequencer.getTrackSolo(track);
 	}
 
-	public void setTrackSolo(int track, boolean solo, Object source) {
+	public void setTrackSolo(int track, boolean solo) {
 		if (solo != this.getTrackSolo(track)) {
 			sequencer.setTrackSolo(track, solo);
-			fireChangeEvent(source, SequencerProperty.TRACK_ACTIVE);
+			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
@@ -215,10 +230,10 @@ public class SequencerWrapper {
 		return dragPosition;
 	}
 
-	public void setDragPosition(long dragPosition, Object source) {
+	public void setDragPosition(long dragPosition) {
 		if (this.dragPosition != dragPosition) {
 			this.dragPosition = dragPosition;
-			fireChangeEvent(source, SequencerProperty.DRAG_POSITION);
+			fireChangeEvent(SequencerProperty.DRAG_POSITION);
 		}
 	}
 
@@ -226,10 +241,10 @@ public class SequencerWrapper {
 		return isDragging;
 	}
 
-	public void setDragging(boolean isDragging, Object source) {
+	public void setDragging(boolean isDragging) {
 		if (this.isDragging != isDragging) {
 			this.isDragging = isDragging;
-			fireChangeEvent(source, SequencerProperty.IS_DRAGGING);
+			fireChangeEvent(SequencerProperty.IS_DRAGGING);
 		}
 	}
 
@@ -245,47 +260,39 @@ public class SequencerWrapper {
 			listeners.remove(l);
 	}
 
-	protected void fireChangeEvent(Object source, SequencerProperty property) {
+	protected void fireChangeEvent(SequencerProperty property) {
 		if (listeners != null) {
-			SequencerEvent e = new SequencerEvent(source, this, property);
+			SequencerEvent e = new SequencerEvent(this, property);
 			for (SequencerListener l : listeners) {
 				l.propertyChanged(e);
 			}
 		}
 	}
 
-	public static Sequencer getDefaultSequencer() throws MidiUnavailableException {
-		Sequencer sequencer = MidiSystem.getSequencer(false);
-		sequencer.open();
-		sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
-		return sequencer;
-	}
-
-	public static Sequencer getDefaultSequencer(DrumFilterTransceiver drumFilter) throws MidiUnavailableException {
-		Sequencer sequencer = MidiSystem.getSequencer(false);
-		sequencer.open();
-		sequencer.getTransmitter().setReceiver(drumFilter);
-		drumFilter.setReceiver(MidiSystem.getReceiver());
-		return sequencer;
-	}
-
-	public void setSequence(Sequence sequence, Object source) throws InvalidMidiDataException {
+	public void setSequence(Sequence sequence) throws InvalidMidiDataException {
 		if (sequencer.getSequence() != sequence) {
+			boolean preLoaded = isLoaded();
 			sequencer.setSequence(sequence);
-			fireChangeEvent(source, SequencerProperty.LENGTH);
+			if (preLoaded != isLoaded())
+				fireChangeEvent(SequencerProperty.IS_LOADED);
+			fireChangeEvent(SequencerProperty.LENGTH);
 		}
+	}
+
+	public boolean isLoaded() {
+		return sequencer.getSequence() != null;
 	}
 
 	public Sequence getSequence() {
 		return sequencer.getSequence();
 	}
 
-	public Transmitter getTransmitter() throws MidiUnavailableException {
-		return sequencer.getTransmitter();
+	public Transmitter getTransmitter() {
+		return transmitter;
 	}
 
-	public Receiver getReceiver() throws MidiUnavailableException {
-		return sequencer.getReceiver();
+	public Receiver getReceiver() {
+		return receiver;
 	}
 
 	public void open() throws MidiUnavailableException {

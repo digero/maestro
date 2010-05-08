@@ -33,6 +33,7 @@ public class TrackInfo implements IMidiConstants {
 	private List<NoteEvent> drumEvents;
 	private SortedSet<Integer> drumsInUse;
 
+	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
 			InstrumentChangeCache instrumentCache) throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
@@ -45,7 +46,6 @@ public class TrackInfo implements IMidiConstants {
 		drumEvents = new ArrayList<NoteEvent>();
 		drumsInUse = new TreeSet<Integer>();
 		List<NoteEvent>[] notesOn = new List[16];
-		List<NoteEvent> drumsOn = new ArrayList<NoteEvent>();
 		int notesNotTurnedOff = 0;
 
 		int[] pitchBend = new int[16];
@@ -74,7 +74,7 @@ public class TrackInfo implements IMidiConstants {
 
 						NoteEvent ne = new NoteEvent(note, velocity, micros);
 
-						Iterator<NoteEvent> onIter = (drums ? drumsOn : notesOn[c]).iterator();
+						Iterator<NoteEvent> onIter =  notesOn[c].iterator();
 						while (onIter.hasNext()) {
 							NoteEvent on = onIter.next();
 							if (on.note.id == ne.note.id) {
@@ -90,16 +90,15 @@ public class TrackInfo implements IMidiConstants {
 								instruments.clear();
 							drumEvents.add(ne);
 							drumsInUse.add(ne.note.id);
-							drumsOn.add(ne);
 						}
 						else {
 							noteEvents.add(ne);
-							notesOn[c].add(ne);
 							instruments.add(instrumentCache.getInstrument(evt.getTick(), c));
 						}
+						notesOn[c].add(ne);
 					}
 					else {
-						Iterator<NoteEvent> iter = drums ? drumsOn.iterator() : notesOn[c].iterator();
+						Iterator<NoteEvent> iter = notesOn[c].iterator();
 						while (iter.hasNext()) {
 							NoteEvent ne = iter.next();
 							if (ne.note.id == noteId) {
@@ -144,6 +143,9 @@ public class TrackInfo implements IMidiConstants {
 					catch (UnsupportedEncodingException ex) {
 						// Ignore.  This should never happen...
 					}
+
+					if (name.equalsIgnoreCase("untitled"))
+						name = null;
 				}
 				else if (type == META_KEY_SIGNATURE && keySignature == null) {
 					keySignature = new KeySignature(m);
@@ -160,15 +162,15 @@ public class TrackInfo implements IMidiConstants {
 			if (notesOnChannel != null)
 				ctNotesOn += notesOnChannel.size();
 		}
-		if (ctNotesOn > 0 || drumsOn.size() > 0) {
-			System.err.println((ctNotesOn + drumsOn.size() + notesNotTurnedOff)
+		if (ctNotesOn > 0) {
+			System.err.println((ctNotesOn + notesNotTurnedOff)
 					+ " note(s) not turned off at the end of the track.");
 
 			for (List<NoteEvent> notesOnChannel : notesOn) {
 				if (notesOnChannel != null)
 					noteEvents.removeAll(notesOnChannel);
 			}
-			drumEvents.removeAll(drumsOn);
+			drumEvents.removeAll(notesOn[DRUM_CHANNEL]);
 //			for (NoteEvent ne : notesOn)
 //				ne.endMicros = song.getMicrosecondLength();
 //

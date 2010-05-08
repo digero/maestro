@@ -166,8 +166,8 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 		public void mousePressed(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
-			seq.setDragging(true, SongPositionBar.this);
-			seq.setDragPosition(getPosition(e.getX()), SongPositionBar.this);
+			seq.setDragging(true);
+			seq.setDragPosition(getPosition(e.getX()));
 			setMouseHovering(e);
 			requestFocus();
 		}
@@ -175,9 +175,9 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 		public void mouseReleased(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
-			seq.setDragging(false, SongPositionBar.this);
+			seq.setDragging(false);
 			if (e.getY() > -MAX_MOUSE_DIST && e.getY() < getHeight() + MAX_MOUSE_DIST) {
-				seq.setPosition(getPosition(e.getX()), SongPositionBar.this);
+				seq.setPosition(getPosition(e.getX()));
 			}
 			setMouseHovering(e);
 		}
@@ -186,11 +186,11 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			if (!SongPositionBar.this.isEnabled())
 				return;
 			if (e.getY() > -MAX_MOUSE_DIST && e.getY() < getHeight() + MAX_MOUSE_DIST) {
-				seq.setDragging(true, SongPositionBar.this);
-				seq.setDragPosition(getPosition(e.getX()), SongPositionBar.this);
+				seq.setDragging(true);
+				seq.setDragPosition(getPosition(e.getX()));
 			}
 			else {
-				seq.setDragging(false, SongPositionBar.this);
+				seq.setDragging(false);
 			}
 			setMouseHovering(e);
 		}

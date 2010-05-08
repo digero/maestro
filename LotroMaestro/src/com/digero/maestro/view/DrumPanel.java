@@ -120,15 +120,15 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		noteGraph.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setTrackSolo(trackInfo.getTrackNumber(), true, DrumPanel.this);
-					seq.setDrumSolo(drumId, true, DrumPanel.this);
+					seq.setTrackSolo(trackInfo.getTrackNumber(), true);
+					seq.setDrumSolo(drumId, true);
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setTrackSolo(trackInfo.getTrackNumber(), false, DrumPanel.this);
-					seq.setDrumSolo(drumId, false, DrumPanel.this);
+					seq.setTrackSolo(trackInfo.getTrackNumber(), false);
+					seq.setDrumSolo(drumId, false);
 				}
 			}
 		});
@@ -323,28 +323,28 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					seq.setDragging(true, this);
-					seq.setDragPosition(positionFromEvent(e), this);
+					seq.setDragging(true);
+					seq.setDragPosition(positionFromEvent(e));
 				}
 			}
 
 			public void mouseDragged(MouseEvent e) {
 				if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
 					if (!isDragCanceled(e)) {
-						seq.setDragging(true, this);
-						seq.setDragPosition(positionFromEvent(e), this);
+						seq.setDragging(true);
+						seq.setDragPosition(positionFromEvent(e));
 					}
 					else {
-						seq.setDragging(false, this);
+						seq.setDragging(false);
 					}
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					seq.setDragging(false, this);
+					seq.setDragging(false);
 					if (!isDragCanceled(e)) {
-						seq.setPosition(positionFromEvent(e), this);
+						seq.setPosition(positionFromEvent(e));
 					}
 				}
 			}

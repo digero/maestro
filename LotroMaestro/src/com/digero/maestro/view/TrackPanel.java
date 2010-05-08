@@ -101,7 +101,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				int track = trackInfo.getTrackNumber();
 				boolean enabled = checkBox.isSelected();
 				abcPart.setTrackEnabled(track, enabled);
-				seq.setTrackMute(track, !enabled, TrackPanel.this);
+				seq.setTrackMute(track, !enabled);
 			}
 		});
 
@@ -132,12 +132,12 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		noteGraph.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3)
-					seq.setTrackSolo(trackInfo.getTrackNumber(), true, TrackPanel.this);
+					seq.setTrackSolo(trackInfo.getTrackNumber(), true);
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3)
-					seq.setTrackSolo(trackInfo.getTrackNumber(), false, TrackPanel.this);
+					seq.setTrackSolo(trackInfo.getTrackNumber(), false);
 			}
 		});
 
@@ -377,28 +377,28 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					seq.setDragging(true, this);
-					seq.setDragPosition(positionFromEvent(e), this);
+					seq.setDragging(true);
+					seq.setDragPosition(positionFromEvent(e));
 				}
 			}
 
 			public void mouseDragged(MouseEvent e) {
 				if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
 					if (!isDragCanceled(e)) {
-						seq.setDragging(true, this);
-						seq.setDragPosition(positionFromEvent(e), this);
+						seq.setDragging(true);
+						seq.setDragPosition(positionFromEvent(e));
 					}
 					else {
-						seq.setDragging(false, this);
+						seq.setDragging(false);
 					}
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					seq.setDragging(false, this);
+					seq.setDragging(false);
 					if (!isDragCanceled(e)) {
-						seq.setPosition(positionFromEvent(e), this);
+						seq.setPosition(positionFromEvent(e));
 					}
 				}
 			}
