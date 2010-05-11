@@ -100,7 +100,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	private Map<File, List<String>> abcData;
 
 	private Preferences prefs = Preferences.userNodeForPackage(AbcPreviewer.class);
-	private Preferences windowPrefs = prefs.node("window");
+
+//	private Preferences windowPrefs = prefs.node("window");
 
 	public AbcPreviewer() {
 		super("LotRO ABC Previewer");
@@ -152,7 +153,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				receiver = MidiSystem.getReceiver();
 			}
 			transmitter.setReceiver(receiver);
-			
+
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
 			sequencer.open();
 		}
@@ -313,7 +314,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	private void openSong(Map<File, List<String>> data) {
 		Sequence song;
 		try {
-			song = new AbcToMidi().convert(data, useLotroInstruments, instrumentOverrideMap);
+			song = new AbcToMidi().convert(data, useLotroInstruments, null);
 		}
 		catch (ParseException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);

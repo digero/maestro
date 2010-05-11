@@ -84,8 +84,8 @@ public class AbcToMidi {
 	private static final int INFO_TYPE = 1;
 	private static final int INFO_VALUE = 2;
 
-	private static final Pattern NOTE_PATTERN = Pattern.compile("(_{1,2}|=|\\^{1,2})?" + "([zA-Ga-g])"
-			+ "(,{1,5}|'{1,5})?" + "((\\d+)?(/\\d{0,2})?|(//))?" + "(-)?");
+	private static final Pattern NOTE_PATTERN = Pattern.compile("(_{1,2}|=|\\^{1,2})?" + "([xzA-Ga-g])"
+			+ "(,{1,5}|'{1,5})?" + "((\\d+)?(/\\d{0,2})?|(//))?" + "(>{1,3}|<{1,3})?" + "(-)?");
 	private static final int NOTE_ACCIDENTAL = 1;
 	private static final int NOTE_LETTER = 2;
 	private static final int NOTE_OCTAVE = 3;
@@ -93,7 +93,8 @@ public class AbcToMidi {
 	private static final int NOTE_LEN_NUMER = 5;
 	private static final int NOTE_LEN_DENOM = 6;
 	private static final int NOTE_LEN_DOUBLECUT = 7;
-	private static final int NOTE_TIE = 8;
+	private static final int NOTE_BROKEN_RHYTHM = 8;
+	private static final int NOTE_TIE = 9;
 
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
@@ -196,10 +197,10 @@ public class AbcToMidi {
 							break;
 						case 'K':
 							info.setKey(value);
-							if (info.getKey().sharpsFlats != 0) {
-								throw new ParseException("Only C major and A minor are currently supported", fileName,
-										lineNumber, infoMatcher.start(INFO_VALUE));
-							}
+//							if (info.getKey().sharpsFlats != 0) {
+//								throw new ParseException("Only C major and A minor are currently supported", fileName,
+//										lineNumber, infoMatcher.start(INFO_VALUE));
+//							}
 							break;
 						case 'L':
 							info.setNoteDivisor(value);
@@ -211,13 +212,16 @@ public class AbcToMidi {
 								throw new ParseException("The meter must be the same for all parts of the song",
 										fileName, lineNumber);
 							break;
-						case 'Q':
+						case 'Q': {
 							int tempo = info.getTempo();
+							int tempoDivisor = info.getTempoDivisor();
 							info.setTempo(value);
-							if (seq != null && info.getTempo() != tempo)
+							if (seq != null && (info.getTempo() != tempo || info.getTempoDivisor() != tempoDivisor)) {
 								throw new ParseException("The tempo must be the same for all parts of the song",
 										fileName, lineNumber);
+							}
 							break;
+						}
 						case 'I':
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
 								info.findInstrumentName(value);
@@ -225,8 +229,8 @@ public class AbcToMidi {
 							break;
 						}
 					}
-					catch (IllegalArgumentException iae) {
-						throw new ParseException(iae.getMessage(), fileName, lineNumber, infoMatcher.start(INFO_VALUE));
+					catch (IllegalArgumentException e) {
+						throw new ParseException(e.getMessage(), fileName, lineNumber, infoMatcher.start(INFO_VALUE));
 					}
 				}
 				else {
@@ -234,6 +238,7 @@ public class AbcToMidi {
 
 					if (seq == null) {
 						try {
+							// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
 							PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
 							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
@@ -267,8 +272,9 @@ public class AbcToMidi {
 					Matcher m = NOTE_PATTERN.matcher(line);
 					int i = 0;
 					boolean inChord = false;
-//				int tupletP = 0, tupletQ = 0, tupletR = 0;
 					Tuplet tuplet = null;
+					int brokenRhythmNumerator = 1; // The numerator of the note after the broken rhythm sign
+					int brokenRhythmDenominator = 1; // The denominator of the note after the broken rhythm sign
 					while (true) {
 						boolean found = m.find(i);
 						int parseEnd = found ? m.start() : line.length();
@@ -284,15 +290,23 @@ public class AbcToMidi {
 
 							switch (ch) {
 							case '[': // Chord start
-								if (inChord)
+								if (inChord) {
 									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
 											lineNumber, i);
+								}
+
+								if (brokenRhythmDenominator != 1 || brokenRhythmNumerator != 1) {
+									throw new ParseException("Can't have broken rhythm (< or >) within a chord",
+											fileName, lineNumber, i);
+								}
+
 								inChord = true;
 								break;
 
 							case ']': // Chord end
-								if (!inChord)
+								if (!inChord) {
 									throw new ParseException("Unexpected '" + ch + "'", fileName, lineNumber, i);
+								}
 								inChord = false;
 								chordStartTick = chordEndTick;
 								break;
@@ -371,6 +385,41 @@ public class AbcToMidi {
 								denominator = Integer.parseInt(denom.substring(1));
 						}
 
+						String brokenRhythm = m.group(NOTE_BROKEN_RHYTHM);
+						if (brokenRhythm != null) {
+							if (brokenRhythmDenominator != 1 || brokenRhythmNumerator != 1) {
+								throw new ParseException("Invalid broken rhythm: " + brokenRhythm, fileName,
+										lineNumber, m.start(NOTE_BROKEN_RHYTHM));
+							}
+							if (inChord) {
+								throw new ParseException("Can't have broken rhythm (< or >) within a chord", fileName,
+										lineNumber, m.start(NOTE_BROKEN_RHYTHM));
+							}
+							if (m.group(NOTE_TIE) != null) {
+								throw new ParseException("Tied notes can't have broken rhythms (< or >)", fileName,
+										lineNumber, m.start(NOTE_BROKEN_RHYTHM));
+							}
+
+							int factor = 1 << brokenRhythm.length();
+
+							if (brokenRhythm.charAt(0) == '>') {
+								numerator *= 2 * factor - 1;
+								denominator *= factor;
+								brokenRhythmDenominator = factor;
+							}
+							else {
+								brokenRhythmNumerator = 2 * factor - 1;
+								brokenRhythmDenominator = factor;
+								denominator *= factor;
+							}
+						}
+						else {
+							numerator *= brokenRhythmNumerator;
+							denominator *= brokenRhythmDenominator;
+							brokenRhythmNumerator = 1;
+							brokenRhythmDenominator = 1;
+						}
+
 						if (tuplet != null) {
 							tuplet.r--;
 							numerator *= tuplet.q;
@@ -388,7 +437,7 @@ public class AbcToMidi {
 						String octaveStr = m.group(NOTE_OCTAVE);
 						if (octaveStr == null)
 							octaveStr = "";
-						if (noteLetter == 'z') {
+						if (noteLetter == 'z' || noteLetter == 'x') {
 							if (m.group(NOTE_ACCIDENTAL) != null && m.group(NOTE_ACCIDENTAL).length() > 0) {
 								throw new ParseException("Unexpected accidental on a rest", fileName, lineNumber, m
 										.start(NOTE_ACCIDENTAL));
@@ -431,12 +480,16 @@ public class AbcToMidi {
 								else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
 									accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
 								else if (m.group(NOTE_ACCIDENTAL).equals("="))
-									accidentals.remove(noteId);
+									accidentals.put(noteId, 0);
 							}
 
-							Integer accidental = accidentals.get(noteId);
-							if (accidental != null)
-								noteId += accidental;
+							if (accidentals.containsKey(noteId)) {
+								noteId += accidentals.get(noteId);
+							}
+							else {
+								// Use the key signature to determine the accidental
+								noteId += info.getKey().getAccidental(noteId).deltaNoteId;
+							}
 
 							// Check for overlapping notes, and remove extra note off events
 							Iterator<MidiEvent> noteOffIter = noteOffEvents.iterator();
@@ -496,6 +549,9 @@ public class AbcToMidi {
 
 					if (inChord)
 						throw new ParseException("Chord not closed at end of line", fileName, lineNumber, i);
+
+					if (brokenRhythmDenominator != 1 || brokenRhythmNumerator != 1)
+						throw new ParseException("Broken rhythm unfinished at end of line", fileName, lineNumber, i);
 				}
 			}
 
@@ -511,6 +567,7 @@ public class AbcToMidi {
 		return seq;
 	}
 
+	@SuppressWarnings("unused")
 	private static void dbgout(String text) {
 		System.out.println(text);
 	}
@@ -589,6 +646,7 @@ public class AbcToMidi {
 		private int noteDivisor;
 		private TimeSignature meter;
 		private int tempo;
+		private int tempoDivisor;
 		private LotroInstrument instrument;
 		private Dynamics dynamics;
 
@@ -598,6 +656,7 @@ public class AbcToMidi {
 			noteDivisor = 8;
 			meter = TimeSignature.FOUR_FOUR;
 			tempo = 120;
+			tempoDivisor = -1;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
 		}
@@ -617,16 +676,7 @@ public class AbcToMidi {
 		}
 
 		public void setNoteDivisor(String str) {
-			String[] parts = str.trim().split("[/:| ]");
-			if (parts.length != 2) {
-				throw new IllegalArgumentException("The string: \"" + str
-						+ "\" is not a valid default note length (expected format: L:1/4)");
-			}
-			int numerator = Integer.parseInt(parts[0]);
-			int denominator = Integer.parseInt(parts[1]);
-			if (numerator != 1)
-				throw new IllegalArgumentException("The numerator of the default note length must be 1");
-			this.noteDivisor = denominator;
+			this.noteDivisor = parseDivisor(str);
 		}
 
 		public void setMeter(String str) {
@@ -635,15 +685,45 @@ public class AbcToMidi {
 		}
 
 		public void setTempo(String str) {
-			int tempo;
 			try {
-				tempo = Integer.parseInt(str);
+				String[] parts = str.split("=");
+				if (parts.length == 1) {
+					this.tempoDivisor = -1;
+					this.tempo = Integer.parseInt(parts[0]);
+				}
+				else if (parts.length == 2) {
+					// Apparently LotRO ignores the note length portion...
+//					this.tempoDivisor = parseDivisor(parts[0]);
+					this.tempoDivisor = -1;
+					this.tempo = Integer.parseInt(parts[1]);
+				}
+				else {
+					throw new IllegalArgumentException("Unable to read tempo");
+				}
 			}
 			catch (NumberFormatException nfe) {
-				throw new IllegalArgumentException("Unable to read tempo. The only supported format is Q:120");
+				throw new IllegalArgumentException("Unable to read tempo");
+			}
+		}
+
+		private int parseDivisor(String str) {
+			String[] parts = str.trim().split("[/:| ]");
+			if (parts.length != 2) {
+				throw new IllegalArgumentException("\"" + str + "\" is not a valid note length"
+						+ " (example of valid note length: 1/4)");
+			}
+			int numerator = Integer.parseInt(parts[0]);
+			int denominator = Integer.parseInt(parts[1]);
+			if (numerator != 1) {
+				throw new IllegalArgumentException("The numerator of the note length must be 1"
+						+ " (example of valid note length: 1/4)");
+			}
+			if (denominator < 1) {
+				throw new IllegalArgumentException("The denominator of the note length must be positive"
+						+ " (example of valid note length: 1/4)");
 			}
 
-			this.tempo = tempo;
+			return denominator;
 		}
 
 		private static Pattern instrRegex = null;
@@ -688,6 +768,12 @@ public class AbcToMidi {
 
 		public int getNoteDivisor() {
 			return noteDivisor;
+		}
+
+		public int getTempoDivisor() {
+			if (tempoDivisor <= 0)
+				return noteDivisor;
+			return tempoDivisor;
 		}
 
 		public TimeSignature getMeter() {
