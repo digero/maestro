@@ -20,11 +20,9 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 
-import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.Dynamics;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.abc.TimingInfo;
@@ -32,6 +30,7 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
@@ -46,19 +45,9 @@ public class AbcToMidi {
 		Sequencer sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
 		Synthesizer synth = null;
-
 		if (useLotroInstruments) {
-			Soundbank lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
-					.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
-			Soundbank lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class
-					.getResourceAsStream("midi/synth/LotroDrums.sf2"));
-			synth = MidiSystem.getSynthesizer();
+			synth = SynthesizerFactory.getLotroSynthesizer();
 			sequencer.getTransmitter().setReceiver(synth.getReceiver());
-			synth.open();
-			synth.unloadAllInstruments(lotroSoundbank);
-			synth.loadAllInstruments(lotroSoundbank);
-			synth.unloadAllInstruments(lotroDrumbank);
-			synth.loadAllInstruments(lotroDrumbank);
 		}
 		else {
 			sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
