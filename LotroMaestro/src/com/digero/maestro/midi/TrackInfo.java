@@ -72,9 +72,9 @@ public class TrackInfo implements IMidiConstants {
 						if (note == null)
 							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
 
-						NoteEvent ne = new NoteEvent(note, velocity, micros);
+						NoteEvent ne = new NoteEvent(note, velocity, micros, micros);
 
-						Iterator<NoteEvent> onIter =  notesOn[c].iterator();
+						Iterator<NoteEvent> onIter = notesOn[c].iterator();
 						while (onIter.hasNext()) {
 							NoteEvent on = onIter.next();
 							if (on.note.id == ne.note.id) {
@@ -120,7 +120,7 @@ public class TrackInfo implements IMidiConstants {
 							ne.endMicros = micros;
 
 							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
-							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros);
+							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
 							noteEvents.add(bne);
 							bentNotes.add(bne);
 						}
@@ -137,15 +137,13 @@ public class TrackInfo implements IMidiConstants {
 					try {
 						byte[] data = m.getData();
 						String tmp = new String(data, 0, data.length, "US-ASCII").trim();
-						if (tmp.length() > 0)
+						if (tmp.length() > 0 && !tmp.equalsIgnoreCase("untitled")
+								&& !tmp.equalsIgnoreCase("WinJammer Demo"))
 							name = tmp;
 					}
 					catch (UnsupportedEncodingException ex) {
 						// Ignore.  This should never happen...
 					}
-
-					if (name.equalsIgnoreCase("untitled"))
-						name = null;
 				}
 				else if (type == META_KEY_SIGNATURE && keySignature == null) {
 					keySignature = new KeySignature(m);
@@ -163,8 +161,7 @@ public class TrackInfo implements IMidiConstants {
 				ctNotesOn += notesOnChannel.size();
 		}
 		if (ctNotesOn > 0) {
-			System.err.println((ctNotesOn + notesNotTurnedOff)
-					+ " note(s) not turned off at the end of the track.");
+			System.err.println((ctNotesOn + notesNotTurnedOff) + " note(s) not turned off at the end of the track.");
 
 			for (List<NoteEvent> notesOnChannel : notesOn) {
 				if (notesOnChannel != null)

@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -167,6 +168,10 @@ public class AbcPart {
 					lineLength = 0;
 				}
 
+				// Trim end
+				while (Character.isWhitespace(sb.charAt(sb.length() - 1)))
+					sb.setLength(sb.length() - 1);
+
 				// Insert line breaks
 				for (int i = LINE_LENGTH; i < sb.length(); i += LINE_LENGTH) {
 					for (int j = 0; j < LINE_LENGTH - 1; j++, i--) {
@@ -179,10 +184,12 @@ public class AbcPart {
 				}
 
 				out.print(sb);
-				out.print("| ");
+				out.print(" | ");
 				lineLength += sb.length() + 2;
 				sb.setLength(0);
 				barNumber = c.getStartMicros() / tm.barLength;
+
+				Arrays.fill(accidentals, false);
 			}
 
 			Dynamics newDyn = c.calcDynamics();
@@ -312,7 +319,7 @@ public class AbcPart {
 
 		// Add initial rest if necessary
 		if (events.get(0).startMicros > 0) {
-			events.add(0, new NoteEvent(Note.REST, 0, events.get(0).startMicros));
+			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, 0, events.get(0).startMicros));
 		}
 
 		// Remove duplicate notes

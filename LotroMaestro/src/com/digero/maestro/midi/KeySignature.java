@@ -2,6 +2,8 @@ package com.digero.maestro.midi;
 
 import javax.sound.midi.MetaMessage;
 
+import com.digero.maestro.abc.Accidental;
+
 /**
  * Representation of a MIDI key signature.
  */
@@ -102,21 +104,21 @@ public class KeySignature implements IMidiConstants {
 		return new KeySignature(x, this.major);
 	}
 
-//	public Accidental getAccidental(Note note) {
-//		int id = (note.id - Note.CX.id) % 12;
-//
-//		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
-//			if (SHARPS[sharp] == note.naturalId)
-//				return note.isAccented ? null : Accidental.SHARP;
-//		}
-//
-//		for (int flat = 0; flat < -sharpsFlats; flat++) {
-//			if (FLATS[flat] == note.naturalId)
-//				return note.isAccented ? null : Accidental.FLAT;
-//		}
-//
-//		return note.isAccented ? null : Accidental.NATURAL;
-//	}
+	public Accidental getAccidental(int noteId) {
+		int id = (noteId - Note.CX.id) % 12;
+
+		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
+			if (SHARPS[sharp] == id)
+				return Accidental.SHARP;
+		}
+
+		for (int flat = 0; flat < -sharpsFlats; flat++) {
+			if (FLATS[flat] == id)
+				return Accidental.FLAT;
+		}
+
+		return Accidental.NONE;
+	}
 
 	@Override
 	public String toString() {

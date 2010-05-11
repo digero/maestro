@@ -64,6 +64,7 @@ public class SequenceInfo implements IMidiConstants {
 			int dot = title.lastIndexOf('.');
 			if (dot > 0)
 				title = title.substring(0, dot);
+			title = title.replace('_', ' ');
 		}
 
 		trackInfoList = Collections.unmodifiableList(trackInfoList);
