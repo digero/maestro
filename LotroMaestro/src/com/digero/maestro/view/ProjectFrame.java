@@ -21,7 +21,6 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
-import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
@@ -46,7 +45,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.TimingInfo;
@@ -59,6 +57,7 @@ import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.SaveData;
 import com.digero.maestro.util.Util;
 
@@ -122,21 +121,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 
 		try {
-			lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
-					.getResourceAsStream("midi/synth/LotroInstruments.sf2"));
-			lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class.getResourceAsStream("midi/synth/LotroDrums.sf2"));
-
 			Sequencer seq = MidiSystem.getSequencer(false);
-			Synthesizer synth = MidiSystem.getSynthesizer();
+			Synthesizer synth = SynthesizerFactory.getLotroSynthesizer();
 			Transmitter transmitter = seq.getTransmitter();
 			Receiver receiver = synth.getReceiver();
 			transmitter.setReceiver(receiver);
 			seq.open();
-			synth.open();
-			synth.unloadAllInstruments(lotroSoundbank);
-			synth.loadAllInstruments(lotroSoundbank);
-			synth.unloadAllInstruments(lotroDrumbank);
-			synth.loadAllInstruments(lotroDrumbank);
 
 			this.abcSequencer = new SequencerWrapper(seq, transmitter, receiver);
 		}
@@ -375,8 +365,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 		}
 	};
-	private Soundbank lotroSoundbank;
-	private Soundbank lotroDrumbank;
 
 	public int getTranspose() {
 		return (Integer) transposeSpinner.getValue();

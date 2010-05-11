@@ -29,7 +29,6 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
@@ -55,6 +54,7 @@ import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ExtensionFileFilter;
 import com.digero.maestro.util.ParseException;
 import com.digero.maestro.util.Util;
@@ -121,23 +121,13 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 			if (useLotroInstruments) {
 				try {
-//					InputStream soundbankStream = ;
-					Soundbank lotroSoundbank = MidiSystem.getSoundbank(MaestroMain.class
-							.getResource("midi/synth/LotroInstruments.sf2"));
-					Soundbank lotroDrumbank = MidiSystem.getSoundbank(MaestroMain.class
-							.getResource("midi/synth/LotroDrums.sf2"));
-					synth = MidiSystem.getSynthesizer();
-					synth.open();
-					synth.unloadAllInstruments(lotroSoundbank);
-					synth.loadAllInstruments(lotroSoundbank);
-					synth.unloadAllInstruments(lotroDrumbank);
-					synth.loadAllInstruments(lotroDrumbank);
+					synth = SynthesizerFactory.getLotroSynthesizer();
 					receiver = synth.getReceiver();
 				}
 				catch (IOException e) {
-					JOptionPane.showMessageDialog(this, "There was an error loading the LotRO instrument sounds. "
+					JOptionPane.showMessageDialog(this, "There was an error loading the LotRO instrument sounds.\n"
 							+ "Playback will use MIDI instruments instead "
-							+ "(drums do not sound good in this mode).\n\n" + e.getMessage(),
+							+ "(drums do not sound good in this mode).\n\nError details:\n" + e.getMessage(),
 							"Failed to load LotRO instruments", JOptionPane.ERROR_MESSAGE);
 
 					if (synth != null)
