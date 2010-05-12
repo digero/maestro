@@ -39,6 +39,7 @@ import javax.swing.JPanel;
 
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
+import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
 
 @SuppressWarnings("serial")
@@ -76,7 +77,7 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 		if (this.seq != null)
 			this.seq.addChangeListener(this);
 
-		setEnabled(this.seq != null);
+		setEnabled(this.seq != null && this.seq.isLoaded());
 	}
 
 	@Override
@@ -214,6 +215,9 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 
 	@Override
 	public void propertyChanged(SequencerEvent evt) {
+		if (evt.getProperty() == SequencerProperty.IS_LOADED)
+			setEnabled(evt.getSequencerWrapper().isLoaded());
+
 		repaint();
 	}
 }

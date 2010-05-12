@@ -279,6 +279,16 @@ public class SequencerWrapper {
 		}
 	}
 
+	public void clearSequence() {
+		try {
+			setSequence(null);
+		}
+		catch (InvalidMidiDataException e) {
+			// This shouldn't happen
+			throw new RuntimeException(e);
+		}
+	}
+
 	public boolean isLoaded() {
 		return sequencer.getSequence() != null;
 	}

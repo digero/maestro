@@ -42,6 +42,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -58,7 +60,6 @@ import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TimeSignature;
 import com.digero.maestro.midi.synth.SynthesizerFactory;
-import com.digero.maestro.util.SaveData;
 import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
@@ -108,48 +109,46 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		super("LotRO Maestro");
 		setBounds(200, 200, 800, 600);
 
-		this.sequenceInfo = sequenceInfo;
-
+//		this.sequenceInfo = sequenceInfo;
 		try {
 			this.sequencer = new SequencerWrapper(new DrumFilterTransceiver());
+
+			Sequencer abcSeq = MidiSystem.getSequencer(false);
+			Synthesizer lotroSynth = null;
+			try {
+				lotroSynth = SynthesizerFactory.getLotroSynthesizer();
+			}
+			catch (InvalidMidiDataException e) {
+				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
+						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n" + e.getMessage(),
+						"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
+			}
+			catch (IOException e) {
+				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
+						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n" + e.getMessage(),
+						"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
+			}
+
+			Transmitter transmitter = abcSeq.getTransmitter();
+			Receiver receiver = (lotroSynth == null) ? MidiSystem.getReceiver() : lotroSynth.getReceiver();
+			transmitter.setReceiver(receiver);
+			abcSeq.open();
+			this.abcSequencer = new SequencerWrapper(abcSeq, transmitter, receiver);
 		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.",
-					"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
+					"Failed to initialize MIDI sequencer", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 			return;
 		}
 
-		try {
-			Sequencer seq = MidiSystem.getSequencer(false);
-			Synthesizer synth = SynthesizerFactory.getLotroSynthesizer();
-			Transmitter transmitter = seq.getTransmitter();
-			Receiver receiver = synth.getReceiver();
-			transmitter.setReceiver(receiver);
-			seq.open();
-
-			this.abcSequencer = new SequencerWrapper(seq, transmitter, receiver);
-		}
-		catch (MidiUnavailableException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		catch (InvalidMidiDataException e3) {
-			// TODO Auto-generated catch block
-			e3.printStackTrace();
-		}
-		catch (IOException e4) {
-			// TODO Auto-generated catch block
-			e4.printStackTrace();
-		}
-
-		try {
-			this.sequencer.setSequence(this.sequenceInfo.getSequence());
-		}
-		catch (InvalidMidiDataException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+//		try {
+//			this.sequencer.setSequence(this.sequenceInfo.getSequence());
+//		}
+//		catch (InvalidMidiDataException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -219,7 +218,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 				newPart.addChangeListener(partChangeListener);
 				parts.addElement(newPart);
 				partsList.setSelectedIndex(parts.indexOf(newPart));
-				newPartButton.setEnabled(parts.getSize() < 15);
+				updateAbcButtons();
 			}
 		});
 
@@ -233,7 +232,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					AbcPart oldPart = (AbcPart) parts.remove(partsList.getSelectedIndex());
 					oldPart.removeChangeListener(partChangeListener);
 				}
-				newPartButton.setEnabled(parts.getSize() < 15);
+				updateAbcButtons();
 			}
 		});
 
@@ -276,6 +275,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		abcPreviewControls.add(abcPositionBar, "1, 1, 4, 1");
 		abcPreviewControls.add(abcPlayButton, "2, 3");
 		abcPreviewControls.add(abcStopButton, "3, 3");
+		updateAbcButtons();
 
 		TableLayout settingsLayout = new TableLayout(new double[] {
 				/* Cols */PREFERRED, PREFERRED, FILL
@@ -319,7 +319,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 		});
 		new DropTarget(this, dropListener);
-		newPartButton.doClick();
+//		newPartButton.doClick();
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
@@ -332,23 +332,38 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 		abcSequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
+				updateAbcButtons();
 				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
-					updateAbcPlayButtons();
 					if (abcSequencer.isRunning())
 						sequencer.stop();
 				}
-				else if (evt.getProperty() == SequencerProperty.POSITION) {
-					updateAbcPlayButtons();
-				}
+			}
+		});
+
+		parts.addListDataListener(new ListDataListener() {
+			public void intervalRemoved(ListDataEvent e) {
+				updateAbcButtons();
+			}
+
+			public void intervalAdded(ListDataEvent e) {
+				updateAbcButtons();
+			}
+
+			public void contentsChanged(ListDataEvent e) {
+				updateAbcButtons();
 			}
 		});
 	}
 
-	private void updateAbcPlayButtons() {
+	private void updateAbcButtons() {
 		abcPlayButton.setEnabled(abcSequencer.isLoaded() || parts.size() > 0);
 		abcPlayButton.setIcon(abcSequencer.isRunning() ? abcPauseIcon : abcPlayIcon);
 		abcStopButton.setEnabled(abcSequencer.isLoaded()
 				&& (abcSequencer.isRunning() || abcSequencer.getPosition() != 0));
+
+		newPartButton.setEnabled(sequenceInfo != null && parts.getSize() < 15);
+		deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
+		exportButton.setEnabled(sequenceInfo != null && parts.size() > 0);
 	}
 
 	private ChangeListener partChangeListener = new ChangeListener() {
@@ -397,31 +412,31 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private void close() {
 		for (int i = 0; i < parts.size(); i++) {
 			AbcPart part = (AbcPart) parts.get(i);
-			part.removeChangeListener(partChangeListener);
+			part.dispose();
 		}
 		parts.clear();
 
-		try {
-			sequencer.setSequence(null);
-		}
-		catch (InvalidMidiDataException e) {
-			e.printStackTrace();
-		}
+		saveFile = null;
+		sequencer.clearSequence();
+		abcSequencer.clearSequence();
+		sequencer.reset();
+		abcSequencer.reset();
+		abcPreviewStartMicros = 0;
 	}
 
 	private void openSong(File midiFile) {
+		for (int i = 0; i < parts.size(); i++) {
+			AbcPart part = (AbcPart) parts.get(i);
+			part.dispose();
+		}
+		parts.clear();
+
 		saveFile = null;
 		sequencer.reset();
 		abcSequencer.reset();
 		abcPreviewStartMicros = 0;
 
 		try {
-			for (int i = 0; i < parts.size(); i++) {
-				AbcPart part = (AbcPart) parts.get(i);
-				part.dispose();
-			}
-			parts.clear();
-
 			sequenceInfo = new SequenceInfo(midiFile);
 
 			sequencer.setSequence(sequenceInfo.getSequence());
@@ -429,33 +444,35 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
-
+	
+			updateAbcButtons();
 			newPartButton.doClick();
 		}
 		catch (InvalidMidiDataException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
+					"Error opening MIDI file", JOptionPane.ERROR_MESSAGE);
 		}
 		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
+					"Error opening MIDI file", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
-	private void save() {
-		SaveData data = new SaveData();
-		data.setString("project.midiFile", sequenceInfo.getMidiFile().getPath());
-		data.setInt("project.transpose", getTranspose());
-		data.setInt("project.tempo", getTempo());
-		data.setKeySignature("project.keySignature", getKeySignature());
-		data.setTimeSignature("project.timeSignature", getTimeSignature());
-		data.setInt("project.partCount", parts.getSize());
-
-		for (int i = 0; i < parts.getSize(); i++) {
-			AbcPart part = (AbcPart) parts.getElementAt(i);
-
-		}
-	}
+	// TODO save
+//	private void save() {
+//		SaveData data = new SaveData();
+//		data.setString("project.midiFile", sequenceInfo.getMidiFile().getPath());
+//		data.setInt("project.transpose", getTranspose());
+//		data.setInt("project.tempo", getTempo());
+//		data.setKeySignature("project.keySignature", getKeySignature());
+//		data.setTimeSignature("project.timeSignature", getTimeSignature());
+//		data.setInt("project.partCount", parts.getSize());
+//
+//		for (int i = 0; i < parts.getSize(); i++) {
+//			AbcPart part = (AbcPart) parts.getElementAt(i);
+//
+//		}
+//	}
 
 	private void refreshPreviewSequence() {
 		try {

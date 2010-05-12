@@ -2,9 +2,7 @@ package com.digero.maestro.abc;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -102,18 +100,18 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		}));
 	}
 
-	private static final Comparator<Note> noteComparator = new Comparator<Note>() {
-		public int compare(Note o1, Note o2) {
-			return o1.id - o2.id;
-		}
-	};
+//	private static final Comparator<Note> noteComparator = new Comparator<Note>() {
+//		public int compare(Note o1, Note o2) {
+//			return o1.id - o2.id;
+//		}
+//	};
 
-	private static void makeCategory(String category, Note... notes) {
-		Arrays.sort(notes, noteComparator);
-		for (Note note : notes) {
-			add(category, note);
-		}
-	}
+//	private static void makeCategory(String category, Note... notes) {
+//		Arrays.sort(notes, noteComparator);
+//		for (Note note : notes) {
+//			add(category, note);
+//		}
+//	}
 
 	private static void add(String category, Note note) {
 		SortedSet<LotroDrumInfo> categorySet = byCategory.get(category);

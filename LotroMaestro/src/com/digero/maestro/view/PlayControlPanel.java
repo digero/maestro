@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
 
 public class PlayControlPanel extends JPanel implements TableLayoutConstants {
@@ -63,10 +62,7 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
-				SequencerProperty p = evt.getProperty();
-				if (p == SequencerProperty.IS_RUNNING || p == SequencerProperty.POSITION) {
-					updateButtonStates();
-				}
+				updateButtonStates();
 			}
 		});
 
