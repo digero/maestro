@@ -35,12 +35,10 @@ import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
 	public static void main(String[] args) throws Exception {
-		AbcToMidi a2m = new AbcToMidi();
-
 		File in = new File("C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\jesujoy" + ".abc");
 
 		boolean useLotroInstruments = true;
-		Sequence song = a2m.convert(in, useLotroInstruments);
+		Sequence song = AbcToMidi.convert(in, useLotroInstruments);
 
 		Sequencer sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
@@ -65,7 +63,7 @@ public class AbcToMidi {
 			synth.close();
 	}
 
-	public AbcToMidi() {
+	private AbcToMidi() {
 
 	}
 
@@ -114,13 +112,13 @@ public class AbcToMidi {
 		}
 	}
 
-	public Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
+	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
 		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
 		tmpMap.put(abcFile, readLines(abcFile));
 		return convert(tmpMap, useLotroInstruments, null);
 	}
 
-	public Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
+	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap) throws ParseException {
 		TuneInfo info = new TuneInfo();
 		Sequence seq = null;

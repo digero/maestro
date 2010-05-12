@@ -70,10 +70,21 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		catch (Exception e) {}
 
 		AbcPreviewer frame = new AbcPreviewer();
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		frame.setBounds(200, 200, 400, 250);
 		frame.setVisible(true);
+
+		if (args.length > 0) {
+			File[] argFiles = new File[args.length];
+			for (int i = 0; i < args.length; i++) {
+				argFiles[i] = new File(args[i]);
+			}
+			if (frame.openSong(argFiles)) {
+				frame.sequencer.start();
+			}
+		}
 	}
 
 	private SequencerWrapper sequencer;
@@ -257,17 +268,6 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		// TODO
 	}
 
-	private void closeMidi() {
-		if (sequencer != null)
-			sequencer.close();
-		if (synth != null)
-			synth.close();
-		if (transmitter != null)
-			transmitter.close();
-		if (receiver != null)
-			receiver.close();
-	}
-
 	private void openSongDialog() {
 		if (openFileDialog == null) {
 			openFileDialog = new JFileChooser(prefs.get("openFileDialog.currentDirectory", Util
@@ -285,7 +285,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		}
 	}
 
-	private void openSong(File... abcFiles) {
+	private boolean openSong(File... abcFiles) {
 		Map<File, List<String>> data = new HashMap<File, List<String>>();
 
 		try {
@@ -295,20 +295,20 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		}
 		catch (IOException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Failed to open file", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 
-		openSong(data);
+		return openSong(data);
 	}
 
-	private void openSong(Map<File, List<String>> data) {
+	private boolean openSong(Map<File, List<String>> data) {
 		Sequence song;
 		try {
-			song = new AbcToMidi().convert(data, useLotroInstruments, null);
+			song = AbcToMidi.convert(data, useLotroInstruments, null);
 		}
 		catch (ParseException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 
 		abcData = data;
@@ -320,7 +320,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 
 		for (int i = 0; i < 16; i++) {
@@ -330,6 +330,8 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 		trackListPanel.songChanged();
 		updateButtonStates();
+
+		return true;
 	}
 
 	private void stop() {
@@ -375,7 +377,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 			prefs.put("exportFileDialog.currentDirectory", exportFileDialog.getCurrentDirectory().getAbsolutePath());
 
 			try {
-				Sequence midi = new AbcToMidi().convert(abcData, false, instrumentOverrideMap);
+				Sequence midi = AbcToMidi.convert(abcData, false, instrumentOverrideMap);
 
 				File saveFile = exportFileDialog.getSelectedFile();
 				if (saveFile.getName().indexOf('.') < 0) {
@@ -527,7 +529,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 				Sequence song;
 
 				try {
-					song = new AbcToMidi().convert(abcData, useLotroInstruments, instrumentOverrideMap);
+					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap);
 				}
 				catch (ParseException e) {
 					JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument",
