@@ -16,11 +16,8 @@ import java.util.regex.Pattern;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 
 import com.digero.maestro.abc.Dynamics;
@@ -30,41 +27,11 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.TimeSignature;
-import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
-	public static void main(String[] args) throws Exception {
-		File in = new File("C:\\Users\\Ben\\Documents\\The Lord of the Rings Online\\Music\\jesujoy" + ".abc");
-
-		boolean useLotroInstruments = true;
-		Sequence song = AbcToMidi.convert(in, useLotroInstruments);
-
-		Sequencer sequencer = MidiSystem.getSequencer(false);
-		sequencer.open();
-		Synthesizer synth = null;
-		if (useLotroInstruments) {
-			synth = SynthesizerFactory.getLotroSynthesizer();
-			sequencer.getTransmitter().setReceiver(synth.getReceiver());
-		}
-		else {
-			sequencer.getTransmitter().setReceiver(MidiSystem.getReceiver());
-		}
-
-		sequencer.setSequence(song);
-		sequencer.start();
-
-		while (sequencer.isRunning()) {
-			Thread.sleep(500);
-		}
-		sequencer.close();
-
-		if (synth != null)
-			synth.close();
-	}
-
+	/** This is a static-only class */
 	private AbcToMidi() {
-
 	}
 
 	private static final Pattern INFO_PATTERN = Pattern.compile("^([A-Z]):\\s*(.*)\\s*$");
