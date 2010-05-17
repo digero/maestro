@@ -109,25 +109,25 @@ public class TrackInfo implements IMidiConstants {
 						}
 					}
 				}
-				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
-					final int STEP_SIZE = ((1 << 14) - 1) / 4;
-					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
-					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-
-					if (bendTmp != pitchBend[c]) {
-						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
-						for (NoteEvent ne : notesOn[c]) {
-							ne.endMicros = micros;
-
-							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
-							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
-							noteEvents.add(bne);
-							bentNotes.add(bne);
-						}
-						notesOn[c] = bentNotes;
-						pitchBend[c] = bendTmp;
-					}
-				}
+//				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
+//					final int STEP_SIZE = ((1 << 14) - 1) / 4;
+//					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
+//					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
+//
+//					if (bendTmp != pitchBend[c]) {
+//						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
+//						for (NoteEvent ne : notesOn[c]) {
+//							ne.endMicros = micros;
+//
+//							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
+//							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
+//							noteEvents.add(bne);
+//							bentNotes.add(bne);
+//						}
+//						notesOn[c] = bentNotes;
+//						pitchBend[c] = bendTmp;
+//					}
+//				}
 			}
 			else if (msg instanceof MetaMessage) {
 				MetaMessage m = (MetaMessage) msg;
