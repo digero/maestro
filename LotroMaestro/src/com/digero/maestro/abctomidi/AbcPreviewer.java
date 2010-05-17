@@ -58,33 +58,50 @@ import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ExtensionFileFilter;
 import com.digero.maestro.util.ParseException;
 import com.digero.maestro.util.Util;
+import com.digero.maestro.util.singleinstance.SingleInstanceListener;
+import com.digero.maestro.util.singleinstance.SingleInstanceManager;
 import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
 
-public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiConstants {
+public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
+	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
+	private static AbcPreviewer mainWindow = null;
+
 	public static void main(String[] args) {
+		SingleInstanceManager sim;
+		try {
+			sim = SingleInstanceManager.createInstance(SINGLE_INSTANCE_PORT, args);
+
+			// If the manager is null, then there's already an instance running
+			if (sim == null)
+				System.exit(0);
+		}
+		catch (Exception e) {
+			sim = null;
+		}
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
 		catch (Exception e) {}
 
-		AbcPreviewer frame = new AbcPreviewer();
+		mainWindow = new AbcPreviewer();
+		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainWindow.setBounds(200, 200, 400, 265);
+		mainWindow.setVisible(true);
 
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		frame.setBounds(200, 200, 400, 250);
-		frame.setVisible(true);
-
-		if (args.length > 0) {
-			File[] argFiles = new File[args.length];
-			for (int i = 0; i < args.length; i++) {
-				argFiles[i] = new File(args[i]);
-			}
-			if (frame.openSong(argFiles)) {
-				frame.sequencer.start();
-			}
+		if (sim != null) {
+			sim.start();
+			sim.setListener(mainWindow);
 		}
+		mainWindow.openSongFromCommandLine(args);
+	}
+
+	@Override
+	public void newActivation(String[] args) {
+		mainWindow.toFront();
+		mainWindow.openSongFromCommandLine(args);
 	}
 
 	private SequencerWrapper sequencer;
@@ -283,6 +300,20 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 			openSong(openFileDialog.getSelectedFiles());
 		}
+	}
+
+	private boolean openSongFromCommandLine(String[] args) {
+		if (args.length > 0) {
+			File[] argFiles = new File[args.length];
+			for (int i = 0; i < args.length; i++) {
+				argFiles[i] = new File(args[i]);
+			}
+			if (openSong(argFiles)) {
+				sequencer.start();
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean openSong(File... abcFiles) {
