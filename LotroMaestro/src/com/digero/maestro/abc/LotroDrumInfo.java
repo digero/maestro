@@ -28,7 +28,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		byId.put(DISABLED.note.id, DISABLED);
 
 		Map<Note, String> drumNames = new HashMap<Note, String>();
-		drumNames.put(Note.C2, "Conga Open");
+		drumNames.put(Note.C2, "Conga High");
 		drumNames.put(Note.Cs2, "Rattle Short");
 		drumNames.put(Note.D2, "Muff");
 		drumNames.put(Note.Ds2, "Slap");
@@ -59,11 +59,11 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		drumNames.put(Note.E4, "Conga Bend");
 		drumNames.put(Note.F4, "Conga Bend");
 		drumNames.put(Note.Fs4, "Slap");
-		drumNames.put(Note.G4, "Conga Open");
+		drumNames.put(Note.G4, "Conga Low");
 		drumNames.put(Note.Gs4, "Slap");
-		drumNames.put(Note.A4, "Conga Open");
+		drumNames.put(Note.A4, "Conga Low");
 		drumNames.put(Note.As4, "Muff");
-		drumNames.put(Note.B4, "Conga Open");
+		drumNames.put(Note.B4, "Conga Mid");
 		drumNames.put(Note.C5, "Slap");
 
 		for (Entry<Note, String> entry : drumNames.entrySet()) {
