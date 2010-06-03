@@ -45,6 +45,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.digero.maestro.MaestroMain;
@@ -59,27 +60,27 @@ import com.digero.maestro.util.ExtensionFileFilter;
 import com.digero.maestro.util.ParseException;
 import com.digero.maestro.util.Util;
 import com.digero.maestro.util.singleinstance.SingleInstanceListener;
-import com.digero.maestro.util.singleinstance.SingleInstanceManager;
 import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
 
 public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
+	private static final String APP_NAME = "ABC Player";
 	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
 	private static AbcPreviewer mainWindow = null;
 
 	public static void main(String[] args) {
-		SingleInstanceManager sim;
-		try {
-			sim = SingleInstanceManager.createInstance(SINGLE_INSTANCE_PORT, args);
-
-			// If the manager is null, then there's already an instance running
-			if (sim == null)
-				System.exit(0);
-		}
-		catch (Exception e) {
-			sim = null;
-		}
+//		SingleInstanceManager sim;
+//		try {
+//			sim = SingleInstanceManager.createInstance(SINGLE_INSTANCE_PORT, args);
+//
+//			// If the manager is null, then there's already an instance running
+//			if (sim == null)
+//				System.exit(0);
+//		}
+//		catch (Exception e) {
+//			sim = null;
+//		}
 
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -88,20 +89,29 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 		mainWindow = new AbcPreviewer();
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainWindow.setBounds(200, 200, 400, 265);
+		mainWindow.setBounds(200, 200, 416, 272);
 		mainWindow.setVisible(true);
 
-		if (sim != null) {
-			sim.start();
-			sim.setListener(mainWindow);
-		}
+//		if (sim != null) {
+//			sim.start();
+//			sim.setListener(mainWindow);
+//		}
 		mainWindow.openSongFromCommandLine(args);
 	}
 
 	@Override
 	public void newActivation(String[] args) {
-		mainWindow.toFront();
 		mainWindow.openSongFromCommandLine(args);
+	}
+
+	public static native void ready();
+
+	public static void activate() {
+		JOptionPane.showMessageDialog(mainWindow, "Activate");
+	}
+
+	public static void execute(String cmdLine) {
+		JOptionPane.showMessageDialog(mainWindow, cmdLine);
 	}
 
 	private SequencerWrapper sequencer;
@@ -132,12 +142,12 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 //	private Preferences windowPrefs = prefs.node("window");
 
 	public AbcPreviewer() {
-		super("LotRO ABC Previewer");
+		super(APP_NAME);
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				openSong(dropListener.getDroppedFiles().toArray(new File[0]));
+				SwingUtilities.invokeLater(new OpenSongRunnable(dropListener.getDroppedFiles().toArray(new File[0])));
 			}
 		});
 		new DropTarget(this, dropListener);
@@ -316,6 +326,18 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		return false;
 	}
 
+	private class OpenSongRunnable implements Runnable {
+		private File[] abcFiles;
+
+		public OpenSongRunnable(File... abcFiles) {
+			this.abcFiles = abcFiles;
+		}
+
+		public void run() {
+			openSong(abcFiles);
+		}
+	}
+
 	private boolean openSong(File... abcFiles) {
 		Map<File, List<String>> data = new HashMap<File, List<String>>();
 
@@ -333,6 +355,9 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	}
 
 	private boolean openSong(Map<File, List<String>> data) {
+		sequencer.stop(); // pause
+		updateButtonStates();
+		
 		Sequence song;
 		try {
 			song = AbcToMidi.convert(data, useLotroInstruments, null);
@@ -344,9 +369,9 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 
 		abcData = data;
 		instrumentOverrideMap.clear();
+		stop();
 
 		try {
-			stop();
 			sequencer.setSequence(song);
 		}
 		catch (InvalidMidiDataException e) {
@@ -359,6 +384,21 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 			sequencer.setTrackSolo(i, false);
 		}
 
+		String fileNames = "";
+		int c = 0;
+		for (File f : data.keySet()) {
+			if (c > 0)
+				fileNames += ", ";
+			fileNames += f.getName();
+			if (++c > 2)
+				break;
+		}
+		if (data.size() > 2)
+			fileNames += ", ...";
+		if (fileNames == "")
+			setTitle(APP_NAME);
+		else
+			setTitle(fileNames + " - " + APP_NAME);
 		trackListPanel.songChanged();
 		updateButtonStates();
 

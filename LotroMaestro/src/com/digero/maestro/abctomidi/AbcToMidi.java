@@ -39,16 +39,14 @@ public class AbcToMidi {
 	private static final int INFO_VALUE = 2;
 
 	private static final Pattern NOTE_PATTERN = Pattern.compile("(_{1,2}|=|\\^{1,2})?" + "([xzA-Ga-g])"
-			+ "(,{1,5}|'{1,5})?" + "((\\d+)?(/\\d{0,2})?|(//))?" + "(>{1,3}|<{1,3})?" + "(-)?");
+			+ "(,{1,5}|'{1,5})?" + "(\\d+)?" + "(//?\\d*)?" + "(>{1,3}|<{1,3})?" + "(-)?");
 	private static final int NOTE_ACCIDENTAL = 1;
 	private static final int NOTE_LETTER = 2;
 	private static final int NOTE_OCTAVE = 3;
-//	private static final int NOTE_LENGTH = 4;
-	private static final int NOTE_LEN_NUMER = 5;
-	private static final int NOTE_LEN_DENOM = 6;
-	private static final int NOTE_LEN_DOUBLECUT = 7;
-	private static final int NOTE_BROKEN_RHYTHM = 8;
-	private static final int NOTE_TIE = 9;
+	private static final int NOTE_LEN_NUMER = 4;
+	private static final int NOTE_LEN_DENOM = 5;
+	private static final int NOTE_BROKEN_RHYTHM = 6;
+	private static final int NOTE_TIE = 7;
 
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
@@ -93,6 +91,8 @@ public class AbcToMidi {
 
 		int channel = 0;
 		int trackNumber = 0;
+		int baseNoteDivisor = 0;
+		int noteDivisorChangeLine = 0;
 
 		long chordStartTick = 0;
 		long chordEndTick = 0;
@@ -146,25 +146,19 @@ public class AbcToMidi {
 
 							info.setTitle(value);
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-								info.findInstrumentName(value);
+								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
 							}
 							break;
 						case 'K':
 							info.setKey(value);
-//							if (info.getKey().sharpsFlats != 0) {
-//								throw new ParseException("Only C major and A minor are currently supported", fileName,
-//										lineNumber, infoMatcher.start(INFO_VALUE));
-//							}
 							break;
 						case 'L':
 							info.setNoteDivisor(value);
+							noteDivisorChangeLine = lineNumber;
 							break;
 						case 'M':
-							TimeSignature meter = info.getMeter();
 							info.setMeter(value);
-							if (seq != null && !info.getMeter().equals(meter))
-								throw new ParseException("The meter must be the same for all parts of the song",
-										fileName, lineNumber);
+							noteDivisorChangeLine = lineNumber;
 							break;
 						case 'Q': {
 							int tempo = info.getTempo();
@@ -178,7 +172,7 @@ public class AbcToMidi {
 						}
 						case 'I':
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-								info.findInstrumentName(value);
+								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
 							}
 							break;
 						}
@@ -193,6 +187,7 @@ public class AbcToMidi {
 					if (seq == null) {
 						try {
 							// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
+							baseNoteDivisor = info.getNoteDivisor();
 							PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
 							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
@@ -306,6 +301,10 @@ public class AbcToMidi {
 								}
 								break;
 
+							case '\\':
+								// Ignore backslashes
+								break;
+
 							default:
 								throw new ParseException("Unknown/unexpected character '" + ch + "'", fileName,
 										lineNumber, i);
@@ -323,21 +322,16 @@ public class AbcToMidi {
 						int numerator;
 						int denominator;
 
-						if (m.group(NOTE_LEN_DOUBLECUT) != null) {
-							numerator = 1;
+						numerator = (m.group(NOTE_LEN_NUMER) == null) ? 1 : Integer.parseInt(m.group(NOTE_LEN_NUMER));
+						String denom = m.group(NOTE_LEN_DENOM);
+						if (denom == null)
+							denominator = 1;
+						else if (denom.equals("/"))
+							denominator = 2;
+						else if (denom.equals("//"))
 							denominator = 4;
-						}
-						else {
-							numerator = (m.group(NOTE_LEN_NUMER) == null) ? 1 : Integer.parseInt(m
-									.group(NOTE_LEN_NUMER));
-							String denom = m.group(NOTE_LEN_DENOM);
-							if (denom == null)
-								denominator = 1;
-							else if (denom.equals("/"))
-								denominator = 2;
-							else
-								denominator = Integer.parseInt(denom.substring(1));
-						}
+						else
+							denominator = Integer.parseInt(denom.substring(1));
 
 						String brokenRhythm = m.group(NOTE_BROKEN_RHYTHM);
 						if (brokenRhythm != null) {
@@ -463,6 +457,11 @@ public class AbcToMidi {
 							}
 
 							if (!tiedNotes.containsKey(noteId)) {
+								if (info.getNoteDivisor() != baseNoteDivisor) {
+									throw new ParseException(
+											"The default note length must be the same for all parts of the song",
+											fileName, noteDivisorChangeLine);
+								}
 								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().velocity,
 										chordStartTick));
 							}
@@ -680,13 +679,25 @@ public class AbcToMidi {
 			return denominator;
 		}
 
+		private static Map<String, LotroInstrument> instrNicknames = null;
 		private static Pattern instrRegex = null;
 
-		public boolean findInstrumentName(String str) {
+		public static LotroInstrument findInstrumentName(String str, LotroInstrument defaultInstrument) {
+			if (instrNicknames == null) {
+				instrNicknames = new HashMap<String, LotroInstrument>();
+				// Must be all-caps
+				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
+				instrNicknames.put("BASS", LotroInstrument.THEORBO);
+				instrNicknames.put("BAGPIPES", LotroInstrument.BAGPIPE);
+			}
+
 			if (instrRegex == null) {
 				String regex = "";
 				for (LotroInstrument instr : LotroInstrument.values()) {
 					regex += "|" + instr;
+				}
+				for (String nick : instrNicknames.keySet()) {
+					regex += "|" + nick;
 				}
 				regex = "\\b(" + regex.substring(1) + ")\\b";
 				instrRegex = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
@@ -694,10 +705,13 @@ public class AbcToMidi {
 
 			Matcher m = instrRegex.matcher(str);
 			if (m.find()) {
-				this.instrument = LotroInstrument.valueOf(m.group(1).toUpperCase());
-				return true;
+				String name = m.group(1).toUpperCase();
+				if (instrNicknames.containsKey(name))
+					return instrNicknames.get(name);
+
+				return LotroInstrument.valueOf(name);
 			}
-			return false;
+			return defaultInstrument;
 		}
 
 		public void setInstrument(LotroInstrument instrument) {
