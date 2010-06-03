@@ -64,10 +64,10 @@ import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
 
-public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
+public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
 	private static final String APP_NAME = "ABC Player";
 	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
-	private static AbcPreviewer mainWindow = null;
+	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
 //		SingleInstanceManager sim;
@@ -87,7 +87,7 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 		}
 		catch (Exception e) {}
 
-		mainWindow = new AbcPreviewer();
+		mainWindow = new AbcPlayer();
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainWindow.setBounds(200, 200, 416, 272);
 		mainWindow.setVisible(true);
@@ -137,11 +137,11 @@ public class AbcPreviewer extends JFrame implements TableLayoutConstants, IMidiC
 	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
 	private Map<File, List<String>> abcData;
 
-	private Preferences prefs = Preferences.userNodeForPackage(AbcPreviewer.class);
+	private Preferences prefs = Preferences.userNodeForPackage(AbcPlayer.class);
 
 //	private Preferences windowPrefs = prefs.node("window");
 
-	public AbcPreviewer() {
+	public AbcPlayer() {
 		super(APP_NAME);
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
