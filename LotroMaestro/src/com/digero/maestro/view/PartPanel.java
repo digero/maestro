@@ -161,7 +161,7 @@ public class PartPanel extends JPanel {
 					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
 				}
 				else {
-					sequencer.setTrackMute(trackNumber, true);
+					sequencer.setTrackMute(trackNumber, false);
 				}
 				sequencer.setTrackSolo(trackNumber, false);
 			}
