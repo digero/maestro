@@ -92,7 +92,12 @@ public class SequencerWrapper {
 				long songPos = sequencer.getMicrosecondPosition();
 				boolean running = sequencer.isRunning();
 				if (songPos >= getLength()) {
-					setPosition(0);
+					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
+					// deadlock when calling setMicrosecondPosition(0) exactly when the sequencer 
+					// hits the end of the sequence.  It looks like it's safe to call 
+					// sequencer.setTickPosition(0).
+					sequencer.stop();
+					sequencer.setTickPosition(0);
 					lastUpdatePosition = songPos;
 				}
 				else if (lastUpdatePosition != songPos) {
