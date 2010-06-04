@@ -145,7 +145,10 @@ public class SequencerWrapper {
 
 	public void setPosition(long position) {
 		if (position != getPosition()) {
-			sequencer.setMicrosecondPosition(position);
+			if (position == 0)
+				sequencer.setTickPosition(0);
+			else
+				sequencer.setMicrosecondPosition(position);
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
