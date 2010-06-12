@@ -9,11 +9,11 @@
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="C:/Users/Ben/workspace/LotroMaestro/bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Ben/workspace/LotroMaestro/TableLayout.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Ben/workspace/LotroMaestro/gervill.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Ben/workspace/LotroMaestro/WinRun4J.jar"/>
         </jar>
-    	<copy file="${basedir}/LotroInstruments.sf2" todir="${output}" preservelastmodified="true"/>
+    	<copy file="${basedir}/LotroInstruments.sf2" todir="${output}"/>
+    	<copy file="${basedir}/TableLayout.jar" todir="${output}"/>
+    	<copy file="${basedir}/gervill.jar" todir="${output}"/>
+    	<copy file="${basedir}/WinRun4J.jar" todir="${output}"/>
     	<copy file="${build}/WinRun4J.exe" tofile="${output}/AbcPlayer.exe" overwrite="true"/>
     	<exec dir="${build}" executable="${build}/rcedit.exe" failonerror="true">
     		<arg value="/W"/>
