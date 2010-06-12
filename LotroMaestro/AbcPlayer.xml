@@ -5,7 +5,7 @@
     <target name="create_run_jar">
         <jar destfile="${output}/AbcPlayer.jar" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="com.digero.maestro.abctomidi.AbcPlayer"/>
+                <attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="C:/Users/Ben/workspace/LotroMaestro/bin"/>
