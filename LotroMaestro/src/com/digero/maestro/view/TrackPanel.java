@@ -37,6 +37,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.AbcPartEvent;
+import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequencerEvent;
@@ -173,28 +175,31 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 	private class NoteGraph extends JPanel implements IDisposable, NoteGraphConstants {
 		public NoteGraph() {
-			abcPart.addChangeListener(myChangeListener);
+			abcPart.addAbcListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
 
 			MyMouseListener mouseListener = new MyMouseListener();
 			addMouseListener(mouseListener);
 			addMouseMotionListener(mouseListener);
-			
+
 			setPreferredSize(new Dimension(200, 24));
 		}
 
 		public void dispose() {
-			abcPart.removeChangeListener(myChangeListener);
+			abcPart.removeAbcListener(myChangeListener);
 			seq.removeChangeListener(myChangeListener);
 		}
 
 		private MyChangeListener myChangeListener = new MyChangeListener();
 
-		private class MyChangeListener implements ChangeListener, SequencerListener {
-			public void stateChanged(ChangeEvent e) {
-				repaint();
+		private class MyChangeListener implements AbcPartListener, SequencerListener {
+			@Override
+			public void abcPartChanged(AbcPartEvent e) {
+				if (e.isPreviewRelated())
+					repaint();
 			}
 
+			@Override
 			public void propertyChanged(SequencerEvent evt) {
 				repaint();
 			}

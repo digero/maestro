@@ -14,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.Comparator;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -40,6 +42,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataEvent;
@@ -49,6 +52,8 @@ import javax.swing.event.ListSelectionListener;
 
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.AbcPartEvent;
+import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.DrumFilterTransceiver;
 import com.digero.maestro.midi.KeySignature;
@@ -60,6 +65,7 @@ import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TimeSignature;
 import com.digero.maestro.midi.synth.SynthesizerFactory;
+import com.digero.maestro.util.ListModelWrapper;
 import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
@@ -77,6 +83,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private SequencerWrapper sequencer;
 	private SequencerWrapper abcSequencer;
 	private DefaultListModel parts = new DefaultListModel();
+	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
 
 	private JPanel content;
 	private JSpinner transposeSpinner;
@@ -98,6 +105,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private Icon abcPauseIcon;
 
 	private long abcPreviewStartMicros = 0;
+	private boolean echoingPosition = false;
 
 	public ProjectFrame(SequenceInfo sequenceInfo) {
 		this(sequenceInfo, 0, sequenceInfo.getTempoBPM(), sequenceInfo.getTimeSignature(), sequenceInfo
@@ -195,16 +203,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		partsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				int idx = partsList.getSelectedIndex();
-				if (idx != -1) {
-					AbcPart abcPart = (AbcPart) parts.getElementAt(idx);
-					sequencer.getDrumFilter().setAbcPart(abcPart);
-					partPanel.setAbcPart(abcPart);
-				}
-				else {
-					sequencer.getDrumFilter().setAbcPart(null);
-					partPanel.setAbcPart(null);
-				}
+				AbcPart abcPart = (AbcPart) partsList.getSelectedValue();
+				sequencer.getDrumFilter().setAbcPart(abcPart);
+				partPanel.setAbcPart(abcPart);
 			}
 		});
 
@@ -215,9 +216,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		newPartButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), calcNextPartNumber());
-				newPart.addChangeListener(partChangeListener);
+				newPart.addAbcListener(abcPartListener);
 				parts.addElement(newPart);
-				partsList.setSelectedIndex(parts.indexOf(newPart));
+				Collections.sort(partsWrapper, partNumberComparator);
+				partsList.setSelectedValue(newPart, true);
 				updateAbcButtons();
 			}
 		});
@@ -225,13 +227,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		deletePartButton = new JButton("Delete");
 		deletePartButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String title = "Delete Part";
-				String msg = "Are you sure you want to delete the selected part?\nThis cannot be undone.";
-				int r = JOptionPane.showConfirmDialog(ProjectFrame.this, msg, title, JOptionPane.YES_NO_OPTION);
-				if (r == JOptionPane.YES_OPTION) {
-					AbcPart oldPart = (AbcPart) parts.remove(partsList.getSelectedIndex());
-					oldPart.removeChangeListener(partChangeListener);
-				}
+				int idx = partsList.getSelectedIndex();
+				AbcPart oldPart = (AbcPart) parts.remove(idx);
+				if (idx > 0)
+					partsList.setSelectedIndex(idx - 1);
+				else if (parts.size() > 0)
+					partsList.setSelectedIndex(0);
+				oldPart.dispose();
 				updateAbcButtons();
 			}
 		});
@@ -256,7 +258,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					abcSequencer.stop();
 				}
 				else {
-					refreshPreviewSequence();
+					refreshPreviewSequence(true);
 					abcSequencer.start();
 				}
 			}
@@ -327,6 +329,25 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					if (sequencer.isRunning())
 						abcSequencer.stop();
 				}
+				else if (!echoingPosition) {
+					try {
+						echoingPosition = true;
+						if (evt.getProperty() == SequencerProperty.POSITION) {
+							long pos = sequencer.getPosition() - abcPreviewStartMicros;
+							abcSequencer.setPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+						}
+						else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
+							long pos = sequencer.getDragPosition() - abcPreviewStartMicros;
+							abcSequencer.setDragPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+						}
+						else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
+							abcSequencer.setDragging(sequencer.isDragging());
+						}
+					}
+					finally {
+						echoingPosition = false;
+					}
+				}
 			}
 		});
 
@@ -336,6 +357,25 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
 					if (abcSequencer.isRunning())
 						sequencer.stop();
+				}
+				else if (!echoingPosition) {
+					try {
+						echoingPosition = true;
+						if (evt.getProperty() == SequencerProperty.POSITION) {
+							long pos = abcSequencer.getPosition() + abcPreviewStartMicros;
+							sequencer.setPosition(Util.clamp(pos, 0, sequencer.getLength()));
+						}
+						else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
+							long pos = abcSequencer.getDragPosition() + abcPreviewStartMicros;
+							sequencer.setDragPosition(Util.clamp(pos, 0, sequencer.getLength()));
+						}
+						else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
+							sequencer.setDragging(abcSequencer.isDragging());
+						}
+					}
+					finally {
+						echoingPosition = false;
+					}
 				}
 			}
 		});
@@ -366,17 +406,23 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		exportButton.setEnabled(sequenceInfo != null && parts.size() > 0);
 	}
 
-	private ChangeListener partChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			int idx = parts.indexOf(e.getSource());
-			if (idx >= 0) {
-				// Make the list model fire the contentsChanged event, 
-				// which will cause a repaint
-				parts.set(idx, e.getSource());
+	private AbcPartListener abcPartListener = new AbcPartListener() {
+		public void abcPartChanged(AbcPartEvent e) {
+			if (e.isPartNumber()) {
+				int idx;
+				Object selected = partsList.getSelectedValue();
+				Collections.sort(partsWrapper, partNumberComparator);
+				if (selected != null) {
+					idx = parts.indexOf(selected);
+					if (idx >= 0)
+						partsList.setSelectedIndex(idx);
+				}
 			}
 
-			if (abcSequencer.isRunning()) {
-				refreshPreviewSequence();
+			partsList.repaint();
+
+			if (e.isPreviewRelated() && abcSequencer.isRunning()) {
+				refreshPreviewSequence(false);
 			}
 		}
 	};
@@ -408,6 +454,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 		return size + 1;
 	}
+
+	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>() {
+		public int compare(AbcPart p1, AbcPart p2) {
+			return p1.getPartNumber() - p2.getPartNumber();
+		}
+	};
 
 	private void close() {
 		for (int i = 0; i < parts.size(); i++) {
@@ -444,7 +496,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
-	
+
 			updateAbcButtons();
 			newPartButton.doClick();
 		}
@@ -474,7 +526,25 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 //		}
 //	}
 
-	private void refreshPreviewSequence() {
+	private boolean refreshPreviewPending = false;
+
+	private class RefreshPreviewTask implements Runnable {
+		public void run() {
+			if (refreshPreviewPending)
+				refreshPreviewSequence(true);
+		}
+	}
+
+	private void refreshPreviewSequence(boolean immediate) {
+		if (!immediate) {
+			if (!refreshPreviewPending) {
+				refreshPreviewPending = true;
+				SwingUtilities.invokeLater(new RefreshPreviewTask());
+			}
+			return;
+		}
+
+		refreshPreviewPending = false;
 		try {
 			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
 			Sequence song = new Sequence(Sequence.PPQ, tm.getMidiResolution());
@@ -495,24 +565,34 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE);
+				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0);
 			}
 
 			long position = abcSequencer.getPosition() + abcPreviewStartMicros - startMicros;
 			abcPreviewStartMicros = startMicros;
 
+			boolean running = abcSequencer.isRunning();
+			abcSequencer.reset();
 			abcSequencer.setSequence(song);
 
-			if (position < 0 || position > abcSequencer.getLength())
+			if (position < 0)
 				position = 0;
 
+			if (position >= abcSequencer.getLength()) {
+				position = 0;
+				running = false;
+			}
+
 			abcSequencer.setPosition(position);
+			abcSequencer.setRunning(running);
 		}
 		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Error exporting ABC", JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error exporting ABC",
+					JOptionPane.WARNING_MESSAGE);
 		}
 		catch (AbcConversionException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Error exporting ABC", JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error exporting ABC",
+					JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
@@ -562,6 +642,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 			// Remove silent bars before the song starts
 			long startMicros = Long.MAX_VALUE;
+			long endMicros = Long.MIN_VALUE;
 			for (int i = 0; i < parts.size(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
 
@@ -570,11 +651,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 					// Remove integral number of bars
 					startMicros = tm.barLength * (firstNoteStart / tm.barLength);
 				}
+				long lastNoteEnd = part.lastNoteEnd();
+				if (lastNoteEnd > endMicros) {
+					// Lengthen to an integral number of bars
+					endMicros = tm.barLength * ((lastNoteEnd + tm.barLength - 1) / tm.barLength);
+				}
 			}
 
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				part.exportToAbc(tm, getKeySignature(), startMicros, Long.MAX_VALUE, out);
+				part.exportToAbc(tm, getKeySignature(), startMicros, endMicros, 0, out);
 			}
 		}
 		catch (AbcConversionException e) {

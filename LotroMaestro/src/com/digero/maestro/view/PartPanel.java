@@ -21,6 +21,8 @@ import javax.swing.event.DocumentListener;
 import sun.awt.VerticalBagLayout;
 
 import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.AbcPartEvent;
+import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
@@ -105,8 +107,8 @@ public class PartPanel extends JPanel {
 		setAbcPart(null);
 	}
 
-	private ChangeListener partChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
+	private AbcPartListener abcPartListener = new AbcPartListener() {
+		public void abcPartChanged(AbcPartEvent e) {
 		}
 	};
 
@@ -115,7 +117,7 @@ public class PartPanel extends JPanel {
 			return;
 
 		if (this.abcPart != null) {
-			this.abcPart.removeChangeListener(partChangeListener);
+			this.abcPart.removeAbcListener(abcPartListener);
 			this.abcPart = null;
 		}
 
@@ -180,7 +182,7 @@ public class PartPanel extends JPanel {
 
 		this.abcPart = abcPart;
 		if (this.abcPart != null) {
-			this.abcPart.addChangeListener(partChangeListener);
+			this.abcPart.addAbcListener(abcPartListener);
 		}
 
 		validate();

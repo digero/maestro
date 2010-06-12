@@ -82,9 +82,9 @@ public class SequencerWrapper {
 	}
 
 	private TimerActionListener timerTick = new TimerActionListener();
+	private long lastUpdatePosition = -1;
 
 	private class TimerActionListener implements ActionListener {
-		private long lastUpdatePosition = -1;
 		private boolean lastRunning = false;
 
 		public void actionPerformed(ActionEvent e) {
@@ -149,6 +149,7 @@ public class SequencerWrapper {
 				sequencer.setTickPosition(0);
 			else
 				sequencer.setMicrosecondPosition(position);
+			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}

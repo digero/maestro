@@ -10,13 +10,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.KeySignature;
@@ -30,42 +29,38 @@ public class AbcPart {
 	private SequenceInfo sequenceInfo;
 	private boolean enabled;
 	private int partNumber;
+	private boolean dynamicVolume;
 	private String title;
 	private LotroInstrument instrument;
 	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackDisabled;
-	private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
+	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
 	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, int partNumber) {
-		this(sequenceInfo, baseTranspose, partNumber,
-				sequenceInfo.getTitle() + " - " + LotroInstrument.LUTE.toString(), LotroInstrument.LUTE, true);
-	}
-
-	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, int partNumber, String title,
-			LotroInstrument instrument, boolean enabled) {
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
 		this.partNumber = partNumber;
-		this.title = title;
-		this.instrument = instrument;
-		this.enabled = enabled;
+		this.title = sequenceInfo.getTitle() + " - " + LotroInstrument.LUTE.toString();
+		this.instrument = LotroInstrument.LUTE;
+		this.enabled = true;
+		this.dynamicVolume = true;
 
 		this.trackTranspose = new int[getTrackCount()];
 		this.trackDisabled = new boolean[getTrackCount()];
 	}
 
 	public void exportToMidi(Sequence out, TimingInfo tm) throws AbcConversionException {
-		exportToMidi(out, tm, 0, Integer.MAX_VALUE);
+		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0);
 	}
 
-	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros)
+	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity)
 			throws AbcConversionException {
 		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
 
-		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros);
+		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
 		int channel = out.getTracks().length;
 		if (channel >= MidiConstants.DRUM_CHANNEL)
 			channel++;
@@ -114,24 +109,16 @@ public class AbcPart {
 		}
 	}
 
-	public String exportToAbc(TimingInfo tm, KeySignature key) throws AbcConversionException {
-		return exportToAbc(tm, key, 0, Integer.MAX_VALUE);
-	}
-
-	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros)
-			throws AbcConversionException {
+	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
+			int deltaVelocity) throws AbcConversionException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		exportToAbc(tm, key, songStartMicros, songEndMicros, os);
+		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, os);
 		return os.toString();
 	}
 
-	public void exportToAbc(TimingInfo tm, KeySignature key, OutputStream os) throws AbcConversionException {
-		exportToAbc(tm, key, 0, Integer.MAX_VALUE, os);
-	}
-
-	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros, OutputStream os)
-			throws AbcConversionException {
-		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros);
+	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
+			int deltaVelocity, OutputStream os) throws AbcConversionException {
+		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros, deltaVelocity);
 
 		if (key.sharpsFlats != 0)
 			throw new AbcConversionException("Only C major and A minor are currently supported");
@@ -147,14 +134,16 @@ public class AbcPart {
 
 		// Keep track of which notes have been sharped or flatted so 
 		// we can naturalize them the next time they show up.
-		boolean[] accidentals = new boolean[Note.C5.id + 1];
+		boolean[] sharps = new boolean[Note.C5.id + 1];
+		boolean[] flats = new boolean[Note.C5.id + 1];
 
 		// Write out ABC notation
 		final int LINE_LENGTH = 80;
+		final int BAR_LENGTH = 160;
 		int lineLength = 0;
 		long barNumber = 0;
 		StringBuilder sb = new StringBuilder();
-		Dynamics curDyn = Dynamics.DEFAULT;
+		Dynamics curDyn = null;
 
 		for (Chord c : chords) {
 			if (c.size() == 0) {
@@ -173,8 +162,8 @@ public class AbcPart {
 					sb.setLength(sb.length() - 1);
 
 				// Insert line breaks
-				for (int i = LINE_LENGTH; i < sb.length(); i += LINE_LENGTH) {
-					for (int j = 0; j < LINE_LENGTH - 1; j++, i--) {
+				for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
+					for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
 						if (sb.charAt(i) == ' ') {
 							sb.replace(i, i + 1, "\r\n");
 							i++;
@@ -189,7 +178,8 @@ public class AbcPart {
 				sb.setLength(0);
 				barNumber = c.getStartMicros() / tm.barLength;
 
-				Arrays.fill(accidentals, false);
+				Arrays.fill(sharps, false);
+				Arrays.fill(flats, false);
 			}
 
 			Dynamics newDyn = c.calcDynamics();
@@ -210,17 +200,28 @@ public class AbcPart {
 					continue;
 				}
 
+				String noteAbc = evt.note.abc;
 				if (evt.note != Note.REST) {
-					if (evt.note.hasAccidental()) {
-						accidentals[evt.note.naturalId] = true;
+					if (evt.note.isSharp()) {
+						if (sharps[evt.note.naturalId])
+							noteAbc = Note.fromId(evt.note.naturalId).abc;
+						else
+							sharps[evt.note.naturalId] = true;
 					}
-					else if (accidentals[evt.note.id]) {
-						accidentals[evt.note.id] = false;
+					else if (evt.note.isFlat()) {
+						if (flats[evt.note.naturalId])
+							noteAbc = Note.fromId(evt.note.naturalId).abc;
+						else
+							flats[evt.note.naturalId] = true;
+					}
+					else if (sharps[evt.note.id] || flats[evt.note.id]) {
+						sharps[evt.note.id] = false;
+						flats[evt.note.id] = false;
 						sb.append('=');
 					}
 				}
 
-				sb.append(evt.note.abc);
+				sb.append(noteAbc);
 				int numerator = (int) (evt.getLength() / tm.minNoteLength) * tm.defaultDivisor;
 				int denominator = tm.minNoteDivisor;
 				// Reduce the fraction
@@ -256,8 +257,8 @@ public class AbcPart {
 		}
 
 		// Insert line breaks
-		for (int i = LINE_LENGTH; i < sb.length(); i += LINE_LENGTH) {
-			for (int j = 0; j < LINE_LENGTH - 1; j++, i--) {
+		for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
+			for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
 				if (sb.charAt(i) == ' ') {
 					sb.replace(i, i + 1, "\r\n");
 					i++;
@@ -278,8 +279,8 @@ public class AbcPart {
 	 * Combine the tracks into one, quantize the note lengths, separate into
 	 * chords.
 	 */
-	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, long songStartMicros, long songEndMicros)
-			throws AbcConversionException {
+	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, final long songStartMicros,
+			final long songEndMicros, int deltaVelocity) throws AbcConversionException {
 
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
@@ -296,7 +297,10 @@ public class AbcPart {
 						assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 						long start = Math.max(ne.startMicros, songStartMicros) - songStartMicros;
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
-						events.add(new NoteEvent(mappedNote, ne.velocity, start, end));
+						int velocity = ne.velocity;
+						if (dynamicVolume)
+							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.fff.velocity);
+						events.add(new NoteEvent(mappedNote, velocity, start, end));
 					}
 				}
 			}
@@ -307,6 +311,26 @@ public class AbcPart {
 
 		Collections.sort(events);
 
+		// Add initial rest if necessary
+		if (events.get(0).startMicros > 0) {
+			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, 0, events.get(0).startMicros));
+		}
+
+		// Add a rest at the end if necessary
+		if (songEndMicros < Long.MAX_VALUE) {
+			NoteEvent lastEvent = events.get(events.size() - 1);
+			long songLengthMicros = songEndMicros - songStartMicros;
+			if (lastEvent.endMicros < songLengthMicros) {
+				if (lastEvent.note == Note.REST) {
+					lastEvent.endMicros = songLengthMicros;
+				}
+				else {
+					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, lastEvent.endMicros,
+							songLengthMicros));
+				}
+			}
+		}
+
 		// Quantize the events
 		for (NoteEvent ne : events) {
 			ne.startMicros = ((ne.startMicros + tm.minNoteLength / 2) / tm.minNoteLength) * tm.minNoteLength;
@@ -315,11 +339,6 @@ public class AbcPart {
 			// Make sure the note didn't get quantized to zero length
 			if (ne.getLength() == 0)
 				ne.setLength(tm.minNoteLength);
-		}
-
-		// Add initial rest if necessary
-		if (events.get(0).startMicros > 0) {
-			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, 0, events.get(0).startMicros));
 		}
 
 		// Remove duplicate notes
@@ -338,16 +357,22 @@ public class AbcPart {
 					if (on.startMicros == ne.startMicros) {
 						// If they start at the same time, remove the second event.
 						// Lengthen the first one if it's shorter than the second one.
-						if (ne.endMicros > on.endMicros) {
+						if (on.endMicros < ne.endMicros)
 							on.endMicros = ne.endMicros;
-						}
+							
 						// Remove the duplicate note
 						neIter.remove();
 						continue dupLoop;
 					}
 					else {
-						// Otherwise, if they don't start at the same time, shorten the note that's
-						// currently on to end at the same time that the next one starts
+						// Otherwise, if they don't start at the same time:
+						// 1. Lengthen the second note if necessary, so it doesn't end before 
+						//    the first note would have ended.
+						if (ne.endMicros < on.endMicros)
+							ne.endMicros = on.endMicros;
+						
+						// 2. Shorten the note that's currently on to end at the same time that 
+						//    the next one starts.
 						on.endMicros = ne.startMicros;
 						onIter.remove();
 					}
@@ -546,6 +571,27 @@ public class AbcPart {
 		return start;
 	}
 
+	public long lastNoteEnd() {
+		long end = Long.MIN_VALUE;
+
+		for (int t = 0; t < getTrackCount(); t++) {
+			if (!trackDisabled[t]) {
+				List<NoteEvent> evts = getTrackEvents(t);
+				ListIterator<NoteEvent> iter = evts.listIterator(evts.size());
+				while (iter.hasPrevious()) {
+					NoteEvent ne = iter.previous();
+					if (mapNote(t, ne.note.id) != null) {
+						if (ne.endMicros > end)
+							end = ne.endMicros;
+						break;
+					}
+				}
+			}
+		}
+
+		return end;
+	}
+
 	public SequenceInfo getSequenceInfo() {
 		return sequenceInfo;
 	}
@@ -569,7 +615,7 @@ public class AbcPart {
 
 		if (!this.title.equals(name)) {
 			this.title = name;
-			fireChangeEvent();
+			fireChangeEvent(false);
 		}
 	}
 
@@ -588,7 +634,7 @@ public class AbcPart {
 
 		if (this.instrument != instrument) {
 			this.instrument = instrument;
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -599,7 +645,7 @@ public class AbcPart {
 	public void setEnabled(boolean partEnabled) {
 		if (this.enabled != partEnabled) {
 			this.enabled = partEnabled;
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -610,7 +656,7 @@ public class AbcPart {
 	public void setBaseTranspose(int baseTranspose) {
 		if (this.baseTranspose != baseTranspose) {
 			this.baseTranspose = baseTranspose;
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -621,7 +667,7 @@ public class AbcPart {
 	public void setTrackTranspose(int track, int transpose) {
 		if (trackTranspose[track] != transpose) {
 			trackTranspose[track] = transpose;
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -632,7 +678,7 @@ public class AbcPart {
 	public void setTrackEnabled(int track, boolean enabled) {
 		if (trackDisabled[track] != !enabled) {
 			trackDisabled[track] = !enabled;
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -643,23 +689,42 @@ public class AbcPart {
 	public void setPartNumber(int partNumber) {
 		if (this.partNumber != partNumber) {
 			this.partNumber = partNumber;
-			fireChangeEvent();
+			firePartNumberChanged();
 		}
 	}
 
-	public void addChangeListener(ChangeListener l) {
+	public boolean isDynamicVolume() {
+		return dynamicVolume;
+	}
+
+	public void setDynamicVolume(boolean dynamicVolume) {
+		if (this.dynamicVolume != dynamicVolume) {
+			this.dynamicVolume = dynamicVolume;
+			fireChangeEvent(true);
+		}
+	}
+
+	public void addAbcListener(AbcPartListener l) {
 		changeListeners.add(l);
 	}
 
-	public void removeChangeListener(ChangeListener l) {
+	public void removeAbcListener(AbcPartListener l) {
 		changeListeners.remove(l);
 	}
 
-	protected void fireChangeEvent() {
+	protected void firePartNumberChanged() {
+		fireChangeEventEx(false, true);
+	}
+
+	protected void fireChangeEvent(boolean previewRelated) {
+		fireChangeEventEx(previewRelated, false);
+	}
+
+	protected void fireChangeEventEx(boolean previewRelated, boolean isPartNumber) {
 		if (changeListeners.size() > 0) {
-			ChangeEvent e = new ChangeEvent(this);
-			for (ChangeListener l : changeListeners) {
-				l.stateChanged(e);
+			AbcPartEvent e = new AbcPartEvent(this, previewRelated, isPartNumber);
+			for (AbcPartListener l : changeListeners) {
+				l.abcPartChanged(e);
 			}
 		}
 	}
@@ -682,7 +747,7 @@ public class AbcPart {
 				drumNoteMap.remove(srcNote);
 			else
 				drumNoteMap.put(srcNote, dstNote);
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 
@@ -701,7 +766,7 @@ public class AbcPart {
 				drumsDisabled.remove(noteId);
 			else
 				drumsDisabled.add(noteId);
-			fireChangeEvent();
+			fireChangeEvent(true);
 		}
 	}
 }

@@ -29,10 +29,10 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.AbcPartEvent;
+import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroDrumInfo;
 import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.NoteEvent;
@@ -113,7 +113,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			}
 		});
 
-		abcPart.addChangeListener(abcPartChangeListener);
+		abcPart.addAbcListener(abcPartListener);
 
 		noteGraph = new NoteGraph();
 		noteGraph.setOpaque(false);
@@ -140,11 +140,11 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	public void dispose() {
 		noteGraph.dispose();
-		abcPart.removeChangeListener(abcPartChangeListener);
+		abcPart.removeAbcListener(abcPartListener);
 	}
 
-	private ChangeListener abcPartChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
+	private AbcPartListener abcPartListener = new AbcPartListener() {
+		public void abcPartChanged(AbcPartEvent e) {
 			checkBox.setSelected(abcPart.isDrumEnabled(drumId));
 			drumComboBox.setSelectedItem(getSelectedDrum());
 		}
@@ -158,7 +158,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		private MyChangeListener myChangeListener = new MyChangeListener();
 
 		public NoteGraph() {
-			abcPart.addChangeListener(myChangeListener);
+			abcPart.addAbcListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
 
 			MyMouseListener mouseListener = new MyMouseListener();
@@ -169,17 +169,20 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		}
 
 		public void dispose() {
-			abcPart.removeChangeListener(myChangeListener);
+			abcPart.removeAbcListener(myChangeListener);
 			seq.removeChangeListener(myChangeListener);
 		}
 
-		private class MyChangeListener implements ChangeListener, SequencerListener {
-			public void stateChanged(ChangeEvent e) {
+		private class MyChangeListener implements AbcPartListener, SequencerListener {
+			@Override
+			public void propertyChanged(SequencerEvent evt) {
 				repaint();
 			}
 
-			public void propertyChanged(SequencerEvent evt) {
-				repaint();
+			@Override
+			public void abcPartChanged(AbcPartEvent e) {
+				if (e.isPreviewRelated())
+					repaint();
 			}
 		}
 

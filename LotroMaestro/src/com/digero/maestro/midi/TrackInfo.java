@@ -18,6 +18,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 
 public class TrackInfo implements IMidiConstants {
@@ -32,6 +33,7 @@ public class TrackInfo implements IMidiConstants {
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
 	private SortedSet<Integer> drumsInUse;
+	private int[] noteVelocities = new int[128];
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
@@ -96,6 +98,7 @@ public class TrackInfo implements IMidiConstants {
 							instruments.add(instrumentCache.getInstrument(evt.getTick(), c));
 						}
 						notesOn[c].add(ne);
+						noteVelocities[velocity]++;
 					}
 					else {
 						Iterator<NoteEvent> iter = notesOn[c].iterator();
@@ -109,25 +112,28 @@ public class TrackInfo implements IMidiConstants {
 						}
 					}
 				}
-//				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
-//					final int STEP_SIZE = ((1 << 14) - 1) / 4;
-//					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
-//					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-//
-//					if (bendTmp != pitchBend[c]) {
-//						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
-//						for (NoteEvent ne : notesOn[c]) {
-//							ne.endMicros = micros;
-//
-//							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
-//							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
-//							noteEvents.add(bne);
-//							bentNotes.add(bne);
-//						}
-//						notesOn[c] = bentNotes;
-//						pitchBend[c] = bendTmp;
-//					}
-//				}
+				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
+					final int STEP_SIZE = ((1 << 14) - 1) / 4;
+					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
+					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
+
+					if (bendTmp != pitchBend[c]) {
+						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
+						for (NoteEvent ne : notesOn[c]) {
+							ne.endMicros = micros;
+							if (ne.getLength() < TimingInfo.SHORTEST_NOTE_MICROS) {
+								noteEvents.remove(ne);
+							}
+
+							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
+							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
+							noteEvents.add(bne);
+							bentNotes.add(bne);
+						}
+						notesOn[c] = bentNotes;
+						pitchBend[c] = bendTmp;
+					}
+				}
 			}
 			else if (msg instanceof MetaMessage) {
 				MetaMessage m = (MetaMessage) msg;
@@ -168,11 +174,6 @@ public class TrackInfo implements IMidiConstants {
 					noteEvents.removeAll(notesOnChannel);
 			}
 			drumEvents.removeAll(notesOn[DRUM_CHANNEL]);
-//			for (NoteEvent ne : notesOn)
-//				ne.endMicros = song.getMicrosecondLength();
-//
-//			for (NoteEvent ne : drumsOn)
-//				ne.endMicros = song.getMicrosecondLength();
 		}
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
@@ -282,5 +283,14 @@ public class TrackInfo implements IMidiConstants {
 
 	public int getInstrumentCount() {
 		return instruments.size();
+	}
+
+	public int[] addNoteVelocities(int[] velocities) {
+		if (velocities == null)
+			velocities = new int[this.noteVelocities.length];
+		for (int i = 0; i < this.noteVelocities.length; i++) {
+			velocities[i] += this.noteVelocities[i];
+		}
+		return velocities;
 	}
 }
