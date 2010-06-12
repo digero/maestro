@@ -3,16 +3,15 @@ package com.digero.maestro.abctomidi;
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -29,15 +28,17 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -48,13 +49,18 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.boris.winrun4j.DDE;
+import org.boris.winrun4j.FileAssociation;
+import org.boris.winrun4j.FileAssociationListener;
+import org.boris.winrun4j.FileAssociations;
+
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.IMidiConstants;
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.midi.VolumeTransceiver;
 import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ExtensionFileFilter;
 import com.digero.maestro.util.ParseException;
@@ -63,10 +69,12 @@ import com.digero.maestro.util.singleinstance.SingleInstanceListener;
 import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
+import com.digero.maestro.view.VolumeBar;
+import com.sun.media.sound.AudioSynthesizer;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
 	private static final String APP_NAME = "ABC Player";
-	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
+//	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
@@ -115,9 +123,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	}
 
 	private SequencerWrapper sequencer;
-	private Synthesizer synth;
+	private AudioSynthesizer synth;
 	private Transmitter transmitter;
 	private Receiver receiver;
+	private VolumeTransceiver volumizer;
 	private boolean useLotroInstruments = true;
 
 	private JPanel content;
@@ -125,11 +134,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private SongPositionBar songPositionBar;
 	private SongPositionLabel songPositionLabel;
+	private VolumeBar volumeBar;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
 	private JButton playButton, stopButton;
 
-	private JMenuItem exportMidiMenuItem;
+//	private JMenuItem exportMidiMenuItem;
+	private JMenuItem exportWavMenuItem;
 
 	private JFileChooser openFileDialog;
 	private JFileChooser exportFileDialog;
@@ -143,6 +154,25 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	public AbcPlayer() {
 		super(APP_NAME);
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				if (synth != null)
+					synth.close();
+				if (receiver != null)
+					receiver.close();
+				if (transmitter != null)
+					transmitter.close();
+				if (sequencer != null)
+					sequencer.close();
+			}
+		});
+
+		DDE.addFileAssocationListener(new FileAssociationListener() {
+			public void execute(String cmdLine) {
+				JOptionPane.showMessageDialog(AbcPlayer.this, cmdLine);
+			}
+		});
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
@@ -159,7 +189,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 			if (useLotroInstruments) {
 				try {
-					synth = SynthesizerFactory.getLotroSynthesizer();
+					synth = SynthesizerFactory.getLotroAudioSynthesizer();
 					receiver = synth.getReceiver();
 				}
 				catch (IOException e) {
@@ -180,7 +210,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			if (!useLotroInstruments) {
 				receiver = MidiSystem.getReceiver();
 			}
-			transmitter.setReceiver(receiver);
+			transmitter.setReceiver(volumizer = new VolumeTransceiver(receiver));
 
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
 			sequencer.open();
@@ -197,7 +227,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		content = new JPanel(new TableLayout(new double[] { // Columns
 						4, FILL, 4
 				}, new double[] { // Rows
-						FILL, 8, PREFERRED, PREFERRED
+						FILL, 8, PREFERRED
 				}));
 		setContentPane(content);
 
@@ -206,11 +236,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
 
+		JPanel controlPanel = new JPanel(new TableLayout(new double[] {
+				4, 0.50, VolumeBar.WIDTH, 4, PREFERRED, 4, PREFERRED, 4, VolumeBar.WIDTH, 0.50, 4, PREFERRED, 4
+		}, new double[] {
+				4, PREFERRED, 4, PREFERRED, 4
+		}));
+
 		songPositionBar = new SongPositionBar(sequencer);
 		songPositionLabel = new SongPositionLabel(sequencer);
-		JPanel songPositionPanel = new JPanel(new BorderLayout(4, 4));
-		songPositionPanel.add(songPositionBar, BorderLayout.CENTER);
-		songPositionPanel.add(songPositionLabel, BorderLayout.EAST);
 
 		playIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/play.png"));
 		pauseIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/pause.png"));
@@ -235,21 +268,22 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
+		volumeBar = new VolumeBar(volumizer);
+
+		controlPanel.add(songPositionBar, "1, 1, 9, 1");
+		controlPanel.add(songPositionLabel, "11, 1");
+		controlPanel.add(playButton, "4, 3");
+		controlPanel.add(stopButton, "6, 3");
+		controlPanel.add(volumeBar, "8, 3, f, c");
+
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
-				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
-					updateButtonStates();
-				}
+				updateButtonStates();
 			}
 		});
 
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-		buttonPanel.add(playButton);
-		buttonPanel.add(stopButton);
-
 		add(trackListScroller, "0, 0, 2, 0");
-		add(songPositionPanel, "1, 2");
-		add(buttonPanel, "1, 3");
+		add(controlPanel, "1, 2");
 
 		initMenu();
 
@@ -260,10 +294,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		JMenuBar mainMenu = new JMenuBar();
 		setJMenuBar(mainMenu);
 
-		JMenu fileMenu = mainMenu.add(new JMenu("File"));
+		JMenu fileMenu = mainMenu.add(new JMenu(" File "));
 		fileMenu.setMnemonic(KeyEvent.VK_F);
 
-		JMenuItem open = fileMenu.add(new JMenuItem("Open ABC File..."));
+		JMenuItem open = fileMenu.add(new JMenuItem("Open ABC file(s)..."));
 		open.setMnemonic(KeyEvent.VK_O);
 		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
 		open.addActionListener(new ActionListener() {
@@ -272,14 +306,24 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-		exportMidiMenuItem = fileMenu.add(new JMenuItem("Export MIDI..."));
-		exportMidiMenuItem.setMnemonic(KeyEvent.VK_M);
-		exportMidiMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		exportMidiMenuItem.addActionListener(new ActionListener() {
+		exportWavMenuItem = fileMenu.add(new JMenuItem("Save as Wave file..."));
+		exportWavMenuItem.setMnemonic(KeyEvent.VK_S);
+		exportWavMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		exportWavMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				exportMidi();
+				exportWav();
 			}
 		});
+
+//		exportMidiMenuItem = fileMenu.add(new JMenuItem("Export MIDI..."));
+//		exportMidiMenuItem.setMnemonic(KeyEvent.VK_M);
+//		exportMidiMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK
+//				| InputEvent.SHIFT_DOWN_MASK));
+//		exportMidiMenuItem.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				exportMidi();
+//			}
+//		});
 
 		fileMenu.addSeparator();
 
@@ -292,7 +336,44 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-		// TODO
+		JMenu editMenu = mainMenu.add(new JMenu(" Edit "));
+		editMenu.setMnemonic(KeyEvent.VK_E);
+
+		JMenuItem fileType = editMenu.add(new JMenuItem("Associate .abc files with " + APP_NAME + "..."));
+		fileType.setMnemonic(KeyEvent.VK_A);
+		fileType.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int result = JOptionPane.showConfirmDialog(AbcPlayer.this,
+						"This will make it so .abc files open and play in " + APP_NAME + ".\n"
+								+ "Would you like to continue?", APP_NAME, JOptionPane.YES_NO_OPTION);
+
+				if (result == JOptionPane.YES_OPTION) {
+					FileAssociation assoc = new FileAssociation(".abc");
+					assoc.setDescription("ABC Song");
+					assoc.setName("ABCSong");
+					assoc.setContentType("text/plain");
+					assoc.setPerceivedType("audio");
+					assoc.addOpenWith("notepad.exe");
+
+					FileAssociations.save(assoc);
+
+					JOptionPane.showMessageDialog(AbcPlayer.this, "ABC files should now open with " + APP_NAME
+							+ " when you double-click them.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		});
+
+		JMenu helpMenu = mainMenu.add(new JMenu(" Help "));
+		helpMenu.setMnemonic(KeyEvent.VK_H);
+
+		JMenuItem about = helpMenu.add(new JMenuItem("About " + APP_NAME + "..."));
+		about.setMnemonic(KeyEvent.VK_A);
+		about.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(AbcPlayer.this, "ABC Player for the Lord of the Rings Online.\n\n"
+						+ "Created by Digero.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 	}
 
 	private void openSongDialog() {
@@ -308,7 +389,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		if (result == JFileChooser.APPROVE_OPTION) {
 			prefs.put("openFileDialog.currentDirectory", openFileDialog.getCurrentDirectory().getAbsolutePath());
 
-			openSong(openFileDialog.getSelectedFiles());
+			if (openSong(openFileDialog.getSelectedFiles()))
+				sequencer.start();
 		}
 	}
 
@@ -334,7 +416,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 
 		public void run() {
-			openSong(abcFiles);
+			if (openSong(abcFiles))
+				sequencer.start();
 		}
 	}
 
@@ -357,7 +440,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private boolean openSong(Map<File, List<String>> data) {
 		sequencer.stop(); // pause
 		updateButtonStates();
-		
+
 		Sequence song;
 		try {
 			song = AbcToMidi.convert(data, useLotroInstruments, null);
@@ -367,6 +450,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			return false;
 		}
 
+		exportFileDialog = null;
 		abcData = data;
 		instrumentOverrideMap.clear();
 		stop();
@@ -417,16 +501,121 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
 		stopButton.setEnabled(loaded && (sequencer.isRunning() || sequencer.getPosition() != 0));
 
-		exportMidiMenuItem.setEnabled(loaded);
+		exportWavMenuItem.setEnabled(loaded);
+//		exportMidiMenuItem.setEnabled(loaded);
+	}
+
+	private void exportWav() {
+		if (exportFileDialog == null) {
+			exportFileDialog = new JFileChooser(prefs.get("exportFileDialog.currentDirectory", Util.getUserMusicPath()
+					.getAbsolutePath()));
+
+			File openedFile = null;
+			for (File f : abcData.keySet()) {
+				openedFile = f;
+				break;
+			}
+			if (openedFile != null) {
+				String openedName = openedFile.getName();
+				int dot = openedName.lastIndexOf('.');
+				if (dot >= 0) {
+					openedName = openedName.substring(0, dot);
+				}
+				openedName += ".wav";
+				exportFileDialog.setSelectedFile(new File(exportFileDialog.getCurrentDirectory() + "/" + openedName));
+			}
+		}
+
+		exportFileDialog.setFileFilter(new ExtensionFileFilter("WAV Files", "wav"));
+
+		int result = exportFileDialog.showSaveDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			prefs.put("exportFileDialog.currentDirectory", exportFileDialog.getCurrentDirectory().getAbsolutePath());
+
+			File saveFile = exportFileDialog.getSelectedFile();
+			if (saveFile.getName().indexOf('.') < 0) {
+				saveFile = new File(saveFile.getParent() + "/" + saveFile.getName() + ".wav");
+				exportFileDialog.setSelectedFile(saveFile);
+			}
+			if (saveFile.exists()) {
+				result = JOptionPane.showConfirmDialog(this, saveFile.getName() + " already exists. Overwrite?",
+						"Export to MIDI", JOptionPane.YES_NO_OPTION);
+				if (result != JOptionPane.YES_OPTION)
+					return;
+			}
+
+			JDialog waitFrame = new JDialog(this, "Please wait...");
+			JPanel waitContent = new JPanel();
+			waitFrame.setContentPane(waitContent);
+			waitContent.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			waitContent.add(new JLabel("Saving " + saveFile.getName() + "..."));
+			waitFrame.pack();
+			waitFrame.setLocation(getX() + (getWidth() - waitFrame.getWidth()) / 2, getY()
+					+ (getHeight() - waitFrame.getHeight()) / 2);
+			waitFrame.setResizable(false);
+			waitFrame.setModal(false);
+			waitFrame.setEnabled(false);
+			waitFrame.setIconImages(getIconImages());
+			waitFrame.setVisible(true);
+
+			new Thread(new ExportWavTask(sequencer.getSequence(), saveFile, waitFrame)).start();
+		}
+	}
+
+	private class ExportWavTask implements Runnable {
+		private Sequence sequence;
+		private File file;
+		private JDialog waitFrame;
+
+		public ExportWavTask(Sequence sequence, File file, JDialog waitFrame) {
+			this.sequence = sequence;
+			this.file = file;
+			this.waitFrame = waitFrame;
+		}
+
+		public void run() {
+			Exception error = null;
+			try {
+				FileOutputStream fos = new FileOutputStream(file);
+				try {
+					MidiToWav.render(sequence, fos);
+				}
+				finally {
+					fos.close();
+				}
+			}
+			catch (Exception e) {
+				error = e;
+			}
+			SwingUtilities.invokeLater(new ExportWavFinishedTask(error, waitFrame));
+		}
+	}
+
+	private class ExportWavFinishedTask implements Runnable {
+		private Exception error;
+		private JDialog waitFrame;
+
+		public ExportWavFinishedTask(Exception error, JDialog waitFrame) {
+			this.error = error;
+			this.waitFrame = waitFrame;
+		}
+
+		public void run() {
+			if (error != null) {
+				JOptionPane.showMessageDialog(AbcPlayer.this, error.getMessage(), "Error saving WAV file",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			waitFrame.setVisible(false);
+		}
 	}
 
 	private void exportMidi() {
 		if (exportFileDialog == null) {
 			exportFileDialog = new JFileChooser(prefs.get("exportFileDialog.currentDirectory", Util.getUserMusicPath()
 					.getAbsolutePath()));
-
-			exportFileDialog.setFileFilter(new ExtensionFileFilter("MIDI Files", "mid", "midi"));
 		}
+
+		exportFileDialog.setFileFilter(new ExtensionFileFilter("MIDI Files", "mid", "midi"));
 
 		if (prefs.getBoolean("exportMidi.showConfirmDialog", true)) {
 			JCheckBox dontShowInFuture = new JCheckBox("Don't show me this message again");
