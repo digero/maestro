@@ -54,6 +54,7 @@ import org.boris.winrun4j.FileAssociation;
 import org.boris.winrun4j.FileAssociationListener;
 import org.boris.winrun4j.FileAssociations;
 
+import com.digero.common.icons.IconLoader;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ParseException;
@@ -68,7 +69,6 @@ import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.SynthesizerFactory;
 import com.digero.maestro.midi.VolumeTransceiver;
-import com.digero.maestro.view.icons.IconLoader;
 import com.sun.media.sound.AudioSynthesizer;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
