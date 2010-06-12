@@ -54,6 +54,7 @@ import org.boris.winrun4j.FileAssociation;
 import org.boris.winrun4j.FileAssociationListener;
 import org.boris.winrun4j.FileAssociations;
 
+import com.digero.common.view.VolumeBar;
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.IMidiConstants;
@@ -69,7 +70,6 @@ import com.digero.maestro.util.singleinstance.SingleInstanceListener;
 import com.digero.maestro.view.FileFilterDropListener;
 import com.digero.maestro.view.SongPositionBar;
 import com.digero.maestro.view.SongPositionLabel;
-import com.digero.maestro.view.VolumeBar;
 import com.sun.media.sound.AudioSynthesizer;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
