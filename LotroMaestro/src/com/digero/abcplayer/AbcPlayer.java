@@ -54,42 +54,28 @@ import org.boris.winrun4j.FileAssociation;
 import org.boris.winrun4j.FileAssociationListener;
 import org.boris.winrun4j.FileAssociations;
 
+import com.digero.common.util.ExtensionFileFilter;
+import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.ParseException;
+import com.digero.common.util.Util;
+import com.digero.common.view.SongPositionBar;
+import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.VolumeBar;
-import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.midi.IMidiConstants;
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.midi.SynthesizerFactory;
 import com.digero.maestro.midi.VolumeTransceiver;
-import com.digero.maestro.midi.synth.SynthesizerFactory;
-import com.digero.maestro.util.ExtensionFileFilter;
-import com.digero.maestro.util.ParseException;
-import com.digero.maestro.util.Util;
-import com.digero.maestro.util.singleinstance.SingleInstanceListener;
-import com.digero.maestro.view.FileFilterDropListener;
-import com.digero.maestro.view.SongPositionBar;
-import com.digero.maestro.view.SongPositionLabel;
+import com.digero.maestro.view.icons.IconLoader;
 import com.sun.media.sound.AudioSynthesizer;
 
-public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, SingleInstanceListener {
+public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final String APP_NAME = "ABC Player";
-//	private static final int SINGLE_INSTANCE_PORT = 41928; // Hopefully nobody else is using this port :)
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
-//		SingleInstanceManager sim;
-//		try {
-//			sim = SingleInstanceManager.createInstance(SINGLE_INSTANCE_PORT, args);
-//
-//			// If the manager is null, then there's already an instance running
-//			if (sim == null)
-//				System.exit(0);
-//		}
-//		catch (Exception e) {
-//			sim = null;
-//		}
-
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
@@ -100,15 +86,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		mainWindow.setBounds(200, 200, 416, 272);
 		mainWindow.setVisible(true);
 
-//		if (sim != null) {
-//			sim.start();
-//			sim.setListener(mainWindow);
-//		}
-		mainWindow.openSongFromCommandLine(args);
-	}
-
-	@Override
-	public void newActivation(String[] args) {
 		mainWindow.openSongFromCommandLine(args);
 	}
 
@@ -245,9 +222,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		songPositionBar = new SongPositionBar(sequencer);
 		songPositionLabel = new SongPositionLabel(sequencer);
 
-		playIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/play.png"));
-		pauseIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/pause.png"));
-		stopIcon = new ImageIcon(MaestroMain.class.getResource("view/icons/stop.png"));
+		playIcon = new ImageIcon(IconLoader.class.getResource("play.png"));
+		pauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
+		stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
 
 		playButton = new JButton(playIcon);
 		playButton.setEnabled(false);

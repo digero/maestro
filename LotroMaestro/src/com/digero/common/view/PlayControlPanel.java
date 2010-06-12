@@ -1,4 +1,4 @@
-package com.digero.maestro.view;
+package com.digero.common.view;
 
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.view.ProjectFrame;
 
 public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 	private SequencerWrapper sequencer;

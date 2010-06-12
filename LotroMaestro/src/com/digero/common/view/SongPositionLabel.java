@@ -1,4 +1,4 @@
-package com.digero.maestro.view;
+package com.digero.common.view;
 
 import javax.swing.JLabel;
 

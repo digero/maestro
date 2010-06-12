@@ -50,6 +50,10 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.Util;
+import com.digero.common.view.PlayControlPanel;
+import com.digero.common.view.SongPositionBar;
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
@@ -63,10 +67,9 @@ import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerProperty;
 import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.midi.SynthesizerFactory;
 import com.digero.maestro.midi.TimeSignature;
-import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ListModelWrapper;
-import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants {

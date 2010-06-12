@@ -1,4 +1,4 @@
-package com.digero.maestro.util;
+package com.digero.common.util;
 
 import java.awt.Color;
 import java.awt.Font;

@@ -1,4 +1,4 @@
-package com.digero.maestro.view;
+package com.digero.common.util;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -16,7 +16,6 @@ import java.util.List;
 
 import sun.awt.shell.ShellFolder;
 
-import com.digero.maestro.util.ExtensionFileFilter;
 
 public class FileFilterDropListener implements DropTargetListener {
 	private FileFilter filter;

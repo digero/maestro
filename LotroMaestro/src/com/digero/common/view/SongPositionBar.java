@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package com.digero.maestro.view;
+package com.digero.common.view;
 
 import java.awt.Color;
 import java.awt.Dimension;

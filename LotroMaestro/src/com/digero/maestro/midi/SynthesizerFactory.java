@@ -1,4 +1,4 @@
-package com.digero.maestro.midi.synth;
+package com.digero.maestro.midi;
 
 import java.io.File;
 import java.io.IOException;

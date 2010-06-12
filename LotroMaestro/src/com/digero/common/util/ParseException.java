@@ -1,4 +1,4 @@
-package com.digero.maestro.util;
+package com.digero.common.util;
 
 public class ParseException extends Exception {
 	public ParseException(String message, String fileName, int line, int column) {

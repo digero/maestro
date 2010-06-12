@@ -20,6 +20,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.common.util.ParseException;
 import com.digero.maestro.abc.Dynamics;
 import com.digero.maestro.abc.LotroInstrument;
 import com.digero.maestro.abc.TimingInfo;
@@ -27,7 +28,6 @@ import com.digero.maestro.midi.KeySignature;
 import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.TimeSignature;
-import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
 	/** This is a static-only class */
