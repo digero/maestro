@@ -1,5 +1,6 @@
 package com.digero.maestro.midi.synth;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -42,7 +43,7 @@ public class SynthesizerFactory {
 	public static Soundbank getLotroSoundbank() throws InvalidMidiDataException, IOException {
 		if (lotroSoundbank == null) {
 			try {
-				lotroSoundbank = MidiSystem.getSoundbank(SynthesizerFactory.class.getResource("LotroInstruments.sf2"));
+				lotroSoundbank = MidiSystem.getSoundbank(new File("LotroInstruments.sf2"));
 			}
 			catch (NullPointerException npe) {
 				// JARSoundbankReader throws a NullPointerException if the file doesn't exist
