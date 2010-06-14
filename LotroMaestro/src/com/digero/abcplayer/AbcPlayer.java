@@ -5,6 +5,7 @@ import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Image;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,11 +15,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
@@ -48,11 +51,6 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-
-import org.boris.winrun4j.DDE;
-import org.boris.winrun4j.FileAssociation;
-import org.boris.winrun4j.FileAssociationListener;
-import org.boris.winrun4j.FileAssociations;
 
 import com.digero.common.icons.IconLoader;
 import com.digero.common.util.ExtensionFileFilter;
@@ -85,18 +83,25 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainWindow.setBounds(200, 200, 416, 272);
 		mainWindow.setVisible(true);
+		mainWindow.openSongFromCommandLine(args);
+		try {
+			ready();
+		}
+		catch (UnsatisfiedLinkError err) {
+			// Ignore
+		}
+	}
 
+	/** Tells the WinRun4J launcher that we're ready to accept activate() calls. */
+	public static native void ready();
+
+	/** A new activation */
+	public static void activate(String[] args) {
 		mainWindow.openSongFromCommandLine(args);
 	}
 
-	public static native void ready();
-
-	public static void activate() {
-		JOptionPane.showMessageDialog(mainWindow, "Activate");
-	}
-
 	public static void execute(String cmdLine) {
-		JOptionPane.showMessageDialog(mainWindow, cmdLine);
+		// TODO
 	}
 
 	private SequencerWrapper sequencer;
@@ -145,11 +150,21 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-		DDE.addFileAssocationListener(new FileAssociationListener() {
-			public void execute(String cmdLine) {
-				JOptionPane.showMessageDialog(AbcPlayer.this, cmdLine);
-			}
-		});
+//		DDE.addFileAssocationListener(new FileAssociationListener() {
+//			public void execute(String cmdLine) {
+//				JOptionPane.showMessageDialog(AbcPlayer.this, cmdLine);
+//			}
+//		});
+
+		try {
+			List<Image> icons = new ArrayList<Image>();
+			icons.add(ImageIO.read(IconLoader.class.getResource("abcplayer_16.png")));
+			icons.add(ImageIO.read(IconLoader.class.getResource("abcplayer_32.png")));
+			setIconImages(icons);
+		}
+		catch (Exception ex) {
+			// Ignore
+		}
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
@@ -313,32 +328,32 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-		JMenu editMenu = mainMenu.add(new JMenu(" Edit "));
-		editMenu.setMnemonic(KeyEvent.VK_E);
-
-		JMenuItem fileType = editMenu.add(new JMenuItem("Associate .abc files with " + APP_NAME + "..."));
-		fileType.setMnemonic(KeyEvent.VK_A);
-		fileType.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int result = JOptionPane.showConfirmDialog(AbcPlayer.this,
-						"This will make it so .abc files open and play in " + APP_NAME + ".\n"
-								+ "Would you like to continue?", APP_NAME, JOptionPane.YES_NO_OPTION);
-
-				if (result == JOptionPane.YES_OPTION) {
-					FileAssociation assoc = new FileAssociation(".abc");
-					assoc.setDescription("ABC Song");
-					assoc.setName("ABCSong");
-					assoc.setContentType("text/plain");
-					assoc.setPerceivedType("audio");
-					assoc.addOpenWith("notepad.exe");
-
-					FileAssociations.save(assoc);
-
-					JOptionPane.showMessageDialog(AbcPlayer.this, "ABC files should now open with " + APP_NAME
-							+ " when you double-click them.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-		});
+//		JMenu editMenu = mainMenu.add(new JMenu(" Edit "));
+//		editMenu.setMnemonic(KeyEvent.VK_E);
+//
+//		JMenuItem fileType = editMenu.add(new JMenuItem("Associate .abc files with " + APP_NAME + "..."));
+//		fileType.setMnemonic(KeyEvent.VK_A);
+//		fileType.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				int result = JOptionPane.showConfirmDialog(AbcPlayer.this,
+//						"This will make it so .abc files open and play in " + APP_NAME + ".\n"
+//								+ "Would you like to continue?", APP_NAME, JOptionPane.YES_NO_OPTION);
+//
+//				if (result == JOptionPane.YES_OPTION) {
+//					FileAssociation assoc = new FileAssociation(".abc");
+//					assoc.setDescription("ABC Song");
+//					assoc.setName("ABCSong");
+//					assoc.setContentType("text/plain");
+//					assoc.setPerceivedType("audio");
+//					assoc.addOpenWith("notepad.exe");
+//
+//					FileAssociations.save(assoc);
+//
+//					JOptionPane.showMessageDialog(AbcPlayer.this, "ABC files should now open with " + APP_NAME
+//							+ " when you double-click them.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+//				}
+//			}
+//		});
 
 		JMenu helpMenu = mainMenu.add(new JMenu(" Help "));
 		helpMenu.setMnemonic(KeyEvent.VK_H);
@@ -459,7 +474,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		if (fileNames == "")
 			setTitle(APP_NAME);
 		else
-			setTitle(fileNames + " - " + APP_NAME);
+			setTitle(APP_NAME + " - " + fileNames);
 		trackListPanel.songChanged();
 		updateButtonStates();
 
