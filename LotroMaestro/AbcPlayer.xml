@@ -13,7 +13,7 @@
     	<copy file="${basedir}/LotroInstruments.sf2" todir="${output}"/>
     	<copy file="${basedir}/TableLayout.jar" todir="${output}"/>
     	<copy file="${basedir}/gervill.jar" todir="${output}"/>
-    	<!--<copy file="${basedir}/WinRun4J.jar" todir="${output}"/>-->
+    	<copy file="${build}/abcplayer.ico" todir="${output}"/>
     	<copy file="${build}/WinRun4J.exe" tofile="${output}/AbcPlayer.exe" overwrite="true"/>
     	<exec dir="${build}" executable="${build}/rcedit.exe" failonerror="true">
     		<arg value="/W"/>
