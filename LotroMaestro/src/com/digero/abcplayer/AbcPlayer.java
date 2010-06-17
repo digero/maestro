@@ -389,16 +389,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-//		exportMidiMenuItem = fileMenu.add(new JMenuItem("Export MIDI..."));
-//		exportMidiMenuItem.setMnemonic(KeyEvent.VK_M);
-//		exportMidiMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK
-//				| InputEvent.SHIFT_DOWN_MASK));
-//		exportMidiMenuItem.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				exportMidi();
-//			}
-//		});
-
 		fileMenu.addSeparator();
 
 		JMenuItem exit = fileMenu.add(new JMenuItem("Exit"));
@@ -409,33 +399,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				System.exit(0);
 			}
 		});
-
-//		JMenu editMenu = mainMenu.add(new JMenu(" Edit "));
-//		editMenu.setMnemonic(KeyEvent.VK_E);
-//
-//		JMenuItem fileType = editMenu.add(new JMenuItem("Associate .abc files with " + APP_NAME + "..."));
-//		fileType.setMnemonic(KeyEvent.VK_A);
-//		fileType.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				int result = JOptionPane.showConfirmDialog(AbcPlayer.this,
-//						"This will make it so .abc files open and play in " + APP_NAME + ".\n"
-//								+ "Would you like to continue?", APP_NAME, JOptionPane.YES_NO_OPTION);
-//
-//				if (result == JOptionPane.YES_OPTION) {
-//					FileAssociation assoc = new FileAssociation(".abc");
-//					assoc.setDescription("ABC Song");
-//					assoc.setName("ABCSong");
-//					assoc.setContentType("text/plain");
-//					assoc.setPerceivedType("audio");
-//					assoc.addOpenWith("notepad.exe");
-//
-//					FileAssociations.save(assoc);
-//
-//					JOptionPane.showMessageDialog(AbcPlayer.this, "ABC files should now open with " + APP_NAME
-//							+ " when you double-click them.", APP_NAME, JOptionPane.INFORMATION_MESSAGE);
-//				}
-//			}
-//		});
 
 		JMenu helpMenu = mainMenu.add(new JMenu(" Help "));
 		helpMenu.setMnemonic(KeyEvent.VK_H);
@@ -696,63 +659,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			waitFrame.setVisible(false);
 		}
 	}
-
-//	private void exportMidi() {
-//		if (exportFileDialog == null) {
-//			exportFileDialog = new JFileChooser(prefs.get("exportFileDialog.currentDirectory", Util.getUserMusicPath()
-//					.getAbsolutePath()));
-//		}
-//
-//		exportFileDialog.setFileFilter(new ExtensionFileFilter("MIDI Files", "mid", "midi"));
-//
-//		if (prefs.getBoolean("exportMidi.showConfirmDialog", true)) {
-//			JCheckBox dontShowInFuture = new JCheckBox("Don't show me this message again");
-//			Object[] confirmElements = new Object[] {
-//					"Exported MIDI files will use standard MIDI instrument sounds \n"
-//							+ "instead of LotRO instrument sounds. Drums will not sound \n"
-//							+ "at all like LotRO's drums.\n\n" + "Do you want to export to MIDI anyways?", //
-//					dontShowInFuture
-//			};
-//			int result = JOptionPane.showConfirmDialog(this, confirmElements, "Export to MIDI",
-//					JOptionPane.YES_NO_OPTION);
-//			prefs.putBoolean("exportMidi.showConfirmDialog", !dontShowInFuture.isSelected());
-//			if (result != JOptionPane.YES_OPTION)
-//				return;
-//		}
-//
-//		int result = exportFileDialog.showSaveDialog(this);
-//		if (result == JFileChooser.APPROVE_OPTION) {
-//			prefs.put("exportFileDialog.currentDirectory", exportFileDialog.getCurrentDirectory().getAbsolutePath());
-//
-//			try {
-//				Sequence midi = AbcToMidi.convert(abcData, false, instrumentOverrideMap);
-//
-//				File saveFile = exportFileDialog.getSelectedFile();
-//				if (saveFile.getName().indexOf('.') < 0) {
-//					saveFile = new File(saveFile.getParent() + "/" + saveFile.getName() + ".mid");
-//					exportFileDialog.setSelectedFile(saveFile);
-//				}
-//				if (saveFile.exists()) {
-//					result = JOptionPane.showConfirmDialog(this, saveFile.getName() + " already exists. Overwrite?",
-//							"Export to MIDI", JOptionPane.YES_NO_OPTION);
-//					if (result != JOptionPane.YES_OPTION)
-//						return;
-//				}
-//				MidiSystem.write(midi, 1, saveFile);
-//			}
-//			catch (ParseException e) {
-//				JOptionPane.showMessageDialog(this, e.getMessage(), "Error converting ABC file",
-//						JOptionPane.ERROR_MESSAGE);
-//				return;
-//			}
-//			catch (IOException e) {
-//				JOptionPane
-//						.showMessageDialog(this, e.getMessage(), "Error saving MIDI file", JOptionPane.ERROR_MESSAGE);
-//				return;
-//			}
-//
-//		}
-//	}
 
 	//
 	// Track list
