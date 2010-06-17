@@ -11,10 +11,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import com.digero.common.icons.IconLoader;
 import com.digero.maestro.midi.SequencerEvent;
 import com.digero.maestro.midi.SequencerListener;
 import com.digero.maestro.midi.SequencerWrapper;
-import com.digero.maestro.view.ProjectFrame;
 
 public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 	private SequencerWrapper sequencer;
@@ -40,9 +40,9 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 		this.sequencer = seq;
 
-		this.playIcon = new ImageIcon(ProjectFrame.class.getResource("icons/" + playIconName + ".png"));
-		this.pauseIcon = new ImageIcon(ProjectFrame.class.getResource("icons/" + pauseIconName + ".png"));
-		Icon stopIcon = new ImageIcon(ProjectFrame.class.getResource("icons/" + stopIconName + ".png"));
+		this.playIcon = new ImageIcon(IconLoader.class.getResource(playIconName + ".png"));
+		this.pauseIcon = new ImageIcon(IconLoader.class.getResource(pauseIconName + ".png"));
+		Icon stopIcon = new ImageIcon(IconLoader.class.getResource(stopIconName + ".png"));
 
 		songPositionBar = new SongPositionBar(seq);
 		songPositionLabel = new SongPositionLabel(seq);
