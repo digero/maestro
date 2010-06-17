@@ -170,11 +170,11 @@ public class AbcToMidi {
 							}
 							break;
 						}
-						case 'I':
-							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
-							}
-							break;
+//						case 'I':
+//							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+//								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
+//							}
+//							break;
 						}
 					}
 					catch (IllegalArgumentException e) {
