@@ -141,4 +141,15 @@ public final class Util {
 			return max;
 		return value;
 	}
+
+	public static boolean openURL(String url) {
+		try {
+			if (System.getProperty("os.name").startsWith("Windows")) {
+				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+				return true;
+			}
+		}
+		catch (Exception e) {}
+		return false;
+	}
 }
