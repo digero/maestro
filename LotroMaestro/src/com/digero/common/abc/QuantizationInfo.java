@@ -1,4 +1,4 @@
-package com.digero.maestro.abc;
+package com.digero.common.abc;
 
 public class QuantizationInfo {
 	// TODO

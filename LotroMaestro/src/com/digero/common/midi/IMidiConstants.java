@@ -1,4 +1,4 @@
-package com.digero.maestro.midi;
+package com.digero.common.midi;
 
 public interface IMidiConstants {
 	public static final int META_TEXT = 0x01;

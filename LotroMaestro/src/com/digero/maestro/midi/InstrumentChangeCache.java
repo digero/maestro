@@ -10,6 +10,8 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.common.midi.IMidiConstants;
+
 public class InstrumentChangeCache implements IMidiConstants {
 	private NavigableMap<Long, Integer>[] mapByChannel;
 

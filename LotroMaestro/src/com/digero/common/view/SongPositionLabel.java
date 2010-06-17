@@ -2,10 +2,10 @@ package com.digero.common.view;
 
 import javax.swing.JLabel;
 
-import com.digero.maestro.midi.SequencerEvent;
-import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerProperty;
-import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerWrapper;
 
 public class SongPositionLabel extends JLabel implements SequencerListener {
 	private SequencerWrapper sequencer;

@@ -1,4 +1,4 @@
-package com.digero.maestro.midi;
+package com.digero.common.midi;
 
 public class MidiConstants implements IMidiConstants {
 	public static String getInstrumentName(int id) {

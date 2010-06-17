@@ -1,6 +1,7 @@
-package com.digero.maestro.abc;
+package com.digero.common.abc;
 
-import com.digero.maestro.midi.TimeSignature;
+import com.digero.common.midi.TimeSignature;
+import com.digero.maestro.abc.AbcConversionException;
 
 public class TimingInfo {
 	public static final int ONE_SECOND_MICROS = 1000000;

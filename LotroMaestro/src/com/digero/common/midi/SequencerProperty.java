@@ -1,4 +1,4 @@
-package com.digero.maestro.midi;
+package com.digero.common.midi;
 
 public enum SequencerProperty {
 	POSITION, LENGTH, DRAG_POSITION, IS_DRAGGING, IS_RUNNING, IS_LOADED, TRACK_ACTIVE;

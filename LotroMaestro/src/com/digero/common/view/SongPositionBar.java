@@ -37,10 +37,10 @@ import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JPanel;
 
-import com.digero.maestro.midi.SequencerEvent;
-import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerProperty;
-import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerWrapper;
 
 @SuppressWarnings("serial")
 public class SongPositionBar extends JPanel implements SequencerListener {

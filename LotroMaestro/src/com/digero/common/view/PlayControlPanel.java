@@ -12,9 +12,9 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import com.digero.common.icons.IconLoader;
-import com.digero.maestro.midi.SequencerEvent;
-import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerWrapper;
 
 public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 	private SequencerWrapper sequencer;

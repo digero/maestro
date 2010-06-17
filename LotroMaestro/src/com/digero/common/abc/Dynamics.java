@@ -1,4 +1,4 @@
-package com.digero.maestro.abc;
+package com.digero.common.abc;
 
 public enum Dynamics {
 	// Velocities referenced form http://en.wikipedia.org/wiki/Dynamics_(music)

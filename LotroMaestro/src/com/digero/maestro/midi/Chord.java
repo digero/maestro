@@ -25,7 +25,7 @@ package com.digero.maestro.midi;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.digero.maestro.abc.Dynamics;
+import com.digero.common.abc.Dynamics;
 
 public class Chord {
 	public static final int MAX_CHORD_NOTES = 6;

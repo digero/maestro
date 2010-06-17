@@ -1,4 +1,4 @@
-package com.digero.maestro.abc;
+package com.digero.common.abc;
 
 public enum Accidental {
 	NONE("", 0), DOUBLE_FLAT("__", -2), FLAT("_", -1), NATURAL("=", 0), SHARP("^", 1), DOUBLE_SHARP("^^", 2);

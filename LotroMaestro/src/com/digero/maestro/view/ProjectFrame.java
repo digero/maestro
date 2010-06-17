@@ -60,7 +60,17 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.digero.common.abc.TimingInfo;
 import com.digero.common.icons.IconLoader;
+import com.digero.common.midi.DrumFilterTransceiver;
+import com.digero.common.midi.KeySignature;
+import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.midi.SynthesizerFactory;
+import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.Util;
 import com.digero.common.view.PlayControlPanel;
@@ -70,17 +80,7 @@ import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.abc.TimingInfo;
-import com.digero.maestro.midi.DrumFilterTransceiver;
-import com.digero.maestro.midi.KeySignature;
-import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.SequenceInfo;
-import com.digero.maestro.midi.SequencerEvent;
-import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerProperty;
-import com.digero.maestro.midi.SequencerWrapper;
-import com.digero.maestro.midi.SynthesizerFactory;
-import com.digero.maestro.midi.TimeSignature;
 import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")

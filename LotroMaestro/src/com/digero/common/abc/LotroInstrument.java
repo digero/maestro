@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package com.digero.maestro.abc;
+package com.digero.common.abc;
 
 import com.digero.maestro.midi.Note;
 

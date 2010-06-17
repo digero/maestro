@@ -66,7 +66,14 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
+import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.midi.SynthesizerFactory;
+import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ParseException;
@@ -75,13 +82,6 @@ import com.digero.common.util.Version;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.VolumeBar;
-import com.digero.maestro.abc.LotroInstrument;
-import com.digero.maestro.midi.IMidiConstants;
-import com.digero.maestro.midi.SequencerEvent;
-import com.digero.maestro.midi.SequencerListener;
-import com.digero.maestro.midi.SequencerWrapper;
-import com.digero.maestro.midi.SynthesizerFactory;
-import com.digero.maestro.midi.VolumeTransceiver;
 import com.sun.media.sound.AudioSynthesizer;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
