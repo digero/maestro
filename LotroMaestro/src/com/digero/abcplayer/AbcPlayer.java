@@ -87,8 +87,7 @@ import com.sun.media.sound.AudioSynthesizer;
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final String APP_NAME = "ABC Player";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
-	private static final Version APP_VERSION = new Version(0, 1, 0, 1);
-	private static final boolean APP_BETA = true;
+	private static final Version APP_VERSION = new Version(0, 1, 0, 0);
 	
 	private static AbcPlayer mainWindow = null;
 
@@ -446,11 +445,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ImageIcon aboutIcon = new ImageIcon(IconLoader.class.getResource("abcplayer_64.png"));
-				String version = APP_VERSION.toString();
-				if (APP_BETA)
-					version += " Beta";
 				JLabel aboutMessage = new JLabel("<html>ABC Player for The Lord of the Rings Online<br>" + "Version "
-						+ version + "<br>" + "Created by Digero of Landroval<br>" + "<a href='" + APP_URL + "'>"
+						+ APP_VERSION + "<br>" + "Created by Digero of Landroval<br>" + "<a href='" + APP_URL + "'>"
 						+ APP_URL + "</a><br>" + "&copy; 2010 Ben Howell</html>");
 				aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				aboutMessage.addMouseListener(new MouseAdapter() {

@@ -36,6 +36,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerWrapper;
@@ -43,7 +44,6 @@ import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;

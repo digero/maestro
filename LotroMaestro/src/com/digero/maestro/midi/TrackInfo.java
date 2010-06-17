@@ -22,6 +22,7 @@ import com.digero.common.abc.TimingInfo;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.Note;
 import com.digero.common.midi.TimeSignature;
 import com.sun.media.sound.MidiUtils;
 

@@ -22,6 +22,8 @@
 
 package com.digero.maestro.midi;
 
+import com.digero.common.midi.Note;
+
 public class NoteEvent implements Comparable<NoteEvent> {
 	public long startMicros;
 	public long endMicros;

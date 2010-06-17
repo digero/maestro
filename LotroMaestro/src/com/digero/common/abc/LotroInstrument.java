@@ -22,7 +22,7 @@
 
 package com.digero.common.abc;
 
-import com.digero.maestro.midi.Note;
+import com.digero.common.midi.Note;
 
 public enum LotroInstrument {
 	LUTE(Note.C2, Note.C5, false, 24, 0), //

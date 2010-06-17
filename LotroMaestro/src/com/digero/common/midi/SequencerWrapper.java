@@ -16,6 +16,7 @@ import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
 
+
 public class SequencerWrapper {
 	private Sequencer sequencer;
 	private Receiver receiver;

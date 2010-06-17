@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_run_jar" name="Create Runnable Jar for Project LotroMaestro">
+<project default="AbcPlayerExe" name="Create Runnable Jar for Project LotroMaestro">
     <property name="output" value="${basedir}/output" />
 	<property name="build" value="${basedir}/build" />
-    <target name="create_run_jar">
-        <jar destfile="${output}/AbcPlayer.jar" filesetmanifest="mergewithoutmain">
+    <target name="AbcPlayerExe">
+        <jar destfile="${output}/AbcPlayer.jar" basedir="${basedir}/bin" excludes="com/digero/maestro/view/**,com/digero/maestro/MaestroMain.class">
             <manifest>
                 <attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="C:/Users/Ben/workspace/LotroMaestro/bin"/>
         </jar>
     	<copy file="${basedir}/LotroInstruments.sf2" todir="${output}"/>
     	<copy file="${basedir}/TableLayout.jar" todir="${output}"/>

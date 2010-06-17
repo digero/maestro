@@ -3,7 +3,6 @@ package com.digero.common.midi;
 import javax.sound.midi.MetaMessage;
 
 import com.digero.common.abc.Accidental;
-import com.digero.maestro.midi.Note;
 
 /**
  * Representation of a MIDI key signature.

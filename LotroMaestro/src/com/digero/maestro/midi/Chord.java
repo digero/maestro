@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.digero.common.abc.Dynamics;
+import com.digero.common.midi.Note;
 
 public class Chord {
 	public static final int MAX_CHORD_NOTES = 6;
