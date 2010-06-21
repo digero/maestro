@@ -15,8 +15,6 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
-
-
 public class SequencerWrapper {
 	private Sequencer sequencer;
 	private Receiver receiver;
@@ -129,12 +127,15 @@ public class SequencerWrapper {
 				msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
 				receiver.send(msg, -1);
 			}
+			msg.setMessage(ShortMessage.SYSTEM_RESET);
+			receiver.send(msg, -1);
 		}
 		catch (MidiUnavailableException e) {
 			// Ignore
 		}
 		catch (InvalidMidiDataException e) {
 			// Ignore
+			e.printStackTrace();
 		}
 
 		if (!isOpen)
