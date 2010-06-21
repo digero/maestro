@@ -48,6 +48,14 @@ public class AbcToMidi {
 	private static final int NOTE_BROKEN_RHYTHM = 6;
 	private static final int NOTE_TIE = 7;
 
+	/**
+	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above
+	 * the beginning of the octave (c)
+	 */
+	private static final int[] CHR_NOTE_DELTA = {
+			9, 11, 0, 2, 4, 5, 7
+	};
+
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
 
@@ -412,11 +420,7 @@ public class AbcToMidi {
 								octave = 4 + octaveStr.length();
 							}
 
-							int[] noteDelta = {
-									9, 11, 0, 2, 4, 5, 7
-							};
-
-							int noteId = (octave + 1) * 12 + noteDelta[Character.toLowerCase(noteLetter) - 'a'];
+							int noteId = (octave + 1) * 12 + CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
 
 							int lotroNoteId = noteId;
 							if (!useLotroInstruments)
@@ -472,14 +476,16 @@ public class AbcToMidi {
 								tiedNotes.put(noteId, lineAndColumn);
 							}
 							else {
-								// Increase the note length to a mininum amount
-								long noteEndTickTmp;
-								if (!info.getInstrument().isSustainable(lotroNoteId)) {
-									noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
-								}
-								else {
-									noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
-											+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
+								long noteEndTickTmp = noteEndTick;
+								if (useLotroInstruments) {
+									// Increase the note length to a mininum amount
+									if (!info.getInstrument().isSustainable(lotroNoteId)) {
+										noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+									}
+									else {
+										noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
+												+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
+									}
 								}
 
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
