@@ -133,7 +133,6 @@ public class AbcPart {
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
-		out.println();
 
 		// Keep track of which notes have been sharped or flatted so 
 		// we can naturalize them the next time they show up.
@@ -155,14 +154,23 @@ public class AbcPart {
 			}
 
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
-				if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
+				barNumber = c.getStartMicros() / tm.barLength;
+
+				if (barNumber % 10 == 1) {
+					out.println();
+					out.println("% Bar " + barNumber);
+					lineLength = 0;
+				}
+				else if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
 					out.println();
 					lineLength = 0;
 				}
 
 				// Trim end
-				while (Character.isWhitespace(sb.charAt(sb.length() - 1)))
-					sb.setLength(sb.length() - 1);
+				int length = sb.length();
+				while (Character.isWhitespace(sb.charAt(length - 1)))
+					length--;
+				sb.setLength(length);
 
 				// Insert line breaks
 				for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
@@ -179,7 +187,6 @@ public class AbcPart {
 				out.print(" | ");
 				lineLength += sb.length() + 2;
 				sb.setLength(0);
-				barNumber = c.getStartMicros() / tm.barLength;
 
 				Arrays.fill(sharps, false);
 				Arrays.fill(flats, false);
@@ -362,7 +369,7 @@ public class AbcPart {
 						// Lengthen the first one if it's shorter than the second one.
 						if (on.endMicros < ne.endMicros)
 							on.endMicros = ne.endMicros;
-							
+
 						// Remove the duplicate note
 						neIter.remove();
 						continue dupLoop;
@@ -373,7 +380,7 @@ public class AbcPart {
 						//    the first note would have ended.
 						if (ne.endMicros < on.endMicros)
 							ne.endMicros = on.endMicros;
-						
+
 						// 2. Shorten the note that's currently on to end at the same time that 
 						//    the next one starts.
 						on.endMicros = ne.startMicros;
