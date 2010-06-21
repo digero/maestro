@@ -31,7 +31,7 @@ public enum LotroInstrument {
 	FLUTE(Note.C2, Note.C5, true, 73, 2), //
 	CLARINET(Note.D2, Note.C5, true, 71, 1), //
 	HORN(Note.Cs2, Note.C5, true, 69, 0), //
-	BAGPIPE(Note.C2, Note.C5, true, 109, 0), //
+	BAGPIPE(Note.C2, Note.C5, true, 109, 1), //
 	DRUMS(Note.C2, Note.C5, false, 118, 0);
 
 	private static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
