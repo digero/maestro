@@ -1,8 +1,6 @@
 package com.digero.maestro.midi;
 
-import java.util.Collections;
 import java.util.NavigableMap;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
@@ -17,11 +15,9 @@ import com.digero.common.midi.IMidiConstants;
 public class ChannelInfoCache implements IMidiConstants {
 	private static final byte DEFAULT_INSTRUMENT = 0x00;
 	private static final byte DEFAULT_VOLUME = 0x7F;
-	private static final int DEFAULT_PITCH_BEND = 0;
 
 	private MapByChannel<Byte> instruments = new MapByChannel<Byte>();
 	private MapByChannel<Byte> volume = new MapByChannel<Byte>();
-	private MapByChannel<Integer> pitchBend = new MapByChannel<Integer>();
 
 	public ChannelInfoCache(Sequence song) {
 		Track[] tracks = song.getTracks();
@@ -47,11 +43,6 @@ public class ChannelInfoCache implements IMidiConstants {
 							volume.put(ch, evt.getTick(), (byte) m.getData2());
 						}
 					}
-					else if (cmd == ShortMessage.PITCH_BEND) {
-						if (ch != DRUM_CHANNEL) {
-							pitchBend.put(ch, evt.getTick(), m.getData1() | (m.getData2() << 7));
-						}
-					}
 				}
 			}
 		}
@@ -63,14 +54,6 @@ public class ChannelInfoCache implements IMidiConstants {
 
 	public int getVolume(int channel, long tick) {
 		return volume.get(channel, tick, DEFAULT_VOLUME);
-	}
-
-	public int getPitch(int channel, long tick) {
-		return pitchBend.get(channel, tick, DEFAULT_PITCH_BEND);
-	}
-
-	public SortedMap<Long, Integer> getPitchChanges(int channel, long fromTick, long toTick) {
-		return pitchBend.getRange(channel, fromTick, toTick);
 	}
 
 	private static class MapByChannel<V> {
@@ -97,13 +80,6 @@ public class ChannelInfoCache implements IMidiConstants {
 				return defaultValue;
 
 			return entry.getValue();
-		}
-
-		public SortedMap<Long, V> getRange(int channel, long fromTick, long toTick) {
-			if (map[channel] == null)
-				map[channel] = new TreeMap<Long, V>();
-
-			return Collections.unmodifiableSortedMap(map[channel].subMap(fromTick, toTick));
 		}
 	}
 }
