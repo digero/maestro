@@ -13,11 +13,11 @@ import javax.sound.midi.Track;
 import com.digero.common.midi.IMidiConstants;
 
 public class ChannelInfoCache implements IMidiConstants {
-	private static final byte DEFAULT_INSTRUMENT = 0x00;
-	private static final byte DEFAULT_VOLUME = 0x7F;
+	private static final int DEFAULT_INSTRUMENT = 0;
+	private static final int DEFAULT_VOLUME = MAX_VOLUME;
 
-	private MapByChannel<Byte> instruments = new MapByChannel<Byte>();
-	private MapByChannel<Byte> volume = new MapByChannel<Byte>();
+	private MapByChannel instruments = new MapByChannel();
+	private MapByChannel volume = new MapByChannel();
 
 	public ChannelInfoCache(Sequence song) {
 		Track[] tracks = song.getTracks();
@@ -35,12 +35,12 @@ public class ChannelInfoCache implements IMidiConstants {
 
 					if (cmd == ShortMessage.PROGRAM_CHANGE) {
 						if (ch != DRUM_CHANNEL) {
-							instruments.put(ch, evt.getTick(), (byte) m.getData1());
+							instruments.put(ch, evt.getTick(), m.getData1());
 						}
 					}
 					else if (cmd == ShortMessage.CONTROL_CHANGE) {
 						if (m.getData1() == COARSE_CHANNEL_VOLUME_CONTROLLER) {
-							volume.put(ch, evt.getTick(), (byte) m.getData2());
+							volume.put(ch, evt.getTick(), m.getData2());
 						}
 					}
 				}
@@ -56,26 +56,26 @@ public class ChannelInfoCache implements IMidiConstants {
 		return volume.get(channel, tick, DEFAULT_VOLUME);
 	}
 
-	private static class MapByChannel<V> {
-		private NavigableMap<Long, V>[] map;
+	private static class MapByChannel {
+		private NavigableMap<Long, Integer>[] map;
 
 		@SuppressWarnings("unchecked")
 		public MapByChannel() {
 			map = new NavigableMap[CHANNEL_COUNT];
 		}
 
-		public void put(int channel, long tick, V value) {
+		public void put(int channel, long tick, Integer value) {
 			if (map[channel] == null)
-				map[channel] = new TreeMap<Long, V>();
+				map[channel] = new TreeMap<Long, Integer>();
 
 			map[channel].put(tick, value);
 		}
 
-		public V get(int channel, long tick, V defaultValue) {
+		public int get(int channel, long tick, Integer defaultValue) {
 			if (map[channel] == null)
 				return defaultValue;
 
-			Entry<Long, V> entry = map[channel].floorEntry(tick);
+			Entry<Long, Integer> entry = map[channel].floorEntry(tick);
 			if (entry == null) // No changes before this tick
 				return defaultValue;
 

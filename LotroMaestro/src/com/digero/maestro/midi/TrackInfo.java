@@ -71,7 +71,7 @@ public class TrackInfo implements IMidiConstants {
 
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
 					int noteId = m.getData1() + (drums ? 0 : pitchBend[c]);
-					int velocity = m.getData2();
+					int velocity = m.getData2() * channelInfo.getVolume(c, evt.getTick()) / MAX_VOLUME;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
