@@ -15,4 +15,5 @@ public interface IMidiConstants {
 
 	public static final int DRUM_CHANNEL = 9;
 	public static final int CHANNEL_COUNT = 16;
+	public static final int MAX_VOLUME = 127;
 }

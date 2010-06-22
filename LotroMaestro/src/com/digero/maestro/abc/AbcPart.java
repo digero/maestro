@@ -744,7 +744,8 @@ public class AbcPart {
 	//
 
 	public boolean isDrumPart() {
-		return instrument == LotroInstrument.DRUMS;
+		return instrument == LotroInstrument.DRUMS || instrument == LotroInstrument.COWBELL
+				|| instrument == LotroInstrument.MOOR_COWBELL;
 	}
 
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;

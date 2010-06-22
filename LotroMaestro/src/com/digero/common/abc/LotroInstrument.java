@@ -32,7 +32,9 @@ public enum LotroInstrument {
 	CLARINET(Note.D2, Note.C5, true, 71, 1), //
 	HORN(Note.Cs2, Note.C5, true, 69, 0), //
 	BAGPIPE(Note.C2, Note.C5, true, 109, 1), //
-	DRUMS(Note.C2, Note.C5, false, 118, 0);
+	DRUMS(Note.C2, Note.C5, false, 118, 0), //
+	COWBELL(Note.C2, Note.C5, false, 115, 0), //
+	MOOR_COWBELL(Note.C2, Note.C5, false, 114, 0);
 
 	private static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
 			LUTE, HARP, THEORBO, BAGPIPE, CLARINET, FLUTE, HORN
@@ -62,6 +64,9 @@ public enum LotroInstrument {
 
 	@Override
 	public String toString() {
+		if (this == MOOR_COWBELL)
+			return "Moor Cowbell";
+		
 		String name = super.toString();
 		return name.substring(0, 1) + name.substring(1).toLowerCase();
 	}

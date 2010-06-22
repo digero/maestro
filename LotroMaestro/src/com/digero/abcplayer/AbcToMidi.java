@@ -178,11 +178,6 @@ public class AbcToMidi {
 							}
 							break;
 						}
-//						case 'I':
-//							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
-//								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
-//							}
-//							break;
 						}
 					}
 					catch (IllegalArgumentException e) {
@@ -420,27 +415,42 @@ public class AbcToMidi {
 								octave = 4 + octaveStr.length();
 							}
 
-							int noteId = (octave + 1) * 12 + CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
-
-							int lotroNoteId = noteId;
-							if (!useLotroInstruments)
-								noteId += 12 * info.getInstrument().octaveDelta;
-
-							if (m.group(NOTE_ACCIDENTAL) != null) {
-								if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
-									accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
-								else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
-									accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
-								else if (m.group(NOTE_ACCIDENTAL).equals("="))
-									accidentals.put(noteId, 0);
-							}
-
-							if (accidentals.containsKey(noteId)) {
-								noteId += accidentals.get(noteId);
+							int noteId;
+							int lotroNoteId;
+							if (info.getInstrument() == LotroInstrument.COWBELL
+									|| info.getInstrument() == LotroInstrument.MOOR_COWBELL) {
+								if (useLotroInstruments) {
+									int min = info.getInstrument().lowestPlayable.id;
+									int max = info.getInstrument().highestPlayable.id;
+									lotroNoteId = noteId = min + (int) (Math.random() * (max - min));
+								}
+								else {
+									noteId = (info.getInstrument() == LotroInstrument.COWBELL) ? 76 : 71;
+									lotroNoteId = 71;
+								}
 							}
 							else {
-								// Use the key signature to determine the accidental
-								noteId += info.getKey().getAccidental(noteId).deltaNoteId;
+								lotroNoteId = noteId = (octave + 1) * 12
+										+ CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
+								if (!useLotroInstruments)
+									noteId += 12 * info.getInstrument().octaveDelta;
+
+								if (m.group(NOTE_ACCIDENTAL) != null) {
+									if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
+										accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
+									else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
+										accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
+									else if (m.group(NOTE_ACCIDENTAL).equals("="))
+										accidentals.put(noteId, 0);
+								}
+
+								if (accidentals.containsKey(noteId)) {
+									noteId += accidentals.get(noteId);
+								}
+								else {
+									// Use the key signature to determine the accidental
+									noteId += info.getKey().getAccidental(noteId).deltaNoteId;
+								}
 							}
 
 							// Check for overlapping notes, and remove extra note off events
@@ -695,6 +705,9 @@ public class AbcToMidi {
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
 				instrNicknames.put("BASS", LotroInstrument.THEORBO);
 				instrNicknames.put("BAGPIPES", LotroInstrument.BAGPIPE);
+				instrNicknames.put("MOORCOWBELL", LotroInstrument.MOOR_COWBELL);
+				instrNicknames.put("MOOR COWBELL", LotroInstrument.MOOR_COWBELL);
+				instrNicknames.put("MORE COWBELL", LotroInstrument.MOOR_COWBELL);
 			}
 
 			if (instrRegex == null) {
