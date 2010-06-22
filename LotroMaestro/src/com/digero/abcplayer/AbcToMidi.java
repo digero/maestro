@@ -704,6 +704,7 @@ public class AbcToMidi {
 				// Must be all-caps
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
 				instrNicknames.put("BASS", LotroInstrument.THEORBO);
+				instrNicknames.put("THEO", LotroInstrument.THEORBO);
 				instrNicknames.put("BAGPIPES", LotroInstrument.BAGPIPE);
 				instrNicknames.put("MOORCOWBELL", LotroInstrument.MOOR_COWBELL);
 				instrNicknames.put("MOOR COWBELL", LotroInstrument.MOOR_COWBELL);
