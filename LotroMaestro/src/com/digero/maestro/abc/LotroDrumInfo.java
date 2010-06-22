@@ -28,7 +28,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 
 		add(Note.C2, "Conga High");
 		add(Note.Cs2, "Rattle Short");
-		add(Note.D2, "Muff");
+		add(Note.D2, "Conga High");
 		add(Note.Ds2, "Slap");
 		add(Note.E2, "Slap");
 		add(Note.F2, "Muted");
@@ -36,10 +36,10 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		add(Note.G2, "Tom High");
 		add(Note.Gs2, "Rattle Short");
 		add(Note.A2, "Tom High");
-		add(Note.As2, "Rattle High");
+		add(Note.As2, "Tambourine");
 		add(Note.B2, "Tom Mid");
 		add(Note.C3, "Muted Mid");
-		add(Note.Cs3, "Bass");
+		add(Note.Cs3, "Bass Slap");
 		add(Note.D3, "Bass Slap");
 		add(Note.Ds3, "Rim Shot");
 		add(Note.E3, "Slap");
@@ -47,15 +47,15 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		add(Note.Fs3, "Slap");
 		add(Note.G3, "Rattle");
 		add(Note.Gs3, "Bass");
-		add(Note.A3, "Rattle");
+		add(Note.A3, "Rattle Long");
 		add(Note.As3, "Bass");
 		add(Note.B3, "Rattle");
 		add(Note.C4, "Rattle");
 		add(Note.Cs4, "Muted");
-		add(Note.D4, "Conga Bend");
+		add(Note.D4, "Bend Low Up");
 		add(Note.Ds4, "Tom Mid");
-		add(Note.E4, "Conga Bend");
-		add(Note.F4, "Conga Bend");
+		add(Note.E4, "Bend Mid Down");
+		add(Note.F4, "Bend High Up");
 		add(Note.Fs4, "Slap");
 		add(Note.G4, "Conga Low");
 		add(Note.Gs4, "Slap");
