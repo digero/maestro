@@ -10,10 +10,15 @@ public interface IMidiConstants {
 	public static final int META_TEMPO = 0x51;
 	public static final int META_TIME_SIGNATURE = 0x58;
 	public static final int META_KEY_SIGNATURE = 0x59;
-	
+
 	public static final int COARSE_CHANNEL_VOLUME_CONTROLLER = 0x07;
 
 	public static final int DRUM_CHANNEL = 9;
 	public static final int CHANNEL_COUNT = 16;
 	public static final int MAX_VOLUME = 127;
+	
+	public static final int DEFAULT_TEMPO_BPM = 120;
+	public static final int DEFAULT_TEMPO_MPQ = 500000;
+	public static final int DEFAULT_INSTRUMENT = 0;
+	public static final int DEFAULT_CHANNEL_VOLUME = MAX_VOLUME;
 }
