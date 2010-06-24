@@ -129,7 +129,6 @@ public class AbcPart {
 		PrintStream out = new PrintStream(os);
 		out.println("X: " + partNumber);
 		out.println("T: " + title);
-		out.println("I: " + instrument);
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
