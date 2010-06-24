@@ -42,7 +42,7 @@ public class TrackInfo implements IMidiConstants {
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
-			ChannelInfoCache channelInfo) throws InvalidMidiDataException {
+			SequenceDataCache sequenceCache) throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
 		this.track = track;
 		this.trackNumber = trackNumber;
@@ -71,7 +71,7 @@ public class TrackInfo implements IMidiConstants {
 
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
 					int noteId = m.getData1() + (drums ? 0 : pitchBend[c]);
-					int velocity = m.getData2() * channelInfo.getVolume(c, evt.getTick()) / MAX_VOLUME;
+					int velocity = m.getData2() * sequenceCache.getVolume(c, evt.getTick()) / MAX_VOLUME;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
@@ -100,7 +100,7 @@ public class TrackInfo implements IMidiConstants {
 						}
 						else {
 							noteEvents.add(ne);
-							instruments.add(channelInfo.getInstrument(c, evt.getTick()));
+							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
 						}
 						notesOn[c].add(ne);
 						noteVelocities[velocity]++;
