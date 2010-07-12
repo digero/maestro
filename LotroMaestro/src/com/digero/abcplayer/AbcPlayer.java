@@ -435,7 +435,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				ImageIcon aboutIcon = new ImageIcon(IconLoader.class.getResource("abcplayer_64.png"));
 				JLabel aboutMessage = new JLabel("<html>ABC Player for The Lord of the Rings Online<br>" + "Version "
 						+ APP_VERSION + "<br>" + "Created by Digero of Landroval<br>" + "<a href='" + APP_URL + "'>"
-						+ APP_URL + "</a><br>" + "&copy; 2010 Ben Howell</html>");
+						+ APP_URL + "</a><br>" + "Copyright &copy; 2010 Ben Howell<br>" + "<br>"
+						+ "This program is not affiliated with Turbine, Inc. or Warner Bros.</html>");
 				aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				aboutMessage.addMouseListener(new MouseAdapter() {
 					public void mouseClicked(MouseEvent e) {
