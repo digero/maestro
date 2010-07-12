@@ -100,6 +100,8 @@ public class VolumeBar extends JPanel {
 		public void mousePressed(MouseEvent e) {
 			if (!VolumeBar.this.isEnabled())
 				return;
+			volumizer.setVolume(getPosition(e.getX()));
+			repaint();
 			requestFocus();
 		}
 

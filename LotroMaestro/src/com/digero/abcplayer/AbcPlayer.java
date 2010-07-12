@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -66,11 +67,13 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.digero.abcplayer.AbcToMidi.AbcInfo;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
+import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.VolumeTransceiver;
@@ -88,7 +91,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final String APP_NAME = "ABC Player";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final Version APP_VERSION = new Version(0, 1, 0, 0);
-	
+
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
@@ -131,10 +134,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private boolean useLotroInstruments = true;
 
 	private JPanel content;
+
+	private JLabel titleLabel;
+
 	private TrackListPanel trackListPanel;
 
 	private SongPositionBar songPositionBar;
 	private SongPositionLabel songPositionLabel;
+	private JLabel barCountLabel;
 	private VolumeBar volumeBar;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
@@ -148,6 +155,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
 	private Map<File, List<String>> abcData;
+	private AbcInfo abcInfo = new AbcInfo();
 
 	private Preferences prefs = Preferences.userNodeForPackage(AbcPlayer.class);
 	private Preferences windowPrefs = prefs.node("window");
@@ -231,9 +239,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		content = new JPanel(new TableLayout(new double[] { // Columns
 						4, FILL, 4
 				}, new double[] { // Rows
-						FILL, 8, PREFERRED
+						PREFERRED, 0, FILL, 8, PREFERRED
 				}));
 		setContentPane(content);
+
+		titleLabel = new JLabel(" ");
+		Font f = titleLabel.getFont();
+		titleLabel.setFont(f.deriveFont(Font.BOLD, f.getSize() + 1));
+		titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
 		trackListPanel = new TrackListPanel();
 		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -248,6 +261,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		songPositionBar = new SongPositionBar(sequencer);
 		songPositionLabel = new SongPositionLabel(sequencer);
+		barCountLabel = new JLabel("Bar 0/0");
 
 		playIcon = new ImageIcon(IconLoader.class.getResource("play.png"));
 		pauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
@@ -279,20 +293,31 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		controlPanel.add(playButton, "4, 3");
 		controlPanel.add(stopButton, "6, 3");
 		controlPanel.add(volumeBar, "8, 3, f, c");
+		controlPanel.add(barCountLabel, "9, 3, 11, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
 				updateButtonStates();
+				SequencerProperty p = evt.getProperty();
+				if (barCountLabel.isVisible() && p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
+					updateBarCountLabel();
+				}
 			}
 		});
 
-		add(trackListScroller, "0, 0, 2, 0");
-		add(controlPanel, "1, 2");
+		add(titleLabel, "0, 0, 2, 0");
+		add(trackListScroller, "0, 2, 2, 2");
+		add(controlPanel, "1, 4");
 
 		initMenu();
 
 		updateButtonStates();
 		initializeWindowBounds();
+	}
+
+	private void updateBarCountLabel() {
+		int bar = abcInfo.getBarNumber(sequencer.getThumbTick()) + 1;
+		barCountLabel.setText("Bar " + bar + "/" + abcInfo.getBarCount());
 	}
 
 	private void initializeWindowBounds() {
@@ -444,6 +469,16 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 	}
 
+	private void updateTitleLabel() {
+		String text = abcInfo.getTitlePrefix();
+		String artist = abcInfo.getMetadata('C');
+		if (artist != null)
+			text += " - " + artist;
+
+		titleLabel.setText(text);
+		titleLabel.setToolTipText(text);
+	}
+
 	private boolean openSongFromCommandLine(String[] args) {
 		mainWindow.setExtendedState(mainWindow.getExtendedState() & ~JFrame.ICONIFIED);
 
@@ -494,17 +529,19 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		updateButtonStates();
 
 		Sequence song;
+		AbcInfo info = new AbcInfo();
 		try {
-			song = AbcToMidi.convert(data, useLotroInstruments, null);
+			song = AbcToMidi.convert(data, useLotroInstruments, null, info);
 		}
 		catch (ParseException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 
-		exportFileDialog = null;
-		abcData = data;
-		instrumentOverrideMap.clear();
+		this.exportFileDialog = null;
+		this.abcData = data;
+		this.abcInfo = info;
+		this.instrumentOverrideMap.clear();
 		stop();
 
 		try {
@@ -539,6 +576,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			setTitle(APP_NAME + " - " + fileNames);
 		trackListPanel.songChanged();
 		updateButtonStates();
+		updateTitleLabel();
+
+		barCountLabel.setVisible(abcInfo.getBarCount() > 0);
+		updateBarCountLabel();
 
 		return true;
 	}
@@ -783,7 +824,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				Sequence song;
 
 				try {
-					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap);
+					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo);
 				}
 				catch (ParseException e) {
 					JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument",

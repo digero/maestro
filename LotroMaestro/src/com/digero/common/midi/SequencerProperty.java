@@ -3,6 +3,8 @@ package com.digero.common.midi;
 public enum SequencerProperty {
 	POSITION, LENGTH, DRAG_POSITION, IS_DRAGGING, IS_RUNNING, IS_LOADED, TRACK_ACTIVE;
 
+	public static final int THUMB_POSITION_MASK = POSITION.mask | DRAG_POSITION.mask;
+
 	public final int mask;
 
 	public static long makeMask(SequencerProperty[] props) {

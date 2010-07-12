@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +34,72 @@ import com.digero.common.util.ParseException;
 public class AbcToMidi {
 	/** This is a static-only class */
 	private AbcToMidi() {
+	}
+
+	public static class AbcInfo {
+		private String titlePrefix;
+		private Map<Character, String> metadata = new HashMap<Character, String>();
+		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
+
+		private void setMetadata(char key, String value) {
+			if (!metadata.containsKey(key))
+				metadata.put(key, value);
+
+			if (Character.toUpperCase(key) == 'T') {
+				if (titlePrefix == null)
+					titlePrefix = value;
+				else
+					titlePrefix = longestCommonPrefix(titlePrefix, value);
+			}
+		}
+
+		public String getMetadata(char key) {
+			return metadata.get(Character.toUpperCase(key));
+		}
+
+		public int getBarNumber(long tick) {
+			Entry<Long, Integer> e = bars.floorEntry(tick);
+			if (e == null)
+				return 0;
+			return e.getValue();
+		}
+
+		public int getBarCount() {
+			return bars.size();
+		}
+
+		private static final Pattern trailingPunct = Pattern.compile("[-:;\\(\\[\\{\\s]+$");
+
+		public String getTitlePrefix() {
+			if (titlePrefix == null || titlePrefix.length() == 0) {
+				if (metadata.containsKey('T'))
+					return metadata.get('T');
+				return "(Untitled)";
+			}
+
+			String ret = titlePrefix;
+			ret = trailingPunct.matcher(ret).replaceFirst("");
+			return ret;
+		}
+
+		private void reset() {
+			titlePrefix = null;
+			metadata.clear();
+			bars.clear();
+		}
+
+		private static String longestCommonPrefix(String a, String b) {
+			if (a.length() > b.length())
+				a = a.substring(0, b.length());
+
+			for (int j = 0; j < a.length(); j++) {
+				if (a.charAt(j) != b.charAt(j)) {
+					a = a.substring(0, j);
+					break;
+				}
+			}
+			return a;
+		}
 	}
 
 	private static final Pattern INFO_PATTERN = Pattern.compile("^([A-Z]):\\s*(.*)\\s*$");
@@ -85,14 +153,17 @@ public class AbcToMidi {
 		}
 	}
 
-	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
-		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
-		tmpMap.put(abcFile, readLines(abcFile));
-		return convert(tmpMap, useLotroInstruments, null);
-	}
+//	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
+//		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
+//		tmpMap.put(abcFile, readLines(abcFile));
+//		return convert(tmpMap, useLotroInstruments, null);
+//	}
 
 	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap) throws ParseException {
+			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo) throws ParseException {
+		if (abcInfo != null)
+			abcInfo.reset();
+
 		TuneInfo info = new TuneInfo();
 		Sequence seq = null;
 		Track track = null;
@@ -124,8 +195,11 @@ public class AbcToMidi {
 
 				Matcher infoMatcher = INFO_PATTERN.matcher(line);
 				if (infoMatcher.matches()) {
-					char type = infoMatcher.group(INFO_TYPE).charAt(0);
+					char type = Character.toUpperCase(infoMatcher.group(INFO_TYPE).charAt(0));
 					String value = infoMatcher.group(INFO_VALUE).trim();
+
+					if (abcInfo != null)
+						abcInfo.setMetadata(type, value);
 
 					try {
 						switch (type) {
@@ -264,9 +338,22 @@ public class AbcToMidi {
 								break;
 
 							case '|': // Bar line
+								if (inChord) {
+									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+											lineNumber, i);
+								}
+
+								if (abcInfo != null && trackNumber == 1 && !abcInfo.bars.containsKey(chordStartTick))
+									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
+
 								accidentals.clear();
-								if (i + 1 < line.length() && line.charAt(i + 1) == ']')
+								if (i + 1 < line.length() && line.charAt(i + 1) == ']') {
 									i++; // Skip |]
+								}
+								else if (abcInfo != null && trackNumber == 1
+										&& !abcInfo.bars.containsKey(chordStartTick)) {
+									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
+								}
 								break;
 
 							case '+': {

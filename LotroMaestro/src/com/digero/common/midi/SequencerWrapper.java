@@ -15,6 +15,9 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
+import com.sun.media.sound.MidiUtils;
+import com.sun.media.sound.MidiUtils.TempoCache;
+
 public class SequencerWrapper {
 	private Sequencer sequencer;
 	private Receiver receiver;
@@ -22,6 +25,7 @@ public class SequencerWrapper {
 	private DrumFilterTransceiver drumFilter;
 	private long dragPosition;
 	private boolean isDragging;
+	private TempoCache tempoCache = new TempoCache();
 
 	private Timer updateTimer;
 
@@ -58,6 +62,10 @@ public class SequencerWrapper {
 		this.sequencer = sequencer;
 		this.transmitter = transmitter;
 		this.receiver = receiver;
+
+		if (sequencer.getSequence() != null) {
+			tempoCache.refresh(sequencer.getSequence());
+		}
 
 		updateTimer = new Timer(50, timerTick);
 		updateTimer.start();
@@ -140,6 +148,18 @@ public class SequencerWrapper {
 
 		if (!isOpen)
 			sequencer.close();
+	}
+
+	public long getTickPosition() {
+		return sequencer.getTickPosition();
+	}
+
+	public void setTickPosition(long tick) {
+		if (tick != getTickPosition()) {
+			sequencer.setTickPosition(tick);
+			lastUpdatePosition = sequencer.getMicrosecondPosition();
+			fireChangeEvent(SequencerProperty.POSITION);
+		}
 	}
 
 	public long getPosition() {
@@ -238,8 +258,21 @@ public class SequencerWrapper {
 		return isDragging() ? getDragPosition() : getPosition();
 	}
 
+	/** If dragging, returns the drag tick. Otherwise returns the song tick. */
+	public long getThumbTick() {
+		return isDragging() ? getDragTick() : getTickPosition();
+	}
+
 	public long getDragPosition() {
 		return dragPosition;
+	}
+
+	public long getDragTick() {
+		return MidiUtils.microsecond2tick(getSequence(), getDragPosition(), tempoCache);
+	}
+
+	public void setDragTick(long tick) {
+		setDragPosition(MidiUtils.tick2microsecond(getSequence(), tick, tempoCache));
 	}
 
 	public void setDragPosition(long dragPosition) {
@@ -285,6 +318,7 @@ public class SequencerWrapper {
 		if (sequencer.getSequence() != sequence) {
 			boolean preLoaded = isLoaded();
 			sequencer.setSequence(sequence);
+			tempoCache.refresh(sequence);
 			if (preLoaded != isLoaded())
 				fireChangeEvent(SequencerProperty.IS_LOADED);
 			fireChangeEvent(SequencerProperty.LENGTH);
