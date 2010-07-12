@@ -15,17 +15,21 @@
     	<copy file="${basedir}/gervill.jar" todir="${output}"/>
     	<copy file="${build}/abcplayer.ico" todir="${output}"/>
     	<copy file="${build}/WinRun4J.exe" tofile="${output}/AbcPlayer.exe" overwrite="true"/>
+    	<echo>Running rcedit.exe...</echo>
     	<exec dir="${build}" executable="${build}/rcedit.exe" failonerror="true">
     		<arg value="/W"/>
     		<arg value="${output}/AbcPlayer.exe"/>
     		<arg value="${build}/AbcPlayer.rcedit.ini"/>
     	</exec>
+    	<echo>Done</echo>
     </target>
 	<target name="AbcPlayerInstaller" depends="AbcPlayerExe">
+		<echo>Building MSI...</echo>
 		<exec dir="${build}" executable="${devenv}" failonerror="true">
 			<arg value="/build"/>
 			<arg value="Release"/>
 			<arg value="AbcPlayerInstaller.sln"/>
 		</exec>
+    	<echo>Done</echo>
 	</target>
 </project>
