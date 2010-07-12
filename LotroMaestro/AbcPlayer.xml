@@ -2,6 +2,7 @@
 <project default="AbcPlayerExe" name="Create Runnable Jar for Project LotroMaestro">
     <property name="output" value="${basedir}/output" />
 	<property name="build" value="${basedir}/build" />
+	<property name="devenv" value="C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/devenv.exe" />
     <target name="AbcPlayerExe">
         <jar destfile="${output}/AbcPlayer.jar" basedir="${basedir}/bin" excludes="com/digero/maestro/view/**,com/digero/maestro/MaestroMain.class">
             <manifest>
@@ -20,4 +21,11 @@
     		<arg value="${build}/AbcPlayer.rcedit.ini"/>
     	</exec>
     </target>
+	<target name="AbcPlayerInstaller" depends="AbcPlayerExe">
+		<exec dir="${build}" executable="${devenv}" failonerror="true">
+			<arg value="/build"/>
+			<arg value="Release"/>
+			<arg value="AbcPlayerInstaller.sln"/>
+		</exec>
+	</target>
 </project>
