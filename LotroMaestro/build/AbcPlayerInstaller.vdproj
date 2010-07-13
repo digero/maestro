@@ -287,7 +287,7 @@
                 {
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_67AAA7FDE2D04089B3F1444FE11562F4"
                     {
-                    "Name" = "8:[ProductName]"
+                    "Name" = "8:ABC Player"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
@@ -381,7 +381,7 @@
         {
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_92B88638636742FEB5A8A4D4A7D7E2CC"
             {
-            "Name" = "8:[ProductName]"
+            "Name" = "8:ABC Player"
             "Arguments" = "8:"
             "Description" = "8:ABC Player for The Lord of the Rings Online"
             "ShowCmd" = "3:1"
