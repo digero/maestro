@@ -6,7 +6,7 @@ public class Version implements Comparable<Version> {
 			return null;
 
 		String[] parts = versionString.trim().split("\\.");
-		int major, minor = 0, revision = 0, build = 0;
+		int major, minor = 0, revision = 0, build = -1;
 
 		try {
 			if (parts.length == 0)
@@ -27,13 +27,37 @@ public class Version implements Comparable<Version> {
 		}
 	}
 
-	public final int major, minor, revision, build;
+	private final int major, minor, revision, build;
+
+	public Version(int major, int minor, int revision) {
+		this(major, minor, revision, -1);
+	}
 
 	public Version(int major, int minor, int revision, int build) {
 		this.major = major;
 		this.minor = minor;
 		this.revision = revision;
 		this.build = build;
+	}
+
+	public int getMajor() {
+		return major;
+	}
+
+	public int getMinor() {
+		return minor;
+	}
+
+	public int getRevision() {
+		return revision;
+	}
+
+	public int getBuild() {
+		return build;
+	}
+
+	public boolean hasBuild() {
+		return build != -1;
 	}
 
 	@Override
@@ -71,6 +95,9 @@ public class Version implements Comparable<Version> {
 
 	@Override
 	public String toString() {
-		return major + "." + minor + "." + revision + "." + build;
+		String s = major + "." + minor + "." + revision;
+		if (hasBuild())
+			s += "." + build;
+		return s;
 	}
 }

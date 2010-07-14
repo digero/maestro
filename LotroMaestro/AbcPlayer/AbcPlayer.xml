@@ -1,30 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="AbcPlayerExe" name="ABC Player executable">
-    <property name="output" value="../output" />
-	<property name="build" value="../build" />
+    <property name="output" value="output"/>
+	<property name="build" value="build"/>
+	<property name="basename" value="AbcPlayer"/>
     <target name="AbcPlayerExe">
-        <jar destfile="${build}/AbcPlayer.jar" basedir="../bin" excludes="com/digero/maestro/view/**,com/digero/maestro/MaestroMain.class">
+    	<mkdir dir="${build}"/>
+    	<delete file="${build}/*.log"/>
+        <jar destfile="${build}/${basename}.jar" basedir="../bin" excludes="com/digero/maestro/view/**,com/digero/maestro/MaestroMain.class">
             <manifest>
                 <attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer"/>
-                <attribute name="Class-Path" value="."/>
+                <attribute name="Class-Path" value=". TableLayout.jar gervill.jar"/>
             </manifest>
         </jar>
-    	<copy file="WinRun4J.exe" tofile="${output}/AbcPlayer.exe" overwrite="true"/>
-    	<echo>Running rcedit.exe...</echo>
+        <copy file="../TableLayout.jar" todir="${build}"/>
+        <copy file="../gervill.jar" todir="${build}"/>
+        <copy file="../LotroInstruments.sf2" todir="${build}"/>
+        <copy file="WinRun4J.exe" tofile="${build}/${basename}.exe" overwrite="true"/>
+    	<echo>Running rcedit.exe</echo>
     	<exec executable="rcedit.exe" failonerror="true">
     		<arg value="/W"/>
-    		<arg value="${output}/AbcPlayer.exe"/>
+    		<arg value="${build}/${basename}.exe"/>
     		<arg value="AbcPlayer.rcedit.ini"/>
     	</exec>
-    	<echo>Done</echo>
     </target>
 	<target name="AbcPlayerInstaller" depends="AbcPlayerExe">
-		<echo>Building MSI...</echo>
+		<echo>Building MSI</echo>
 		<exec executable="C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/devenv.exe" failonerror="true">
 			<arg value="/build"/>
 			<arg value="Release"/>
 			<arg value="AbcPlayerInstaller.sln"/>
 		</exec>
-    	<echo>Done</echo>
 	</target>
+	<target name="AbcPlayerZip" depends="AbcPlayerExe">
+	    <mkdir dir="${output}"/>
+		<zip destfile="${output}/${basename}.zip" basedir="${build}" includes="${basename}.exe,LotroInstruments.sf2,${basename}.jar,TableLayout.jar,gervill.jar"/>
+	</target>
+	<target name="AbcPlayerDistrib" depends="AbcPlayerInstaller,AbcPlayerZip"/>
 </project>

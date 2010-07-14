@@ -45,6 +45,7 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 import javax.swing.BorderFactory;
@@ -85,12 +86,11 @@ import com.digero.common.util.Version;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.VolumeBar;
-import com.sun.media.sound.AudioSynthesizer;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final String APP_NAME = "ABC Player";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
-	private static final Version APP_VERSION = new Version(0, 1, 0, 0);
+	private static final Version APP_VERSION = new Version(1, 0, 0);
 
 	private static AbcPlayer mainWindow = null;
 
@@ -127,7 +127,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	}
 
 	private SequencerWrapper sequencer;
-	private AudioSynthesizer synth;
+	private Synthesizer synth;
 	private Transmitter transmitter;
 	private Receiver receiver;
 	private VolumeTransceiver volumizer;
@@ -178,8 +178,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		try {
 			List<Image> icons = new ArrayList<Image>();
-			icons.add(ImageIO.read(IconLoader.class.getResource("abcplayer_16.png")));
-			icons.add(ImageIO.read(IconLoader.class.getResource("abcplayer_32.png")));
+			icons.add(ImageIO.read(IconLoader.class.getResourceAsStream("abcplayer_16.png")));
+			icons.add(ImageIO.read(IconLoader.class.getResourceAsStream("abcplayer_32.png")));
 			setIconImages(icons);
 		}
 		catch (Exception ex) {
@@ -201,8 +201,11 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 			if (useLotroInstruments) {
 				try {
-					synth = SynthesizerFactory.getLotroAudioSynthesizer();
-					receiver = synth.getReceiver();
+					synth = SynthesizerFactory.getLotroSynthesizer();
+					if (synth == null)
+						throw new IOException("Could not get synthesizer");
+					else
+						receiver = synth.getReceiver();
 				}
 				catch (IOException e) {
 					JOptionPane.showMessageDialog(this, "There was an error loading the LotRO instrument sounds.\n"
@@ -229,11 +232,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
+			throw new RuntimeException(e);
+//			System.exit(1);
 		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
+			throw new RuntimeException(e);
+//			System.exit(1);
 		}
 
 		content = new JPanel(new TableLayout(new double[] { // Columns
@@ -261,11 +266,17 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		songPositionBar = new SongPositionBar(sequencer);
 		songPositionLabel = new SongPositionLabel(sequencer);
-		barCountLabel = new JLabel("Bar 0/0");
+		barCountLabel = new JLabel("0/0");
+		barCountLabel.setToolTipText("Bar number");
 
-		playIcon = new ImageIcon(IconLoader.class.getResource("play.png"));
-		pauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
-		stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
+		try {
+			playIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("play.png")));
+			pauseIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("pause.png")));
+			stopIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("stop.png")));
+		}
+		catch (IOException e1) {
+			throw new RuntimeException(e1);
+		}
 
 		playButton = new JButton(playIcon);
 		playButton.setEnabled(false);
@@ -317,7 +328,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private void updateBarCountLabel() {
 		int bar = abcInfo.getBarNumber(sequencer.getThumbTick()) + 1;
-		barCountLabel.setText("Bar " + bar + "/" + abcInfo.getBarCount());
+		barCountLabel.setText(bar + "/" + abcInfo.getBarCount());
 	}
 
 	private void initializeWindowBounds() {
@@ -325,8 +336,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		Dimension mainScreen = Toolkit.getDefaultToolkit().getScreenSize();
 
-		int width = windowPrefs.getInt("width", 416);
-		int height = windowPrefs.getInt("height", 272);
+		int width = windowPrefs.getInt("width", 450);
+		int height = windowPrefs.getInt("height", 282);
 		int x = windowPrefs.getInt("x", (mainScreen.width - width) / 2);
 		int y = windowPrefs.getInt("y", (mainScreen.height - height) / 2);
 
@@ -432,11 +443,22 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		about.setMnemonic(KeyEvent.VK_A);
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ImageIcon aboutIcon = new ImageIcon(IconLoader.class.getResource("abcplayer_64.png"));
-				JLabel aboutMessage = new JLabel("<html>ABC Player for The Lord of the Rings Online<br>" + "Version "
-						+ APP_VERSION + "<br>" + "Created by Digero of Landroval<br>" + "<a href='" + APP_URL + "'>"
-						+ APP_URL + "</a><br>" + "Copyright &copy; 2010 Ben Howell<br>" + "<br>"
-						+ "This program is not affiliated with Turbine, Inc. or Warner Bros.</html>");
+				ImageIcon aboutIcon;
+				try {
+					aboutIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("abcplayer_64.png")));
+				}
+				catch (IOException e1) {
+					throw new RuntimeException(e1);
+				}
+				JLabel aboutMessage = new JLabel("<html>" //
+						+ "ABC Player for The Lord of the Rings Online<br>" //
+						+ "Version " + APP_VERSION + "<br>" //
+						+ "Created by Digero of Landroval<br>" //
+						+ "Copyright &copy; 2010 Ben Howell<br>" //
+						+ "<a href='" + APP_URL + "'>" + APP_URL + "</a><br>" //
+						+ "<br>" //
+						+ "No affiliation with Turbine, Inc. or Warner Bros." //
+						+ "</html>");
 				aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				aboutMessage.addMouseListener(new MouseAdapter() {
 					public void mouseClicked(MouseEvent e) {

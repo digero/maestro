@@ -34,10 +34,9 @@ public class SynthesizerFactory {
 
 	public static void initLotroSynthesizer(Synthesizer synth) throws MidiUnavailableException,
 			InvalidMidiDataException, IOException {
-		getLotroSoundbank();
 		synth.open();
-		synth.unloadAllInstruments(lotroSoundbank);
-		synth.loadAllInstruments(lotroSoundbank);
+		synth.unloadAllInstruments(getLotroSoundbank());
+		synth.loadAllInstruments(getLotroSoundbank());
 	}
 
 	public static Soundbank getLotroSoundbank() throws InvalidMidiDataException, IOException {
