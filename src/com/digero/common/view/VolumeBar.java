@@ -14,7 +14,7 @@ import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JPanel;
 
-import com.digero.common.midi.VolumeTransceiver;
+import com.digero.maestro.midi.VolumeTransceiver;
 
 public class VolumeBar extends JPanel {
 	private static final int PTR_WIDTH = 12;
@@ -100,8 +100,6 @@ public class VolumeBar extends JPanel {
 		public void mousePressed(MouseEvent e) {
 			if (!VolumeBar.this.isEnabled())
 				return;
-			volumizer.setVolume(getPosition(e.getX()));
-			repaint();
 			requestFocus();
 		}
 

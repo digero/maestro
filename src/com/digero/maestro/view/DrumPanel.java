@@ -30,18 +30,18 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import com.digero.common.midi.MidiConstants;
-import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerWrapper;
-import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroDrumInfo;
+import com.digero.maestro.midi.MidiConstants;
 import com.digero.maestro.midi.NoteEvent;
+import com.digero.maestro.midi.SequencerEvent;
+import com.digero.maestro.midi.SequencerListener;
+import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
+import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
 public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants {

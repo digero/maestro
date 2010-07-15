@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,84 +20,18 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
-import com.digero.common.abc.Dynamics;
-import com.digero.common.abc.LotroInstrument;
-import com.digero.common.abc.TimingInfo;
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiConstants;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.TimeSignature;
-import com.digero.common.util.ParseException;
+import com.digero.maestro.abc.Dynamics;
+import com.digero.maestro.abc.LotroInstrument;
+import com.digero.maestro.abc.TimingInfo;
+import com.digero.maestro.midi.KeySignature;
+import com.digero.maestro.midi.MidiConstants;
+import com.digero.maestro.midi.MidiFactory;
+import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.util.ParseException;
 
 public class AbcToMidi {
 	/** This is a static-only class */
 	private AbcToMidi() {
-	}
-
-	public static class AbcInfo {
-		private String titlePrefix;
-		private Map<Character, String> metadata = new HashMap<Character, String>();
-		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
-
-		private void setMetadata(char key, String value) {
-			if (!metadata.containsKey(key))
-				metadata.put(key, value);
-
-			if (Character.toUpperCase(key) == 'T') {
-				if (titlePrefix == null)
-					titlePrefix = value;
-				else
-					titlePrefix = longestCommonPrefix(titlePrefix, value);
-			}
-		}
-
-		public String getMetadata(char key) {
-			return metadata.get(Character.toUpperCase(key));
-		}
-
-		public int getBarNumber(long tick) {
-			Entry<Long, Integer> e = bars.floorEntry(tick);
-			if (e == null)
-				return 0;
-			return e.getValue();
-		}
-
-		public int getBarCount() {
-			return bars.size();
-		}
-
-		private static final Pattern trailingPunct = Pattern.compile("[-:;\\(\\[\\{\\s]+$");
-
-		public String getTitlePrefix() {
-			if (titlePrefix == null || titlePrefix.length() == 0) {
-				if (metadata.containsKey('T'))
-					return metadata.get('T');
-				return "(Untitled)";
-			}
-
-			String ret = titlePrefix;
-			ret = trailingPunct.matcher(ret).replaceFirst("");
-			return ret;
-		}
-
-		private void reset() {
-			titlePrefix = null;
-			metadata.clear();
-			bars.clear();
-		}
-
-		private static String longestCommonPrefix(String a, String b) {
-			if (a.length() > b.length())
-				a = a.substring(0, b.length());
-
-			for (int j = 0; j < a.length(); j++) {
-				if (a.charAt(j) != b.charAt(j)) {
-					a = a.substring(0, j);
-					break;
-				}
-			}
-			return a;
-		}
 	}
 
 	private static final Pattern INFO_PATTERN = Pattern.compile("^([A-Z]):\\s*(.*)\\s*$");
@@ -115,14 +47,6 @@ public class AbcToMidi {
 	private static final int NOTE_LEN_DENOM = 5;
 	private static final int NOTE_BROKEN_RHYTHM = 6;
 	private static final int NOTE_TIE = 7;
-
-	/**
-	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above
-	 * the beginning of the octave (c)
-	 */
-	private static final int[] CHR_NOTE_DELTA = {
-			9, 11, 0, 2, 4, 5, 7
-	};
 
 	// Lots of prime factors for divisibility goodness
 	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
@@ -153,17 +77,14 @@ public class AbcToMidi {
 		}
 	}
 
-//	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
-//		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
-//		tmpMap.put(abcFile, readLines(abcFile));
-//		return convert(tmpMap, useLotroInstruments, null);
-//	}
+	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
+		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
+		tmpMap.put(abcFile, readLines(abcFile));
+		return convert(tmpMap, useLotroInstruments, null);
+	}
 
 	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo) throws ParseException {
-		if (abcInfo != null)
-			abcInfo.reset();
-
+			Map<Integer, LotroInstrument> instrumentOverrideMap) throws ParseException {
 		TuneInfo info = new TuneInfo();
 		Sequence seq = null;
 		Track track = null;
@@ -195,11 +116,8 @@ public class AbcToMidi {
 
 				Matcher infoMatcher = INFO_PATTERN.matcher(line);
 				if (infoMatcher.matches()) {
-					char type = Character.toUpperCase(infoMatcher.group(INFO_TYPE).charAt(0));
+					char type = infoMatcher.group(INFO_TYPE).charAt(0);
 					String value = infoMatcher.group(INFO_VALUE).trim();
-
-					if (abcInfo != null)
-						abcInfo.setMetadata(type, value);
 
 					try {
 						switch (type) {
@@ -252,6 +170,11 @@ public class AbcToMidi {
 							}
 							break;
 						}
+						case 'I':
+							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
+								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
+							}
+							break;
 						}
 					}
 					catch (IllegalArgumentException e) {
@@ -338,22 +261,9 @@ public class AbcToMidi {
 								break;
 
 							case '|': // Bar line
-								if (inChord) {
-									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
-											lineNumber, i);
-								}
-
-								if (abcInfo != null && trackNumber == 1 && !abcInfo.bars.containsKey(chordStartTick))
-									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
-
 								accidentals.clear();
-								if (i + 1 < line.length() && line.charAt(i + 1) == ']') {
+								if (i + 1 < line.length() && line.charAt(i + 1) == ']')
 									i++; // Skip |]
-								}
-								else if (abcInfo != null && trackNumber == 1
-										&& !abcInfo.bars.containsKey(chordStartTick)) {
-									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
-								}
 								break;
 
 							case '+': {
@@ -502,42 +412,31 @@ public class AbcToMidi {
 								octave = 4 + octaveStr.length();
 							}
 
-							int noteId;
-							int lotroNoteId;
-							if (info.getInstrument() == LotroInstrument.COWBELL
-									|| info.getInstrument() == LotroInstrument.MOOR_COWBELL) {
-								if (useLotroInstruments) {
-									int min = info.getInstrument().lowestPlayable.id;
-									int max = info.getInstrument().highestPlayable.id;
-									lotroNoteId = noteId = min + (int) (Math.random() * (max - min));
-								}
-								else {
-									noteId = (info.getInstrument() == LotroInstrument.COWBELL) ? 76 : 71;
-									lotroNoteId = 71;
-								}
+							int[] noteDelta = {
+									9, 11, 0, 2, 4, 5, 7
+							};
+
+							int noteId = (octave + 1) * 12 + noteDelta[Character.toLowerCase(noteLetter) - 'a'];
+
+							int lotroNoteId = noteId;
+							if (!useLotroInstruments)
+								noteId += 12 * info.getInstrument().octaveDelta;
+
+							if (m.group(NOTE_ACCIDENTAL) != null) {
+								if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
+									accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
+									accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).equals("="))
+									accidentals.put(noteId, 0);
+							}
+
+							if (accidentals.containsKey(noteId)) {
+								noteId += accidentals.get(noteId);
 							}
 							else {
-								lotroNoteId = noteId = (octave + 1) * 12
-										+ CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
-								if (!useLotroInstruments)
-									noteId += 12 * info.getInstrument().octaveDelta;
-
-								if (m.group(NOTE_ACCIDENTAL) != null) {
-									if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
-										accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
-									else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
-										accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
-									else if (m.group(NOTE_ACCIDENTAL).equals("="))
-										accidentals.put(noteId, 0);
-								}
-
-								if (accidentals.containsKey(noteId)) {
-									noteId += accidentals.get(noteId);
-								}
-								else {
-									// Use the key signature to determine the accidental
-									noteId += info.getKey().getAccidental(noteId).deltaNoteId;
-								}
+								// Use the key signature to determine the accidental
+								noteId += info.getKey().getAccidental(noteId).deltaNoteId;
 							}
 
 							// Check for overlapping notes, and remove extra note off events
@@ -573,16 +472,14 @@ public class AbcToMidi {
 								tiedNotes.put(noteId, lineAndColumn);
 							}
 							else {
-								long noteEndTickTmp = noteEndTick;
-								if (useLotroInstruments) {
-									// Increase the note length to a mininum amount
-									if (!info.getInstrument().isSustainable(lotroNoteId)) {
-										noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
-									}
-									else {
-										noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
-												+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
-									}
+								// Increase the note length to a mininum amount
+								long noteEndTickTmp;
+								if (!info.getInstrument().isSustainable(lotroNoteId)) {
+									noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+								}
+								else {
+									noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
+											+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
 								}
 
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
@@ -791,11 +688,7 @@ public class AbcToMidi {
 				// Must be all-caps
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
 				instrNicknames.put("BASS", LotroInstrument.THEORBO);
-				instrNicknames.put("THEO", LotroInstrument.THEORBO);
 				instrNicknames.put("BAGPIPES", LotroInstrument.BAGPIPE);
-				instrNicknames.put("MOORCOWBELL", LotroInstrument.MOOR_COWBELL);
-				instrNicknames.put("MOOR COWBELL", LotroInstrument.MOOR_COWBELL);
-				instrNicknames.put("MORE COWBELL", LotroInstrument.MOOR_COWBELL);
 			}
 
 			if (instrRegex == null) {

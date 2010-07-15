@@ -11,8 +11,9 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
-import com.digero.common.midi.Note;
+import com.digero.maestro.midi.Note;
 
 public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 	private static Map<Integer, LotroDrumInfo> byId = new HashMap<Integer, LotroDrumInfo>();
@@ -26,43 +27,55 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		byCategory.get(DISABLED.category).add(DISABLED);
 		byId.put(DISABLED.note.id, DISABLED);
 
-		add(Note.C2, "Conga High");
-		add(Note.Cs2, "Rattle Short");
-		add(Note.D2, "Conga High");
-		add(Note.Ds2, "Slap");
-		add(Note.E2, "Slap");
-		add(Note.F2, "Muted");
-		add(Note.Fs2, "Rattle Short");
-		add(Note.G2, "Tom High");
-		add(Note.Gs2, "Rattle Short");
-		add(Note.A2, "Tom High");
-		add(Note.As2, "Tambourine");
-		add(Note.B2, "Tom Mid");
-		add(Note.C3, "Muted Mid");
-		add(Note.Cs3, "Bass Slap");
-		add(Note.D3, "Bass Slap");
-		add(Note.Ds3, "Rim Shot");
-		add(Note.E3, "Slap");
-		add(Note.F3, "Rim Shot");
-		add(Note.Fs3, "Slap");
-		add(Note.G3, "Rattle");
-		add(Note.Gs3, "Bass");
-		add(Note.A3, "Rattle Long");
-		add(Note.As3, "Bass");
-		add(Note.B3, "Rattle");
-		add(Note.C4, "Rattle");
-		add(Note.Cs4, "Muted");
-		add(Note.D4, "Bend Low Up");
-		add(Note.Ds4, "Tom Mid");
-		add(Note.E4, "Bend Mid Down");
-		add(Note.F4, "Bend High Up");
-		add(Note.Fs4, "Slap");
-		add(Note.G4, "Conga Low");
-		add(Note.Gs4, "Slap");
-		add(Note.A4, "Conga Low");
-		add(Note.As4, "Muff");
-		add(Note.B4, "Conga Mid");
-		add(Note.C5, "Slap");
+		Map<Note, String> drumNames = new HashMap<Note, String>();
+		drumNames.put(Note.C2, "Conga High");
+		drumNames.put(Note.Cs2, "Rattle Short");
+		drumNames.put(Note.D2, "Muff");
+		drumNames.put(Note.Ds2, "Slap");
+		drumNames.put(Note.E2, "Slap");
+		drumNames.put(Note.F2, "Muted");
+		drumNames.put(Note.Fs2, "Rattle Short");
+		drumNames.put(Note.G2, "Tom High");
+		drumNames.put(Note.Gs2, "Rattle Short");
+		drumNames.put(Note.A2, "Tom High");
+		drumNames.put(Note.As2, "Rattle High");
+		drumNames.put(Note.B2, "Tom Mid");
+		drumNames.put(Note.C3, "Muted Mid");
+		drumNames.put(Note.Cs3, "Bass");
+		drumNames.put(Note.D3, "Bass Slap");
+		drumNames.put(Note.Ds3, "Rim Shot");
+		drumNames.put(Note.E3, "Slap");
+		drumNames.put(Note.F3, "Rim Shot");
+		drumNames.put(Note.Fs3, "Slap");
+		drumNames.put(Note.G3, "Rattle");
+		drumNames.put(Note.Gs3, "Bass");
+		drumNames.put(Note.A3, "Rattle");
+		drumNames.put(Note.As3, "Bass");
+		drumNames.put(Note.B3, "Rattle");
+		drumNames.put(Note.C4, "Rattle");
+		drumNames.put(Note.Cs4, "Muted");
+		drumNames.put(Note.D4, "Conga Bend");
+		drumNames.put(Note.Ds4, "Tom Mid");
+		drumNames.put(Note.E4, "Conga Bend");
+		drumNames.put(Note.F4, "Conga Bend");
+		drumNames.put(Note.Fs4, "Slap");
+		drumNames.put(Note.G4, "Conga Low");
+		drumNames.put(Note.Gs4, "Slap");
+		drumNames.put(Note.A4, "Conga Low");
+		drumNames.put(Note.As4, "Muff");
+		drumNames.put(Note.B4, "Conga Mid");
+		drumNames.put(Note.C5, "Slap");
+
+		for (Entry<Note, String> entry : drumNames.entrySet()) {
+			add(entry.getValue(), entry.getKey());
+		}
+
+//		makeCategory("Rim Shot", Note.Ds3, Note.F3);
+//		makeCategory("Pitch Bend", Note.D4, Note.E4, Note.F4);
+//		makeCategory("Rattle", Note.G3, Note.A3, Note.B3, Note.C4);
+//		makeCategory("Rattle Bells", Note.As2);
+//		makeCategory("Rattle Short", Note.Cs2, Note.Fs2, Note.Gs2);
+//		makeCategory("Bass Open", Note.Gs3, Note.As3);
 
 		int noteCount = Note.MAX_PLAYABLE.id - Note.MIN_PLAYABLE.id + 1;
 		if (byId.keySet().size() < noteCount) {
@@ -72,7 +85,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 			}
 			unassigned.removeAll(byId.keySet());
 			for (int id : unassigned) {
-				add(Note.fromId(id), "Unassigned");
+				add("Unassigned", Note.fromId(id));
 			}
 		}
 
@@ -100,7 +113,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 //		}
 //	}
 
-	private static void add(Note note, String category) {
+	private static void add(String category, Note note) {
 		SortedSet<LotroDrumInfo> categorySet = byCategory.get(category);
 		if (categorySet == null)
 			byCategory.put(category, categorySet = new TreeSet<LotroDrumInfo>());

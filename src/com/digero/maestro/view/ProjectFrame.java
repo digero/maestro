@@ -4,20 +4,11 @@ import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,7 +16,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.prefs.Preferences;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -60,28 +50,23 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.digero.common.abc.TimingInfo;
-import com.digero.common.icons.IconLoader;
-import com.digero.common.midi.DrumFilterTransceiver;
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
-import com.digero.common.midi.SequencerWrapper;
-import com.digero.common.midi.SynthesizerFactory;
-import com.digero.common.midi.TimeSignature;
-import com.digero.common.util.FileFilterDropListener;
-import com.digero.common.util.Util;
-import com.digero.common.view.PlayControlPanel;
-import com.digero.common.view.SongPositionBar;
-import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.TimingInfo;
+import com.digero.maestro.midi.DrumFilterTransceiver;
+import com.digero.maestro.midi.KeySignature;
+import com.digero.maestro.midi.MidiFactory;
 import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.midi.SequencerEvent;
+import com.digero.maestro.midi.SequencerListener;
+import com.digero.maestro.midi.SequencerProperty;
+import com.digero.maestro.midi.SequencerWrapper;
+import com.digero.maestro.midi.TimeSignature;
+import com.digero.maestro.midi.synth.SynthesizerFactory;
 import com.digero.maestro.util.ListModelWrapper;
+import com.digero.maestro.util.Util;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants {
@@ -122,9 +107,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private long abcPreviewStartMicros = 0;
 	private boolean echoingPosition = false;
 
-	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
-	private Preferences windowPrefs = prefs.node("window");
-
 	public ProjectFrame(SequenceInfo sequenceInfo) {
 		this(sequenceInfo, 0, sequenceInfo.getTempoBPM(), sequenceInfo.getTimeSignature(), sequenceInfo
 				.getKeySignature());
@@ -133,7 +115,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	public ProjectFrame(SequenceInfo sequenceInfo, int transpose, int tempoBPM, TimeSignature timeSignature,
 			KeySignature keySignature) {
 		super("LotRO Maestro");
-		initializeWindowBounds();
+		setBounds(200, 200, 800, 600);
 
 //		this.sequenceInfo = sequenceInfo;
 		try {
@@ -266,9 +248,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		partsListPanel.add(partsButtonPanel, BorderLayout.SOUTH);
 
 		abcPositionBar = new SongPositionBar(abcSequencer);
-		abcPlayIcon = new ImageIcon(IconLoader.class.getResource("play_yellow.png"));
-		abcPauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
-		Icon abcStopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
+		abcPlayIcon = new ImageIcon(ProjectFrame.class.getResource("icons/play_yellow.png"));
+		abcPauseIcon = new ImageIcon(ProjectFrame.class.getResource("icons/pause.png"));
+		Icon abcStopIcon = new ImageIcon(ProjectFrame.class.getResource("icons/stop.png"));
 		abcPlayButton = new JButton(abcPlayIcon);
 		abcPlayButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -409,75 +391,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 			public void contentsChanged(ListDataEvent e) {
 				updateAbcButtons();
-			}
-		});
-	}
-
-	private void initializeWindowBounds() {
-		setMinimumSize(new Dimension(512, 384));
-
-		Dimension mainScreen = Toolkit.getDefaultToolkit().getScreenSize();
-
-		int width = windowPrefs.getInt("width", 800);
-		int height = windowPrefs.getInt("height", 600);
-		int x = windowPrefs.getInt("x", (mainScreen.width - width) / 2);
-		int y = windowPrefs.getInt("y", (mainScreen.height - height) / 2);
-
-		// Handle the case where the window was last saved on
-		// a screen that is no longer connected
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] gs = ge.getScreenDevices();
-		Rectangle onScreen = null;
-		for (int i = 0; i < gs.length; i++) {
-			Rectangle monitorBounds = gs[i].getDefaultConfiguration().getBounds();
-			if (monitorBounds.intersects(x, y, width, height)) {
-				onScreen = monitorBounds;
-				break;
-			}
-		}
-		if (onScreen == null) {
-			x = (mainScreen.width - width) / 2;
-			y = (mainScreen.height - height) / 2;
-		}
-		else {
-			if (x < onScreen.x)
-				x = onScreen.x;
-			else if (x + width > onScreen.x + onScreen.width)
-				x = onScreen.x + onScreen.width - width;
-
-			if (y < onScreen.y)
-				y = onScreen.y;
-			else if (y + height > onScreen.y + onScreen.height)
-				y = onScreen.y + onScreen.height - height;
-		}
-
-		setBounds(x, y, width, height);
-
-		int maximized = windowPrefs.getInt("maximized", 0);
-		setExtendedState((getExtendedState() & ~JFrame.MAXIMIZED_BOTH) | maximized);
-
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				if ((getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
-					windowPrefs.putInt("width", getWidth());
-					windowPrefs.putInt("height", getHeight());
-				}
-			}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				if ((getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
-					windowPrefs.putInt("x", getX());
-					windowPrefs.putInt("y", getY());
-				}
-			}
-		});
-
-		addWindowStateListener(new WindowStateListener() {
-			@Override
-			public void windowStateChanged(WindowEvent e) {
-				windowPrefs.putInt("maximized", e.getNewState() & JFrame.MAXIMIZED_BOTH);
 			}
 		});
 	}

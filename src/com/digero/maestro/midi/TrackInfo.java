@@ -18,12 +18,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
-import com.digero.common.abc.TimingInfo;
-import com.digero.common.midi.IMidiConstants;
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiConstants;
-import com.digero.common.midi.Note;
-import com.digero.common.midi.TimeSignature;
+import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 
 public class TrackInfo implements IMidiConstants {
@@ -42,7 +37,7 @@ public class TrackInfo implements IMidiConstants {
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
-			SequenceDataCache sequenceCache) throws InvalidMidiDataException {
+			InstrumentChangeCache instrumentCache) throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
 		this.track = track;
 		this.trackNumber = trackNumber;
@@ -71,7 +66,7 @@ public class TrackInfo implements IMidiConstants {
 
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
 					int noteId = m.getData1() + (drums ? 0 : pitchBend[c]);
-					int velocity = m.getData2() * sequenceCache.getVolume(c, evt.getTick()) / MAX_VOLUME;
+					int velocity = m.getData2();
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
@@ -100,7 +95,7 @@ public class TrackInfo implements IMidiConstants {
 						}
 						else {
 							noteEvents.add(ne);
-							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
+							instruments.add(instrumentCache.getInstrument(evt.getTick(), c));
 						}
 						notesOn[c].add(ne);
 						noteVelocities[velocity]++;
@@ -119,26 +114,24 @@ public class TrackInfo implements IMidiConstants {
 				}
 				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
 					final int STEP_SIZE = ((1 << 14) - 1) / 4;
-					int bend = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
+					int bendTmp = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
-					if (bend != pitchBend[c]) {
+					if (bendTmp != pitchBend[c]) {
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
 						for (NoteEvent ne : notesOn[c]) {
 							ne.endMicros = micros;
-							// If the note is too short, just skip it
 							if (ne.getLength() < TimingInfo.SHORTEST_NOTE_MICROS) {
 								noteEvents.remove(ne);
-								micros = ne.startMicros;
 							}
 
-							Note bn = Note.fromId(ne.note.id + bend - pitchBend[c]);
+							Note bn = Note.fromId(ne.note.id + bendTmp - pitchBend[c]);
 							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
 							noteEvents.add(bne);
 							bentNotes.add(bne);
 						}
 						notesOn[c] = bentNotes;
-						pitchBend[c] = bend;
+						pitchBend[c] = bendTmp;
 					}
 				}
 			}

@@ -17,14 +17,11 @@ import java.util.Set;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 
-import com.digero.common.abc.Dynamics;
-import com.digero.common.abc.LotroInstrument;
-import com.digero.common.abc.TimingInfo;
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiConstants;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.Note;
 import com.digero.maestro.midi.Chord;
+import com.digero.maestro.midi.KeySignature;
+import com.digero.maestro.midi.MidiConstants;
+import com.digero.maestro.midi.MidiFactory;
+import com.digero.maestro.midi.Note;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 
@@ -129,9 +126,11 @@ public class AbcPart {
 		PrintStream out = new PrintStream(os);
 		out.println("X: " + partNumber);
 		out.println("T: " + title);
+		out.println("I: " + instrument);
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
+		out.println();
 
 		// Keep track of which notes have been sharped or flatted so 
 		// we can naturalize them the next time they show up.
@@ -153,23 +152,14 @@ public class AbcPart {
 			}
 
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
-				barNumber = c.getStartMicros() / tm.barLength;
-
-				if (barNumber % 10 == 1) {
-					out.println();
-					out.println("% Bar " + barNumber);
-					lineLength = 0;
-				}
-				else if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
+				if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
 					out.println();
 					lineLength = 0;
 				}
 
 				// Trim end
-				int length = sb.length();
-				while (Character.isWhitespace(sb.charAt(length - 1)))
-					length--;
-				sb.setLength(length);
+				while (Character.isWhitespace(sb.charAt(sb.length() - 1)))
+					sb.setLength(sb.length() - 1);
 
 				// Insert line breaks
 				for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
@@ -186,6 +176,7 @@ public class AbcPart {
 				out.print(" | ");
 				lineLength += sb.length() + 2;
 				sb.setLength(0);
+				barNumber = c.getStartMicros() / tm.barLength;
 
 				Arrays.fill(sharps, false);
 				Arrays.fill(flats, false);
@@ -368,7 +359,7 @@ public class AbcPart {
 						// Lengthen the first one if it's shorter than the second one.
 						if (on.endMicros < ne.endMicros)
 							on.endMicros = ne.endMicros;
-
+							
 						// Remove the duplicate note
 						neIter.remove();
 						continue dupLoop;
@@ -379,7 +370,7 @@ public class AbcPart {
 						//    the first note would have ended.
 						if (ne.endMicros < on.endMicros)
 							ne.endMicros = on.endMicros;
-
+						
 						// 2. Shorten the note that's currently on to end at the same time that 
 						//    the next one starts.
 						on.endMicros = ne.startMicros;
@@ -743,8 +734,7 @@ public class AbcPart {
 	//
 
 	public boolean isDrumPart() {
-		return instrument == LotroInstrument.DRUMS || instrument == LotroInstrument.COWBELL
-				|| instrument == LotroInstrument.MOOR_COWBELL;
+		return instrument == LotroInstrument.DRUMS;
 	}
 
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;

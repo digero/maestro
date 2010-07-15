@@ -2,8 +2,8 @@ package com.digero.maestro.util;
 
 import java.util.Properties;
 
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.TimeSignature;
+import com.digero.maestro.midi.KeySignature;
+import com.digero.maestro.midi.TimeSignature;
 
 public class SaveData extends Properties {
 	public static void main(String[] args) throws Exception {

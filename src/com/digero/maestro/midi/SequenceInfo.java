@@ -17,10 +17,6 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
-import com.digero.common.midi.IMidiConstants;
-import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.TimeSignature;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
@@ -51,11 +47,11 @@ public class SequenceInfo implements IMidiConstants {
 		}
 
 		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
-		SequenceDataCache sequenceCache = new SequenceDataCache(sequence);
+		InstrumentChangeCache instrumentCache = new InstrumentChangeCache(sequence);
 
 		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
 		for (int i = 0; i < tracks.length; i++) {
-			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache));
+			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, instrumentCache));
 		}
 
 		tempoBPM = findMainTempo(sequence, tempoCache);

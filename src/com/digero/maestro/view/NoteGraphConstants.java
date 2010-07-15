@@ -2,7 +2,7 @@ package com.digero.maestro.view;
 
 import java.awt.Color;
 
-import com.digero.common.util.Util;
+import com.digero.maestro.util.Util;
 
 public interface NoteGraphConstants {
 	public static final Color NOTE = new Color(29, 95, 255);

@@ -20,11 +20,11 @@ import javax.swing.event.DocumentListener;
 
 import sun.awt.VerticalBagLayout;
 
-import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.SequencerWrapper;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.LotroInstrument;
+import com.digero.maestro.midi.SequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
