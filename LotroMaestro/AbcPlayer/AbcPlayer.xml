@@ -3,6 +3,7 @@
     <property name="output" value="output"/>
 	<property name="build" value="build"/>
 	<property name="basename" value="AbcPlayer"/>
+	<property name="version" value="1.0.0"/>
     <target name="AbcPlayerExe">
     	<mkdir dir="${build}"/>
     	<delete file="${build}/*.log"/>
@@ -33,7 +34,7 @@
 	</target>
 	<target name="AbcPlayerZip" depends="AbcPlayerExe">
 	    <mkdir dir="${output}"/>
-		<zip destfile="${output}/${basename}.zip" basedir="${build}" includes="${basename}.exe,LotroInstruments.sf2,${basename}.jar,TableLayout.jar,gervill.jar"/>
+		<zip destfile="${output}/${basename}_${version}.zip" basedir="${build}" includes="${basename}.exe,LotroInstruments.sf2,${basename}.jar,TableLayout.jar,gervill.jar"/>
 	</target>
 	<target name="AbcPlayerDistrib" depends="AbcPlayerInstaller,AbcPlayerZip"/>
 </project>

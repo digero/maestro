@@ -2,7 +2,7 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 ?>
-<h2>VERSION 1.0.0.0</h2>
+<h2>Version 1.0.0.0</h2>
 <ul>
 	<li>Initial release</li>
 </ul>

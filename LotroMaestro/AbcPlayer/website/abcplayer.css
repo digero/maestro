@@ -96,6 +96,12 @@ line-height:14pt;
 color:#FFFFFF;
 }
 
+#donate {
+text-align:right;
+padding-right:15px;
+padding-top:6px;
+}
+
 #footer {
 width:900px;
 clear:both;
@@ -144,6 +150,14 @@ padding-left:5px;
 a {
 color:#FFFFFF;
 text-decoration:none;
+}
+
+a.dnld {
+color:#A9FF38;
+}
+
+a.contact {
+color:#F9C600;
 }
 
 #sidebar a {
