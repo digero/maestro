@@ -2,11 +2,11 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 	
-	$msi_path = "files/AbcPlayer_1.0.0.msi";
-	$msi_size = round(filesize($msi_path) / (1024 * 1024), 1) . "MB";
+	$msi_path = "bin/AbcPlayer_1.0.0.msi";
+	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
 	
-	$zip_path = "files/AbcPlayer_1.0.0.zip";
-	$zip_size = round(filesize($zip_path) / (1024 * 1024), 1) . "MB";
+	$zip_path = "bin/AbcPlayer_1.0.0.zip";
+	$zip_size = round(@filesize($zip_path) / (1024 * 1024), 1) . "MB";
 ?>
 
 <h2>Description</h2>
@@ -36,7 +36,7 @@ Running ABC Player on another OS is completely untested and unsupported.</i>
 
 <h2>How to use</h2>
 <p>
-ABC Player is fairly straightforward.  If you used the installer, you can just double-click 
+ABC Player is fairly straightforward.  If you used the installer, you can double-click 
 on an .abc file to play it.  You can also drag and drop an .abc file onto the player, or use File > Open.
 </p>
 <p>
@@ -50,14 +50,14 @@ use a program like <a href="http://lame.sourceforge.net/">LAME</a> to convert th
 
 <h2>Preview</h2>
 <p>
-<div><img src="abcplayer.png"/></div>
+<img src="abcplayer.png" alt="Screenshot of ABC Player"/>
 </p>
 <p>
 This is what the song pictured above sounds like when played in ABC Player:
-<?php mp3('sunshine', 'Walking on Sunshine'); ?>
 </p>
+<?php mp3('alabama', 'Sweet Home Alabama'); ?>
 <p>
-If you want to try the song yourself, download <a class="dnld" href="files/sunshine.abc">sunshine.abc</a> 
+If you want to try the song yourself, download <a class="dnld" href="files/alabama.abc">alabama.abc</a> 
 and either open it in ABC Player, or get 5 friends together and play it in LotRO.
 </p>
 
