@@ -1,4 +1,6 @@
 <?php
+	header('Content-Type: text/html;charset=utf-8');
+
 	$host_and_uri = $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
 	if (!defined('_ABCPLAYER_'))
@@ -23,12 +25,17 @@
 		echo("AudioPlayer.embed('$filename', {soundFile: 'http://$host_and_uri/mp3/$filename.mp3'});");
 		echo("</script>\n");
 	}
+	
+	$title = "ABC Player";
+	if (isset($pagename))
+		$title .= " - " . $pagename;
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<title>ABC Player</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<title><?=$title?></title>
 
 <link rel="stylesheet" href="abcplayer.css" type="text/css" />
 <link rel="icon" type="image/vnd.microsoft.icon" href="abcplayer.ico" />
@@ -45,26 +52,26 @@
 <body>
 <div id="page">
 	<div id="header">
-		<img id="headericon" src="images/abcplayer_96.png" />
+		<img id="headericon" src="images/abcplayer_96.png" alt="" />
 		<h1><a href="index.php">ABC Player</a></h1>
-		<div class="description">for <span style="font-style: italic;">The Lord of the Rings Online<span></div>
+		<div class="description">for <i>The Lord of the Rings Online</i></div>
 	</div>
 	
 	<div id="mainarea">
 	<div id="sidebar">
 		<div id="sidebarnav">
 		<?php sidebar('index.php', 'Home'); ?>
-		<?php sidebar('changelog.php', 'Change Log'); ?>
+		<?php sidebar('changelog.php', 'Release Notes'); ?>
 		<?php sidebar('contact.php', 'Contact Me'); ?>
 		</div>
-		<div id="donate">
 		<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-			<input type="hidden" name="cmd" value="_s-xclick">
-			<input type="hidden" name="hosted_button_id" value="KPX5YZW5SALAG">
-			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
-		</form>
+		<div id="donate">
+			<input type="hidden" name="cmd" value="_s-xclick"/>
+			<input type="hidden" name="hosted_button_id" value="KPX5YZW5SALAG"/>
+			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" name="submit" alt="PayPal - The safer, easier way to pay online!"/>
+			<img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1"/>
 		</div>
+		</form>
 	</div>
 	
 	<div id="contentarea">
