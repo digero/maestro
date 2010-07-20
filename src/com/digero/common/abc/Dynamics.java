@@ -1,8 +1,8 @@
 package com.digero.common.abc;
 
 public enum Dynamics {
-	// Velocities referenced form http://en.wikipedia.org/wiki/Dynamics_(music)
-	ppp(16), pp(33), p(49), mp(64), mf(80), f(96), ff(112), fff(126);
+	// In LotRO, +ppp+ seems to be 50% volume
+	ppp(64), pp(73), p(82), mp(91), mf(100), f(109), ff(118), fff(127);
 
 	public static final Dynamics DEFAULT = mf;
 
