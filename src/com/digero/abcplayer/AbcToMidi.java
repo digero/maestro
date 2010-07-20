@@ -169,7 +169,6 @@ public class AbcToMidi {
 
 		int channel = 0;
 		int trackNumber = 0;
-		int baseNoteDivisor = 0;
 		int noteDivisorChangeLine = 0;
 
 		long chordStartTick = 0;
@@ -243,9 +242,8 @@ public class AbcToMidi {
 							break;
 						case 'Q': {
 							int tempo = info.getTempo();
-							int tempoDivisor = info.getTempoDivisor();
 							info.setTempo(value);
-							if (seq != null && (info.getTempo() != tempo || info.getTempoDivisor() != tempoDivisor)) {
+							if (seq != null && (info.getTempo() != tempo)) {
 								throw new ParseException("The tempo must be the same for all parts of the song",
 										fileName, lineNumber);
 							}
@@ -263,8 +261,7 @@ public class AbcToMidi {
 					if (seq == null) {
 						try {
 							// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
-							baseNoteDivisor = info.getNoteDivisor();
-							PPQN = DEFAULT_NOTE_PULSES * info.getNoteDivisor() / 4;
+							PPQN = info.getPpqn();
 							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
@@ -556,7 +553,7 @@ public class AbcToMidi {
 							}
 
 							if (!tiedNotes.containsKey(noteId)) {
-								if (info.getNoteDivisor() != baseNoteDivisor) {
+								if (info.getPpqn() != PPQN) {
 									throw new ParseException(
 											"The default note length must be the same for all parts of the song",
 											fileName, noteDivisorChangeLine);
@@ -697,9 +694,8 @@ public class AbcToMidi {
 		private int partNumber;
 		private String title;
 		private KeySignature key;
-		private int noteDivisor;
+		private long ppqn;
 		private int tempo;
-		private int tempoDivisor;
 		private LotroInstrument instrument;
 		private Dynamics dynamics;
 		private boolean compoundMeter;
@@ -707,9 +703,7 @@ public class AbcToMidi {
 		public TuneInfo() {
 			title = "";
 			key = KeySignature.C_MAJOR;
-			noteDivisor = 8;
 			tempo = 120;
-			tempoDivisor = -1;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
 			compoundMeter = false;
@@ -730,7 +724,7 @@ public class AbcToMidi {
 		}
 
 		public void setNoteDivisor(String str) {
-			this.noteDivisor = parseDivisor(str);
+			this.ppqn = DEFAULT_NOTE_PULSES * parseDivisor(str) / 4;
 		}
 
 		public void setMeter(String str) {
@@ -755,7 +749,7 @@ public class AbcToMidi {
 				denominator = Integer.parseInt(parts[1]);
 			}
 
-			this.noteDivisor = ((4 * numerator / denominator) < 3 ? 16 : 8) * 4 / denominator;
+			this.ppqn = ((4 * numerator / denominator) < 3 ? 16 : 8) * DEFAULT_NOTE_PULSES / denominator;
 			this.compoundMeter = (numerator % 3) == 0;
 		}
 
@@ -763,13 +757,9 @@ public class AbcToMidi {
 			try {
 				String[] parts = str.split("=");
 				if (parts.length == 1) {
-					this.tempoDivisor = -1;
 					this.tempo = Integer.parseInt(parts[0]);
 				}
 				else if (parts.length == 2) {
-					// Apparently LotRO ignores the note length portion...
-//					this.tempoDivisor = parseDivisor(parts[0]);
-					this.tempoDivisor = -1;
 					this.tempo = Integer.parseInt(parts[1]);
 				}
 				else {
@@ -861,14 +851,8 @@ public class AbcToMidi {
 			return key;
 		}
 
-		public int getNoteDivisor() {
-			return noteDivisor;
-		}
-
-		public int getTempoDivisor() {
-			if (tempoDivisor <= 0)
-				return noteDivisor;
-			return tempoDivisor;
+		public long getPpqn() {
+			return ppqn;
 		}
 
 		public boolean isCompoundMeter() {
