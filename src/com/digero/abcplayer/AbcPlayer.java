@@ -89,6 +89,7 @@ import com.digero.common.view.VolumeBar;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final String APP_NAME = "ABC Player";
+	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final Version APP_VERSION = new Version(1, 0, 0);
 
@@ -451,7 +452,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					throw new RuntimeException(e1);
 				}
 				JLabel aboutMessage = new JLabel("<html>" //
-						+ "ABC Player for The Lord of the Rings Online<br>" //
+						+ APP_NAME_LONG + "<br>" //
 						+ "Version " + APP_VERSION + "<br>" //
 						+ "Created by Digero of Landroval<br>" //
 						+ "Copyright &copy; 2010 Ben Howell<br>" //
@@ -467,7 +468,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 						}
 					}
 				});
-				String aboutTitle = "About ABC Player";
+				String aboutTitle = "About " + APP_NAME;
 				JOptionPane.showMessageDialog(AbcPlayer.this, aboutMessage, aboutTitle,
 						JOptionPane.INFORMATION_MESSAGE, aboutIcon);
 			}
