@@ -857,8 +857,11 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				}
 
 				try {
+					boolean running = sequencer.isRunning();
+					sequencer.reset();
 					sequencer.setSequence(song);
 					sequencer.setPosition(positon);
+					sequencer.setRunning(running);
 				}
 				catch (InvalidMidiDataException e) {
 					JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
