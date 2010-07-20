@@ -1,0 +1,16 @@
+Known Issues
+  - Only major and minor keys are supported.
+
+Version 1.1.0
+  - Fixed an issue when determining the speed to play songs that have a meter 
+    with a denominator that's not 4 (e.g. 6/8). Hopefully all songs should 
+    play at the correct speed now.
+  - The volmue difference between +ppp+ and +fff+ has been reduced. ABC 
+    Player's volume dynamics should now more closely match LotRO's.
+  - Fixed the harp's ^a and b notes to no longer sound like clicks.
+  - Occasionally when changing instruments, you'd hear the instruments 
+    playing at full volume for a few seconds. This should no longer happen.
+  - Removed the power of two restriction on the meter's denominator.
+
+Version 1.0.0
+  - Initial release
