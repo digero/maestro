@@ -120,6 +120,6 @@ public class Chord {
 		if (velocity == -1)
 			return null;
 
-		return Dynamics.fromVelocity(velocity);
+		return Dynamics.fromMidiVelocity(velocity);
 	}
 }

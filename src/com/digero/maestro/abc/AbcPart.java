@@ -101,7 +101,7 @@ public class AbcPart {
 				if (!instrument.isSustainable(ne.note.id))
 					ne.endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
 
-				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.velocity, tm
+				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.abcVol, tm
 						.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
@@ -308,7 +308,7 @@ public class AbcPart {
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
 						int velocity = ne.velocity;
 						if (dynamicVolume)
-							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.fff.velocity);
+							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.fff.midiVol);
 						events.add(new NoteEvent(mappedNote, velocity, start, end));
 					}
 				}
@@ -322,7 +322,7 @@ public class AbcPart {
 
 		// Add initial rest if necessary
 		if (events.get(0).startMicros > 0) {
-			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, 0, events.get(0).startMicros));
+			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, 0, events.get(0).startMicros));
 		}
 
 		// Add a rest at the end if necessary
@@ -334,7 +334,7 @@ public class AbcPart {
 					lastEvent.endMicros = songLengthMicros;
 				}
 				else {
-					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, lastEvent.endMicros,
+					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros,
 							songLengthMicros));
 				}
 			}
@@ -425,13 +425,13 @@ public class AbcPart {
 				// Check the chord length again, since removing a note might have changed its length
 				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
 					// If the chord is too long, add a short rest in the chord to shorten it
-					curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, curChord.getStartMicros(),
+					curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getStartMicros(),
 							nextChord.getStartMicros()));
 				}
 				else if (curChord.getEndMicros() < nextChord.getStartMicros()) {
 					// If the chord is too short, insert a rest to fill the gap
 					tmpEvents.clear();
-					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.velocity, curChord.getEndMicros(),
+					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(),
 							nextChord.getStartMicros()));
 					breakLongNotes(tmpEvents, tm, addTies);
 
