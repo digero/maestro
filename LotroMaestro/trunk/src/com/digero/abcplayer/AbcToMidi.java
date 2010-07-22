@@ -558,7 +558,7 @@ public class AbcToMidi {
 											"The default note length must be the same for all parts of the song",
 											fileName, noteDivisorChangeLine);
 								}
-								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().velocity,
+								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().abcVol,
 										chordStartTick));
 							}
 
@@ -581,7 +581,7 @@ public class AbcToMidi {
 								}
 
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
-										.getDynamics().velocity, noteEndTickTmp);
+										.getDynamics().abcVol, noteEndTickTmp);
 								track.add(noteOff);
 
 								noteOffEvents.add(noteOff);
@@ -799,6 +799,7 @@ public class AbcToMidi {
 				instrNicknames = new HashMap<String, LotroInstrument>();
 				// Must be all-caps
 				instrNicknames.put("GUITAR", LotroInstrument.LUTE);
+				instrNicknames.put("PIANO", LotroInstrument.LUTE);
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
 				instrNicknames.put("BASS", LotroInstrument.THEORBO);
 				instrNicknames.put("THEO", LotroInstrument.THEORBO);
