@@ -1,16 +1,31 @@
-Known Issues
-  - Only major and minor keys are supported.
+Todo:
+  - Separate LotroInstruments.sf2 from the installer. Make it a download.
+  - Allow pasting of ABC text.
+  - Add support for keys other than major and minor.
 
 Version 1.1.0
   - Fixed an issue when determining the speed to play songs that have a meter 
     with a denominator that's not 4 (e.g. 6/8). Hopefully all songs should 
     play at the correct speed now.
-  - The volmue difference between +ppp+ and +fff+ has been reduced. ABC 
-    Player's volume dynamics should now more closely match LotRO's.
-  - Fixed the harp's ^a and b notes to no longer sound like clicks.
+  - Reduced the volmue difference between +ppp+ and +fff+. ABC Player's 
+    volume dynamics should now more closely match LotRO's.
+  - Fixed the harp's ^a and b notes so they don't sound like clicks.
   - Occasionally when changing instruments, you'd hear the instruments 
     playing at full volume for a few seconds. This should no longer happen.
   - Removed the power of two restriction on the meter's denominator.
 
 Version 1.0.0
   - Initial release
+
+
+== VERSION LOCATIONS ==
+AbcPlayer.java
+	private static final Version APP_VERSION = new Version(1, 1, 0);
+	
+AbcPlayer.xml
+	<property name="version" value="1.1.0"/>
+	
+AbcPlayerInstaller.vdproj
+	"ProductVersion" = "8:1.1.0"
+	"ProductCode" = "8:{29E777C0-042C-418F-9B68-4DE5EA2CE6EA}"
+	"OutputFilename" = "8:output\\installer\\AbcPlayer_1.1.0.msi"
