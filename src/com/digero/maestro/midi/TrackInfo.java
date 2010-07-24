@@ -38,7 +38,7 @@ public class TrackInfo implements IMidiConstants {
 	private List<NoteEvent> noteEvents;
 	private List<NoteEvent> drumEvents;
 	private SortedSet<Integer> drumsInUse;
-	private int[] noteVelocities = new int[128];
+//	private int[] noteVelocities = new int[128];
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
@@ -103,7 +103,7 @@ public class TrackInfo implements IMidiConstants {
 							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
 						}
 						notesOn[c].add(ne);
-						noteVelocities[velocity]++;
+//						noteVelocities[velocity]++;
 					}
 					else {
 						Iterator<NoteEvent> iter = notesOn[c].iterator();
@@ -292,12 +292,12 @@ public class TrackInfo implements IMidiConstants {
 		return instruments.size();
 	}
 
-	public int[] addNoteVelocities(int[] velocities) {
-		if (velocities == null)
-			velocities = new int[this.noteVelocities.length];
-		for (int i = 0; i < this.noteVelocities.length; i++) {
-			velocities[i] += this.noteVelocities[i];
-		}
-		return velocities;
-	}
+//	public int[] addNoteVelocities(int[] velocities) {
+//		if (velocities == null)
+//			velocities = new int[this.noteVelocities.length];
+//		for (int i = 0; i < this.noteVelocities.length; i++) {
+//			velocities[i] += this.noteVelocities[i];
+//		}
+//		return velocities;
+//	}
 }
