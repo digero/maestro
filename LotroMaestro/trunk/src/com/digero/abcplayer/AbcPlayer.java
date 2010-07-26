@@ -52,6 +52,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -80,6 +81,7 @@ import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.util.Version;
@@ -150,6 +152,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 //	private JMenuItem exportMidiMenuItem;
 	private JMenuItem exportWavMenuItem;
+	private JCheckBoxMenuItem lotroErrorsMenuItem;
 
 	private JFileChooser openFileDialog;
 	private JFileChooser exportFileDialog;
@@ -437,10 +440,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
-		JMenu helpMenu = mainMenu.add(new JMenu(" Help "));
-		helpMenu.setMnemonic(KeyEvent.VK_H);
+		JMenu toolsMenu = mainMenu.add(new JMenu(" Tools "));
+		toolsMenu.setMnemonic(KeyEvent.VK_T);
 
-		JMenuItem about = helpMenu.add(new JMenuItem("About " + APP_NAME + "..."));
+		toolsMenu.add(lotroErrorsMenuItem = new JCheckBoxMenuItem("Ignore LotRO-specific errors"));
+		lotroErrorsMenuItem.setSelected(prefs.getBoolean("ignoreLotroErrors", false));
+		lotroErrorsMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				prefs.putBoolean("ignoreLotroErrors", lotroErrorsMenuItem.isSelected());
+			}
+		});
+
+		toolsMenu.addSeparator();
+
+		JMenuItem about = toolsMenu.add(new JMenuItem("About " + APP_NAME + "..."));
 		about.setMnemonic(KeyEvent.VK_A);
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -548,19 +561,43 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		return openSong(data);
 	}
 
+	private boolean onLotroParseError(LotroParseException lpe) {
+		JCheckBox checkBox = new JCheckBox("Ignore LotRO-specific errors");
+		Object[] message = new Object[] {
+				lpe.getMessage(), checkBox
+		};
+		JOptionPane.showMessageDialog(this, message, "Error reading ABC file", JOptionPane.WARNING_MESSAGE);
+		prefs.putBoolean("ignoreLotroErrors", checkBox.isSelected());
+		lotroErrorsMenuItem.setSelected(checkBox.isSelected());
+		return checkBox.isSelected();
+	}
+
 	private boolean openSong(Map<File, List<String>> data) {
 		sequencer.stop(); // pause
 		updateButtonStates();
 
-		Sequence song;
+		Sequence song = null;
 		AbcInfo info = new AbcInfo();
-		try {
-			song = AbcToMidi.convert(data, useLotroInstruments, null, info);
-		}
-		catch (ParseException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
-			return false;
-		}
+		boolean retry;
+		do {
+			retry = false;
+			try {
+				song = AbcToMidi.convert(data, useLotroInstruments, null, info, !lotroErrorsMenuItem.isSelected());
+			}
+			catch (LotroParseException e) {
+				if (onLotroParseError(e)) {
+					retry = true;
+				}
+				else {
+					return false;
+				}
+			}
+			catch (ParseException e) {
+				JOptionPane
+						.showMessageDialog(this, e.getMessage(), "Error reading ABC file", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
+		} while (retry);
 
 		this.exportFileDialog = null;
 		this.abcData = data;
@@ -848,7 +885,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				Sequence song;
 
 				try {
-					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo);
+					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo, false);
 				}
 				catch (ParseException e) {
 					JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument",

@@ -28,7 +28,10 @@ import com.digero.common.abc.TimingInfo;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.Note;
+import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
+import com.digero.maestro.midi.Chord;
 
 public class AbcToMidi {
 	/** This is a static-only class */
@@ -159,7 +162,8 @@ public class AbcToMidi {
 //	}
 
 	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo) throws ParseException {
+			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
+			throws ParseException {
 		if (abcInfo != null)
 			abcInfo.reset();
 
@@ -190,6 +194,8 @@ public class AbcToMidi {
 					line = line.substring(0, comment);
 				if (line.trim().length() == 0)
 					continue;
+
+				int chordSize = 0;
 
 				Matcher infoMatcher = INFO_PATTERN.matcher(line);
 				if (infoMatcher.matches()) {
@@ -322,6 +328,7 @@ public class AbcToMidi {
 											fileName, lineNumber, i);
 								}
 
+								chordSize = 0;
 								inChord = true;
 								break;
 
@@ -402,6 +409,10 @@ public class AbcToMidi {
 						// The matcher might find +f+, +ff+, or +fff+ and think it's a note
 						if (i > m.start())
 							continue;
+
+						if (enableLotroErrors && inChord && ++chordSize > Chord.MAX_CHORD_NOTES) {
+							throw new LotroParseException("Too many notes in a chord", fileName, lineNumber, m.start());
+						}
 
 						// Parse the note
 						int numerator;
@@ -526,13 +537,21 @@ public class AbcToMidi {
 										accidentals.put(noteId, 0);
 								}
 
+								int noteDelta;
 								if (accidentals.containsKey(noteId)) {
-									noteId += accidentals.get(noteId);
+									noteDelta = accidentals.get(noteId);
 								}
 								else {
 									// Use the key signature to determine the accidental
-									noteId += info.getKey().getAccidental(noteId).deltaNoteId;
+									noteDelta = info.getKey().getAccidental(noteId).deltaNoteId;
 								}
+								lotroNoteId += noteDelta;
+								noteId += noteDelta;
+
+								if (enableLotroErrors && lotroNoteId < Note.MIN_PLAYABLE.id)
+									throw new LotroParseException("Note is too low", fileName, lineNumber, m.start());
+								else if (enableLotroErrors && lotroNoteId > Note.MAX_PLAYABLE.id)
+									throw new LotroParseException("Note is too high", fileName, lineNumber, m.start());
 							}
 
 							// Check for overlapping notes, and remove extra note off events
@@ -563,8 +582,7 @@ public class AbcToMidi {
 							}
 
 							if (m.group(NOTE_TIE) != null) {
-//							tiedNotes.add(noteId);
-								int lineAndColumn = lineNumber << 16 | m.start();
+								int lineAndColumn = (lineNumber << 16) | m.start();
 								tiedNotes.put(noteId, lineAndColumn);
 							}
 							else {
@@ -578,6 +596,16 @@ public class AbcToMidi {
 										noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
 												+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
 									}
+								}
+
+								long lengthMicros = (noteEndTick - chordStartTick) * MPQN / PPQN;
+								if (enableLotroErrors && lengthMicros < TimingInfo.SHORTEST_NOTE_MICROS) {
+									throw new LotroParseException("Note's duration is too short", fileName, lineNumber,
+											m.start());
+								}
+								else if (enableLotroErrors && lengthMicros > TimingInfo.LONGEST_NOTE_MICROS) {
+									throw new LotroParseException("Note's duration is too long", fileName, lineNumber,
+											m.start());
 								}
 
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
@@ -609,9 +637,9 @@ public class AbcToMidi {
 			if (seq == null)
 				throw new ParseException("The song contains no notes", fileName, lineNumber);
 
-			if (tiedNotes.size() > 0) {
-				throw new ParseException(tiedNotes.size() + " unresolved note tie(s) "
-						+ "in the part beginning on line " + partStartLine, fileName, lineNumber);
+			for (int lineAndColumn : tiedNotes.values()) {
+				throw new ParseException("Tied note does not connect to another note", fileName, lineAndColumn >>> 16,
+						lineAndColumn & 0xFFFF);
 			}
 		}
 
@@ -798,6 +826,7 @@ public class AbcToMidi {
 			if (instrNicknames == null) {
 				instrNicknames = new HashMap<String, LotroInstrument>();
 				// Must be all-caps
+				instrNicknames.put("BANJO", LotroInstrument.LUTE);
 				instrNicknames.put("GUITAR", LotroInstrument.LUTE);
 				instrNicknames.put("PIANO", LotroInstrument.LUTE);
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
