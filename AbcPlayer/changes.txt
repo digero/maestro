@@ -13,6 +13,8 @@ Version 1.1.0
   - Occasionally when changing instruments, you'd hear the instruments 
     playing at full volume for a few seconds. This should no longer happen.
   - Removed the power of two restriction on the meter's denominator.
+  - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
+    many notes.
 
 Version 1.0.0
   - Initial release
