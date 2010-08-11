@@ -237,12 +237,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
 			throw new RuntimeException(e);
-//			System.exit(1);
 		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
 			throw new RuntimeException(e);
-//			System.exit(1);
 		}
 
 		content = new JPanel(new TableLayout(new double[] { // Columns
@@ -328,6 +326,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		updateButtonStates();
 		initializeWindowBounds();
+	}
+	
+	private void initSynthesizer() {
+		
 	}
 
 	private void updateBarCountLabel() {
