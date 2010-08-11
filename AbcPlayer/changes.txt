@@ -2,6 +2,9 @@ Todo:
   - Separate LotroInstruments.sf2 from the installer. Make it a download.
   - Allow pasting of ABC text.
   - Add support for keys other than major and minor.
+  - Tempo slider.
+  - ABC visualization.
+  - Open multiple copies of one song.
 
 Version 1.1.0
   - Fixed an issue when determining the speed to play songs that have a meter 
@@ -14,7 +17,13 @@ Version 1.1.0
     playing at full volume for a few seconds. This should no longer happen.
   - Removed the power of two restriction on the meter's denominator.
   - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
-    many notes.
+    many notes, volume +dynamics+ inside chords.
+  - ABC Player handles notes with incorrect octave markers (like c,, or A') 
+    like LotRO does, rather than giving an error.  The comma always lowers 
+    the octave and the apostrophe always raises the octave, regardless of 
+    whether the note letter is upper or lower case.
+  - You can now change the instrument and see bar numbers even if the abc 
+    file is missing the (required) "X:" line at the beginning.
 
 Version 1.0.0
   - Initial release

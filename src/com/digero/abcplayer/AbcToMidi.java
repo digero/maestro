@@ -155,12 +155,6 @@ public class AbcToMidi {
 		}
 	}
 
-//	public static Sequence convert(File abcFile, boolean useLotroInstruments) throws IOException, ParseException {
-//		Map<File, List<String>> tmpMap = new HashMap<File, List<String>>(1);
-//		tmpMap.put(abcFile, readLines(abcFile));
-//		return convert(tmpMap, useLotroInstruments, null);
-//	}
-
 	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
 			throws ParseException {
@@ -263,6 +257,14 @@ public class AbcToMidi {
 				}
 				else {
 					// The line contains notes
+
+					if (trackNumber == 0) {
+						// This ABC file doesn't have an "X:" line before notes. Tsk tsk.
+						trackNumber = 1;
+						if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
+							info.setInstrument(instrumentOverrideMap.get(trackNumber));
+						}
+					}
 
 					if (seq == null) {
 						try {
@@ -370,6 +372,12 @@ public class AbcToMidi {
 								catch (IllegalArgumentException iae) {
 									throw new ParseException("Unsupported +decoration+", fileName, lineNumber, i);
 								}
+
+								if (enableLotroErrors && inChord) {
+									throw new LotroParseException("Can't include a +decoration+ inside a chord",
+											fileName, lineNumber, i);
+								}
+
 								i = j;
 								break;
 							}
@@ -492,21 +500,11 @@ public class AbcToMidi {
 							}
 						}
 						else {
-							int octave;
-							if (Character.isUpperCase(noteLetter)) {
-								// Upper case letters: octaves 3 and below (with commas)
-								if (octaveStr.indexOf('\'') >= 0)
-									throw new ParseException("Invalid octave marker", fileName, lineNumber, m
-											.start(NOTE_OCTAVE));
-								octave = 3 - octaveStr.length();
-							}
-							else {
-								// Lower case letters: octaves 4 and above (with apostrophes)
-								if (octaveStr.indexOf(',') >= 0)
-									throw new ParseException("Invalid octave marker", fileName, lineNumber, m
-											.start(NOTE_OCTAVE));
-								octave = 4 + octaveStr.length();
-							}
+							int octave = Character.isUpperCase(noteLetter) ? 3 : 4;
+							if (octaveStr.indexOf('\'') >= 0)
+								octave += octaveStr.length();
+							if (octaveStr.indexOf(',') >= 0)
+								octave -= octaveStr.length();
 
 							int noteId;
 							int lotroNoteId;
@@ -729,8 +727,10 @@ public class AbcToMidi {
 		private boolean compoundMeter;
 
 		public TuneInfo() {
+			partNumber = 0;
 			title = "";
 			key = KeySignature.C_MAJOR;
+			ppqn = 8 * DEFAULT_NOTE_PULSES / 4;
 			tempo = 120;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
@@ -752,7 +752,7 @@ public class AbcToMidi {
 		}
 
 		public void setNoteDivisor(String str) {
-			this.ppqn = DEFAULT_NOTE_PULSES * parseDivisor(str) / 4;
+			this.ppqn = parseDivisor(str) * DEFAULT_NOTE_PULSES / 4;
 		}
 
 		public void setMeter(String str) {
