@@ -93,9 +93,11 @@ public class PartPanel extends JPanel {
 		});
 
 		JPanel dataPanel = new JPanel(new BorderLayout(HGAP, VGAP));
-		dataPanel.add(numberSpinner, BorderLayout.WEST);
+		JPanel dataPanel2 = new JPanel(new BorderLayout(HGAP, VGAP));
+		dataPanel2.add(numberSpinner, BorderLayout.WEST);
+		dataPanel2.add(instrumentComboBox, BorderLayout.CENTER);
+		dataPanel.add(dataPanel2, BorderLayout.WEST);
 		dataPanel.add(nameTextField, BorderLayout.CENTER);
-		dataPanel.add(instrumentComboBox, BorderLayout.EAST);
 
 		trackListPanel = new JPanel(new VerticalBagLayout());
 		trackListPanel.setBackground(Color.WHITE);
