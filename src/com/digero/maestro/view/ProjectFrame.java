@@ -50,6 +50,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
@@ -91,7 +92,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			250, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-		FILL, //MINIMUM, PREFERRED
+		FILL
 	};
 
 	private File saveFile;
@@ -102,6 +103,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
 
 	private JPanel content;
+	private JTextField songTitleField;
 	private JSpinner transposeSpinner;
 	private JSpinner tempoSpinner;
 	private JFormattedTextField keySignatureField;
@@ -182,6 +184,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		content = new JPanel(tableLayout, false);
 		setContentPane(content);
 
+		songTitleField = new JTextField();
+
 		keySignatureField = new MyFormattedTextField(KeySignature.C_MAJOR, 5);
 		keySignatureField.setToolTipText("<html>Adjust the key signature of the ABC file. "
 				+ "This only affects the display, not the sound of the exported file.<br>"
@@ -252,6 +256,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 		});
 
+		JPanel songTitlePanel = new JPanel(new BorderLayout());
+		songTitlePanel.add(songTitleField, BorderLayout.CENTER);
+		songTitlePanel.setBorder(BorderFactory.createTitledBorder("Song Title"));
+
 		JPanel partsButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, HGAP, VGAP));
 		partsButtonPanel.add(newPartButton);
 		partsButtonPanel.add(deletePartButton);
@@ -317,6 +325,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		PlayControlPanel playControlPanel = new PlayControlPanel(sequencer, "play_blue", "pause_blue", "stop");
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
+		abcPartsAndSettings.add(songTitlePanel, BorderLayout.NORTH);
 		abcPartsAndSettings.add(partsListPanel, BorderLayout.CENTER);
 		abcPartsAndSettings.add(settingsPanel, BorderLayout.SOUTH);
 
@@ -577,6 +586,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			sequenceInfo = new SequenceInfo(midiFile, isAbc);
 
 			sequencer.setSequence(sequenceInfo.getSequence());
+			songTitleField.setText(sequenceInfo.getTitle());
 			transposeSpinner.setValue(0);
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
@@ -749,7 +759,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				part.exportToAbc(tm, getKeySignature(), startMicros, endMicros, 0, out);
+				part.exportToAbc(tm, getKeySignature(), startMicros, endMicros, 0, songTitleField.getText(), out);
 			}
 		}
 		catch (AbcConversionException e) {

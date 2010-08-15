@@ -45,8 +45,8 @@ public class AbcPart {
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
 		this.partNumber = partNumber;
-		this.title = sequenceInfo.getTitle() + " - " + LotroInstrument.LUTE.toString();
 		this.instrument = LotroInstrument.LUTE;
+		this.title = this.instrument.toString();
 		this.enabled = true;
 		this.dynamicVolume = true;
 
@@ -114,14 +114,14 @@ public class AbcPart {
 	}
 
 	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity) throws AbcConversionException {
+			int deltaVelocity, String songTitle) throws AbcConversionException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, os);
+		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, songTitle, os);
 		return os.toString();
 	}
 
 	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity, OutputStream os) throws AbcConversionException {
+			int deltaVelocity, String songTitle, OutputStream os) throws AbcConversionException {
 		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros, deltaVelocity);
 
 		if (key.sharpsFlats != 0)
@@ -129,7 +129,7 @@ public class AbcPart {
 
 		PrintStream out = new PrintStream(os);
 		out.println("X: " + partNumber);
-		out.println("T: " + title);
+		out.println("T: " + songTitle + " - " + title);
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
@@ -172,19 +172,19 @@ public class AbcPart {
 					length--;
 				sb.setLength(length);
 
-				// Insert line breaks
+				// Insert line breaks inside very long bars
 				for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
 					for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
 						if (sb.charAt(i) == ' ') {
-							sb.replace(i, i + 1, "\r\n");
-							i++;
+							sb.replace(i, i + 1, "\r\n\t");
+							i += "\r\n\t".length() - 1;
 							break;
 						}
 					}
 				}
 
 				out.print(sb);
-				out.print(" | ");
+				out.print("  |  ");
 				lineLength += sb.length() + 2;
 				sb.setLength(0);
 
