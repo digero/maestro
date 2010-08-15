@@ -72,6 +72,7 @@ import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.PlayControlPanel;
 import com.digero.common.view.SongPositionBar;
@@ -125,13 +126,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 	private Preferences windowPrefs = prefs.node("window");
 
-	public ProjectFrame(SequenceInfo sequenceInfo) {
-		this(sequenceInfo, 0, sequenceInfo.getTempoBPM(), sequenceInfo.getTimeSignature(), sequenceInfo
-				.getKeySignature());
-	}
-
-	public ProjectFrame(SequenceInfo sequenceInfo, int transpose, int tempoBPM, TimeSignature timeSignature,
-			KeySignature keySignature) {
+	public ProjectFrame() {
 		super("LotRO Maestro");
 		initializeWindowBounds();
 
@@ -187,17 +182,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		content = new JPanel(tableLayout, false);
 		setContentPane(content);
 
-		keySignatureField = new MyFormattedTextField(keySignature, 5);
+		keySignatureField = new MyFormattedTextField(KeySignature.C_MAJOR, 5);
 		keySignatureField.setToolTipText("<html>Adjust the key signature of the ABC file. "
 				+ "This only affects the display, not the sound of the exported file.<br>"
 				+ "Examples: C maj, Eb maj, F# min</html>");
 
-		timeSignatureField = new MyFormattedTextField(timeSignature, 5);
+		timeSignatureField = new MyFormattedTextField(TimeSignature.FOUR_FOUR, 5);
 		timeSignatureField.setToolTipText("<html>Adjust the time signature of the ABC file. "
 				+ "This only affects the display, not the sound of the exported file.<br>"
 				+ "Examples: 4/4, 3/8, 2/2</html>");
 
-		transposeSpinner = new JSpinner(new SpinnerNumberModel(transpose, -48, 48, 1));
+		transposeSpinner = new JSpinner(new SpinnerNumberModel(0, -48, 48, 1));
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				int transpose = getTranspose();
@@ -208,7 +203,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(tempoBPM, 8, 960, 2));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(120, 8, 960, 2));
 
 		exportButton = new JButton("Export ABC");
 		exportButton.addActionListener(new ActionListener() {
@@ -237,6 +232,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 				newPart.addAbcListener(abcPartListener);
 				parts.addElement(newPart);
 				Collections.sort(partsWrapper, partNumberComparator);
+				partsList.clearSelection();
 				partsList.setSelectedValue(newPart, true);
 				updateAbcButtons();
 			}
@@ -332,7 +328,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		add(abcPartsAndSettings, "0, 0");
 		add(midiPartsAndControls, "1, 0");
 
-		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi");
+		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi", "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				openSong(dropListener.getDroppedFile());
@@ -576,7 +572,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		abcPreviewStartMicros = 0;
 
 		try {
-			sequenceInfo = new SequenceInfo(midiFile);
+			String fileName = midiFile.getName().toLowerCase();
+			boolean isAbc = fileName.endsWith(".abc") || fileName.endsWith(".txt");
+			sequenceInfo = new SequenceInfo(midiFile, isAbc);
 
 			sequencer.setSequence(sequenceInfo.getSequence());
 			transposeSpinner.setValue(0);
@@ -593,7 +591,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		}
 		catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
-					"Error opening MIDI file", JOptionPane.ERROR_MESSAGE);
+					"Error opening file", JOptionPane.ERROR_MESSAGE);
+		}
+		catch (ParseException e) {
+			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
+					"Error opening ABC file", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -688,7 +690,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants {
 		String fileName;
 		int dot;
 		if (saveFile == null) {
-			fileName = this.sequenceInfo.getMidiFile().getName();
+			fileName = this.sequenceInfo.getFile().getName();
 			dot = fileName.lastIndexOf('.');
 			if (dot > 0)
 				fileName = fileName.substring(0, dot);

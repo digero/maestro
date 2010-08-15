@@ -77,6 +77,7 @@ public class PartPanel extends JPanel {
 		});
 
 		instrumentComboBox = new JComboBox();
+		instrumentComboBox.setMaximumRowCount(12);
 		instrumentComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (abcPart != null) {

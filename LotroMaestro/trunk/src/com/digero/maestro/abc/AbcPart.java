@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
@@ -334,8 +335,9 @@ public class AbcPart {
 					lastEvent.endMicros = songLengthMicros;
 				}
 				else {
-					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros,
-							songLengthMicros));
+					events
+							.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros,
+									songLengthMicros));
 				}
 			}
 		}
@@ -431,8 +433,8 @@ public class AbcPart {
 				else if (curChord.getEndMicros() < nextChord.getStartMicros()) {
 					// If the chord is too short, insert a rest to fill the gap
 					tmpEvents.clear();
-					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(),
-							nextChord.getStartMicros()));
+					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(), nextChord
+							.getStartMicros()));
 					breakLongNotes(tmpEvents, tm, addTies);
 
 					for (NoteEvent restEvent : tmpEvents)
@@ -750,20 +752,23 @@ public class AbcPart {
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;
 	private Map<Integer, Integer> drumNoteMap = new HashMap<Integer, Integer>();
 	private Set<Integer> drumsDisabled = new HashSet<Integer>();
+	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
 	public void setDrumMapping(int srcNote, int dstNote) {
 		if (getDrumMapping(srcNote) != dstNote) {
-			if (dstNote == DISABLED_DRUM_ID)
-				drumNoteMap.remove(srcNote);
-			else
-				drumNoteMap.put(srcNote, dstNote);
+			drumNoteMap.put(srcNote, dstNote);
+			drumPrefs.putInt(Integer.toString(srcNote), dstNote);
 			fireChangeEvent(true);
 		}
 	}
 
 	public int getDrumMapping(int srcNote) {
 		Integer dstNote = drumNoteMap.get(srcNote);
-		return (dstNote == null) ? DISABLED_DRUM_ID : dstNote;
+		if (dstNote == null) {
+			dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
+			drumNoteMap.put(srcNote, dstNote);
+		}
+		return dstNote;
 	}
 
 	public boolean isDrumEnabled(int noteId) {
