@@ -36,16 +36,18 @@ public class AbcPart {
 	private boolean dynamicVolume;
 	private String title;
 	private LotroInstrument instrument;
+	private AbcMetadataSource metadata;
 	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackDisabled;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
-	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, int partNumber) {
+	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcMetadataSource metadata) {
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
-		this.partNumber = partNumber;
+		this.metadata = metadata;
 		this.instrument = LotroInstrument.LUTE;
+		this.partNumber = metadata.findPartNumber(this.instrument, -1);
 		this.title = this.instrument.toString();
 		this.enabled = true;
 		this.dynamicVolume = true;
@@ -114,14 +116,14 @@ public class AbcPart {
 	}
 
 	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity, String songTitle) throws AbcConversionException {
+			int deltaVelocity) throws AbcConversionException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, songTitle, os);
+		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, os);
 		return os.toString();
 	}
 
 	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity, String songTitle, OutputStream os) throws AbcConversionException {
+			int deltaVelocity, OutputStream os) throws AbcConversionException {
 		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros, deltaVelocity);
 
 		if (key.sharpsFlats != 0)
@@ -129,7 +131,21 @@ public class AbcPart {
 
 		PrintStream out = new PrintStream(os);
 		out.println("X: " + partNumber);
-		out.println("T: " + songTitle + " - " + title);
+		if (metadata != null) {
+			if (metadata.getSongTitle().length() > 0)
+				out.println("T: " + (metadata.getSongTitle() + " - " + title + " " + metadata.getTitleTag()).trim());
+			else
+				out.println("T: " + (title + " " + metadata.getTitleTag()).trim());
+
+			if (metadata.getComposer().length() > 0)
+				out.println("C: " + metadata.getComposer());
+
+			if (metadata.getTranscriber().length() > 0)
+				out.println("Z: " + metadata.getTranscriber());
+		}
+		else {
+			out.println("T: " + title.trim());
+		}
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
@@ -645,6 +661,7 @@ public class AbcPart {
 
 		if (this.instrument != instrument) {
 			this.instrument = instrument;
+			setPartNumber(metadata.findPartNumber(instrument, getPartNumber()));
 			fireChangeEvent(true);
 		}
 	}
