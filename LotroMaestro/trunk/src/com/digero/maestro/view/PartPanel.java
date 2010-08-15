@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -110,6 +111,9 @@ public class PartPanel extends JPanel {
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
+			if (e.isPartNumber()) {
+				numberSpinner.setValue(abcPart.getPartNumber());
+			}
 		}
 	};
 
@@ -118,6 +122,10 @@ public class PartPanel extends JPanel {
 			return;
 
 		if (this.abcPart != null) {
+			try {
+				numberSpinner.commitEdit();
+			}
+			catch (ParseException e) {}
 			this.abcPart.removeAbcListener(abcPartListener);
 			this.abcPart = null;
 		}
