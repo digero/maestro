@@ -106,6 +106,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 		drumComboBox = new JComboBox(LotroDrumInfo.ALL_DRUMS.toArray());
 		drumComboBox.setSelectedItem(getSelectedDrum());
+		drumComboBox.setMaximumRowCount(20);
 		drumComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				LotroDrumInfo selected = (LotroDrumInfo) drumComboBox.getSelectedItem();

@@ -17,10 +17,12 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.abcplayer.AbcToMidi;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.TimeSignature;
+import com.digero.common.util.ParseException;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
@@ -29,15 +31,22 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  * type 1.
  */
 public class SequenceInfo implements IMidiConstants {
-	private File midiFile;
+	private File file;
 	private Sequence sequence;
 	private String title;
 	private int tempoBPM;
 	private List<TrackInfo> trackInfoList;
 
-	public SequenceInfo(File midiFile) throws InvalidMidiDataException, IOException {
-		this.midiFile = midiFile;
-		sequence = MidiSystem.getSequence(midiFile);
+	public SequenceInfo(File file, boolean isAbc) throws InvalidMidiDataException, IOException, ParseException {
+		this.file = file;
+		if (isAbc) {
+			Map<File, List<String>> fileData = new HashMap<File, List<String>>();
+			fileData.put(file, AbcToMidi.readLines(file));
+			sequence = AbcToMidi.convert(fileData, false, null, null, false);
+		}
+		else {
+			sequence = MidiSystem.getSequence(file);
+		}
 
 		// Since the drum track merge is only applicable to type 1 midi sequences, 
 		// do it before we convert this sequence, to avoid doing unnecessary work
@@ -64,7 +73,7 @@ public class SequenceInfo implements IMidiConstants {
 			title = trackInfoList.get(0).getName();
 		}
 		else {
-			title = midiFile.getName();
+			title = file.getName();
 			int dot = title.lastIndexOf('.');
 			if (dot > 0)
 				title = title.substring(0, dot);
@@ -74,8 +83,8 @@ public class SequenceInfo implements IMidiConstants {
 		trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
-	public File getMidiFile() {
-		return midiFile;
+	public File getFile() {
+		return file;
 	}
 
 	public Sequence getSequence() {
