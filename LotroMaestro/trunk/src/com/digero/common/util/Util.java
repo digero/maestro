@@ -1,12 +1,23 @@
 package com.digero.common.util;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.io.File;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.swing.JFrame;
 
 public final class Util {
 	private Util() {
@@ -151,5 +162,72 @@ public final class Util {
 		}
 		catch (Exception e) {}
 		return false;
+	}
+
+	public static void initWinBounds(final JFrame frame, final Preferences prefs, int defaultW, int defaultH) {
+		Dimension mainScreen = Toolkit.getDefaultToolkit().getScreenSize();
+
+		int width = prefs.getInt("width", defaultW);
+		int height = prefs.getInt("height", defaultH);
+		int x = prefs.getInt("x", (mainScreen.width - width) / 2);
+		int y = prefs.getInt("y", (mainScreen.height - height) / 2);
+
+		// Handle the case where the window was last saved on
+		// a screen that is no longer connected
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] gs = ge.getScreenDevices();
+		Rectangle onScreen = null;
+		for (int i = 0; i < gs.length; i++) {
+			Rectangle monitorBounds = gs[i].getDefaultConfiguration().getBounds();
+			if (monitorBounds.intersects(x, y, width, height)) {
+				onScreen = monitorBounds;
+				break;
+			}
+		}
+		if (onScreen == null) {
+			x = (mainScreen.width - width) / 2;
+			y = (mainScreen.height - height) / 2;
+		}
+		else {
+			if (x < onScreen.x)
+				x = onScreen.x;
+			else if (x + width > onScreen.x + onScreen.width)
+				x = onScreen.x + onScreen.width - width;
+
+			if (y < onScreen.y)
+				y = onScreen.y;
+			else if (y + height > onScreen.y + onScreen.height)
+				y = onScreen.y + onScreen.height - height;
+		}
+
+		frame.setBounds(x, y, width, height);
+
+		int maximized = prefs.getInt("maximized", 0);
+		frame.setExtendedState((frame.getExtendedState() & ~JFrame.MAXIMIZED_BOTH) | maximized);
+
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+					prefs.putInt("width", frame.getWidth());
+					prefs.putInt("height", frame.getHeight());
+				}
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+					prefs.putInt("x", frame.getX());
+					prefs.putInt("y", frame.getY());
+				}
+			}
+		});
+
+		frame.addWindowStateListener(new WindowStateListener() {
+			@Override
+			public void windowStateChanged(WindowEvent e) {
+				prefs.putInt("maximized", e.getNewState() & JFrame.MAXIMIZED_BOTH);
+			}
+		});
 	}
 }
