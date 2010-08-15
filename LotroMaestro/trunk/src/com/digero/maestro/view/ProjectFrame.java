@@ -277,8 +277,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		JPanel partsListPanel = new JPanel(new BorderLayout(HGAP, VGAP));
 		partsListPanel.setBorder(BorderFactory.createTitledBorder("Song Parts"));
+		partsListPanel.add(partsButtonPanel, BorderLayout.NORTH);
 		partsListPanel.add(partsListScrollPane, BorderLayout.CENTER);
-		partsListPanel.add(partsButtonPanel, BorderLayout.SOUTH);
 
 		abcPositionBar = new SongPositionBar(abcSequencer);
 		abcPlayIcon = new ImageIcon(IconLoader.class.getResource("play_yellow.png"));
