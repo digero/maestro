@@ -308,8 +308,8 @@ public class AbcToMidi {
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 
 						int deltaPan = 0;
-						for (int i = 0; i < trackNumber / 2 && i < 7; i++) {
-							deltaPan += 11 - 5 * i;
+						for (int i = 1; i < trackNumber && i < 9; i++) {
+							deltaPan += 10 - 4 * i;
 						}
 						if (trackNumber % 2 == 1)
 							deltaPan = -deltaPan;
