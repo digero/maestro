@@ -155,6 +155,14 @@ public class AbcToMidi {
 		}
 	}
 
+	public static Sequence convert(File file, boolean useLotroInstruments,
+			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
+			throws ParseException, IOException {
+		Map<File, List<String>> filesData = new HashMap<File, List<String>>();
+		filesData.put(file, readLines(file));
+		return convert(filesData, useLotroInstruments, instrumentOverrideMap, abcInfo, enableLotroErrors);
+	}
+
 	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
 			throws ParseException {
