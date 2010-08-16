@@ -31,6 +31,7 @@ import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
+import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 
 public class AbcToMidi {
@@ -305,6 +306,16 @@ public class AbcToMidi {
 
 						track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
+
+						int deltaPan = 0;
+						for (int i = 0; i < trackNumber / 2 && i < 7; i++) {
+							deltaPan += 11 - 5 * i;
+						}
+						if (trackNumber % 2 == 1)
+							deltaPan = -deltaPan;
+						deltaPan = Util.clamp(deltaPan, -32, 32);
+
+						track.add(MidiFactory.createPanEvent(64 + deltaPan, channel));
 					}
 
 					Matcher m = NOTE_PATTERN.matcher(line);
