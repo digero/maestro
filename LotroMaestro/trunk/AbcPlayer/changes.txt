@@ -24,6 +24,8 @@ Version 1.1.0
     regardless of whether the note letter is upper or lower case.
   - You can now change the instrument and see bar numbers even if the abc 
     file is missing the (required) "X:" line at the beginning.
+  - Now in Stereo! In songs with multiple parts, the second and subsequent 
+    parts are panned slightly to the right or left.
 
 Version 1.0.0
   - Initial release

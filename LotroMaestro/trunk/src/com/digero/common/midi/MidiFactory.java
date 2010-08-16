@@ -7,7 +7,6 @@ import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 
-
 /**
  * Provides static methods to create MidiEvents.
  */
@@ -81,6 +80,17 @@ public class MidiFactory implements IMidiConstants {
 			ShortMessage msg = new ShortMessage();
 			msg.setMessage(ShortMessage.NOTE_OFF, channel, id, velocity);
 			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static MidiEvent createPanEvent(int value, int channel) {
+		try {
+			ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, PAN_CONTROL, value);
+			return new MidiEvent(msg, 0);
 		}
 		catch (InvalidMidiDataException e) {
 			throw new RuntimeException(e);

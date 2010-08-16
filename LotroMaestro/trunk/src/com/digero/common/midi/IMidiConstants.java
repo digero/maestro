@@ -17,6 +17,8 @@ public interface IMidiConstants {
 	public static final int CHANNEL_COUNT = 16;
 	public static final int MAX_VOLUME = 127;
 	
+	public static final int PAN_CONTROL = 0x0A;
+	
 	public static final int DEFAULT_TEMPO_BPM = 120;
 	public static final int DEFAULT_TEMPO_MPQ = 500000;
 	public static final int DEFAULT_INSTRUMENT = 0;
