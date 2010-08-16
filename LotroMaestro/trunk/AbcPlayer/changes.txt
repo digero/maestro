@@ -19,9 +19,9 @@ Version 1.1.0
   - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
     many notes, volume +dynamics+ inside chords.
   - ABC Player handles notes with incorrect octave markers (like c,, or A') 
-    like LotRO does, rather than giving an error.  The comma always lowers 
-    the octave and the apostrophe always raises the octave, regardless of 
-    whether the note letter is upper or lower case.
+    the same way that LotRO does, rather than giving an error.  The comma 
+    always lowers the octave and the apostrophe always raises the octave, 
+    regardless of whether the note letter is upper or lower case.
   - You can now change the instrument and see bar numbers even if the abc 
     file is missing the (required) "X:" line at the beginning.
 
