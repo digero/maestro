@@ -308,12 +308,15 @@ public class AbcToMidi {
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 
 						int deltaPan = 0;
-						for (int i = 1; i < trackNumber && i < 9; i++) {
-							deltaPan += 10 - 4 * i;
+						for (int i = 1; i < trackNumber && i < 15; i++) {
+							deltaPan += 15 - 3 * i;
 						}
 						if (trackNumber % 2 == 1)
 							deltaPan = -deltaPan;
-						deltaPan = Util.clamp(deltaPan, -32, 32);
+						deltaPan = Util.clamp(deltaPan, -48, 48);
+
+						if (info.getInstrument() == LotroInstrument.DRUMS)
+							deltaPan /= 2;
 
 						track.add(MidiFactory.createPanEvent(64 + deltaPan, channel));
 					}
