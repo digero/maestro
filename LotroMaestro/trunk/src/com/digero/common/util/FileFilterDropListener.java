@@ -16,12 +16,12 @@ import java.util.List;
 
 import sun.awt.shell.ShellFolder;
 
-
 public class FileFilterDropListener implements DropTargetListener {
 	private FileFilter filter;
 	private boolean acceptMultiple;
 	private List<File> draggingFiles = null;
 	private List<ActionListener> listeners = null;
+	private DropTargetDropEvent dropEvent = null;
 
 	public FileFilterDropListener(boolean acceptMultiple, String... fileTypes) {
 		this(acceptMultiple, new ExtensionFileFilter("", fileTypes));
@@ -58,7 +58,7 @@ public class FileFilterDropListener implements DropTargetListener {
 	public void dragEnter(DropTargetDragEvent dtde) {
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
 		if (draggingFiles != null) {
-			dtde.acceptDrag(DnDConstants.ACTION_COPY);
+			dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
 		}
 		else {
 			dtde.rejectDrag();
@@ -73,8 +73,8 @@ public class FileFilterDropListener implements DropTargetListener {
 
 	public void drop(DropTargetDropEvent dtde) {
 		if (draggingFiles != null) {
-			dtde.acceptDrop(DnDConstants.ACTION_COPY);
-			fireActionPerformed();
+			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+			fireActionPerformed(dtde);
 			draggingFiles = null;
 		}
 		else {
@@ -85,17 +85,23 @@ public class FileFilterDropListener implements DropTargetListener {
 	public void dropActionChanged(DropTargetDragEvent dtde) {
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
 		if (draggingFiles != null) {
-			dtde.acceptDrag(DnDConstants.ACTION_COPY);
+			dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
 		}
 		else {
 			dtde.rejectDrag();
 		}
 	}
 
-	private void fireActionPerformed() {
+	public DropTargetDropEvent getDropEvent() {
+		return dropEvent;
+	}
+
+	private void fireActionPerformed(DropTargetDropEvent dtde) {
+		this.dropEvent = dtde;
 		for (ActionListener l : listeners) {
 			l.actionPerformed(new ActionEvent(this, 0, null));
 		}
+		this.dropEvent = null;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -11,14 +11,22 @@ public class KeySignature implements IMidiConstants {
 	public static final KeySignature C_MAJOR = new KeySignature(0, true);
 
 	public final byte sharpsFlats;
-	public final boolean major;
+	public final KeyMode mode;
 
 	public KeySignature(int sharpsFlats, boolean major) {
 		if (sharpsFlats < -7 || sharpsFlats > 7)
 			throw new IllegalArgumentException("Key signatures can't have more than 7 sharps or flats");
 
 		this.sharpsFlats = (byte) sharpsFlats;
-		this.major = major;
+		this.mode = major ? KeyMode.MAJOR : KeyMode.MINOR;
+	}
+
+	public KeySignature(int sharpsFlats, KeyMode mode) {
+		if (sharpsFlats < -7 || sharpsFlats > 7)
+			throw new IllegalArgumentException("Key signatures can't have more than 7 sharps or flats");
+
+		this.sharpsFlats = (byte) sharpsFlats;
+		this.mode = mode;
 	}
 
 	public KeySignature(MetaMessage midiMessage) {
@@ -28,7 +36,7 @@ public class KeySignature implements IMidiConstants {
 		}
 
 		this.sharpsFlats = data[0];
-		this.major = (data[1] == 0);
+		this.mode = (data[1] == 0) ? KeyMode.MAJOR : KeyMode.MINOR;
 	}
 
 	public KeySignature(String str) {
@@ -50,41 +58,17 @@ public class KeySignature implements IMidiConstants {
 		if (suffix.length() > 3)
 			suffix = suffix.substring(0, 3);
 
-		final int MAJOR = 0x01;
-		final int MINOR = 0x02;
-		final int BOTH = MAJOR | MINOR;
-		int keys = 0;
+		this.mode = KeyMode.parseMode(suffix);
+		if (this.mode == null)
+			throw new IllegalArgumentException("Invalid key signature: " + str);
 
-		if (suffix.length() == 0) {
-			keys = BOTH; // Try to find a major key match, then a minor key
-		}
-		else if (suffix.equals("M") || suffix.equalsIgnoreCase("maj")) {
-			keys = MAJOR;
-		}
-		else if (suffix.equals("m") || suffix.equalsIgnoreCase("min")) {
-			keys = MINOR;
-		}
-
-		if ((keys & MAJOR) != 0) {
-			for (int i = 0; i < MAJOR_KEYS.length; i++) {
-				if (MAJOR_KEYS[i].equalsIgnoreCase(keyPart)) {
-					this.sharpsFlats = (byte) (i - 7);
-					this.major = true;
-					return;
-				}
+		String[] keys = modeToKeys(this.mode);
+		for (int i = 0; i < keys.length; i++) {
+			if (keys[i].equalsIgnoreCase(keyPart)) {
+				this.sharpsFlats = (byte) (i - 7);
+				return;
 			}
 		}
-
-		if ((keys & MINOR) != 0) {
-			for (int i = 0; i < MINOR_KEYS.length; i++) {
-				if (MINOR_KEYS[i].equalsIgnoreCase(keyPart)) {
-					this.sharpsFlats = (byte) (i - 7);
-					this.major = false;
-					return;
-				}
-			}
-		}
-
 		throw new IllegalArgumentException("Invalid key signature: " + str);
 	}
 
@@ -101,7 +85,7 @@ public class KeySignature implements IMidiConstants {
 			x += 12;
 		}
 
-		return new KeySignature(x, this.major);
+		return new KeySignature(x, this.mode);
 	}
 
 	public Accidental getAccidental(int noteId) {
@@ -122,24 +106,21 @@ public class KeySignature implements IMidiConstants {
 
 	@Override
 	public String toString() {
-		if (major)
-			return MAJOR_KEYS[sharpsFlats + 7] + " maj";
-		else
-			return MINOR_KEYS[sharpsFlats + 7] + " min";
+		return modeToKeys(mode)[sharpsFlats + 7] + " " + mode.toShortString().toLowerCase();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof KeySignature) {
 			KeySignature that = (KeySignature) obj;
-			return this.major == that.major && this.sharpsFlats == that.sharpsFlats;
+			return this.mode == that.mode && this.sharpsFlats == that.sharpsFlats;
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return ((int) sharpsFlats) ^ (major ? 0x100 : 0x200);
+		return ((int) sharpsFlats) ^ (mode.ordinal() << 4);
 	}
 
 	private static final String[] MAJOR_KEYS = new String[] {
@@ -154,6 +135,36 @@ public class KeySignature implements IMidiConstants {
 			"E", "B", "F#", "C#", "G#", "D#", "A#"
 	};
 
+	private static final String[] DORIAN_KEYS = new String[] {
+			"Db", "Ab", "Eb", "Bb", "F", "C", "G", //
+			"D", //
+			"A", "E", "B", "F#", "C#", "G#", "D#"
+	};
+
+	private static final String[] PHRYGIAN_KEYS = new String[] {
+			"Eb", "Bb", "F", "C", "G", "D", "A", //
+			"E", //
+			"B", "F#", "C#", "G#", "D#", "A#", "E#"
+	};
+
+	private static final String[] LYDIAN_KEYS = new String[] {
+			"Fb", "Cb", "Gb", "Db", "Ab", "Eb", "Bb", //
+			"F", //
+			"C", "G", "D", "A", "E", "B", "F#"
+	};
+
+	private static final String[] MIXOLYDIAN_KEYS = new String[] {
+			"Gb", "Db", "Ab", "Eb", "Bb", "F", "C", //
+			"G", //
+			"D", "A", "E", "B", "F#", "C#", "G#"
+	};
+
+	private static final String[] LOCRIAN_KEYS = new String[] {
+			"Bb", "F", "C", "G", "D", "A", "E", //
+			"B", //
+			"F#", "C#", "G#", "D#", "A#", "E#", "B#"
+	};
+
 	private static final int[] SHARPS = new int[] {
 			Note.FX.id, Note.CX.id, Note.GX.id, Note.DX.id, Note.AX.id, Note.EX.id, Note.BX.id
 	};
@@ -161,6 +172,29 @@ public class KeySignature implements IMidiConstants {
 	private static final int[] FLATS = new int[] {
 			Note.BX.id, Note.EX.id, Note.AX.id, Note.DX.id, Note.GX.id, Note.CX.id, Note.FX.id
 	};
+
+	private static final String[] modeToKeys(KeyMode mode) {
+		switch (mode) {
+		case MAJOR:
+		case IONIAN:
+			return MAJOR_KEYS;
+		case MINOR:
+		case AEOLIAN:
+			return MINOR_KEYS;
+		case DORIAN:
+			return DORIAN_KEYS;
+		case PHRYGIAN:
+			return PHRYGIAN_KEYS;
+		case LYDIAN:
+			return LYDIAN_KEYS;
+		case MIXOLYDIAN:
+			return MIXOLYDIAN_KEYS;
+		case LOCRIAN:
+			return LOCRIAN_KEYS;
+		default:
+			return null;
+		}
+	}
 
 	public static void main(String[] args) {
 		System.out.println("Sharps");
