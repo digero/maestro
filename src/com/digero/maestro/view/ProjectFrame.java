@@ -642,7 +642,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
-				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0);
+
+				int deltaPan = 0;
+				for (int j = 1; j < i && j < 15; j++) {
+					deltaPan += 15 - 3 * j;
+				}
+				if (i % 2 == 0)
+					deltaPan = -deltaPan;
+				deltaPan = Util.clamp(deltaPan, -48, 48);
+
+				if (part.getInstrument() == LotroInstrument.DRUMS)
+					deltaPan /= 2;
+
+				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0, deltaPan);
 			}
 
 			long position = abcSequencer.getPosition() + abcPreviewStartMicros - startMicros;
