@@ -636,28 +636,39 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		StringTokenizer tok = new StringTokenizer(text, "\r\n");
 		int i = 0;
-		boolean success = false;
+		boolean isValid = false;
 		while (tok.hasMoreTokens()) {
 			String line = tok.nextToken();
 
-			if (!success && (line.startsWith("X:") || line.startsWith("x:"))) {
-				success = true;
-				if (data == null)
-					break;
+			if (!isValid) {
+				if (line.startsWith("X:") || line.startsWith("x:")) {
+					isValid = true;
+					if (data == null)
+						break;
+				}
+				else {
+					String lineTrim = line.trim();
+					// If we find a line that's not a comment before the 
+					// X: line, then this isn't an ABC file
+					if (lineTrim.length() > 0 && !lineTrim.startsWith("%")) {
+						isValid = false;
+						break;
+					}
+				}
 			}
 
 			if (data != null)
 				data.add(line);
-			else if (i >= 50)
+			else if (i >= 100)
 				break;
 
 			i++;
 		}
 
-		if (!success && data != null)
+		if (!isValid && data != null)
 			data.clear();
 
-		return success;
+		return isValid;
 	}
 
 	@SuppressWarnings("unchecked")
