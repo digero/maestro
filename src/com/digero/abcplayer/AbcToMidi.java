@@ -182,16 +182,16 @@ public class AbcToMidi {
 	}
 
 	public static Sequence convert(File file, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
-			throws ParseException, IOException {
+			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
+			final boolean stereo) throws ParseException, IOException {
 		List<FileAndData> filesData = new ArrayList<FileAndData>();
 		filesData.add(new FileAndData(file, readLines(file)));
-		return convert(filesData, useLotroInstruments, instrumentOverrideMap, abcInfo, enableLotroErrors);
+		return convert(filesData, useLotroInstruments, instrumentOverrideMap, abcInfo, enableLotroErrors, stereo);
 	}
 
 	public static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
-			throws ParseException {
+			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
+			final boolean stereo) throws ParseException {
 		if (abcInfo != null)
 			abcInfo.reset();
 
@@ -335,18 +335,23 @@ public class AbcToMidi {
 						track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 
-						int deltaPan = 0;
-						for (int i = 1; i < trackNumber && i < 15; i++) {
-							deltaPan += 15 - 3 * i;
+						if (stereo) {
+							int deltaPan = 0;
+							for (int i = 1; i < trackNumber && i < 15; i++) {
+								deltaPan += 15 - 3 * i;
+							}
+							if (trackNumber % 2 == 1)
+								deltaPan = -deltaPan;
+							deltaPan = Util.clamp(deltaPan, -48, 48);
+
+							if (info.getInstrument() == LotroInstrument.DRUMS)
+								deltaPan /= 2;
+
+							track.add(MidiFactory.createPanEvent(64 + deltaPan, channel));
 						}
-						if (trackNumber % 2 == 1)
-							deltaPan = -deltaPan;
-						deltaPan = Util.clamp(deltaPan, -48, 48);
-
-						if (info.getInstrument() == LotroInstrument.DRUMS)
-							deltaPan /= 2;
-
-						track.add(MidiFactory.createPanEvent(64 + deltaPan, channel));
+						else {
+							track.add(MidiFactory.createPanEvent(64, channel));
+						}
 					}
 
 					Matcher m = NOTE_PATTERN.matcher(line);

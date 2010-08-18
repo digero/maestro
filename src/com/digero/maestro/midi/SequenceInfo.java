@@ -40,7 +40,7 @@ public class SequenceInfo implements IMidiConstants {
 	public SequenceInfo(File file, boolean isAbc) throws InvalidMidiDataException, IOException, ParseException {
 		this.file = file;
 		if (isAbc) {
-			sequence = AbcToMidi.convert(file, false, null, null, false);
+			sequence = AbcToMidi.convert(file, false, null, null, false, true);
 		}
 		else {
 			sequence = MidiSystem.getSequence(file);

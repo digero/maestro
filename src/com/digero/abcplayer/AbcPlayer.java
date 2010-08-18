@@ -159,6 +159,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private JButton playButton, stopButton;
 
 	private JCheckBoxMenuItem lotroErrorsMenuItem;
+	private JCheckBoxMenuItem stereoMenuItem;
 
 	private JFileChooser openFileDialog;
 	private JFileChooser saveFileDialog;
@@ -458,17 +459,17 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
 		pasteMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ArrayList<String> lines = new ArrayList<String>();
-				if (getAbcDataFromClipboard(lines)) {
-					List<FileAndData> filesData = new ArrayList<FileAndData>();
-					filesData.add(new FileAndData(new File("[Clipboard]"), lines));
-					openSong(filesData);
-					return;
-				}
-
 				ArrayList<File> files = new ArrayList<File>();
 				if (getFileListFromClipboard(files)) {
 					openSong(files.toArray(new File[files.size()]));
+					return;
+				}
+
+				ArrayList<String> lines = new ArrayList<String>();
+				if (getAbcDataFromClipboard(lines, false)) {
+					List<FileAndData> filesData = new ArrayList<FileAndData>();
+					filesData.add(new FileAndData(new File("[Clipboard]"), lines));
+					openSong(filesData);
 					return;
 				}
 
@@ -482,17 +483,17 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				| InputEvent.SHIFT_DOWN_MASK));
 		pasteAppendMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ArrayList<String> lines = new ArrayList<String>();
-				if (getAbcDataFromClipboard(lines)) {
-					List<FileAndData> data = new ArrayList<FileAndData>();
-					data.add(new FileAndData(new File("[Clipboard]"), lines));
-					appendSong(data);
-					return;
-				}
-
 				ArrayList<File> files = new ArrayList<File>();
 				if (getFileListFromClipboard(files)) {
 					appendSong(files.toArray(new File[files.size()]));
+					return;
+				}
+
+				ArrayList<String> lines = new ArrayList<String>();
+				if (getAbcDataFromClipboard(lines, true)) {
+					List<FileAndData> data = new ArrayList<FileAndData>();
+					data.add(new FileAndData(new File("[Clipboard]"), lines));
+					appendSong(data);
 					return;
 				}
 
@@ -543,9 +544,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		fileMenu.addMenuListener(new MenuListener() {
 			@Override
 			public void menuSelected(MenuEvent e) {
-				boolean pasteEnabled = getAbcDataFromClipboard(null) || getFileListFromClipboard(null);
-				pasteMenuItem.setEnabled(pasteEnabled);
-				pasteAppendMenuItem.setEnabled(pasteEnabled);
+				boolean pasteEnabled = getFileListFromClipboard(null);
+				pasteMenuItem.setEnabled(pasteEnabled || getAbcDataFromClipboard(null, false));
+				pasteAppendMenuItem.setEnabled(pasteEnabled || getAbcDataFromClipboard(null, true));
 
 				boolean saveEnabled = sequencer.isLoaded();
 				saveMenuItem.setEnabled(saveEnabled);
@@ -575,6 +576,17 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		lotroErrorsMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				prefs.putBoolean("ignoreLotroErrors", lotroErrorsMenuItem.isSelected());
+			}
+		});
+
+		toolsMenu.add(stereoMenuItem = new JCheckBoxMenuItem("Stereo pan in multi-part songs"));
+		stereoMenuItem.setToolTipText("<html>Separates the parts of a multi-part song by <br>"
+				+ "panning them towards the left or right speaker.</html>");
+		stereoMenuItem.setSelected(prefs.getBoolean("stereoMenuItem", true));
+		stereoMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				prefs.putBoolean("stereoMenuItem", stereoMenuItem.isSelected());
+				refreshSequence();
 			}
 		});
 
@@ -615,7 +627,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		});
 	}
 
-	private boolean getAbcDataFromClipboard(ArrayList<String> data) {
+	private boolean getAbcDataFromClipboard(ArrayList<String> data, boolean checkContents) {
 		if (data != null)
 			data.clear();
 
@@ -634,9 +646,12 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			return false;
 		}
 
+		if (!checkContents && data == null)
+			return true;
+
 		StringTokenizer tok = new StringTokenizer(text, "\r\n");
 		int i = 0;
-		boolean isValid = false;
+		boolean isValid = !checkContents;
 		while (tok.hasMoreTokens()) {
 			String line = tok.nextToken();
 
@@ -872,7 +887,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, null, info, !lotroErrorsMenuItem.isSelected());
+				song = AbcToMidi.convert(data, useLotroInstruments, null, info, !lotroErrorsMenuItem.isSelected(),
+						stereoMenuItem.isSelected());
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -941,7 +957,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			retry = false;
 			try {
 				song = AbcToMidi.convert(data, useLotroInstruments, instrumentOverrideMap, info, !lotroErrorsMenuItem
-						.isSelected());
+						.isSelected(), stereoMenuItem.isSelected());
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1278,31 +1294,35 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				JComboBox comboBox = (JComboBox) evt.getSource();
 				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
 
-				long position = sequencer.getPosition();
 				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
-				Sequence song;
-
-				try {
-					song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo, false);
-				}
-				catch (ParseException e) {
-					JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-				try {
-					boolean running = sequencer.isRunning();
-					sequencer.reset();
-					sequencer.setSequence(song);
-					sequencer.setPosition(position);
-					sequencer.setRunning(running);
-				}
-				catch (InvalidMidiDataException e) {
-					JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
+				refreshSequence();
 			}
+		}
+	}
+
+	private void refreshSequence() {
+		long position = sequencer.getPosition();
+		Sequence song;
+
+		try {
+			song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo, false,
+					stereoMenuItem.isSelected());
+		}
+		catch (ParseException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		try {
+			boolean running = sequencer.isRunning();
+			sequencer.reset();
+			sequencer.setSequence(song);
+			sequencer.setPosition(position);
+			sequencer.setRunning(running);
+		}
+		catch (InvalidMidiDataException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 	}
 }
