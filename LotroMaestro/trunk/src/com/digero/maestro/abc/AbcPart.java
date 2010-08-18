@@ -25,6 +25,7 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
+import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
@@ -57,11 +58,11 @@ public class AbcPart {
 	}
 
 	public void exportToMidi(Sequence out, TimingInfo tm) throws AbcConversionException {
-		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0);
+		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0, 0);
 	}
 
-	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity)
-			throws AbcConversionException {
+	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity,
+			int deltaPan) throws AbcConversionException {
 		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
@@ -74,6 +75,8 @@ public class AbcPart {
 
 		track.add(MidiFactory.createTrackNameEvent(title));
 		track.add(MidiFactory.createProgramChangeEvent(instrument.midiProgramId, channel, 0));
+		track.add(MidiFactory.createPanEvent(64 + Util.clamp(deltaPan, -48, 48), channel));
+
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 
 		for (Chord chord : chords) {
