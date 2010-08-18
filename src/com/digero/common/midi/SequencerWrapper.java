@@ -181,6 +181,17 @@ public class SequencerWrapper {
 		return sequencer.getMicrosecondLength();
 	}
 
+	public float getTempoFactor() {
+		return sequencer.getTempoFactor();
+	}
+
+	public void setTempoFactor(float tempo) {
+		if (tempo != getTempoFactor()) {
+			sequencer.setTempoFactor(tempo);
+			fireChangeEvent(SequencerProperty.TEMPO);
+		}
+	}
+
 	public boolean isRunning() {
 		return sequencer.isRunning();
 	}
@@ -322,6 +333,7 @@ public class SequencerWrapper {
 			if (preLoaded != isLoaded())
 				fireChangeEvent(SequencerProperty.IS_LOADED);
 			fireChangeEvent(SequencerProperty.LENGTH);
+			fireChangeEvent(SequencerProperty.SEQUENCE);
 		}
 	}
 

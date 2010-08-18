@@ -40,21 +40,11 @@ public class AbcToMidi {
 	}
 
 	public static class AbcInfo {
+		private boolean empty = true;
 		private String titlePrefix;
 		private Map<Character, String> metadata = new HashMap<Character, String>();
 		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
-
-		private void setMetadata(char key, String value) {
-			if (!metadata.containsKey(key))
-				metadata.put(key, value);
-
-			if (Character.toUpperCase(key) == 'T') {
-				if (titlePrefix == null)
-					titlePrefix = value;
-				else
-					titlePrefix = longestCommonPrefix(titlePrefix, value);
-			}
-		}
+		private int tempoBPM = 120;
 
 		public String getMetadata(char key) {
 			return metadata.get(Character.toUpperCase(key));
@@ -69,6 +59,39 @@ public class AbcToMidi {
 
 		public int getBarCount() {
 			return bars.size();
+		}
+
+		public int getTempoBPM() {
+			return tempoBPM;
+		}
+
+		public boolean isEmpty() {
+			return empty;
+		}
+
+		private void setMetadata(char key, String value) {
+			this.empty = false;
+			if (!metadata.containsKey(key))
+				metadata.put(key, value);
+
+			if (Character.toUpperCase(key) == 'T') {
+				if (titlePrefix == null)
+					titlePrefix = value;
+				else
+					titlePrefix = longestCommonPrefix(titlePrefix, value);
+			}
+		}
+
+		private void addBar(long chordStartTick) {
+			if (!bars.containsKey(chordStartTick)) {
+				this.empty = false;
+				bars.put(chordStartTick, bars.size() + 1);
+			}
+		}
+
+		private void setTempoBPM(int tempoBPM) {
+			this.tempoBPM = tempoBPM;
+			this.empty = false;
 		}
 
 		private static final Pattern trailingPunct = Pattern.compile("[-:;\\(\\[\\{\\s]+$");
@@ -86,9 +109,11 @@ public class AbcToMidi {
 		}
 
 		private void reset() {
+			empty = true;
 			titlePrefix = null;
 			metadata.clear();
 			bars.clear();
+			tempoBPM = 120;
 		}
 
 		private static String longestCommonPrefix(String a, String b) {
@@ -159,12 +184,12 @@ public class AbcToMidi {
 	public static Sequence convert(File file, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
 			throws ParseException, IOException {
-		Map<File, List<String>> filesData = new HashMap<File, List<String>>();
-		filesData.put(file, readLines(file));
+		List<FileAndData> filesData = new ArrayList<FileAndData>();
+		filesData.add(new FileAndData(file, readLines(file)));
 		return convert(filesData, useLotroInstruments, instrumentOverrideMap, abcInfo, enableLotroErrors);
 	}
 
-	public static Sequence convert(Map<File, List<String>> filesData, boolean useLotroInstruments,
+	public static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors)
 			throws ParseException {
 		if (abcInfo != null)
@@ -185,11 +210,11 @@ public class AbcToMidi {
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
-		for (Entry<File, List<String>> fileData : filesData.entrySet()) {
-			String fileName = fileData.getKey().getName();
+		for (FileAndData fileAndData : filesData) {
+			String fileName = fileAndData.file.getName();
 			int lineNumber = 0;
 			int partStartLine = 0;
-			for (String line : fileData.getValue()) {
+			for (String line : fileAndData.lines) {
 				lineNumber++;
 
 				int comment = line.indexOf('%');
@@ -282,6 +307,9 @@ public class AbcToMidi {
 							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
+							if (abcInfo != null)
+								abcInfo.setTempoBPM(info.getTempo());
+
 							// Track 0: Title and meta info
 							Track track0 = seq.createTrack();
 							track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
@@ -370,16 +398,15 @@ public class AbcToMidi {
 											lineNumber, i);
 								}
 
-								if (abcInfo != null && trackNumber == 1 && !abcInfo.bars.containsKey(chordStartTick))
-									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
+								if (abcInfo != null && trackNumber == 1)
+									abcInfo.addBar(chordStartTick);
 
 								accidentals.clear();
 								if (i + 1 < line.length() && line.charAt(i + 1) == ']') {
 									i++; // Skip |]
 								}
-								else if (abcInfo != null && trackNumber == 1
-										&& !abcInfo.bars.containsKey(chordStartTick)) {
-									abcInfo.bars.put(chordStartTick, abcInfo.bars.size() + 1);
+								else if (abcInfo != null && trackNumber == 1) {
+									abcInfo.addBar(chordStartTick);
 								}
 								break;
 
@@ -405,21 +432,41 @@ public class AbcToMidi {
 							}
 
 							case '(':
-								if (tuplet != null)
-									throw new ParseException("Unexpected '" + ch + "' before end of tuplet", fileName,
-											lineNumber, i);
+								// Tuplet or slur start
+								if (i + 1 < line.length() && Character.isDigit(line.charAt(i + 1))) {
+									// If it has a digit following it, it's a tuplet
+									if (tuplet != null)
+										throw new ParseException("Unexpected '" + ch + "' before end of tuplet",
+												fileName, lineNumber, i);
 
-								try {
-									for (int j = i + 1; j < line.length(); j++) {
-										if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
-											tuplet = new Tuplet(line.substring(i + 1, j + 1), info.isCompoundMeter());
-											i = j;
-											break;
+									try {
+										for (int j = i + 1; j < line.length(); j++) {
+											if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
+												tuplet = new Tuplet(line.substring(i + 1, j + 1), info
+														.isCompoundMeter());
+												i = j;
+												break;
+											}
 										}
 									}
+									catch (IllegalArgumentException e) {
+										throw new ParseException("Invalid tuplet", fileName, lineNumber, i);
+									}
 								}
-								catch (IllegalArgumentException e) {
-									throw new ParseException("Invalid tuplet", fileName, lineNumber, i);
+								else {
+									// Otherwise it's a slur, which LotRO conveniently ignores
+									if (inChord) {
+										throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+												lineNumber, i);
+									}
+								}
+								break;
+
+							case ')':
+								// End of a slur, ignore
+								if (inChord) {
+									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+											lineNumber, i);
 								}
 								break;
 
@@ -440,7 +487,10 @@ public class AbcToMidi {
 						if (i > m.start())
 							continue;
 
-						if (enableLotroErrors && inChord && ++chordSize > Chord.MAX_CHORD_NOTES) {
+						if (inChord)
+							chordSize++;
+
+						if (enableLotroErrors && inChord && chordSize > Chord.MAX_CHORD_NOTES) {
 							throw new LotroParseException("Too many notes in a chord", fileName, lineNumber, m.start());
 						}
 
@@ -495,7 +545,8 @@ public class AbcToMidi {
 						}
 
 						if (tuplet != null) {
-							tuplet.r--;
+							if (!inChord || chordSize == 1)
+								tuplet.r--;
 							numerator *= tuplet.q;
 							denominator *= tuplet.p;
 							if (tuplet.r == 0)
@@ -525,53 +576,56 @@ public class AbcToMidi {
 							int octave = Character.isUpperCase(noteLetter) ? 3 : 4;
 							if (octaveStr.indexOf('\'') >= 0)
 								octave += octaveStr.length();
-							if (octaveStr.indexOf(',') >= 0)
+							else if (octaveStr.indexOf(',') >= 0)
 								octave -= octaveStr.length();
 
 							int noteId;
 							int lotroNoteId;
+
+							lotroNoteId = noteId = (octave + 1) * 12
+									+ CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
+							if (!useLotroInstruments)
+								noteId += 12 * info.getInstrument().octaveDelta;
+
+							if (m.group(NOTE_ACCIDENTAL) != null) {
+								if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
+									accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
+									accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
+								else if (m.group(NOTE_ACCIDENTAL).equals("="))
+									accidentals.put(noteId, 0);
+							}
+
+							int noteDelta;
+							if (accidentals.containsKey(noteId)) {
+								noteDelta = accidentals.get(noteId);
+							}
+							else {
+								// Use the key signature to determine the accidental
+								noteDelta = info.getKey().getAccidental(noteId).deltaNoteId;
+							}
+							lotroNoteId += noteDelta;
+							noteId += noteDelta;
+
+							if (enableLotroErrors && lotroNoteId < Note.MIN_PLAYABLE.id)
+								throw new LotroParseException("Note is too low", fileName, lineNumber, m.start());
+							else if (enableLotroErrors && lotroNoteId > Note.MAX_PLAYABLE.id)
+								throw new LotroParseException("Note is too high", fileName, lineNumber, m.start());
+
 							if (info.getInstrument() == LotroInstrument.COWBELL
 									|| info.getInstrument() == LotroInstrument.MOOR_COWBELL) {
 								if (useLotroInstruments) {
-									int min = info.getInstrument().lowestPlayable.id;
-									int max = info.getInstrument().highestPlayable.id;
-									lotroNoteId = noteId = min + (int) (Math.random() * (max - min));
+									// Randomize the noteId unless it's part of a note tie
+									if (m.group(NOTE_TIE) == null && !tiedNotes.containsKey(noteId)) {
+										int min = info.getInstrument().lowestPlayable.id;
+										int max = info.getInstrument().highestPlayable.id;
+										lotroNoteId = noteId = min + (int) (Math.random() * (max - min));
+									}
 								}
 								else {
 									noteId = (info.getInstrument() == LotroInstrument.COWBELL) ? 76 : 71;
 									lotroNoteId = 71;
 								}
-							}
-							else {
-								lotroNoteId = noteId = (octave + 1) * 12
-										+ CHR_NOTE_DELTA[Character.toLowerCase(noteLetter) - 'a'];
-								if (!useLotroInstruments)
-									noteId += 12 * info.getInstrument().octaveDelta;
-
-								if (m.group(NOTE_ACCIDENTAL) != null) {
-									if (m.group(NOTE_ACCIDENTAL).startsWith("_"))
-										accidentals.put(noteId, -m.group(NOTE_ACCIDENTAL).length());
-									else if (m.group(NOTE_ACCIDENTAL).startsWith("^"))
-										accidentals.put(noteId, m.group(NOTE_ACCIDENTAL).length());
-									else if (m.group(NOTE_ACCIDENTAL).equals("="))
-										accidentals.put(noteId, 0);
-								}
-
-								int noteDelta;
-								if (accidentals.containsKey(noteId)) {
-									noteDelta = accidentals.get(noteId);
-								}
-								else {
-									// Use the key signature to determine the accidental
-									noteDelta = info.getKey().getAccidental(noteId).deltaNoteId;
-								}
-								lotroNoteId += noteDelta;
-								noteId += noteDelta;
-
-								if (enableLotroErrors && lotroNoteId < Note.MIN_PLAYABLE.id)
-									throw new LotroParseException("Note is too low", fileName, lineNumber, m.start());
-								else if (enableLotroErrors && lotroNoteId > Note.MAX_PLAYABLE.id)
-									throw new LotroParseException("Note is too high", fileName, lineNumber, m.start());
 							}
 
 							// Check for overlapping notes, and remove extra note off events
