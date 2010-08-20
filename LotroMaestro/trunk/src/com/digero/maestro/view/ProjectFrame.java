@@ -300,6 +300,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcStopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				abcSequencer.reset();
+				sequencer.reset();
 			}
 		});
 		JPanel abcPreviewControls = new JPanel(new TableLayout(new double[] {
