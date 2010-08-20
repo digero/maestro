@@ -2,13 +2,18 @@ Todo:
   - Separate LotroInstruments.sf2 from the installer. Make it a download.
   - ABC visualization.
 
+Version 1.1.1
+  - When a long note is held on a woodwind instrument while stringed 
+    instruments are playing many fast notes, the note on the woodwind should 
+    no longer be cut off before it actually ends.
+  - If the same note is repeated quickly on a woodwind instrument, the 
+    difference between notes is sharper, and sounds more like it does in LotRO.
+  - Short notes on woodwind instruments are more clipped, to sound more like 
+    they do in LotRO.
+
 Version 1.1.0
   - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
     many notes, volume +dynamics+ inside chords.
-  - ABC Player handles notes with incorrect octave markers (like c,, or A') 
-    the same way that LotRO does, rather than giving an error.  The comma 
-    always lowers the octave and the apostrophe always raises the octave, 
-    regardless of whether the note letter is upper or lower case.
   - Now in Stereo! In songs with multiple parts, the second and subsequent 
     parts are panned slightly to the right or left.
   - Added a tempo slider to adjust the tempo of playback. Right-click on 
@@ -31,6 +36,10 @@ Version 1.1.0
     major and minor: 
     Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Ionian, and Locrian.
   
+  - ABC Player handles notes with incorrect octave markers (like c,, or A') 
+    the same way that LotRO does, rather than giving an error.  The comma 
+    always lowers the octave and the apostrophe always raises the octave, 
+    regardless of whether the note letter is upper or lower case.
   - Tuplets that contain chords should be the right length now.
   - Fixed an issue when determining the speed to play songs that have a meter 
     with a denominator that's not 4 (e.g. 6/8). Hopefully all songs should 

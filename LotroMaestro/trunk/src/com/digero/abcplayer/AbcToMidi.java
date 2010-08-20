@@ -94,7 +94,9 @@ public class AbcToMidi {
 			this.empty = false;
 		}
 
-		private static final Pattern trailingPunct = Pattern.compile("[-:;\\(\\[\\{\\s]+$");
+		private static final String openPunct = "[-:;\\(\\[\\{\\s]*";
+		private static final Pattern trailingPunct = Pattern.compile(openPunct
+				+ "([\\(\\[\\{]\\d{1,2}:\\d{2}[\\)\\]\\}])?" + openPunct + "$");
 
 		public String getTitlePrefix() {
 			if (titlePrefix == null || titlePrefix.length() == 0) {
@@ -645,6 +647,8 @@ public class AbcToMidi {
 								int noteOffId = ((ShortMessage) evt.getMessage()).getData1();
 								if (noteOffId == noteId) {
 									track.remove(evt);
+									evt.setTick(chordStartTick);
+									track.add(evt);
 									noteOffIter.remove();
 									break;
 								}
@@ -665,18 +669,6 @@ public class AbcToMidi {
 								tiedNotes.put(noteId, lineAndColumn);
 							}
 							else {
-								long noteEndTickTmp = noteEndTick;
-								if (useLotroInstruments) {
-									// Increase the note length to a mininum amount
-									if (!info.getInstrument().isSustainable(lotroNoteId)) {
-										noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
-									}
-									else {
-										noteEndTickTmp = Math.max(noteEndTick + 1, chordStartTick
-												+ TimingInfo.ONE_SECOND_MICROS / 4 * PPQN / MPQN);
-									}
-								}
-
 								long lengthMicros = (noteEndTick - chordStartTick) * MPQN / PPQN;
 								if (enableLotroErrors && lengthMicros < TimingInfo.SHORTEST_NOTE_MICROS) {
 									throw new LotroParseException("Note's duration is too short", fileName, lineNumber,
@@ -687,6 +679,11 @@ public class AbcToMidi {
 											m.start());
 								}
 
+								long noteEndTickTmp = noteEndTick;
+								// Increase the note length to a mininum amount
+								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId)) {
+									noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
 										.getDynamics().abcVol, noteEndTickTmp);
 								track.add(noteOff);
