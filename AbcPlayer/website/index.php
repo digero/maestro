@@ -2,10 +2,12 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 	
-	$msi_path = "bin/AbcPlayer_1.0.0.msi";
+	$cur_ver = "1.1.0";
+	
+	$msi_path = "bin/AbcPlayer_$cur_ver.msi";
 	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
 	
-	$zip_path = "bin/AbcPlayer_1.0.0.zip";
+	$zip_path = "bin/AbcPlayer_$cur_ver.zip";
 	$zip_size = round(@filesize($zip_path) / (1024 * 1024), 1) . "MB";
 ?>
 
@@ -18,9 +20,13 @@ ABC Player is especially useful for previewing songs with multiple parts, to see
 sound with each other without having to get your band together in game.
 </p>
 
+<p style="color: yellow;">Version <?=$cur_ver?> is here... Now in stereo! Take a look at the 
+<a href="changelog.php">Release Notes</a> to see what's new.</p>
+
 <h2>Downloads</h2>
 <p>
-<a class="dnld" style="font-weight:bold;" href="<?=$msi_path?>">ABC Player Installer</a> <?=$msi_size?><br />
+<a class="dnld" style="font-weight:bold;" href="<?=$msi_path?>">ABC Player v<?=$cur_ver?> 
+	Installer</a> <?=$msi_size?><br />
 <i>The installer will configure your computer to open .abc files using ABC Player.</i>
 </p>
 <p>
@@ -28,7 +34,7 @@ ABC Player requires <a class="dnld" href="http://java.com/">Java 6.0</a> or grea
 You must have the 32-bit version of Java installed, even if you're running 64-bit Windows.
 </p>
 <p>
-<a class="dnld" href="<?=$zip_path?>">AbcPlayer.zip</a> <?=$zip_size?> (advanced)<br />
+<a class="dnld" href="<?=$zip_path?>">AbcPlayer_<?=$cur_ver?>.zip</a> <?=$zip_size?> (advanced)<br />
 <i>All of the files needed to run ABC Player in a .zip, if you prefer not to use the installer, or
 want to try running ABC Player on another operating system (like 64-bit Java, MacOS, or Linux). 
 Running ABC Player on another OS is completely untested and unsupported.</i>
@@ -50,14 +56,14 @@ use a program like <a href="http://lame.sourceforge.net/">LAME</a> to convert th
 
 <h2>Preview</h2>
 <p>
-<img src="abcplayer.png" alt="Screenshot of ABC Player"/>
+<img src="abcplayer_1.1.0.png" alt="Screenshot of ABC Player"/>
 </p>
 <p>
 This is what the song pictured above sounds like when played in ABC Player:
 </p>
-<?php mp3('alabama', 'Sweet Home Alabama'); ?>
+<?php mp3('getaround', 'I Get Around'); ?>
 <p>
-If you want to try the song yourself, download <a class="dnld" href="files/alabama.abc">alabama.abc</a> 
+If you want to try the song yourself, download <a class="dnld" href="files/getaround.abc">getaround.abc</a> 
 and either open it in ABC Player, or get 5 friends together and play it in LotRO.
 </p>
 
