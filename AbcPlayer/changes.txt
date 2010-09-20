@@ -8,8 +8,8 @@ Version 1.1.1
     no longer be cut off before it actually ends.
   - If the same note is repeated quickly on a woodwind instrument, the 
     difference between notes is sharper, and sounds more like it does in LotRO.
-  - Short notes on woodwind instruments are more clipped, to sound more like 
-    they do in LotRO.
+  - Staccato (short) notes on woodwind instruments are more... staccato, to 
+    sound more like they do in LotRO.
 
 Version 1.1.0
   - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
