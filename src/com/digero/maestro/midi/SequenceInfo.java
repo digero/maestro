@@ -175,6 +175,28 @@ public class SequenceInfo implements IMidiConstants {
 		return bestTempoBPM;
 	}
 
+	public long calcFirstNoteTick() {
+		long firstNoteTick = Long.MAX_VALUE;
+		for (Track t : sequence.getTracks()) {
+			for (int j = 0; j < t.size(); j++) {
+				MidiEvent evt = t.get(j);
+				MidiMessage msg = evt.getMessage();
+				if (msg instanceof ShortMessage) {
+					ShortMessage m = (ShortMessage) msg;
+					if (m.getCommand() == ShortMessage.NOTE_ON) {
+						if (evt.getTick() < firstNoteTick) {
+							firstNoteTick = evt.getTick();
+						}
+						break;
+					}
+				}
+			}
+		}
+		if (firstNoteTick == Long.MAX_VALUE)
+			return 0;
+		return firstNoteTick;
+	}
+
 	/**
 	 * Separates the MIDI file to have one track per channel (Type 1).
 	 */
