@@ -527,6 +527,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>() {
 		public int compare(AbcPart p1, AbcPart p2) {
+			int ret = p1.getInstrument().ordinal() - p2.getInstrument().ordinal();
+			if (ret != 0)
+				return ret;
 			return p1.getPartNumber() - p2.getPartNumber();
 		}
 	};
@@ -564,6 +567,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			sequenceInfo = new SequenceInfo(midiFile, isAbc);
 
 			sequencer.setSequence(sequenceInfo.getSequence());
+			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
 			composerField.setText("");
 			transposeSpinner.setValue(0);
