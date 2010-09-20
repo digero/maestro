@@ -679,15 +679,18 @@ public class AbcToMidi {
 											m.start());
 								}
 
+								// Stringed instruments, drums, and woodwind breath sounds always play the 
+								// sound sample in its entirety. Since Gervill doesn't support the SoundFont 
+								// extension that specifies this, we have to increase the note length.
+								// One second should do the trick.
 								long noteEndTickTmp = noteEndTick;
-								// Increase the note length to a mininum amount
 								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId)) {
-									noteEndTickTmp = chordStartTick + TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN;
+									noteEndTickTmp = Math.max(noteEndTick, chordStartTick
+											+ TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN);
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
 										.getDynamics().abcVol, noteEndTickTmp);
 								track.add(noteOff);
-
 								noteOffEvents.add(noteOff);
 
 								tiedNotes.remove((Integer) noteId);
