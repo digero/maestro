@@ -50,9 +50,9 @@ padding-bottom:10px;
 	text-decoration:none;
 	font-size:14px;
 	font-weight:bold;
-	border-left:3px solid #474747;
-	border-top:3px solid #474747;
-	border-bottom:3px solid #474747;
+	border-left:3px solid #454545;
+	border-top:3px solid #454545;
+	border-bottom:3px solid #454545;
 	margin-top:3px;
 	text-align:right;
   }
@@ -166,4 +166,10 @@ color:#FFFFFF;
 
 a:hover {
 text-decoration:underline;
+}
+
+#maindownload {
+border: 1px solid white;
+background-color: #222222;
+padding: 3px;
 }
