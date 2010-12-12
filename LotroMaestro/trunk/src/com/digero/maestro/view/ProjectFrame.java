@@ -38,6 +38,9 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -57,7 +60,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abc.TimingInfo;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.DrumFilterTransceiver;
@@ -82,6 +84,7 @@ import com.digero.maestro.abc.AbcMetadataSource;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.util.ListModelWrapper;
 
@@ -95,12 +98,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		FILL
 	};
 
+	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
+
 	private File saveFile;
 	private SequenceInfo sequenceInfo;
 	private SequencerWrapper sequencer;
 	private SequencerWrapper abcSequencer;
 	private DefaultListModel parts = new DefaultListModel();
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
+	private PartAutoNumberer partAutoNumberer;
 
 	private JPanel content;
 	private JTextField songTitleField;
@@ -128,8 +134,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private long abcPreviewStartMicros = 0;
 	private boolean echoingPosition = false;
 
-	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
-
 	private MainSequencerListener mainSequencerListener;
 	private AbcSequencerListener abcSequencerListener;
 
@@ -137,6 +141,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		super("LOTRO Maestro");
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
+
+		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), partsWrapper);
 
 		try {
 			this.sequencer = new SequencerWrapper(new DrumFilterTransceiver());
@@ -172,7 +178,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-		partPanel = new PartPanel(sequencer);
+		partPanel = new PartPanel(sequencer, partAutoNumberer);
 
 		TableLayout tableLayout = new TableLayout(LAYOUT_COLS, LAYOUT_ROWS);
 		tableLayout.setHGap(HGAP);
@@ -237,6 +243,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
 				newPart.addAbcListener(abcPartListener);
 				parts.addElement(newPart);
+				partAutoNumberer.onPartAdded(newPart);
 				Collections.sort(partsWrapper, partNumberComparator);
 				partsList.clearSelection();
 				partsList.setSelectedValue(newPart, true);
@@ -253,6 +260,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					partsList.setSelectedIndex(idx - 1);
 				else if (parts.size() > 0)
 					partsList.setSelectedIndex(0);
+				partAutoNumberer.onPartDeleted(oldPart);
 				oldPart.dispose();
 				updateAbcButtons();
 			}
@@ -388,6 +396,31 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			public void contentsChanged(ListDataEvent e) {
 				updateAbcButtons();
+			}
+		});
+
+		initMenu();
+	}
+
+	private void initMenu() {
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+
+		JMenu toolsMenu = menuBar.add(new JMenu(" Tools "));
+
+		JMenuItem settingsItem = toolsMenu.add(new JMenuItem("Settings..."));
+		settingsItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SettingsDialog dialog = new SettingsDialog(ProjectFrame.this, partAutoNumberer.getSettingsCopy());
+				dialog.setVisible(true);
+				if (dialog.isSuccess()) {
+					if (dialog.isNumbererSettingsChanged()) {
+						partAutoNumberer.setSettings(dialog.getNumbererSettings());
+						partAutoNumberer.renumberAllParts();
+					}
+					partPanel.settingsChanged();
+				}
+				dialog.dispose();
 			}
 		});
 	}
@@ -550,9 +583,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>() {
 		public int compare(AbcPart p1, AbcPart p2) {
-			int ret = p1.getInstrument().ordinal() - p2.getInstrument().ordinal();
-			if (ret != 0)
-				return ret;
+			int base1 = partAutoNumberer.getFirstNumber(p1.getInstrument());
+			int base2 = partAutoNumberer.getFirstNumber(p2.getInstrument());
+
+			if (base1 != base2)
+				return base1 - base2;
 			return p1.getPartNumber() - p2.getPartNumber();
 		}
 	};
@@ -833,26 +868,5 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	@Override
 	public String getTranscriber() {
 		return transcriberField.getText();
-	}
-
-	@Override
-	public int findPartNumber(LotroInstrument instrument, int currentPartNumber) {
-		if (instrument == LotroInstrument.MOOR_COWBELL)
-			instrument = LotroInstrument.COWBELL;
-		int i = instrument.ordinal() + 1;
-
-		outerLoop: while (true) {
-			if (i == currentPartNumber)
-				return i;
-
-			for (AbcPart part : partsWrapper) {
-				if (part.getPartNumber() == i) {
-					i += 10;
-					continue outerLoop;
-				}
-			}
-
-			return i;
-		}
 	}
 }

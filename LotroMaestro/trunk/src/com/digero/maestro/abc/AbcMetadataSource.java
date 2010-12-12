@@ -1,6 +1,5 @@
 package com.digero.maestro.abc;
 
-import com.digero.common.abc.LotroInstrument;
 
 public interface AbcMetadataSource {
 	public String getSongTitle();
@@ -11,5 +10,5 @@ public interface AbcMetadataSource {
 
 	public String getTranscriber();
 
-	public int findPartNumber(LotroInstrument instrument, int currentPartNumber);
+//	public int findPartNumber(LotroInstrument instrument, int currentPartNumber);
 }
