@@ -28,6 +28,7 @@ import com.digero.common.util.ICompileConstants;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
@@ -36,9 +37,11 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	private static final int HGAP = 4, VGAP = 4;
 
 	private AbcPart abcPart;
+	private PartAutoNumberer partAutoNumberer;
 	private SequencerWrapper sequencer;
 
 	private JSpinner numberSpinner;
+	private SpinnerNumberModel numberSpinnerModel;
 	private JTextField nameTextField;
 	private JComboBox instrumentComboBox;
 
@@ -51,16 +54,18 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private LotroInstrument lastSelectedInstrument = null;
 
-	public PartPanel(SequencerWrapper sequencer) {
+	public PartPanel(SequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		this.sequencer = sequencer;
-
-		numberSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 999, 1));
+		this.partAutoNumberer = partAutoNumberer;
+		
+		numberSpinnerModel = new SpinnerNumberModel(0, 0, 999, partAutoNumberer.getIncrement());
+		numberSpinner = new JSpinner(numberSpinnerModel);
 		numberSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				if (abcPart != null)
-					abcPart.setPartNumber((Integer) numberSpinner.getValue());
+					PartPanel.this.partAutoNumberer.setPartNumber(abcPart, (Integer) numberSpinner.getValue());
 			}
 		});
 
@@ -88,7 +93,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			public void actionPerformed(ActionEvent e) {
 				if (abcPart != null) {
 					LotroInstrument newInstrument = (LotroInstrument) instrumentComboBox.getSelectedItem();
-					abcPart.setInstrument(newInstrument);
+					PartPanel.this.partAutoNumberer.setInstrument(abcPart, newInstrument);
 					String title = abcPart.getTitle();
 					title = title.replace(lastSelectedInstrument.toString(), newInstrument.toString());
 					nameTextField.setText(title);
@@ -132,6 +137,10 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			}
 		}
 	};
+
+	public void settingsChanged() {
+		numberSpinnerModel.setStepSize(partAutoNumberer.getIncrement());
+	}
 
 	public void setAbcPart(AbcPart abcPart) {
 		if (this.abcPart == abcPart)
@@ -188,12 +197,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 						sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
 				}
 
-				if ((track.hasNotes() || track.hasDrums()) && MUTE_DISABLED_TRACKS) {
-					sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
-				}
-				else {
+				if (!MUTE_DISABLED_TRACKS)
 					sequencer.setTrackMute(trackNumber, false);
-				}
 
 				sequencer.setTrackSolo(trackNumber, false);
 			}

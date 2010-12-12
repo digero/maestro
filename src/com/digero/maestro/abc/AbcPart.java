@@ -49,7 +49,7 @@ public class AbcPart {
 		this.baseTranspose = baseTranspose;
 		this.metadata = metadata;
 		this.instrument = LotroInstrument.LUTE;
-		this.partNumber = metadata.findPartNumber(this.instrument, -1);
+		this.partNumber = 1;
 		this.title = this.instrument.toString();
 		this.enabled = true;
 		this.dynamicVolume = true;
@@ -672,7 +672,6 @@ public class AbcPart {
 
 		if (this.instrument != instrument) {
 			this.instrument = instrument;
-			setPartNumber(metadata.findPartNumber(instrument, getPartNumber()));
 			fireChangeEvent(true);
 		}
 	}
@@ -773,8 +772,7 @@ public class AbcPart {
 	//
 
 	public boolean isDrumPart() {
-		return instrument == LotroInstrument.DRUMS || instrument == LotroInstrument.COWBELL
-				|| instrument == LotroInstrument.MOOR_COWBELL;
+		return instrument.isPercussion;
 	}
 
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;
