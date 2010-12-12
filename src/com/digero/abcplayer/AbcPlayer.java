@@ -990,7 +990,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		int oldTrackCount = sequencer.getSequence().getTracks().length;
 
 		try {
-			sequencer.reset();
+			sequencer.reset(false);
 			sequencer.setSequence(song);
 			sequencer.setPosition(position);
 			sequencer.setRunning(running);
@@ -1315,7 +1315,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		try {
 			boolean running = sequencer.isRunning();
-			sequencer.reset();
+			sequencer.reset(false);
 			sequencer.setSequence(song);
 			sequencer.setPosition(position);
 			sequencer.setRunning(running);

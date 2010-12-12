@@ -40,6 +40,7 @@ import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
@@ -49,7 +50,7 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants {
+public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   |      TRACK NAME    | octave   |  +--------------+  |
@@ -73,9 +74,11 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private JSpinner transposeSpinner;
 	private NoteGraph noteGraph;
 
+	private AbcPartListener abcListener;
+
 	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
-		setBackground(Color.WHITE);
+
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.DARK_GRAY));
 //		setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.LIGHT_GRAY, Color.GRAY));
 
@@ -103,7 +106,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				int track = trackInfo.getTrackNumber();
 				boolean enabled = checkBox.isSelected();
 				abcPart.setTrackEnabled(track, enabled);
-				seq.setTrackMute(track, !enabled);
+				if (MUTE_DISABLED_TRACKS)
+					seq.setTrackMute(track, !enabled);
 			}
 		});
 
@@ -147,9 +151,30 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 //		add(octaveLabel, "1, 1, f, b");
 		add(transposeSpinner, "1, 1, f, c");
 		add(noteGraph, "2, 1");
+		updateBackground();
+
+		abcListener = new AbcPartListener() {
+			public void abcPartChanged(AbcPartEvent e) {
+				if (e.isPreviewRelated())
+					updateBackground();
+			}
+		};
+		abcPart.addAbcListener(abcListener);
+
+		if (!trackInfo.hasNotes()) {
+			checkBox.setEnabled(false);
+			checkBox.setForeground(Color.DARK_GRAY);
+			checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
+			transposeSpinner.setVisible(false);
+		}
+	}
+
+	private void updateBackground() {
+		setBackground(abcPart.isTrackEnabled(trackInfo.getTrackNumber()) ? Color.WHITE : Color.LIGHT_GRAY);
 	}
 
 	public void dispose() {
+		abcPart.removeAbcListener(abcListener);
 		noteGraph.dispose();
 	}
 
@@ -223,27 +248,58 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			double minLength = NOTE_WIDTH_PX / xform.getScaleX();
 			double height = Math.abs(NOTE_HEIGHT_PX / xform.getScaleY());
 
-			boolean trackEnabled = seq.isTrackActive(trackInfo.getTrackNumber());
+			int trackNumber = trackInfo.getTrackNumber();
+			Color noteColor;
+			Color xnoteColor;
+			Color drumColor;
+			Color borderColor;
+			Color bkgdColor;
+
+			List<Rectangle2D> notesUnplayable = new ArrayList<Rectangle2D>();
+			List<Rectangle2D> notesPlaying = null;
+
+			if (seq.isTrackActive(trackNumber)) {
+				if (abcPart.isTrackEnabled(trackNumber)) {
+					noteColor = NOTE;
+					xnoteColor = NOTE_BAD;
+					drumColor = NOTE_OFF;//NOTE_DRUM;
+					borderColor = BORDER_COLOR;
+					bkgdColor = BKGD_COLOR;
+				}
+				else {
+					noteColor = NOTE_DISABLED;
+					xnoteColor = NOTE_BAD_DISABLED;
+					drumColor = NOTE_OFF;//NOTE_DRUM_DISABLED;
+					borderColor = BORDER_DISABLED;
+					bkgdColor = BKGD_DISABLED;
+				}
+
+				if (seq.isRunning())
+					notesPlaying = new ArrayList<Rectangle2D>();
+			}
+			else {
+				noteColor = NOTE_OFF;
+				xnoteColor = NOTE_BAD_OFF;
+				drumColor = NOTE_OFF;//NOTE_DRUM_OFF;
+				borderColor = BORDER_OFF;
+				bkgdColor = BKGD_OFF;
+			}
+
 			long songPos = seq.getPosition();
-			int transpose = abcPart.getTrackTranspose(trackInfo.getTrackNumber()) + abcPart.getBaseTranspose();
+			int transpose = abcPart.getTrackTranspose(trackNumber) + abcPart.getBaseTranspose();
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 
-			g2.setColor(trackEnabled && trackInfo.hasNotes() ? BORDER_COLOR : BORDER_DISABLED);
+			g2.setColor(borderColor);
 			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-			g2.setColor(trackEnabled && trackInfo.hasNotes() ? BKGD_COLOR : BKGD_DISABLED);
+			g2.setColor(bkgdColor);
 			g2.fillRoundRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE, 5,
 					5);
 
 			g2.transform(xform);
 
-			List<Rectangle2D> notesUnplayable = new ArrayList<Rectangle2D>();
-			List<Rectangle2D> notesPlaying = null;
-			if (trackEnabled && seq.isRunning())
-				notesPlaying = new ArrayList<Rectangle2D>();
-
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
-			g2.setColor(trackEnabled ? NOTE : NOTE_DISABLED);
+			g2.setColor(noteColor);
 
 			Iterator<NoteEvent> noteEventIter = trackInfo.getNoteEvents().iterator();
 			Iterator<NoteEvent> drumEventIter = trackInfo.getDrumEvents().iterator();
@@ -280,9 +336,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				}
 				else {
 					if (drums)
-						g2.setColor(trackEnabled ? NOTE_DRUM : NOTE_DRUM_DISABLED);
+						g2.setColor(drumColor);
 					else
-						g2.setColor(trackEnabled ? NOTE : NOTE_DISABLED);
+						g2.setColor(noteColor);
 
 					rectTmp.setRect(evt.startMicros, y, width, height);
 					g2.fill(rectTmp);
@@ -290,7 +346,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 
 			// Paint the unplayable notes above the playable ones
-			g2.setColor(trackEnabled ? XNOTE : XNOTE_DISABLED);
+			g2.setColor(xnoteColor);
 			for (Rectangle2D rect : notesUnplayable) {
 				g2.fill(rect);
 			}

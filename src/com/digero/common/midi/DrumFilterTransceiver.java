@@ -8,9 +8,10 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
+import com.digero.common.util.ICompileConstants;
 import com.digero.maestro.abc.AbcPart;
 
-public class DrumFilterTransceiver implements Transmitter, Receiver, IMidiConstants {
+public class DrumFilterTransceiver implements Transmitter, Receiver, IMidiConstants, ICompileConstants {
 	private Receiver receiver = null;
 	private AbcPart abcPart = null;
 	private Set<Integer> drumsOn = new HashSet<Integer>();
@@ -36,7 +37,10 @@ public class DrumFilterTransceiver implements Transmitter, Receiver, IMidiConsta
 	}
 
 	public boolean isDrumActive(int drumId) {
-		return (!drumSolos.isEmpty()) ? drumSolos.contains(drumId) : abcPart.isDrumEnabled(drumId);
+//		if (MUTE_DISABLED_TRACKS)
+//			return (!drumSolos.isEmpty()) ? drumSolos.contains(drumId) : abcPart.isDrumEnabled(track, drumId);
+//		else
+			return (!drumSolos.isEmpty()) ? drumSolos.contains(drumId) : true;
 	}
 
 	@Override
