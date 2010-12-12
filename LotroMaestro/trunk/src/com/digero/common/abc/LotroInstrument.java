@@ -25,37 +25,32 @@ package com.digero.common.abc;
 import com.digero.common.midi.Note;
 
 public enum LotroInstrument {
-	LUTE(Note.C2, Note.C5, false, 24, 0), //
-	HARP(Note.C2, Note.C5, false, 46, 0), //
-	THEORBO(Note.C2, Note.C5, false, 32, -1), //
-	FLUTE(Note.C2, Note.C5, true, 73, 2), //
-	CLARINET(Note.D2, Note.C5, true, 71, 1), //
-	HORN(Note.Cs2, Note.C5, true, 69, 0), //
-	BAGPIPE(Note.C2, Note.C5, true, 109, 1), //
-	DRUMS(Note.C2, Note.C5, false, 118, 0), //
-	COWBELL(Note.C2, Note.C5, false, 115, 0), //
-	MOOR_COWBELL(Note.C2, Note.C5, false, 114, 0);
-
-	private static final LotroInstrument[] NON_DRUMS = new LotroInstrument[] {
-			LUTE, HARP, THEORBO, BAGPIPE, CLARINET, FLUTE, HORN
-	};
-
-	public static final LotroInstrument[] getNonDrumInstruments() {
-		return NON_DRUMS;
-	}
+	LUTE(Note.C2, Note.C5, false, 24, 0, false), //
+	HARP(Note.C2, Note.C5, false, 46, 0, false), //
+	THEORBO(Note.C2, Note.C5, false, 32, -1, false), //
+	FLUTE(Note.C2, Note.C5, true, 73, 2, false), //
+	CLARINET(Note.D2, Note.C5, true, 71, 1, false), //
+	HORN(Note.Cs2, Note.C5, true, 69, 0, false), //
+	BAGPIPE(Note.C2, Note.C5, true, 109, 1, false), //
+	DRUMS(Note.C2, Note.C5, false, 118, 0, true), //
+	COWBELL(Note.C2, Note.C5, false, 115, 0, true), //
+	MOOR_COWBELL(Note.C2, Note.C5, false, 114, 0, true);
 
 	public final Note lowestPlayable;
 	public final Note highestPlayable;
 	public final boolean sustainable;
+	public final boolean isPercussion;
 	public final int midiProgramId;
-	public final int octaveDelta; 
+	public final int octaveDelta;
 
-	private LotroInstrument(Note low, Note high, boolean sustainable, int midiProgramId, int octaveDelta) {
+	private LotroInstrument(Note low, Note high, boolean sustainable, int midiProgramId, int octaveDelta,
+			boolean isPercussion) {
 		this.lowestPlayable = low;
 		this.highestPlayable = high;
 		this.sustainable = sustainable;
 		this.midiProgramId = midiProgramId;
 		this.octaveDelta = octaveDelta;
+		this.isPercussion = isPercussion;
 	}
 
 	public boolean isSustainable(int noteId) {
@@ -66,7 +61,7 @@ public enum LotroInstrument {
 	public String toString() {
 		if (this == MOOR_COWBELL)
 			return "Moor Cowbell";
-		
+
 		String name = super.toString();
 		return name.substring(0, 1) + name.substring(1).toLowerCase();
 	}

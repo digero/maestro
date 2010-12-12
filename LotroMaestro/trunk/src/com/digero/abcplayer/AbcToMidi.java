@@ -29,9 +29,9 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
+import com.digero.common.midi.PanGenerator;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
-import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 
 public class AbcToMidi {
@@ -211,6 +211,9 @@ public class AbcToMidi {
 		long MPQN = 0;
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
+		PanGenerator pan = new PanGenerator();
+		MidiEvent lastPanEvent = null;
+
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
 		for (FileAndData fileAndData : filesData) {
 			String fileName = fileAndData.file.getName();
@@ -338,18 +341,8 @@ public class AbcToMidi {
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 
 						if (stereo) {
-							int deltaPan = 0;
-							for (int i = 1; i < trackNumber && i < 15; i++) {
-								deltaPan += 15 - 3 * i;
-							}
-							if (trackNumber % 2 == 1)
-								deltaPan = -deltaPan;
-							deltaPan = Util.clamp(deltaPan, -48, 48);
-
-							if (info.getInstrument() == LotroInstrument.DRUMS)
-								deltaPan /= 2;
-
-							track.add(MidiFactory.createPanEvent(64 + deltaPan, channel));
+							track.add(lastPanEvent = MidiFactory.createPanEvent(pan.get(info.getInstrument(), info
+									.getTitle()), channel));
 						}
 						else {
 							track.add(MidiFactory.createPanEvent(64, channel));
@@ -714,12 +707,18 @@ public class AbcToMidi {
 			}
 
 			if (seq == null)
-				throw new ParseException("The song contains no notes", fileName, lineNumber);
+				throw new ParseException("The file contains no notes", fileName, lineNumber);
 
 			for (int lineAndColumn : tiedNotes.values()) {
 				throw new ParseException("Tied note does not connect to another note", fileName, lineAndColumn >>> 16,
 						lineAndColumn & 0xFFFF);
 			}
+		}
+
+		if (trackNumber == 1 && track != null && lastPanEvent != null) {
+			// Only one track
+			track.remove(lastPanEvent);
+			track.add(MidiFactory.createPanEvent(64, channel));
 		}
 
 		return seq;

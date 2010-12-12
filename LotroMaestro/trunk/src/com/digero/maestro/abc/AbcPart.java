@@ -25,7 +25,7 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
-import com.digero.common.util.Util;
+import com.digero.common.midi.PanGenerator;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
@@ -40,9 +40,10 @@ public class AbcPart {
 	private AbcMetadataSource metadata;
 	private int baseTranspose;
 	private int[] trackTranspose;
-	private boolean[] trackDisabled;
+	private boolean[] trackEnabled;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
+	@SuppressWarnings("unchecked")
 	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcMetadataSource metadata) {
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
@@ -53,16 +54,23 @@ public class AbcPart {
 		this.enabled = true;
 		this.dynamicVolume = true;
 
-		this.trackTranspose = new int[getTrackCount()];
-		this.trackDisabled = new boolean[getTrackCount()];
+		int t = getTrackCount();
+		this.trackTranspose = new int[t];
+		this.trackEnabled = new boolean[t];
+		this.drumsDisabled = new HashSet[t];
+		this.drumNoteMap = new HashMap[t];
+		for (int i = 0; i < t; i++) {
+			this.drumNoteMap[i] = new HashMap<Integer, Integer>();
+			this.drumsDisabled[i] = new HashSet<Integer>();
+		}
 	}
 
 	public void exportToMidi(Sequence out, TimingInfo tm) throws AbcConversionException {
-		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0, 0);
+		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0, PanGenerator.CENTER);
 	}
 
 	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity,
-			int deltaPan) throws AbcConversionException {
+			int pan) throws AbcConversionException {
 		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
@@ -75,7 +83,7 @@ public class AbcPart {
 
 		track.add(MidiFactory.createTrackNameEvent(title));
 		track.add(MidiFactory.createProgramChangeEvent(instrument.midiProgramId, channel, 0));
-		track.add(MidiFactory.createPanEvent(64 + Util.clamp(deltaPan, -48, 48), channel));
+		track.add(MidiFactory.createPanEvent(pan, channel));
 
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 
@@ -314,7 +322,7 @@ public class AbcPart {
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
 		for (int t = 0; t < getTrackCount(); t++) {
-			if (!trackDisabled[t]) {
+			if (isTrackEnabled(t)) {
 				for (NoteEvent ne : getTrackEvents(t)) {
 					// Skip notes that are outside of the play range.
 					if (ne.endMicros <= songStartMicros || ne.startMicros >= songEndMicros)
@@ -567,10 +575,10 @@ public class AbcPart {
 	 */
 	protected Note mapNote(int track, int noteId) {
 		if (isDrumPart()) {
-			if (!isDrumEnabled(noteId))
+			if (!isDrumEnabled(track, noteId))
 				return null;
 
-			int dstNote = getDrumMapping(noteId);
+			int dstNote = getDrumMapping(track, noteId);
 			return (dstNote == DISABLED_DRUM_ID) ? null : Note.fromId(dstNote);
 		}
 		else {
@@ -587,7 +595,7 @@ public class AbcPart {
 		long start = Long.MAX_VALUE;
 
 		for (int t = 0; t < getTrackCount(); t++) {
-			if (!trackDisabled[t]) {
+			if (isTrackEnabled(t)) {
 				for (NoteEvent ne : getTrackEvents(t)) {
 					if (mapNote(t, ne.note.id) != null) {
 						if (ne.startMicros < start)
@@ -605,7 +613,7 @@ public class AbcPart {
 		long end = Long.MIN_VALUE;
 
 		for (int t = 0; t < getTrackCount(); t++) {
-			if (!trackDisabled[t]) {
+			if (isTrackEnabled(t)) {
 				List<NoteEvent> evts = getTrackEvents(t);
 				ListIterator<NoteEvent> iter = evts.listIterator(evts.size());
 				while (iter.hasPrevious()) {
@@ -703,12 +711,12 @@ public class AbcPart {
 	}
 
 	public boolean isTrackEnabled(int track) {
-		return !trackDisabled[track];
+		return trackEnabled[track] || isDrumPart();
 	}
 
 	public void setTrackEnabled(int track, boolean enabled) {
-		if (trackDisabled[track] != !enabled) {
-			trackDisabled[track] = !enabled;
+		if (trackEnabled[track] != enabled) {
+			trackEnabled[track] = enabled;
 			fireChangeEvent(true);
 		}
 	}
@@ -770,37 +778,37 @@ public class AbcPart {
 	}
 
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;
-	private Map<Integer, Integer> drumNoteMap = new HashMap<Integer, Integer>();
-	private Set<Integer> drumsDisabled = new HashSet<Integer>();
+	private Map<Integer, Integer>[] drumNoteMap;
+	private Set<Integer>[] drumsDisabled;
 	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
-	public void setDrumMapping(int srcNote, int dstNote) {
-		if (getDrumMapping(srcNote) != dstNote) {
-			drumNoteMap.put(srcNote, dstNote);
+	public void setDrumMapping(int track, int srcNote, int dstNote) {
+		if (getDrumMapping(track, srcNote) != dstNote) {
+			drumNoteMap[track].put(srcNote, dstNote);
 			drumPrefs.putInt(Integer.toString(srcNote), dstNote);
 			fireChangeEvent(true);
 		}
 	}
 
-	public int getDrumMapping(int srcNote) {
-		Integer dstNote = drumNoteMap.get(srcNote);
+	public int getDrumMapping(int track, int srcNote) {
+		Integer dstNote = drumNoteMap[track].get(srcNote);
 		if (dstNote == null) {
 			dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
-			drumNoteMap.put(srcNote, dstNote);
+			drumNoteMap[track].put(srcNote, dstNote);
 		}
 		return dstNote;
 	}
 
-	public boolean isDrumEnabled(int noteId) {
-		return !drumsDisabled.contains(noteId);
+	public boolean isDrumEnabled(int track, int drumId) {
+		return !drumsDisabled[track].contains(drumId);
 	}
 
-	public void setDrumEnabled(int noteId, boolean enabled) {
-		if (isDrumEnabled(noteId) != enabled) {
+	public void setDrumEnabled(int track, int noteId, boolean enabled) {
+		if (isDrumEnabled(track, noteId) != enabled) {
 			if (enabled)
-				drumsDisabled.remove(noteId);
+				drumsDisabled[track].remove(noteId);
 			else
-				drumsDisabled.add(noteId);
+				drumsDisabled[track].add(noteId);
 			fireChangeEvent(true);
 		}
 	}

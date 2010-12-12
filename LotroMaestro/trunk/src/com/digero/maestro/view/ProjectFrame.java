@@ -63,6 +63,7 @@ import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.DrumFilterTransceiver;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.PanGenerator;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -70,6 +71,7 @@ import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.PlayControlPanel;
@@ -84,10 +86,10 @@ import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")
-public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource {
+public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource, ICompileConstants {
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] {
-			220, FILL
+			180, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
 		FILL
@@ -128,8 +130,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 
+	private MainSequencerListener mainSequencerListener;
+	private AbcSequencerListener abcSequencerListener;
+
 	public ProjectFrame() {
-		super("LotRO Maestro");
+		super("LOTRO Maestro");
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
@@ -299,8 +304,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcStopButton = new JButton(abcStopIcon);
 		abcStopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				abcSequencer.reset();
-				sequencer.reset();
+				abcSequencer.reset(false);
+				sequencer.reset(false);
 			}
 		});
 		JPanel abcPreviewControls = new JPanel(new TableLayout(new double[] {
@@ -326,13 +331,22 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		settingsPanel.add(new JLabel("Transpose:"), "0, 0");
 		settingsPanel.add(new JLabel("Tempo:"), "0, 1");
 		settingsPanel.add(new JLabel("Meter:"), "0, 2");
-		settingsPanel.add(new JLabel("Key:"), "0, 3");
+		if (SHOW_KEY_FIELD)
+			settingsPanel.add(new JLabel("Key:"), "0, 3");
 		settingsPanel.add(transposeSpinner, "1, 0");
 		settingsPanel.add(tempoSpinner, "1, 1");
 		settingsPanel.add(timeSignatureField, "1, 2, 2, 2, L, F");
-		settingsPanel.add(keySignatureField, "1, 3, 2, 3, L, F");
+		if (SHOW_KEY_FIELD)
+			settingsPanel.add(keySignatureField, "1, 3, 2, 3, L, F");
 		settingsPanel.add(exportButton, "0, 4, 2, 4, C, F");
 		settingsPanel.add(abcPreviewControls, "0, 5, 2, 5");
+
+		if (!SHOW_TEMPO_SPINNER)
+			tempoSpinner.setEnabled(false);
+		if (!SHOW_METER_TEXTBOX)
+			timeSignatureField.setEnabled(false);
+		if (!SHOW_KEY_FIELD)
+			keySignatureField.setEnabled(false);
 
 		PlayControlPanel playControlPanel = new PlayControlPanel(sequencer, "play_blue", "pause_blue", "stop");
 
@@ -357,62 +371,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 		new DropTarget(this, dropListener);
 
-		sequencer.addChangeListener(new SequencerListener() {
-			public void propertyChanged(SequencerEvent evt) {
-				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
-					if (sequencer.isRunning())
-						abcSequencer.stop();
-				}
-				else if (!echoingPosition) {
-					try {
-						echoingPosition = true;
-						if (evt.getProperty() == SequencerProperty.POSITION) {
-							long pos = sequencer.getPosition() - abcPreviewStartMicros;
-							abcSequencer.setPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
-						}
-						else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
-							long pos = sequencer.getDragPosition() - abcPreviewStartMicros;
-							abcSequencer.setDragPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
-						}
-						else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
-							abcSequencer.setDragging(sequencer.isDragging());
-						}
-					}
-					finally {
-						echoingPosition = false;
-					}
-				}
-			}
-		});
+		mainSequencerListener = new MainSequencerListener();
+		sequencer.addChangeListener(mainSequencerListener);
 
-		abcSequencer.addChangeListener(new SequencerListener() {
-			public void propertyChanged(SequencerEvent evt) {
-				updateAbcButtons();
-				if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
-					if (abcSequencer.isRunning())
-						sequencer.stop();
-				}
-				else if (!echoingPosition) {
-					try {
-						echoingPosition = true;
-						if (evt.getProperty() == SequencerProperty.POSITION) {
-							long pos = abcSequencer.getPosition() + abcPreviewStartMicros;
-							sequencer.setPosition(Util.clamp(pos, 0, sequencer.getLength()));
-						}
-						else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
-							long pos = abcSequencer.getDragPosition() + abcPreviewStartMicros;
-							sequencer.setDragPosition(Util.clamp(pos, 0, sequencer.getLength()));
-						}
-						else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
-							sequencer.setDragging(abcSequencer.isDragging());
-						}
-					}
-					finally {
-						echoingPosition = false;
-					}
-				}
-			}
-		});
+		abcSequencerListener = new AbcSequencerListener();
+		abcSequencer.addChangeListener(abcSequencerListener);
 
 		parts.addListDataListener(new ListDataListener() {
 			public void intervalRemoved(ListDataEvent e) {
@@ -427,6 +390,63 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				updateAbcButtons();
 			}
 		});
+	}
+
+	private class MainSequencerListener implements SequencerListener {
+		public void propertyChanged(SequencerEvent evt) {
+			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
+				if (sequencer.isRunning())
+					abcSequencer.stop();
+			}
+			else if (!echoingPosition) {
+				try {
+					echoingPosition = true;
+					if (evt.getProperty() == SequencerProperty.POSITION) {
+						long pos = sequencer.getPosition() - abcPreviewStartMicros;
+						abcSequencer.setPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+					}
+					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
+						long pos = sequencer.getDragPosition() - abcPreviewStartMicros;
+						abcSequencer.setDragPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+					}
+					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
+						abcSequencer.setDragging(sequencer.isDragging());
+					}
+				}
+				finally {
+					echoingPosition = false;
+				}
+			}
+		}
+	}
+
+	private class AbcSequencerListener implements SequencerListener {
+		public void propertyChanged(SequencerEvent evt) {
+			updateAbcButtons();
+			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
+				if (abcSequencer.isRunning())
+					sequencer.stop();
+			}
+			else if (!echoingPosition) {
+				try {
+					echoingPosition = true;
+					if (evt.getProperty() == SequencerProperty.POSITION) {
+						long pos = abcSequencer.getPosition() + abcPreviewStartMicros;
+						sequencer.setPosition(Util.clamp(pos, 0, sequencer.getLength()));
+					}
+					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION) {
+						long pos = abcSequencer.getDragPosition() + abcPreviewStartMicros;
+						sequencer.setDragPosition(Util.clamp(pos, 0, sequencer.getLength()));
+					}
+					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
+						sequencer.setDragging(abcSequencer.isDragging());
+					}
+				}
+				finally {
+					echoingPosition = false;
+				}
+			}
+		}
 	}
 
 	private static class PrefsDocumentListener implements DocumentListener {
@@ -506,7 +526,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	public KeySignature getKeySignature() {
-		return (KeySignature) keySignatureField.getValue();
+		if (SHOW_KEY_FIELD)
+			return (KeySignature) keySignatureField.getValue();
+		else
+			return KeySignature.C_MAJOR;
 	}
 
 	public TimeSignature getTimeSignature() {
@@ -544,8 +567,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		saveFile = null;
 		sequencer.clearSequence();
 		abcSequencer.clearSequence();
-		sequencer.reset();
-		abcSequencer.reset();
+		sequencer.reset(false);
+		abcSequencer.reset(false);
 		abcPreviewStartMicros = 0;
 	}
 
@@ -557,8 +580,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		parts.clear();
 
 		saveFile = null;
-		sequencer.reset();
-		abcSequencer.reset();
+		sequencer.reset(true);
+		abcSequencer.reset(false);
 		abcPreviewStartMicros = 0;
 
 		try {
@@ -577,6 +600,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			updateAbcButtons();
 			newPartButton.doClick();
+
+			sequencer.start();
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
@@ -645,28 +670,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			track.add(MidiFactory.createTrackNameEvent(sequenceInfo.getTitle()));
 			track.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
 
+			PanGenerator panner = new PanGenerator();
 			for (int i = 0; i < parts.getSize(); i++) {
 				AbcPart part = (AbcPart) parts.get(i);
+				int pan = (parts.getSize() > 1) ? panner.get(part.getInstrument(), part.getTitle())
+						: PanGenerator.CENTER;
 
-				int deltaPan = 0;
-				for (int j = 1; j < i && j < 15; j++) {
-					deltaPan += 15 - 3 * j;
-				}
-				if (i % 2 == 0)
-					deltaPan = -deltaPan;
-				deltaPan = Util.clamp(deltaPan, -48, 48);
-
-				if (part.getInstrument() == LotroInstrument.DRUMS)
-					deltaPan /= 2;
-
-				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0, deltaPan);
+				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0, pan);
 			}
 
 			long position = abcSequencer.getPosition() + abcPreviewStartMicros - startMicros;
 			abcPreviewStartMicros = startMicros;
 
 			boolean running = abcSequencer.isRunning();
-			abcSequencer.reset();
+			abcSequencer.reset(false);
 			abcSequencer.setSequence(song);
 
 			if (position < 0)

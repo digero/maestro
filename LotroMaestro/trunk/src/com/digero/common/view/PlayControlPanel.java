@@ -57,7 +57,7 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 		stopButton = new JButton(stopIcon);
 		stopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				sequencer.reset();
+				sequencer.reset(false);
 			}
 		});
 

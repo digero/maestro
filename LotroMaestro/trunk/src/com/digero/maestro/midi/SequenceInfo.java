@@ -35,6 +35,7 @@ public class SequenceInfo implements IMidiConstants {
 	private Sequence sequence;
 	private String title;
 	private int tempoBPM;
+	private long endMicros;
 	private List<TrackInfo> trackInfoList;
 
 	public SequenceInfo(File file, boolean isAbc) throws InvalidMidiDataException, IOException, ParseException {
@@ -61,8 +62,16 @@ public class SequenceInfo implements IMidiConstants {
 		SequenceDataCache sequenceCache = new SequenceDataCache(sequence);
 
 		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
+		endMicros = 0;
 		for (int i = 0; i < tracks.length; i++) {
-			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache));
+			TrackInfo track = new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache);
+			trackInfoList.add(track);
+
+			if (track.getNoteCount() > 0)
+				endMicros = Math.max(endMicros, track.getNoteEvents().get(track.getNoteCount() - 1).endMicros);
+
+			if (track.getDrumCount() > 0)
+				endMicros = Math.max(endMicros, track.getDrumEvents().get(track.getDrumCount() - 1).endMicros);
 		}
 
 		tempoBPM = findMainTempo(sequence, tempoCache);
@@ -107,6 +116,10 @@ public class SequenceInfo implements IMidiConstants {
 
 	public int getTempoBPM() {
 		return tempoBPM;
+	}
+
+	public long getEndMicros() {
+		return endMicros;
 	}
 
 	public KeySignature getKeySignature() {

@@ -26,6 +26,7 @@ public class SequencerWrapper {
 	private long dragPosition;
 	private boolean isDragging;
 	private TempoCache tempoCache = new TempoCache();
+	private boolean customSequencer = false;
 
 	private Timer updateTimer;
 
@@ -59,6 +60,7 @@ public class SequencerWrapper {
 	}
 
 	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
+		customSequencer = true;
 		this.sequencer = sequencer;
 		this.transmitter = transmitter;
 		this.receiver = receiver;
@@ -75,18 +77,19 @@ public class SequencerWrapper {
 		return drumFilter;
 	}
 
-	public void setDrumSolo(int drumId, boolean solo) {
-		if (drumFilter != null && solo != getDrumSolo(drumId)) {
+	public void setDrumSolo(int track, int drumId, boolean solo) {
+		if (drumFilter != null && solo != getDrumSolo(track, drumId)) {
+			sequencer.setTrackSolo(track, solo);
 			drumFilter.setDrumSolo(drumId, solo);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
-	public boolean getDrumSolo(int drumId) {
+	public boolean getDrumSolo(int track, int drumId) {
 		if (drumFilter == null)
 			return false;
 
-		return drumFilter.getDrumSolo(drumId);
+		return drumFilter.getDrumSolo(drumId) && sequencer.getTrackSolo(track);
 	}
 
 	private TimerActionListener timerTick = new TimerActionListener();
@@ -120,34 +123,104 @@ public class SequencerWrapper {
 		}
 	};
 
-	public void reset() {
+	public void reset(boolean fullReset) {
 		stop();
 		setPosition(0);
 
-		// Reset the instruments
-		boolean isOpen = sequencer.isOpen();
+		boolean oldReset = customSequencer || !fullReset;
+		Sequencer newSequencer = null;
+		Transmitter newTransmitter = null;
+		Receiver newReceiver = null;
+
 		try {
-			if (!isOpen)
-				sequencer.open();
+			if (!oldReset) {
+				try {
+					newSequencer = MidiSystem.getSequencer(false);
+					newSequencer.open();
+					newTransmitter = newSequencer.getTransmitter();
+					newReceiver = MidiSystem.getReceiver();
+				}
+				catch (MidiUnavailableException e1) {
+					e1.printStackTrace();
+				}
 
-			ShortMessage msg = new ShortMessage();
-			for (int i = 0; i < 16; i++) {
-				msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-				receiver.send(msg, -1);
 			}
-			msg.setMessage(ShortMessage.SYSTEM_RESET);
-			receiver.send(msg, -1);
-		}
-		catch (MidiUnavailableException e) {
-			// Ignore
-		}
-		catch (InvalidMidiDataException e) {
-			// Ignore
-			e.printStackTrace();
-		}
 
-		if (!isOpen)
-			sequencer.close();
+			if (newSequencer != null && newTransmitter != null && newReceiver != null) {
+				try {
+					newSequencer.setSequence(sequencer.getSequence());
+					sequencer.setSequence((Sequence) null);
+				}
+				catch (InvalidMidiDataException e) {
+					// This shouldn't happen
+					throw new RuntimeException(e);
+				}
+
+				sequencer.close();
+				transmitter.close();
+				receiver.close();
+
+				sequencer = newSequencer;
+				transmitter = newTransmitter;
+				receiver = newReceiver;
+
+				newSequencer = null;
+				newTransmitter = null;
+				newReceiver = null;
+
+				if (drumFilter != null) {
+					transmitter.setReceiver(drumFilter);
+					drumFilter.setReceiver(receiver);
+				}
+				else {
+					transmitter.setReceiver(receiver);
+				}
+			}
+			else {
+				oldReset = true;
+			}
+
+			if (oldReset) {
+				// Reset the instruments
+				boolean isOpen = sequencer.isOpen();
+				try {
+					if (!isOpen)
+						sequencer.open();
+
+					ShortMessage msg = new ShortMessage();
+					for (int i = 0; i < 16; i++) {
+						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+						receiver.send(msg, -1);
+					}
+					msg.setMessage(ShortMessage.SYSTEM_RESET);
+					receiver.send(msg, -1);
+				}
+				catch (MidiUnavailableException e) {
+					// Ignore
+				}
+				catch (InvalidMidiDataException e) {
+					// Ignore
+					e.printStackTrace();
+				}
+
+				if (!isOpen)
+					sequencer.close();
+			}
+		}
+		finally {
+			if (newSequencer != null) {
+				newSequencer.close();
+				newSequencer = null;
+			}
+			if (newTransmitter != null) {
+				newTransmitter.close();
+				newTransmitter = null;
+			}
+			if (newReceiver != null) {
+				newReceiver.close();
+				newReceiver = null;
+			}
+		}
 	}
 
 	public long getTickPosition() {

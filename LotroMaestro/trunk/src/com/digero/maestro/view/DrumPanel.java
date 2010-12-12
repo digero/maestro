@@ -19,7 +19,6 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.sound.midi.Sequence;
@@ -34,6 +33,7 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
@@ -44,7 +44,7 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants {
+public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   | TRACK NAME         | Drum     |  +--------------+  |
@@ -86,10 +86,10 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		tableLayout.setHGap(HGAP);
 
 		checkBox = new JCheckBox();
-		checkBox.setSelected(abcPart.isDrumEnabled(drumId));
+		checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
 		checkBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				abcPart.setDrumEnabled(drumId, checkBox.isSelected());
+				abcPart.setDrumEnabled(trackInfo.getTrackNumber(), drumId, checkBox.isSelected());
 			}
 		});
 
@@ -110,7 +110,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		drumComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				LotroDrumInfo selected = (LotroDrumInfo) drumComboBox.getSelectedItem();
-				abcPart.setDrumMapping(drumId, selected.note.id);
+				abcPart.setDrumMapping(trackInfo.getTrackNumber(), drumId, selected.note.id);
 			}
 		});
 
@@ -121,15 +121,13 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		noteGraph.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setTrackSolo(trackInfo.getTrackNumber(), true);
-					seq.setDrumSolo(drumId, true);
+					seq.setDrumSolo(trackInfo.getTrackNumber(), drumId, true);
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setTrackSolo(trackInfo.getTrackNumber(), false);
-					seq.setDrumSolo(drumId, false);
+					seq.setDrumSolo(trackInfo.getTrackNumber(), drumId, false);
 				}
 			}
 		});
@@ -146,13 +144,13 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
-			checkBox.setSelected(abcPart.isDrumEnabled(drumId));
+			checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
 			drumComboBox.setSelectedItem(getSelectedDrum());
 		}
 	};
 
 	private LotroDrumInfo getSelectedDrum() {
-		return LotroDrumInfo.getById(abcPart.getDrumMapping(drumId));
+		return LotroDrumInfo.getById(abcPart.getDrumMapping(trackInfo.getTrackNumber(), drumId));
 	}
 
 	private class NoteGraph extends JPanel implements IDisposable, NoteGraphConstants {
@@ -205,23 +203,45 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			double minLength = NOTE_WIDTH_PX * 0.5 / xform.getScaleX();
 			double height = Math.abs(NOTE_HEIGHT_PX * 2.0 / xform.getScaleY());
 
-			boolean trackEnabled = seq.isDrumActive(trackInfo.getTrackNumber(), drumId);
+			Color drumColor;
+			Color borderColor;
+			Color bkgdColor;
+
+			List<Rectangle2D> notesPlaying = null;
+
+			if (seq.isDrumActive(trackInfo.getTrackNumber(), drumId)) {
+				if (abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId)) {
+					drumColor = NOTE_DRUM;
+					borderColor = BORDER_COLOR;
+					bkgdColor = BKGD_COLOR;
+				}
+				else {
+					drumColor = NOTE_DRUM_DISABLED;
+					borderColor = BORDER_DISABLED;
+					bkgdColor = BKGD_DISABLED;
+				}
+
+				// Drum parts don't really need to highlight the notes playing
+//				if (seq.isRunning())
+//					notesPlaying = new ArrayList<Rectangle2D>();
+			}
+			else {
+				drumColor = NOTE_DRUM_OFF;
+				borderColor = BORDER_OFF;
+				bkgdColor = BKGD_OFF;
+			}
 			long songPos = seq.getPosition();
 
-			g2.setColor(trackEnabled ? BORDER_COLOR : BORDER_DISABLED);
+			g2.setColor(borderColor);
 			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-			g2.setColor(trackEnabled ? BKGD_COLOR : BKGD_DISABLED);
+			g2.setColor(bkgdColor);
 			g2.fillRoundRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE, 5,
 					5);
 
 			g2.transform(xform);
 
-			List<Rectangle2D> notesPlaying = null;
-			if (trackEnabled && seq.isRunning())
-				notesPlaying = new ArrayList<Rectangle2D>();
-
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
-			g2.setColor(trackEnabled ? NOTE_DRUM : NOTE_DRUM_DISABLED);
+			g2.setColor(drumColor);
 
 			for (NoteEvent evt : trackInfo.getDrumEvents()) {
 				int id = evt.note.id;
