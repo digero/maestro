@@ -9,7 +9,7 @@ public class MidiConstants implements IMidiConstants {
 	}
 
 	public static String getDrumName(int id) {
-		id -= 35;
+		id -= LOWEST_DRUM_ID;
 		if (id < 0 || id >= DRUM_NAMES.length) {
 			return "Unknown";
 		}
@@ -147,7 +147,16 @@ public class MidiConstants implements IMidiConstants {
 			"Gun Shot", // 127
 	};
 
+	public static final int LOWEST_DRUM_ID = 27;
 	private static final String[] DRUM_NAMES = {
+			"Synth Zap", // 27
+			"Unknown", // 28
+			"Record Scratch 1", // 29
+			"Record Scratch 2", // 30
+			"Drum Sticks", // 31
+			"Unknown", // 32
+			"Metronome Click", // 33
+			"Metronome Bell", // 34
 			"Acou. Bass Drum", // 35
 			"Bass Drum 1", // 36
 			"Rim Shot", // 37
@@ -195,5 +204,12 @@ public class MidiConstants implements IMidiConstants {
 			"Open Cuica", // 79
 			"Mute Triangle", // 80
 			"Open Triangle", // 81
+			"Cabasa 2", // 82
+			"Bells", // 83
+			"Chimes", // 84
+			"Click", // 85
+			"Muted Large Drum", // 86
+			"Large Drum", // 87
 	};
+	public static final int HIGHEST_DRUM_ID = LOWEST_DRUM_ID + DRUM_NAMES.length - 1;
 }
