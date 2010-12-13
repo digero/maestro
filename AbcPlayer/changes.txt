@@ -3,6 +3,8 @@ Todo:
   - ABC visualization.
 
 Version 1.1.1
+  - You can now export songs directly to MP3! Requires the (free) LAME mp3 
+    converter.
   - When a long note is held on a woodwind instrument while stringed 
     instruments are playing many fast notes, the note on the woodwind should 
     no longer be cut off before it actually ends.
