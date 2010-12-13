@@ -76,6 +76,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.filechooser.FileFilter;
 
 import com.digero.abcplayer.AbcToMidi.AbcInfo;
 import com.digero.common.abc.LotroInstrument;
@@ -520,6 +521,19 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
+		final JMenuItem exportMp3MenuItem = fileMenu.add(new JMenuItem("Save as MP3 file..."));
+		exportMp3MenuItem.setMnemonic(KeyEvent.VK_M);
+		exportMp3MenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
+		exportMp3MenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!sequencer.isLoaded() || isExporting) {
+					Toolkit.getDefaultToolkit().beep();
+					return;
+				}
+				exportMp3();
+			}
+		});
+
 		final JMenuItem exportWavMenuItem = fileMenu.add(new JMenuItem("Save as Wave file..."));
 		exportWavMenuItem.setMnemonic(KeyEvent.VK_E);
 		exportWavMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK
@@ -531,19 +545,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					return;
 				}
 				exportWav();
-			}
-		});
-
-		final JMenuItem exportMp3MenuItem = fileMenu.add(new JMenuItem("Save as MP3 file..."));
-		exportMp3MenuItem.setMnemonic(KeyEvent.VK_M);
-		exportMp3MenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
-		exportMp3MenuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (!sequencer.isLoaded() || isExporting) {
-					Toolkit.getDefaultToolkit().beep();
-					return;
-				}
-				exportMp3();
 			}
 		});
 
@@ -1232,7 +1233,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					}
 				});
 				Object[] message = new Object[] {
-						"Exporting to MP3 requires LAME. To download it, visit: ", hyperlink,
+						"Exporting to MP3 requires LAME, a free MP3 encoder. To download it, visit: ", hyperlink,
 						"\nAfter you download and unzip it, click OK to locate lame.exe",
 				};
 				int result = JOptionPane.showConfirmDialog(this, message, "Export to MP3 requires LAME",
@@ -1254,7 +1255,15 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 			while (!lameExe.exists()) {
 				JFileChooser fc = new JFileChooser();
-				fc.setFileFilter(new ExtensionFileFilter("Executable (*.exe)", "exe"));
+				fc.setFileFilter(new FileFilter() {
+					public boolean accept(File f) {
+						return f.isDirectory() || f.getName().toLowerCase().equals("lame.exe");
+					}
+
+					public String getDescription() {
+						return "lame.exe";
+					}
+				});
 				fc.setSelectedFile(lameExe);
 				int result = fc.showOpenDialog(this);
 
