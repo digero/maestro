@@ -98,9 +98,10 @@ import com.digero.common.view.TempoBar;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
-	private static final String APP_NAME = "ABC Player";
+	static final String APP_NAME = "ABC Player";
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
+	private static final String LAME_URL = "http://lame.sourceforge.net/";
 	private static final Version APP_VERSION = new Version(1, 1, 1);
 
 	private static AbcPlayer mainWindow = null;
@@ -171,6 +172,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private Preferences prefs = Preferences.userNodeForPackage(AbcPlayer.class);
 	private Preferences windowPrefs = prefs.node("window");
+
+	private boolean isExporting = false;
 
 	public AbcPlayer() {
 		super(APP_NAME);
@@ -519,14 +522,28 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		final JMenuItem exportWavMenuItem = fileMenu.add(new JMenuItem("Save as Wave file..."));
 		exportWavMenuItem.setMnemonic(KeyEvent.VK_E);
-		exportWavMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
+		exportWavMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK
+				| InputEvent.SHIFT_DOWN_MASK));
 		exportWavMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!sequencer.isLoaded()) {
+				if (!sequencer.isLoaded() || isExporting) {
 					Toolkit.getDefaultToolkit().beep();
 					return;
 				}
 				exportWav();
+			}
+		});
+
+		final JMenuItem exportMp3MenuItem = fileMenu.add(new JMenuItem("Save as MP3 file..."));
+		exportMp3MenuItem.setMnemonic(KeyEvent.VK_M);
+		exportMp3MenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
+		exportMp3MenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!sequencer.isLoaded() || isExporting) {
+					Toolkit.getDefaultToolkit().beep();
+					return;
+				}
+				exportMp3();
 			}
 		});
 
@@ -550,7 +567,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 				boolean saveEnabled = sequencer.isLoaded();
 				saveMenuItem.setEnabled(saveEnabled);
-				exportWavMenuItem.setEnabled(saveEnabled);
+				exportWavMenuItem.setEnabled(saveEnabled && !isExporting);
+				exportMp3MenuItem.setEnabled(saveEnabled && !isExporting);
 			}
 
 			@Override
@@ -565,6 +583,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 				saveMenuItem.setEnabled(true);
 				exportWavMenuItem.setEnabled(true);
+				exportMp3MenuItem.setEnabled(true);
 			}
 		});
 
@@ -1075,6 +1094,25 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		stopButton.setEnabled(loaded && (sequencer.isRunning() || sequencer.getPosition() != 0));
 	}
 
+	private class WaitDialog extends JDialog {
+		public WaitDialog(JFrame owner, File saveFile) {
+			super(owner, APP_NAME, false);
+			JPanel waitContent = new JPanel(new BorderLayout(5, 5));
+			setContentPane(waitContent);
+			waitContent.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			waitContent.add(new JLabel("Saving " + saveFile.getName() + ". Please wait..."), BorderLayout.CENTER);
+			JProgressBar waitProgress = new JProgressBar();
+			waitProgress.setIndeterminate(true);
+			waitContent.add(waitProgress, BorderLayout.SOUTH);
+			pack();
+			setLocation(getOwner().getX() + (getOwner().getWidth() - getWidth()) / 2, getOwner().getY()
+					+ (getOwner().getHeight() - getHeight()) / 2);
+			setResizable(false);
+			setEnabled(false);
+			setIconImages(AbcPlayer.this.getIconImages());
+		}
+	}
+
 	private void exportWav() {
 		if (exportFileDialog == null) {
 			exportFileDialog = new JFileChooser(prefs.get("exportFileDialog.currentDirectory", Util.getUserMusicPath()
@@ -1107,23 +1145,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				exportFileDialog.setSelectedFile(saveFile);
 			}
 
-			JDialog waitFrame = new JDialog(this, APP_NAME);
-			JPanel waitContent = new JPanel(new BorderLayout(5, 5));
-			waitFrame.setContentPane(waitContent);
-			waitContent.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-			waitContent.add(new JLabel("Saving " + saveFile.getName() + ". Please wait..."), BorderLayout.CENTER);
-			JProgressBar waitProgress = new JProgressBar();
-			waitProgress.setIndeterminate(true);
-			waitContent.add(waitProgress, BorderLayout.SOUTH);
-			waitFrame.pack();
-			waitFrame.setLocation(getX() + (getWidth() - waitFrame.getWidth()) / 2, getY()
-					+ (getHeight() - waitFrame.getHeight()) / 2);
-			waitFrame.setResizable(false);
-			waitFrame.setModal(false);
-			waitFrame.setEnabled(false);
-			waitFrame.setIconImages(getIconImages());
+			JDialog waitFrame = new WaitDialog(this, saveFile);
 			waitFrame.setVisible(true);
-
 			new Thread(new ExportWavTask(sequencer.getSequence(), saveFile, waitFrame)).start();
 		}
 	}
@@ -1140,6 +1163,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 
 		public void run() {
+			isExporting = true;
 			Exception error = null;
 			try {
 				FileOutputStream fos = new FileOutputStream(file);
@@ -1153,7 +1177,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			catch (Exception e) {
 				error = e;
 			}
-			SwingUtilities.invokeLater(new ExportWavFinishedTask(error, waitFrame));
+			finally {
+				isExporting = false;
+				SwingUtilities.invokeLater(new ExportWavFinishedTask(error, waitFrame));
+			}
 		}
 	}
 
@@ -1169,6 +1196,148 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		public void run() {
 			if (error != null) {
 				JOptionPane.showMessageDialog(AbcPlayer.this, error.getMessage(), "Error saving WAV file",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			waitFrame.setVisible(false);
+		}
+	}
+
+	private void exportMp3() {
+		File openedFile = null;
+		if (abcData.size() > 0)
+			openedFile = abcData.get(0).file;
+
+		Preferences mp3Prefs = prefs.node("mp3x");
+		File lameExe = new File(mp3Prefs.get("lameExe", "./lame.exe"));
+		if (!lameExe.exists()) {
+			outerLoop: for (File dir : new File(".").listFiles()) {
+				if (dir.isDirectory()) {
+					for (File file : dir.listFiles()) {
+						if (file.getName().toLowerCase().equals("lame.exe")) {
+							lameExe = file;
+							break outerLoop;
+						}
+					}
+				}
+			}
+
+			if (!lameExe.exists()) {
+				JLabel hyperlink = new JLabel("<html><a href='" + LAME_URL + "'>" + LAME_URL + "</a></html>");
+				hyperlink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				hyperlink.addMouseListener(new MouseAdapter() {
+					public void mouseClicked(MouseEvent e) {
+						if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+							Util.openURL(LAME_URL);
+						}
+					}
+				});
+				Object[] message = new Object[] {
+						"Exporting to MP3 requires LAME. To download it, visit: ", hyperlink,
+						"\nAfter you download and unzip it, click OK to locate lame.exe",
+				};
+				int result = JOptionPane.showConfirmDialog(this, message, "Export to MP3 requires LAME",
+						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+				if (result != JOptionPane.OK_OPTION)
+					return;
+
+				outerLoop: for (File dir : new File(".").listFiles()) {
+					if (dir.isDirectory()) {
+						for (File file : dir.listFiles()) {
+							if (file.getName().toLowerCase().equals("lame.exe")) {
+								lameExe = file;
+								break outerLoop;
+							}
+						}
+					}
+				}
+			}
+
+			while (!lameExe.exists()) {
+				JFileChooser fc = new JFileChooser();
+				fc.setFileFilter(new ExtensionFileFilter("Executable (*.exe)", "exe"));
+				fc.setSelectedFile(lameExe);
+				int result = fc.showOpenDialog(this);
+
+				if (result == JFileChooser.ERROR_OPTION)
+					continue; // Try again
+				else if (result != JFileChooser.APPROVE_OPTION)
+					return;
+
+				lameExe = fc.getSelectedFile();
+				if (!lameExe.exists()) {
+					JOptionPane.showMessageDialog(this, "File does not exist:\n" + lameExe.getAbsolutePath(),
+							"LAME not found", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+
+			mp3Prefs.put("lameExe", lameExe.getAbsolutePath());
+		}
+
+		ExportMp3Dialog mp3Dialog = new ExportMp3Dialog(this, lameExe, mp3Prefs, openedFile, abcInfo.getTitlePrefix(),
+				abcInfo.getArtist());
+		mp3Dialog.setIconImages(AbcPlayer.this.getIconImages());
+		mp3Dialog.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ExportMp3Dialog dialog = (ExportMp3Dialog) e.getSource();
+				JDialog waitFrame = new WaitDialog(AbcPlayer.this, dialog.getSaveFile());
+				waitFrame.setVisible(true);
+				new Thread(new ExportMp3Task(sequencer.getSequence(), dialog, waitFrame)).start();
+			}
+		});
+		mp3Dialog.setVisible(true);
+	}
+
+	private class ExportMp3Task implements Runnable {
+		private Sequence sequence;
+		private ExportMp3Dialog mp3Dialog;
+		private JDialog waitFrame;
+
+		public ExportMp3Task(Sequence sequence, ExportMp3Dialog mp3Dialog, JDialog waitFrame) {
+			this.sequence = sequence;
+			this.mp3Dialog = mp3Dialog;
+			this.waitFrame = waitFrame;
+		}
+
+		public void run() {
+			isExporting = true;
+			Exception error = null;
+			try {
+				File wavFile = File.createTempFile("AbcPlayer-", ".wav");
+				FileOutputStream fos = new FileOutputStream(wavFile);
+				try {
+					MidiToWav.render(sequence, fos);
+					fos.close();
+					Process p = Runtime.getRuntime().exec(mp3Dialog.getCommandLine(wavFile));
+					if (p.waitFor() != 0)
+						throw new Exception("LAME failed");
+				}
+				finally {
+					fos.close();
+					wavFile.delete();
+				}
+			}
+			catch (Exception e) {
+				error = e;
+			}
+			finally {
+				isExporting = false;
+				SwingUtilities.invokeLater(new ExportMp3FinishedTask(error, waitFrame));
+			}
+		}
+	}
+
+	private class ExportMp3FinishedTask implements Runnable {
+		private Exception error;
+		private JDialog waitFrame;
+
+		public ExportMp3FinishedTask(Exception error, JDialog waitFrame) {
+			this.error = error;
+			this.waitFrame = waitFrame;
+		}
+
+		public void run() {
+			if (error != null) {
+				JOptionPane.showMessageDialog(AbcPlayer.this, error.getMessage(), "Error saving MP3 file",
 						JOptionPane.ERROR_MESSAGE);
 			}
 			waitFrame.setVisible(false);

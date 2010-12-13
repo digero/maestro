@@ -49,6 +49,10 @@ public class AbcToMidi {
 		public String getMetadata(char key) {
 			return metadata.get(Character.toUpperCase(key));
 		}
+		
+		public String getArtist() {
+			return getMetadata('C');
+		}
 
 		public int getBarNumber(long tick) {
 			Entry<Long, Integer> e = bars.floorEntry(tick);
