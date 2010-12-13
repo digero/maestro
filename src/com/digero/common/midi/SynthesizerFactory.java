@@ -14,7 +14,15 @@ import javax.sound.midi.MidiDevice.Info;
 import com.sun.media.sound.AudioSynthesizer;
 
 public class SynthesizerFactory {
-	private static Soundbank lotroSoundbank;
+	private static Soundbank lotroSoundbank = null;
+	private static File soundFontFile = new File("LotroInstruments.sf2");
+
+	public static void setSoundFontLocation(File soundFontFile) {
+		if (SynthesizerFactory.soundFontFile != soundFontFile) {
+			SynthesizerFactory.soundFontFile = soundFontFile;
+			lotroSoundbank = null;
+		}
+	}
 
 	public static Synthesizer getLotroSynthesizer() throws MidiUnavailableException, InvalidMidiDataException,
 			IOException {
@@ -42,7 +50,7 @@ public class SynthesizerFactory {
 	public static Soundbank getLotroSoundbank() throws InvalidMidiDataException, IOException {
 		if (lotroSoundbank == null) {
 			try {
-				lotroSoundbank = MidiSystem.getSoundbank(new File("LotroInstruments.sf2"));
+				lotroSoundbank = MidiSystem.getSoundbank(soundFontFile);
 			}
 			catch (NullPointerException npe) {
 				// JARSoundbankReader throws a NullPointerException if the file doesn't exist
