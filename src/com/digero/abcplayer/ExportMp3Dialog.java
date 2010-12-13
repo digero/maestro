@@ -91,6 +91,9 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 				fc.setSelectedFile(new File(saveAsField.getText()));
 				int result = fc.showSaveDialog(ExportMp3Dialog.this);
 				if (result == JFileChooser.APPROVE_OPTION) {
+					File f = fc.getSelectedFile();
+					if (f.getName().indexOf('.') < 0)
+						f = new File(f.getParentFile(), f + ".mp3");
 					saveAsField.setText(fc.getSelectedFile().getAbsolutePath());
 				}
 			}
@@ -107,14 +110,15 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 			qualityPanel.add(qualityButtons[i]);
 		}
 
-		addRow("Save As", saveAsField, browseButton);
-		addRow("Quality", qualityPanel, qualityPanel);
 		addRow("Title", titleField, addLotroCheckbox);
 		addRow("Artist", artistField, null);
 		addRow("Album", albumField, null);
+		addRow("Quality", qualityPanel, qualityPanel);
+		addRow("Save As", saveAsField, browseButton);
 		for (int r = 0; r < layout.getNumRow(); r++) {
 			layout.setRow(r, 1.0 / layout.getNumRow());
 		}
+		layout.insertRow(layout.getNumRow(), 16);
 
 		JPanel okCancelPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		JButton okButton = new JButton("Convert");
@@ -244,8 +248,8 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 			return result == JOptionPane.OK_OPTION;
 		}
 		else if (!f.getParentFile().exists()) {
-			int result = JOptionPane.showConfirmDialog(this, "Parent folder " + f.getParentFile().getName()
-					+ " doesn't exist. Create?", "Create directory", JOptionPane.OK_CANCEL_OPTION);
+			int result = JOptionPane.showConfirmDialog(this, "Folder \"" + f.getParentFile().getName()
+					+ "\" doesn't exist. Create?", "Create directory", JOptionPane.OK_CANCEL_OPTION);
 			if (result == JOptionPane.OK_OPTION) {
 				if (!f.getParentFile().mkdirs()) {
 					JOptionPane.showMessageDialog(this, "Failed to create parent folder", "Failed to create folder",

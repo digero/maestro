@@ -1207,7 +1207,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		if (abcData.size() > 0)
 			openedFile = abcData.get(0).file;
 
-		Preferences mp3Prefs = prefs.node("mp3x");
+		Preferences mp3Prefs = prefs.node("mp3");
 		File lameExe = new File(mp3Prefs.get("lameExe", "./lame.exe"));
 		if (!lameExe.exists()) {
 			outerLoop: for (File dir : new File(".").listFiles()) {
