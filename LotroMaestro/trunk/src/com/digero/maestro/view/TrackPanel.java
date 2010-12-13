@@ -286,7 +286,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 
 			long songPos = seq.getPosition();
-			int transpose = abcPart.getTrackTranspose(trackNumber) + abcPart.getBaseTranspose();
+			int transpose = abcPart.getTranspose(trackNumber);
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 

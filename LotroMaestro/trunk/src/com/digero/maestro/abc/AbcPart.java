@@ -582,7 +582,7 @@ public class AbcPart {
 			return (dstNote == DISABLED_DRUM_ID) ? null : Note.fromId(dstNote);
 		}
 		else {
-			noteId += getBaseTranspose() + getTrackTranspose(track);
+			noteId += getTranspose(track);
 			while (noteId < instrument.lowestPlayable.id)
 				noteId += 12;
 			while (noteId > instrument.highestPlayable.id)
@@ -707,6 +707,10 @@ public class AbcPart {
 			trackTranspose[track] = transpose;
 			fireChangeEvent(true);
 		}
+	}
+
+	public int getTranspose(int track) {
+		return getBaseTranspose() + getTrackTranspose(track) - getInstrument().octaveDelta * 12;
 	}
 
 	public boolean isTrackEnabled(int track) {
