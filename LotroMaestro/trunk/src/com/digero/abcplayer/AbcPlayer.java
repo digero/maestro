@@ -29,9 +29,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -1203,6 +1205,56 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 	}
 
+	// Cached result of isLame()
+	private static File notLameExe = null;
+
+	private boolean isLame(File lameExe) {
+		if (!lameExe.exists() || lameExe.equals(notLameExe))
+			return false;
+
+		LameChecker checker = new LameChecker(lameExe);
+		checker.start();
+		try {
+			// Wait up to 3 seconds for the program to respond
+			checker.join(3000);
+		}
+		catch (InterruptedException e) {}
+		if (checker.isAlive())
+			checker.process.destroy();
+		if (!checker.isLame) {
+			notLameExe = lameExe;
+			return false;
+		}
+
+		return true;
+	}
+
+	private class LameChecker extends Thread {
+		private boolean isLame = false;
+		private File lameExe;
+		private Process process;
+
+		public LameChecker(File lameExe) {
+			this.lameExe = lameExe;
+		}
+
+		@Override
+		public void run() {
+			try {
+				process = Runtime.getRuntime().exec(Util.quote(lameExe.getAbsolutePath()) + " -?");
+				BufferedReader rdr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+				String line;
+				while ((line = rdr.readLine()) != null) {
+					if (line.contains("LAME")) {
+						isLame = true;
+						break;
+					}
+				}
+			}
+			catch (IOException e) {}
+		}
+	}
+
 	private void exportMp3() {
 		File openedFile = null;
 		if (abcData.size() > 0)
@@ -1221,39 +1273,21 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					}
 				}
 			}
+		}
 
-			if (!lameExe.exists()) {
-				JLabel hyperlink = new JLabel("<html><a href='" + LAME_URL + "'>" + LAME_URL + "</a></html>");
-				hyperlink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-				hyperlink.addMouseListener(new MouseAdapter() {
-					public void mouseClicked(MouseEvent e) {
-						if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-							Util.openURL(LAME_URL);
-						}
-					}
-				});
-				Object[] message = new Object[] {
-						"Exporting to MP3 requires LAME, a free MP3 encoder. To download it, visit: ", hyperlink,
-						"\nAfter you download and unzip it, click OK to locate lame.exe",
-				};
-				int result = JOptionPane.showConfirmDialog(this, message, "Export to MP3 requires LAME",
-						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				if (result != JOptionPane.OK_OPTION)
-					return;
-
-				outerLoop: for (File dir : new File(".").listFiles()) {
-					if (dir.isDirectory()) {
-						for (File file : dir.listFiles()) {
-							if (file.getName().toLowerCase().equals("lame.exe")) {
-								lameExe = file;
-								break outerLoop;
-							}
-						}
-					}
+		JLabel hyperlink = new JLabel("<html><a href='" + LAME_URL + "'>" + LAME_URL + "</a></html>");
+		hyperlink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		hyperlink.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+					Util.openURL(LAME_URL);
 				}
 			}
+		});
 
-			while (!lameExe.exists()) {
+		boolean overrideAndUseExe = false;
+		for (int i = 0; (!overrideAndUseExe && !isLame(lameExe)) || !lameExe.exists(); i++) {
+			if (i > 0) {
 				JFileChooser fc = new JFileChooser();
 				fc.setFileFilter(new FileFilter() {
 					public boolean accept(File f) {
@@ -1271,12 +1305,44 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					continue; // Try again
 				else if (result != JFileChooser.APPROVE_OPTION)
 					return;
-
 				lameExe = fc.getSelectedFile();
-				if (!lameExe.exists()) {
-					JOptionPane.showMessageDialog(this, "File does not exist:\n" + lameExe.getAbsolutePath(),
-							"LAME not found", JOptionPane.ERROR_MESSAGE);
+			}
+
+			if (!lameExe.exists()) {
+				Object message;
+				int icon;
+				if (i == 0) {
+					message = new Object[] {
+							"Exporting to MP3 requires LAME, a free MP3 encoder.\n" + "To download LAME, visit: ",
+							hyperlink, "\nAfter you download and unzip it, click OK to locate lame.exe",
+					};
+					icon = JOptionPane.INFORMATION_MESSAGE;
 				}
+				else {
+					message = "File does not exist:\n" + lameExe.getAbsolutePath();
+					icon = JOptionPane.ERROR_MESSAGE;
+				}
+				int result = JOptionPane.showConfirmDialog(this, message, "Export to MP3 requires LAME",
+						JOptionPane.OK_CANCEL_OPTION, icon);
+				if (result != JOptionPane.OK_OPTION)
+					return;
+			}
+			else if (!isLame(lameExe)) {
+				Object[] message = new Object[] {
+						"The MP3 converter you selected \"" + lameExe.getName() + "\" doesn't appear to be LAME.\n"
+								+ "You can download LAME from: ",
+						hyperlink,
+						"\nWould you like to use \"" + lameExe.getName() + "\" anyways?\n"
+								+ "If you choose No, you'll be prompted to locate lame.exe"
+				};
+				int result = JOptionPane.showConfirmDialog(this, message, "Export to MP3 requires LAME",
+						JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (result == JOptionPane.YES_OPTION)
+					overrideAndUseExe = true;
+				else if (result == JOptionPane.NO_OPTION)
+					continue; // Try again
+				else
+					return;
 			}
 
 			mp3Prefs.put("lameExe", lameExe.getAbsolutePath());
@@ -1310,7 +1376,11 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		public void run() {
 			isExporting = true;
 			Exception error = null;
+			String lameExeSav = null;
+			Preferences mp3Prefs = mp3Dialog.getPreferencesNode();
 			try {
+				lameExeSav = mp3Prefs.get("lameExe", null);
+				mp3Prefs.put("lameExe", "");
 				File wavFile = File.createTempFile("AbcPlayer-", ".wav");
 				FileOutputStream fos = new FileOutputStream(wavFile);
 				try {
@@ -1329,6 +1399,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				error = e;
 			}
 			finally {
+				if (lameExeSav != null) {
+					mp3Prefs.put("lameExe", lameExeSav);
+				}
 				isExporting = false;
 				SwingUtilities.invokeLater(new ExportMp3FinishedTask(error, waitFrame));
 			}
