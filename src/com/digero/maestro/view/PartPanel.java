@@ -54,12 +54,14 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private LotroInstrument lastSelectedInstrument = null;
 
+	private boolean initialized = false;
+
 	public PartPanel(SequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		this.sequencer = sequencer;
 		this.partAutoNumberer = partAutoNumberer;
-		
+
 		numberSpinnerModel = new SpinnerNumberModel(0, 0, 999, partAutoNumberer.getIncrement());
 		numberSpinner = new JSpinner(numberSpinnerModel);
 		numberSpinner.addChangeListener(new ChangeListener() {
@@ -128,6 +130,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		add(trackScrollPane, BorderLayout.CENTER);
 
 		setAbcPart(null);
+		initialized = true;
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
@@ -143,7 +146,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	}
 
 	public void setAbcPart(AbcPart abcPart) {
-		if (this.abcPart == abcPart)
+		if (this.abcPart == abcPart && initialized)
 			return;
 
 		if (this.abcPart != null) {
@@ -159,6 +162,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			numberSpinner.setEnabled(false);
 			nameTextField.setEnabled(false);
 			instrumentComboBox.setEnabled(false);
+			instrumentComboBox.setModel(new DefaultComboBoxModel(LotroInstrument.values()));
 
 			numberSpinner.setValue(0);
 			nameTextField.setText("");
