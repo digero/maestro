@@ -176,6 +176,10 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 				content.add(element2, "2, " + row + ", L, C");
 		}
 	}
+	
+	public Preferences getPreferencesNode() {
+		return prefs;
+	}
 
 	private void saveSettings() {
 		prefs.putBoolean("addLotro", addLotroCheckbox.isSelected());
@@ -216,22 +220,18 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		return new File(saveAsField.getText());
 	}
 
-	private static String quote(String in) {
-		return "\"" + in.replace("\"", "\\\"") + "\"";
-	}
-
 	public String getCommandLine(File wav) {
 		String args = " --silent";
 		args += " --preset " + getQuality();
 		if (getSongTitle().length() > 0)
-			args += " --tt " + quote(getSongTitle());
+			args += " --tt " + Util.quote(getSongTitle());
 		if (getArtist().length() > 0)
-			args += " --ta " + quote(getArtist());
+			args += " --ta " + Util.quote(getArtist());
 		if (getAlbum().length() > 0)
-			args += " --tl " + quote(getAlbum());
-		args += " " + quote(wav.getAbsolutePath());
-		args += " " + quote(getSaveFile().getAbsolutePath());
-		return quote(lameExe.getAbsolutePath()) + args;
+			args += " --tl " + Util.quote(getAlbum());
+		args += " " + Util.quote(wav.getAbsolutePath());
+		args += " " + Util.quote(getSaveFile().getAbsolutePath());
+		return Util.quote(lameExe.getAbsolutePath()) + args;
 	}
 
 	private boolean validateFile() {
