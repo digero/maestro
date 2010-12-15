@@ -52,6 +52,7 @@ public class SequenceInfo implements IMidiConstants {
 //		mergeDrumTracks(sequence);
 
 		convertToType1(sequence);
+		fixupTrackLength(sequence);
 
 		Track[] tracks = sequence.getTracks();
 		if (tracks.length == 0) {
@@ -208,6 +209,58 @@ public class SequenceInfo implements IMidiConstants {
 		if (firstNoteTick == Long.MAX_VALUE)
 			return 0;
 		return firstNoteTick;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void fixupTrackLength(Sequence song) {
+//		System.out.println("Before: " + Util.formatDuration(song.getMicrosecondLength()));
+//		TempoCache tempoCache = new TempoCache(song);
+		Track[] tracks = song.getTracks();
+		List<MidiEvent>[] suspectEvents = new List[tracks.length];
+		long endTick = 0;
+
+		for (int i = 0; i < tracks.length; i++) {
+			Track track = tracks[i];
+			for (int j = track.size() - 1; j >= 0; --j) {
+				MidiEvent evt = track.get(j);
+				if (MidiUtils.isMetaEndOfTrack(evt.getMessage())) {
+					if (suspectEvents[i] == null)
+						suspectEvents[i] = new ArrayList<MidiEvent>();
+					suspectEvents[i].add(evt);
+				}
+				else if (evt.getTick() > endTick) {
+					// Seems like some songs have extra meta messages way past the end
+					if (evt.getMessage() instanceof MetaMessage) {
+						if (suspectEvents[i] == null)
+							suspectEvents[i] = new ArrayList<MidiEvent>();
+						suspectEvents[i].add(0, evt);
+					}
+					else {
+						endTick = evt.getTick();
+						break;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < tracks.length; i++) {
+			for (MidiEvent evt : suspectEvents[i]) {
+				if (evt.getTick() > endTick) {
+					tracks[i].remove(evt);
+					if (MidiUtils.isMetaEndOfTrack(evt.getMessage())) {
+//						System.out.println("Moving track end event from "
+//								+ Util.formatDuration(MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache)) + " to "
+//								+ Util.formatDuration(MidiUtils.tick2microsecond(song, endTick, tempoCache)));
+						evt.setTick(endTick);
+						tracks[i].add(evt);
+					}
+				}
+			}
+		}
+
+//		System.out.println("Real song duration: "
+//				+ Util.formatDuration(MidiUtils.tick2microsecond(song, endTick, tempoCache)));
+//		System.out.println("After: " + Util.formatDuration(song.getMicrosecondLength()));
 	}
 
 	/**

@@ -592,6 +592,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 	};
 
+	@SuppressWarnings("unused")
 	private void close() {
 		for (int i = 0; i < parts.size(); i++) {
 			AbcPart part = (AbcPart) parts.get(i);
