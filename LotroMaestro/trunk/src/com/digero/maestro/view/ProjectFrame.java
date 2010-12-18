@@ -263,6 +263,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				partAutoNumberer.onPartDeleted(oldPart);
 				oldPart.dispose();
 				updateAbcButtons();
+				refreshPreviewSequence(false);
 			}
 		});
 

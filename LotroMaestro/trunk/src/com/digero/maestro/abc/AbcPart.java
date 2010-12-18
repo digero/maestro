@@ -29,6 +29,7 @@ import com.digero.common.midi.PanGenerator;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.midi.TrackInfo;
 
 public class AbcPart {
 	private SequenceInfo sequenceInfo;
@@ -575,7 +576,7 @@ public class AbcPart {
 	 */
 	protected Note mapNote(int track, int noteId) {
 		if (isDrumPart()) {
-			if (!isDrumEnabled(track, noteId))
+			if (!isTrackEnabled(track) || !isDrumEnabled(track, noteId))
 				return null;
 
 			int dstNote = getDrumMapping(track, noteId);
@@ -714,7 +715,8 @@ public class AbcPart {
 	}
 
 	public boolean isTrackEnabled(int track) {
-		return trackEnabled[track] || isDrumPart();
+		TrackInfo trackInfo = getSequenceInfo().getTrackInfo(track);
+		return trackEnabled[track] && (isDrumPart() == trackInfo.hasDrums() || isDrumPart() != trackInfo.hasNotes());
 	}
 
 	public void setTrackEnabled(int track, boolean enabled) {
@@ -765,7 +767,9 @@ public class AbcPart {
 	protected void fireChangeEventEx(boolean previewRelated, boolean isPartNumber) {
 		if (changeListeners.size() > 0) {
 			AbcPartEvent e = new AbcPartEvent(this, previewRelated, isPartNumber);
-			for (AbcPartListener l : changeListeners) {
+			// Listener list might be modified in the callback
+			List<AbcPartListener> listenerListCopy = new ArrayList<AbcPartListener>(changeListeners);
+			for (AbcPartListener l : listenerListCopy) {
 				l.abcPartChanged(e);
 			}
 		}

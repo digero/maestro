@@ -1,13 +1,13 @@
 package com.digero.maestro.view;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.JComboBox;
@@ -33,7 +33,7 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class PartPanel extends JPanel implements ICompileConstants {
+public class PartPanel extends JPanel implements TrackPanelConstants, ICompileConstants {
 	private static final int HGAP = 4, VGAP = 4;
 
 	private AbcPart abcPart;
@@ -58,6 +58,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	public PartPanel(SequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
 		super(new BorderLayout(HGAP, VGAP));
+
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));
 
 		this.sequencer = sequencer;
 		this.partAutoNumberer = partAutoNumberer;
@@ -121,7 +123,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		trackListLayout.setHorizontalGroup(trackListHGroup = trackListLayout.createParallelGroup());
 		trackListLayout.setHonorsVisibility(true);
 		trackListPanel.setLayout(trackListLayout);
-		trackListPanel.setBackground(Color.WHITE);
+		trackListPanel.setBackground(TrackPanel.PANEL_BACKGROUND_DISABLED);// Color.WHITE);
 
 		trackScrollPane = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -184,18 +186,23 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 			clearTrackListPanel();
 
-			boolean gray = false;
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
 				int trackNumber = track.getTrackNumber();
 				if (track.hasNotes() || track.hasDrums()) {
 					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart);
-//					trackPanel.setBackground(gray ? Color.LIGHT_GRAY : Color.WHITE);
-					gray = !gray;
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
-//					trackListPanel.add(trackPanel);
 					trackListVGroup.addComponent(trackPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 							GroupLayout.PREFERRED_SIZE);
 					trackListHGroup.addComponent(trackPanel);
+
+//					if (track.hasDrums()) {
+//						for (int drumId : track.getDrumsInUse()) {
+//							DrumPanel panel = new DrumPanel(track, sequencer, abcPart, drumId);
+//							trackListVGroup.addComponent(panel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+//									GroupLayout.PREFERRED_SIZE);
+//							trackListHGroup.addComponent(panel);
+//						}
+//					}
 
 					if (MUTE_DISABLED_TRACKS)
 						sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
@@ -206,24 +213,6 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 				sequencer.setTrackSolo(trackNumber, false);
 			}
-
-			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
-				if (track.hasDrums()) {
-					DrumTrackPanel panel = new DrumTrackPanel(track, sequencer, abcPart);
-					trackListVGroup.addComponent(panel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-							GroupLayout.PREFERRED_SIZE);
-					trackListHGroup.addComponent(panel);
-
-//					for (int drumId : track.getDrumsInUse()) {
-//						DrumPanel drumPanel = new DrumPanel(track, sequencer, abcPart, drumId);
-////						trackListPanel.add(drumPanel);
-//						trackListVGroup.addComponent(drumPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-//								GroupLayout.PREFERRED_SIZE);
-//						trackListHGroup.addComponent(drumPanel);
-//					}
-				}
-			}
-
 		}
 
 		this.abcPart = abcPart;
@@ -245,7 +234,9 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 		for (Component child : trackListPanel.getComponents()) {
 			if (child instanceof TrackPanel) {
-				child.setVisible(!percussion);
+				TrackPanel trackPanel = (TrackPanel) child;
+//				child.setVisible(!percussion || trackPanel.getTrackInfo().hasDrums());
+				child.setEnabled(percussion || trackPanel.getTrackInfo().hasNotes());
 				if (!setHeight && !percussion) {
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(child.getPreferredSize().height);
 					setHeight = true;

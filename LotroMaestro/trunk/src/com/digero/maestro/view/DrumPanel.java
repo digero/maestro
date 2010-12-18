@@ -19,10 +19,11 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.sound.midi.Sequence;
-import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -44,7 +45,8 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
+public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants, TrackPanelConstants,
+		ICompileConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   | TRACK NAME         | Drum     |  +--------------+  |
@@ -55,13 +57,11 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH - 52;
 	private static final int COMBO_WIDTH = TrackPanel.SPINNER_WIDTH + 52;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, COMBO_WIDTH, FILL, 1
+			TITLE_WIDTH, COMBO_WIDTH, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-			2, PREFERRED, 2
+			0, PREFERRED, 0
 	};
-
-	private static final Color BACKGROUND = new Color(224, 224, 224);
 
 	private TrackInfo trackInfo;
 	private SequencerWrapper seq;
@@ -74,8 +74,6 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	public DrumPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part, int drumNoteId) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
-		setBackground(BACKGROUND);
-		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BACKGROUND));
 
 		this.trackInfo = info;
 		this.seq = sequencer;
@@ -132,9 +130,17 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			}
 		});
 
+		addPropertyChangeListener("enabled", new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				updateState();
+			}
+		});
+
 		add(checkBox, "0, 1");
 		add(drumComboBox, "1, 1, f, c");
 		add(noteGraph, "2, 1");
+
+		updateState();
 	}
 
 	public void dispose() {
@@ -144,16 +150,29 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
+			checkBox.setEnabled(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
 			checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
 			drumComboBox.setSelectedItem(getSelectedDrum());
+			updateState();
 		}
 	};
+
+	private void updateState() {
+		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+		boolean drumEnabled = abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId);
+		boolean enabled = trackEnabled && drumEnabled;
+		setBackground(enabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
+		checkBox.setForeground(enabled ? PANEL_DRUM_TEXT_ENABLED : (trackEnabled ? PANEL_TEXT_DISABLED
+				: PANEL_TEXT_OFF));
+		checkBox.setEnabled(trackEnabled);
+		drumComboBox.setEnabled(trackEnabled);
+	}
 
 	private LotroDrumInfo getSelectedDrum() {
 		return LotroDrumInfo.getById(abcPart.getDrumMapping(trackInfo.getTrackNumber(), drumId));
 	}
 
-	private class NoteGraph extends JPanel implements IDisposable, NoteGraphConstants {
+	private class NoteGraph extends JPanel implements IDisposable, TrackPanelConstants {
 		private MyChangeListener myChangeListener = new MyChangeListener();
 
 		public NoteGraph() {
@@ -209,16 +228,17 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 			List<Rectangle2D> notesPlaying = null;
 
-			if (seq.isDrumActive(trackInfo.getTrackNumber(), drumId)) {
-				if (abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId)) {
-					drumColor = NOTE_DRUM;
-					borderColor = BORDER_COLOR;
-					bkgdColor = BKGD_COLOR;
+			int trackNumber = trackInfo.getTrackNumber();
+			if (seq.isDrumActive(trackNumber, drumId)) {
+				if (abcPart.isTrackEnabled(trackNumber) && abcPart.isDrumEnabled(trackNumber, drumId)) {
+					drumColor = NOTE_DRUM_ENABLED;
+					borderColor = GRAPH_BORDER_ENABLED;
+					bkgdColor = GRAPH_BACKGROUND_ENABLED;
 				}
 				else {
 					drumColor = NOTE_DRUM_DISABLED;
-					borderColor = BORDER_DISABLED;
-					bkgdColor = BKGD_DISABLED;
+					borderColor = GRAPH_BORDER_DISABLED;
+					bkgdColor = GRAPH_BACKGROUND_DISABLED;
 				}
 
 				// Drum parts don't really need to highlight the notes playing
@@ -227,16 +247,22 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			}
 			else {
 				drumColor = NOTE_DRUM_OFF;
-				borderColor = BORDER_OFF;
-				bkgdColor = BKGD_OFF;
+				borderColor = GRAPH_BORDER_OFF;
+				bkgdColor = GRAPH_BACKGROUND_OFF;
 			}
 			long songPos = seq.getPosition();
 
-			g2.setColor(borderColor);
-			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-			g2.setColor(bkgdColor);
-			g2.fillRoundRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE, 5,
-					5);
+			if (GRAPH_HAS_BORDER) {
+				g2.setColor(borderColor);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+				g2.setColor(bkgdColor);
+				g2.fillRoundRect(GRAPH_BORDER_SIZE, GRAPH_BORDER_SIZE, getWidth() - 2 * GRAPH_BORDER_SIZE, getHeight()
+						- 2 * GRAPH_BORDER_SIZE, GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+			}
+			else {
+				g2.setColor(bkgdColor);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+			}
 
 			g2.transform(xform);
 
@@ -285,10 +311,10 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			if (song == null)
 				return new AffineTransform();
 
-			double scrnX = BORDER_SIZE;
-			double scrnY = BORDER_SIZE + NOTE_HEIGHT_PX;
-			double scrnW = getWidth() - 2 * BORDER_SIZE;
-			double scrnH = getHeight() - 2 * BORDER_SIZE - NOTE_HEIGHT_PX;
+			double scrnX = GRAPH_BORDER_SIZE;
+			double scrnY = GRAPH_BORDER_SIZE + NOTE_HEIGHT_PX;
+			double scrnW = getWidth() - 2 * GRAPH_BORDER_SIZE;
+			double scrnH = getHeight() - 2 * GRAPH_BORDER_SIZE - NOTE_HEIGHT_PX;
 
 			double noteX = 0;
 			double noteY = 2; //MAX_RENDERED;
