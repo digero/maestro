@@ -19,6 +19,8 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,12 +28,10 @@ import java.util.List;
 import javax.sound.midi.Sequence;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -50,7 +50,8 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
+public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants, TrackPanelConstants,
+		ICompileConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   |      TRACK NAME    | octave   |  +--------------+  |
@@ -59,11 +60,13 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	//   +--------------------+----------+--------------------+
 	static final int TITLE_WIDTH = 160;
 	static final int SPINNER_WIDTH = 48;
+	private static final double DRUM_ROW0 = 32;
+	private static final double NOTE_ROW0 = 48;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, SPINNER_WIDTH, FILL, 1
+			TITLE_WIDTH, SPINNER_WIDTH, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-			4, 48, 4
+		NOTE_ROW0
 	};
 
 	private TrackInfo trackInfo;
@@ -71,16 +74,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private AbcPart abcPart;
 
 	private JCheckBox checkBox;
-	private JSpinner transposeSpinner;
+//	private JSpinner transposeSpinner;
 	private NoteGraph noteGraph;
 
 	private AbcPartListener abcListener;
 
+	private boolean showDrumPanels;
+
 	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
-		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.DARK_GRAY));
-//		setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.LIGHT_GRAY, Color.GRAY));
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));
 
 		this.trackInfo = info;
 		this.seq = sequencer;
@@ -93,14 +97,6 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		checkBox.setOpaque(false);
 		checkBox.setSelected(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
 
-		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
-		String instr = trackInfo.getInstrumentNames();
-		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
-
-		title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
-		instr = Util.ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
-		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
-
 		checkBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int track = trackInfo.getTrackNumber();
@@ -108,28 +104,6 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				abcPart.setTrackEnabled(track, enabled);
 				if (MUTE_DISABLED_TRACKS)
 					seq.setTrackMute(track, !enabled);
-			}
-		});
-
-		JLabel octaveLabel = new JLabel("octave", SwingConstants.RIGHT);
-		octaveLabel.setOpaque(false);
-		octaveLabel.setFont(octaveLabel.getFont().deriveFont(Font.ITALIC));
-
-		int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
-		transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
-		transposeSpinner.setToolTipText("Transpose this track by octaves (12 semitones)");
-
-		transposeSpinner.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				int track = trackInfo.getTrackNumber();
-				int value = (Integer) transposeSpinner.getValue();
-				if (value % 12 != 0) {
-					value = (abcPart.getTrackTranspose(track) / 12) * 12;
-					transposeSpinner.setValue(value);
-				}
-				else {
-					abcPart.setTrackTranspose(trackInfo.getTrackNumber(), value);
-				}
 			}
 		});
 
@@ -147,30 +121,104 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 		});
 
-		add(checkBox, "0, 1");
-//		add(octaveLabel, "1, 1, f, b");
-		add(transposeSpinner, "1, 1, f, c");
-		add(noteGraph, "2, 1");
-		updateBackground();
+		add(noteGraph, "2, 0");
 
-		abcListener = new AbcPartListener() {
+		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
+		String instr = trackInfo.getInstrumentNames();
+		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
+
+		if (trackInfo.hasNotes()) {
+			int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
+			final JSpinner transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
+			transposeSpinner.setToolTipText("Transpose this track by octaves (12 semitones)");
+
+			transposeSpinner.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
+					int track = trackInfo.getTrackNumber();
+					int value = (Integer) transposeSpinner.getValue();
+					if (value % 12 != 0) {
+						value = (abcPart.getTrackTranspose(track) / 12) * 12;
+						transposeSpinner.setValue(value);
+					}
+					else {
+						abcPart.setTrackTranspose(trackInfo.getTrackNumber(), value);
+					}
+				}
+			});
+
+			title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
+			instr = Util.ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
+			checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
+
+			add(checkBox, "0, 0");
+			add(transposeSpinner, "1, 0, f, c");
+		}
+		else {
+			((TableLayout) getLayout()).setRow(0, DRUM_ROW0);
+			checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
+			title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont());
+			checkBox.setText("<html><b>" + title + "</b> (" + instr + ")</html>");
+
+			add(checkBox, "0, 0, 1, 0");
+		}
+
+		abcPart.addAbcListener(abcListener = new AbcPartListener() {
 			public void abcPartChanged(AbcPartEvent e) {
 				if (e.isPreviewRelated())
-					updateBackground();
+					updateState();
 			}
-		};
-		abcPart.addAbcListener(abcListener);
+		});
 
-		if (!trackInfo.hasNotes()) {
-			checkBox.setEnabled(false);
-			checkBox.setForeground(Color.DARK_GRAY);
-			checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
-			transposeSpinner.setVisible(false);
-		}
+		addPropertyChangeListener("enabled", new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				updateState();
+			}
+		});
+
+		updateState(true);
 	}
 
-	private void updateBackground() {
-		setBackground(abcPart.isTrackEnabled(trackInfo.getTrackNumber()) ? Color.WHITE : Color.LIGHT_GRAY);
+	public TrackInfo getTrackInfo() {
+		return trackInfo;
+	}
+
+	private void updateState() {
+		updateState(false);
+	}
+
+	private void updateState(boolean initDrumPanels) {
+		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+		boolean inputEnabled = abcPart.isDrumPart() ? trackInfo.hasDrums() : trackInfo.hasNotes();
+		setBackground(trackEnabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
+		checkBox.setForeground(trackEnabled ? (abcPart.isDrumPart() ? PANEL_DRUM_TEXT_ENABLED : PANEL_TEXT_ENABLED)
+				: (inputEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
+
+		checkBox.setEnabled(inputEnabled);
+		checkBox.setSelected(trackEnabled);
+
+		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
+		if (initDrumPanels || showDrumPanels != showDrumPanelsNew) {
+			showDrumPanels = showDrumPanelsNew;
+
+			for (int i = getComponentCount() - 1; i >= 0; --i) {
+				if (getComponent(i) instanceof DrumPanel) {
+					remove(i);
+				}
+			}
+
+			if (showDrumPanels) {
+				int row = 1;
+				TableLayout layout = (TableLayout) getLayout();
+				for (int drumId : trackInfo.getDrumsInUse()) {
+					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, drumId);
+					if (row <= layout.getNumRow())
+						layout.insertRow(row, PREFERRED);
+					add(panel, "0, " + row + ", 2, " + row);
+				}
+			}
+
+			validate();
+		}
 	}
 
 	public void dispose() {
@@ -198,7 +246,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private static final int MIN_RENDERED = Note.C2.id - 12;
 	private static final int MAX_RENDERED = Note.C5.id + 12;
 
-	private class NoteGraph extends JPanel implements IDisposable, NoteGraphConstants {
+	private class NoteGraph extends JPanel implements IDisposable, TrackPanelConstants {
 		public NoteGraph() {
 			abcPart.addAbcListener(myChangeListener);
 			seq.addChangeListener(myChangeListener);
@@ -260,18 +308,18 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			if (seq.isTrackActive(trackNumber)) {
 				if (abcPart.isTrackEnabled(trackNumber)) {
-					noteColor = NOTE;
-					xnoteColor = NOTE_BAD;
-					drumColor = NOTE_OFF;//NOTE_DRUM;
-					borderColor = BORDER_COLOR;
-					bkgdColor = BKGD_COLOR;
+					noteColor = abcPart.isDrumPart() ? NOTE_OFF : NOTE_ENABLED;
+					xnoteColor = abcPart.isDrumPart() ? NOTE_BAD_OFF : NOTE_BAD_ENABLED;
+					drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;//NOTE_DRUM_ENABLED;
+					borderColor = GRAPH_BORDER_ENABLED;
+					bkgdColor = GRAPH_BACKGROUND_ENABLED;
 				}
 				else {
-					noteColor = NOTE_DISABLED;
-					xnoteColor = NOTE_BAD_DISABLED;
-					drumColor = NOTE_OFF;//NOTE_DRUM_DISABLED;
-					borderColor = BORDER_DISABLED;
-					bkgdColor = BKGD_DISABLED;
+					noteColor = abcPart.isDrumPart() ? NOTE_OFF : NOTE_DISABLED;
+					xnoteColor = abcPart.isDrumPart() ? NOTE_BAD_OFF : NOTE_BAD_DISABLED;
+					drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;
+					borderColor = GRAPH_BORDER_DISABLED;
+					bkgdColor = GRAPH_BACKGROUND_DISABLED;
 				}
 
 				if (seq.isRunning())
@@ -280,9 +328,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			else {
 				noteColor = NOTE_OFF;
 				xnoteColor = NOTE_BAD_OFF;
-				drumColor = NOTE_OFF;//NOTE_DRUM_OFF;
-				borderColor = BORDER_OFF;
-				bkgdColor = BKGD_OFF;
+				drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_OFF;
+				borderColor = GRAPH_BORDER_OFF;
+				bkgdColor = GRAPH_BACKGROUND_OFF;
 			}
 
 			long songPos = seq.getPosition();
@@ -290,11 +338,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
 			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 
-			g2.setColor(borderColor);
-			g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-			g2.setColor(bkgdColor);
-			g2.fillRoundRect(BORDER_SIZE, BORDER_SIZE, getWidth() - 2 * BORDER_SIZE, getHeight() - 2 * BORDER_SIZE, 5,
-					5);
+			if (GRAPH_HAS_BORDER) {
+				g2.setColor(borderColor);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+				g2.setColor(bkgdColor);
+				g2.fillRoundRect(GRAPH_BORDER_SIZE, GRAPH_BORDER_SIZE, getWidth() - 2 * GRAPH_BORDER_SIZE, getHeight()
+						- 2 * GRAPH_BORDER_SIZE, GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+			}
+			else {
+				g2.setColor(bkgdColor);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), GRAPH_BORDER_ROUNDED, GRAPH_BORDER_ROUNDED);
+			}
 
 			g2.transform(xform);
 
@@ -376,10 +430,10 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			if (song == null)
 				return new AffineTransform();
 
-			double scrnX = BORDER_SIZE;
-			double scrnY = BORDER_SIZE + NOTE_HEIGHT_PX;
-			double scrnW = getWidth() - 2 * BORDER_SIZE;
-			double scrnH = getHeight() - 2 * BORDER_SIZE - NOTE_HEIGHT_PX;
+			double scrnX = GRAPH_BORDER_SIZE;
+			double scrnY = GRAPH_BORDER_SIZE + NOTE_HEIGHT_PX;
+			double scrnW = getWidth() - 2 * GRAPH_BORDER_SIZE;
+			double scrnH = getHeight() - 2 * GRAPH_BORDER_SIZE - NOTE_HEIGHT_PX;
 
 			double noteX = 0;
 			double noteY = MAX_RENDERED;
