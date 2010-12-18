@@ -247,13 +247,11 @@ public class SequenceInfo implements IMidiConstants {
 			for (MidiEvent evt : suspectEvents[i]) {
 				if (evt.getTick() > endTick) {
 					tracks[i].remove(evt);
-					if (MidiUtils.isMetaEndOfTrack(evt.getMessage())) {
-//						System.out.println("Moving track end event from "
-//								+ Util.formatDuration(MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache)) + " to "
-//								+ Util.formatDuration(MidiUtils.tick2microsecond(song, endTick, tempoCache)));
-						evt.setTick(endTick);
-						tracks[i].add(evt);
-					}
+//					System.out.println("Moving event from "
+//							+ Util.formatDuration(MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache)) + " to "
+//							+ Util.formatDuration(MidiUtils.tick2microsecond(song, endTick, tempoCache)));
+					evt.setTick(endTick);
+					tracks[i].add(evt);
 				}
 			}
 		}
