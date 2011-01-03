@@ -308,7 +308,7 @@ public class AbcPart {
 		if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH)
 			out.println();
 		out.print(sb);
-		out.print("|]");
+		out.print(" |]");
 		out.println();
 		out.println();
 	}

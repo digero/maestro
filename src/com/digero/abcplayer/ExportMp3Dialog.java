@@ -176,7 +176,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 				content.add(element2, "2, " + row + ", L, C");
 		}
 	}
-	
+
 	public Preferences getPreferencesNode() {
 		return prefs;
 	}
@@ -244,7 +244,11 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		}
 		else if (f.exists()) {
 			int result = JOptionPane.showConfirmDialog(this, "File " + f.getName() + " already exists. Overwrite?",
-					"Confirm overwrite", JOptionPane.OK_CANCEL_OPTION);
+					"Confirm overwrite", JOptionPane.YES_NO_CANCEL_OPTION);
+			if (result == JOptionPane.CANCEL_OPTION) {
+				setVisible(false);
+				return false;
+			}
 			return result == JOptionPane.OK_OPTION;
 		}
 		else if (!f.getParentFile().exists()) {
