@@ -1,6 +1,6 @@
 package com.digero.abcplayer.viz;
 
-public class Region {
+public class Region implements Comparable<Region> {
 	private final int start;
 	private final int end;
 
@@ -10,7 +10,7 @@ public class Region {
 			start = end;
 			end = tmp;
 		}
-		
+
 		this.start = start;
 		this.end = end;
 	}
@@ -25,7 +25,7 @@ public class Region {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == this.getClass()) {
+		if (obj instanceof Region) {
 			Region that = (Region) obj;
 			return this.start == that.start && this.end == that.end;
 		}
@@ -35,5 +35,13 @@ public class Region {
 	@Override
 	public int hashCode() {
 		return (start << 15) ^ end;
+	}
+
+	@Override
+	public int compareTo(Region that) {
+		if (this.start != that.start)
+			return (this.start - that.start);
+		else
+			return (this.end - that.end);
 	}
 }
