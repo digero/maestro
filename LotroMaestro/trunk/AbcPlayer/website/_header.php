@@ -63,15 +63,20 @@
 		<?php sidebar('index.php', 'Home'); ?>
 		<?php sidebar('changelog.php', 'Release Notes'); ?>
 		<?php sidebar('contact.php', 'Contact Me'); ?>
+		<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KPX5YZW5SALAG">
+			<img src="images/btn_donate_SM.gif" alt="Donate" title="PayPal - The safer, easier way to pay online!" width="74" height="21" border="0" />
+		</a>
 		</div>
+		<?php /*
 		<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 		<div id="donate">
 			<input type="hidden" name="cmd" value="_s-xclick"/>
 			<input type="hidden" name="hosted_button_id" value="KPX5YZW5SALAG"/>
-			<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif" name="submit" alt="PayPal - The safer, easier way to pay online!"/>
-			<img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1"/>
+			<input type="image" src="images/btn_donate_SM.gif" name="submit" alt="Donate" title="PayPal - The safer, easier way to pay online!" width="74" height="21" />
+			<img alt="" src="images/pixel.gif" width="1" height="1"/>
 		</div>
 		</form>
+		*/ ?>
 	</div>
 	
 	<div id="contentarea">
