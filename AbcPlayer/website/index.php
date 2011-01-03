@@ -20,8 +20,8 @@ ABC Player is especially useful for previewing songs with multiple parts, to see
 sound with each other without having to get your band together in game.
 </p>
 
-<p style="color: yellow;">Version <?=$cur_ver?> is here... Now in stereo! Take a look at the 
-<a href="changelog.php">Release Notes</a> to see what's new.</p>
+<!--<p style="color: yellow;">Version <?=$cur_ver?> is here... Now in stereo! Take a look at the 
+<a href="changelog.php">Release Notes</a> to see what's new.</p>-->
 
 <h2>Downloads</h2>
 <p id="maindownload">
