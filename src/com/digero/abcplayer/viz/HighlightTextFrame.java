@@ -2,11 +2,13 @@ package com.digero.abcplayer.viz;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -15,16 +17,16 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 
-public class HgltTextFrame extends JFrame {
+public class HighlightTextFrame extends JFrame {
 	private Map<Region, Object> regions = new HashMap<Region, Object>();
 
 	private DefaultHighlighter hglter;
-	private DefaultHighlightPainter hgltPainter;
+	private DefaultHighlightPainter painter;
 
 	private JTextArea textArea;
 	private String text;
 
-	public HgltTextFrame(String title, String text) {
+	public HighlightTextFrame(String title, String text) {
 		super(title);
 		this.text = text;
 
@@ -32,9 +34,11 @@ public class HgltTextFrame extends JFrame {
 		setContentPane(content);
 
 		hglter = new DefaultHighlighter();
-		hgltPainter = new DefaultHighlightPainter(Color.YELLOW);
+		painter = new DefaultHighlightPainter(Color.YELLOW);
 
 		textArea = new JTextArea(text);
+		textArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+		textArea.setFont(new Font("Courier New", Font.PLAIN, 13));
 		textArea.setEditable(false);
 		textArea.setLineWrap(false);
 		textArea.setHighlighter(hglter);
@@ -47,7 +51,7 @@ public class HgltTextFrame extends JFrame {
 		Region rgn = new Region(p0, p1);
 		if (!regions.containsKey(rgn)) {
 			try {
-				Object tag = hglter.addHighlight(rgn.getStart(), rgn.getEnd(), hgltPainter);
+				Object tag = hglter.addHighlight(rgn.getStart(), rgn.getEnd(), painter);
 				regions.put(rgn, tag);
 			}
 			catch (BadLocationException e) {
