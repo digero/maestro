@@ -14,9 +14,9 @@ public interface TrackPanelConstants {
 	public static final Color NOTE_BAD_DISABLED /* */= Color.getHSBColor(0.00f, 0.95f, 0.90f);
 	public static final Color NOTE_BAD_OFF /*      */= Color.getHSBColor(0.00f, 0.00f, 0.70f);
 
-	public static final Color NOTE_DRUM_ENABLED /* */= Color.getHSBColor(0.28f, 0.60f, 1.00f);//new Color(239, 228, 176);
-	public static final Color NOTE_DRUM_DISABLED /**/= Color.getHSBColor(0.28f, 0.30f, 0.90f);//new Color(215, 213, 200);
-	public static final Color NOTE_DRUM_OFF /*     */= NOTE_OFF;//new Color(0x888888);
+	public static final Color NOTE_DRUM_ENABLED /* */= NOTE_ENABLED;// Color.getHSBColor(0.28f, 0.60f, 1.00f);
+	public static final Color NOTE_DRUM_DISABLED /**/= NOTE_DISABLED;//Color.getHSBColor(0.28f, 0.30f, 0.90f);
+	public static final Color NOTE_DRUM_OFF /*     */= NOTE_OFF;
 
 	public static final Color GRAPH_BACKGROUND_ENABLED = Color.BLACK;
 	public static final Color GRAPH_BACKGROUND_DISABLED = new Color(0x262626);
@@ -31,8 +31,8 @@ public interface TrackPanelConstants {
 
 	public static final Color PANEL_BORDER = new Color(0xEEEEEE);
 
-	public static final Color PANEL_TEXT_ENABLED = Color.YELLOW;//Color.getHSBColor(0.14f, 0.20f, 1.00f);
-	public static final Color PANEL_DRUM_TEXT_ENABLED = Color.YELLOW;//Color.getHSBColor(0.14f, 0.20f, 1.00f);
+	public static final Color PANEL_TEXT_ENABLED = Color.getHSBColor(0.28f, 0.60f, 1.00f);//Color.YELLOW;
+	public static final Color PANEL_DRUM_TEXT_ENABLED = PANEL_TEXT_ENABLED;//Color.getHSBColor(0.14f, 0.20f, 1.00f);
 	public static final Color PANEL_TEXT_DISABLED = Color.WHITE;//new Color(0xE0E0E0);
 	public static final Color PANEL_TEXT_OFF = new Color(0x777777);
 
