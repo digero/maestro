@@ -228,10 +228,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 						receiver = synth.getReceiver();
 				}
 				catch (IOException e) {
-					JOptionPane.showMessageDialog(this, "There was an error loading the LotRO instrument sounds.\n"
+					JOptionPane.showMessageDialog(this, "There was an error loading the LOTRO instrument sounds.\n"
 							+ "Playback will use MIDI instruments instead "
 							+ "(drums do not sound good in this mode).\n\nError details:\n" + e.getMessage(),
-							"Failed to load LotRO instruments", JOptionPane.ERROR_MESSAGE);
+							"Failed to load LOTRO instruments", JOptionPane.ERROR_MESSAGE);
 
 					if (synth != null)
 						synth.close();
@@ -593,7 +593,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		JMenu toolsMenu = mainMenu.add(new JMenu(" Tools "));
 		toolsMenu.setMnemonic(KeyEvent.VK_T);
 
-		toolsMenu.add(lotroErrorsMenuItem = new JCheckBoxMenuItem("Ignore LotRO-specific errors"));
+		toolsMenu.add(lotroErrorsMenuItem = new JCheckBoxMenuItem("Ignore LOTRO-specific errors"));
 		lotroErrorsMenuItem.setSelected(prefs.getBoolean("ignoreLotroErrors", false));
 		lotroErrorsMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -889,7 +889,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	}
 
 	private boolean onLotroParseError(LotroParseException lpe) {
-		JCheckBox checkBox = new JCheckBox("Ignore LotRO-specific errors");
+		JCheckBox checkBox = new JCheckBox("Ignore LOTRO-specific errors");
 		Object[] message = new Object[] {
 				lpe.getMessage(), checkBox
 		};

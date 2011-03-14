@@ -38,6 +38,11 @@ public class AbcToMidi {
 	/** This is a static-only class */
 	private AbcToMidi() {
 	}
+	
+	public static class AbcPartInfo {
+		private String text;
+//		private NavigableMap
+	}
 
 	public static class AbcInfo {
 		private boolean empty = true;
@@ -912,7 +917,6 @@ public class AbcToMidi {
 				// Must be all-caps
 				instrNicknames.put("BANJO", LotroInstrument.LUTE);
 				instrNicknames.put("GUITAR", LotroInstrument.LUTE);
-				instrNicknames.put("PIANO", LotroInstrument.LUTE);
 				instrNicknames.put("DRUM", LotroInstrument.DRUMS);
 				instrNicknames.put("BASS", LotroInstrument.THEORBO);
 				instrNicknames.put("THEO", LotroInstrument.THEORBO);

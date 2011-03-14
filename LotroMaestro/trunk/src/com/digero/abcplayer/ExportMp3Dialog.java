@@ -78,7 +78,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		File saveFile = new File(saveDir, saveName);
 
 		titleField = new JTextField(songTitle, TEXT_FIELD_COLS);
-		addLotroCheckbox = new JCheckBox("Add \"(LotRO)\"", prefs.getBoolean("addLotro", true));
+		addLotroCheckbox = new JCheckBox("Add \"(LOTRO)\"", prefs.getBoolean("addLotro", true));
 		artistField = new JTextField(songArtist, TEXT_FIELD_COLS);
 		albumField = new JTextField(prefs.get("album", ""), TEXT_FIELD_COLS);
 		saveAsField = new JTextField(saveFile.getAbsolutePath(), TEXT_FIELD_COLS);
@@ -199,7 +199,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 	public String getSongTitle() {
 		String title = titleField.getText().trim();
 		if (title.length() > 0 && addLotroCheckbox.isSelected()) {
-			title += " (LotRO)";
+			title += " (LOTRO)";
 		}
 		return title;
 	}
