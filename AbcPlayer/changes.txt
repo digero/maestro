@@ -1,6 +1,7 @@
 Todo:
   - Separate LotroInstruments.sf2 from the installer. Make it a download.
   - ABC visualization.
+  - Part solos
 
 Version 1.1.1
   - You can now export songs directly to MP3! Requires the (free) LAME mp3 
@@ -9,9 +10,11 @@ Version 1.1.1
     instruments are playing many fast notes, the note on the woodwind should 
     no longer be cut off before it actually ends.
   - If the same note is repeated quickly on a woodwind instrument, the 
-    difference between notes is sharper, and sounds more like it does in LotRO.
+    difference between notes is sharper, and sounds more like it does in LOTRO.
   - Staccato (short) notes on woodwind instruments are more... staccato, to 
-    sound more like they do in LotRO.
+    sound more like they do in LOTRO.
+  - Bagpipe drone notes (C, through ^D,) now sustain forever rather than fading 
+    out after ~8 seconds, to match how they sound in LOTRO.
   - Changed the stereo effect to be less dependent on the order of the parts
     in the file, and more on the instrument used for the part. For example, 
     flute will always be panned to the left. If the same instrument is used in 
@@ -46,7 +49,7 @@ Version 1.1.0
     Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Ionian, and Locrian.
   
   - ABC Player handles notes with incorrect octave markers (like c,, or A') 
-    the same way that LotRO does, rather than giving an error.  The comma 
+    the same way that LOTRO does, rather than giving an error.  The comma 
     always lowers the octave and the apostrophe always raises the octave, 
     regardless of whether the note letter is upper or lower case.
   - Tuplets that contain chords should be the right length now.
@@ -54,7 +57,7 @@ Version 1.1.0
     with a denominator that's not 4 (e.g. 6/8). Hopefully all songs should 
     play at the correct speed now.
   - Reduced the volmue difference between +ppp+ and +fff+. ABC Player's 
-    volume dynamics should now more closely match LotRO's.
+    volume dynamics should now more closely match LOTRO's.
   - Fixed the harp's ^a and b notes so they don't sound like clicks.
   - Occasionally when changing instruments, you'd hear the instruments 
     playing at full volume for a few seconds. This should no longer happen.
@@ -62,7 +65,7 @@ Version 1.1.0
   - You can now change the instrument and see bar numbers even if the abc 
     file is missing the (required) "X:" line at the beginning.
   - ABC Player now ignores slurs () without generating errors, to mimic 
-    LotRO's behavior.
+    LOTRO's behavior.
   - Playing a part that has note ties on the cowbell should no longer generate 
     erroneous note tie errors.
 
