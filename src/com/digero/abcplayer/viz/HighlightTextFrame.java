@@ -24,11 +24,9 @@ public class HighlightTextFrame extends JFrame {
 	private DefaultHighlightPainter painter;
 
 	private JTextArea textArea;
-	private String text;
 
 	public HighlightTextFrame(String title, String text) {
 		super(title);
-		this.text = text;
 
 		JPanel content = new JPanel(new BorderLayout());
 		setContentPane(content);
@@ -47,6 +45,15 @@ public class HighlightTextFrame extends JFrame {
 		content.add(textAreaScrollPane, BorderLayout.CENTER);
 	}
 
+	public String getText() {
+		return textArea.getText();
+	}
+
+	public void setText(String text) {
+		removeAllRegions();
+		textArea.setText(text);
+	}
+
 	public void setRegion(int p0, int p1) {
 		Region rgn = new Region(p0, p1);
 		if (!regions.containsKey(rgn)) {
@@ -63,7 +70,7 @@ public class HighlightTextFrame extends JFrame {
 	public void setRegions(Iterable<Region> newRegions) {
 		ArrayList x;
 		for (Region r : newRegions) {
-			
+			// TODO
 		}
 	}
 
@@ -72,6 +79,11 @@ public class HighlightTextFrame extends JFrame {
 		if (tag != null) {
 			hglter.removeHighlight(tag);
 		}
+	}
+
+	public void removeAllRegions() {
+		hglter.removeAllHighlights();
+		regions.clear();
 	}
 
 	public boolean isHighlighted(int p0, int p1) {
