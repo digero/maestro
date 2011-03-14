@@ -12,6 +12,12 @@ public interface IMidiConstants {
 	public static final int META_KEY_SIGNATURE = 0x59;
 
 	public static final int COARSE_CHANNEL_VOLUME_CONTROLLER = 0x07;
+	public static final int ALL_CONTROLLERS_OFF = 0x79;
+	public static final int REGISTERED_PARAMETER_NUMBER_COARSE = 0x65;
+	public static final int REGISTERED_PARAMETER_NUMBER_FINE = 0x65;
+	public static final int DATA_ENTRY_COARSE = 0x06;
+	public static final int DATA_ENTRY_FINE = 0x26;
+	public static final int REGISTERED_PARAM_PITCH_BEND_RANGE = 0x0000;
 
 	public static final int DRUM_CHANNEL = 9;
 	public static final int CHANNEL_COUNT = 16;
