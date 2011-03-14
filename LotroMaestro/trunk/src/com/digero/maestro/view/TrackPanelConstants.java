@@ -11,7 +11,7 @@ public interface TrackPanelConstants {
 	public static final Color NOTE_OFF /*          */= Color.getHSBColor(0.62f, 0.00f, 0.50f);
 
 	public static final Color NOTE_BAD_ENABLED /*  */= Color.getHSBColor(0.05f, 1.00f, 1.00f);
-	public static final Color NOTE_BAD_DISABLED /* */= Color.getHSBColor(0.88f, 0.65f, 0.75f);
+	public static final Color NOTE_BAD_DISABLED /* */= Color.getHSBColor(0.95f, 0.65f, 0.75f);
 	public static final Color NOTE_BAD_OFF /*      */= Color.getHSBColor(0.00f, 0.00f, 0.70f);
 
 	public static final Color NOTE_DRUM_ENABLED /* */= NOTE_ENABLED;// Color.getHSBColor(0.28f, 0.60f, 1.00f);
