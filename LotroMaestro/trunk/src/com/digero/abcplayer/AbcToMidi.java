@@ -38,11 +38,6 @@ public class AbcToMidi {
 	/** This is a static-only class */
 	private AbcToMidi() {
 	}
-	
-	public static class AbcPartInfo {
-		private String text;
-//		private NavigableMap
-	}
 
 	public static class AbcInfo {
 		private boolean empty = true;
