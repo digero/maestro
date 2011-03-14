@@ -95,6 +95,7 @@ import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.util.Version;
+import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
@@ -125,6 +126,26 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		catch (UnsatisfiedLinkError err) {
 			// Ignore (we weren't started via WinRun4j)
 		}
+	}
+
+	public static native boolean isVolumeSupported();
+
+	private static boolean isVolumeSupportedSafe() {
+		try {
+			return isVolumeSupported();
+		}
+		catch (UnsatisfiedLinkError err) {
+			return false;
+		}
+	}
+
+	public static native float getVolume();
+
+	public static native void setVolume(float volume);
+
+	public static void onVolumeChanged() {
+		if (mainWindow != null && mainWindow.volumeBar != null)
+			mainWindow.volumeBar.repaint();
 	}
 
 	/** Tells the WinRun4J launcher that we're ready to accept activate() calls. */
@@ -158,6 +179,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private JLabel barCountLabel;
 	private JLabel tempoLabel;
 	private TempoBar tempoBar;
+	private NativeVolumeBar volumeBar;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
 	private JButton playButton, stopButton;
@@ -277,7 +299,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
 
 		JPanel controlPanel = new JPanel(new TableLayout(new double[] {
-				4, 0.25, PREFERRED, 0.25, 4, PREFERRED, 4, PREFERRED, 4, TempoBar.WIDTH, 0.50, 4, PREFERRED, 4
+				4, 0.25, PREFERRED, 0.25, 4, PREFERRED, 4, PREFERRED, 4, 0.25, PREFERRED, 0.25, 4, PREFERRED, 4
 		}, new double[] {
 				4, PREFERRED, 4, PREFERRED, 4
 		}));
@@ -323,17 +345,41 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		tempoPanel.add(tempoLabel, BorderLayout.NORTH);
 		tempoPanel.add(tempoBar, BorderLayout.CENTER);
 
-		controlPanel.add(songPositionBar, "1, 1, 10, 1");
-		controlPanel.add(songPositionLabel, "12, 1");
+		JPanel volumePanel = null;
+		volumeBar = null;
+		if (isVolumeSupportedSafe()) {
+			volumeBar = new NativeVolumeBar(new NativeVolumeBar.NativeCallback() {
+				@Override
+				public void setVolume(float volume) {
+					AbcPlayer.setVolume(volume);
+				}
+
+				@Override
+				public float getVolume() {
+					return AbcPlayer.getVolume();
+				}
+			});
+			volumePanel = new JPanel(new BorderLayout());
+			volumePanel.add(new JLabel("Volume"), BorderLayout.NORTH);
+			volumePanel.add(volumeBar, BorderLayout.CENTER);
+		}
+
+		controlPanel.add(songPositionBar, "1, 1, 11, 1");
+		controlPanel.add(songPositionLabel, "13, 1");
 		controlPanel.add(playButton, "5, 3");
 		controlPanel.add(stopButton, "7, 3");
 		controlPanel.add(tempoPanel, "2, 3, f, c");
-		controlPanel.add(barCountLabel, "10, 3, 12, 3, r, t");
+		if (volumePanel != null)
+			controlPanel.add(volumePanel, "10, 3, f, c");
+		controlPanel.add(barCountLabel, "11, 3, 13, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
 				updateButtonStates();
 				SequencerProperty p = evt.getProperty();
+				if (volumeBar != null)
+					volumeBar.repaint();
+				
 				if (barCountLabel.isVisible() && p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
 					updateBarCountLabel();
 				}
