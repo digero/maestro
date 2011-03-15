@@ -617,7 +617,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		parts.clear();
 
 		saveFile = null;
-		sequencer.reset(true);
+		sequencer.stop();
 		abcSequencer.reset(false);
 		abcPreviewStartMicros = 0;
 
@@ -627,6 +627,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			sequenceInfo = new SequenceInfo(midiFile, isAbc);
 
 			sequencer.setSequence(sequenceInfo.getSequence());
+			sequencer.reset(true);
 			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
 			composerField.setText("");

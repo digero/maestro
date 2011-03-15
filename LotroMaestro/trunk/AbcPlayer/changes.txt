@@ -3,9 +3,12 @@ Todo:
   - ABC visualization.
   - Part solos
 
-Version 1.1.1
+Version 1.2.0
   - You can now export songs directly to MP3! Requires the (free) LAME mp3 
     converter.
+  - The volume slider makes a triumphant return. If you're using Windows Vista 
+    or Windows 7, it will use the system's per-application volume (kept in 
+    sync with the volume set for ABC Player in the system volume mixer).
   - When a long note is held on a woodwind instrument while stringed 
     instruments are playing many fast notes, the note on the woodwind should 
     no longer be cut off before it actually ends.

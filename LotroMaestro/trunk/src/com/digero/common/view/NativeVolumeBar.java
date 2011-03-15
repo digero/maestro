@@ -5,14 +5,14 @@ import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JPanel;
+
+import com.digero.common.midi.VolumeTransceiver;
 
 public class NativeVolumeBar extends JPanel {
 	private static final int PTR_WIDTH = 12;
@@ -23,18 +23,17 @@ public class NativeVolumeBar extends JPanel {
 
 	public static final int WIDTH = PTR_WIDTH * 5;
 
-	public interface NativeCallback {
-		float getVolume();
+	public static final int MAX_VOLUME = VolumeTransceiver.MAX_VOLUME;
 
-		void setVolume(float volume);
+	public interface Callback {
+		int getVolume();
+
+		void setVolume(int volume);
 	}
 
-	private final int MAX_VOLUME = 127;
-	private NativeCallback callback;
+	private Callback callback;
 
-	private Rectangle ptrRect = new Rectangle(0, 0, PTR_WIDTH, PTR_HEIGHT);
-
-	public NativeVolumeBar(NativeCallback callback) {
+	public NativeVolumeBar(Callback callback) {
 		this.callback = callback;
 
 		MouseHandler mouseHandler = new MouseHandler();
@@ -44,15 +43,6 @@ public class NativeVolumeBar extends JPanel {
 		Dimension sz = new Dimension(WIDTH, PTR_HEIGHT);
 		setMinimumSize(sz);
 		setPreferredSize(sz);
-		updatePointerRect();
-	}
-
-	private float getVolume() {
-		return callback.getVolume() * MAX_VOLUME;
-	}
-
-	private void setVolume(float volume) {
-		callback.setVolume(volume / MAX_VOLUME);
 	}
 
 	@Override
@@ -62,7 +52,7 @@ public class NativeVolumeBar extends JPanel {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * getVolume() / MAX_VOLUME);
+		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * callback.getVolume() / MAX_VOLUME);
 
 		final int x = 0;
 		final int y = (PTR_HEIGHT - BAR_HEIGHT) / 2;
@@ -91,11 +81,7 @@ public class NativeVolumeBar extends JPanel {
 		g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 	}
 
-	private void updatePointerRect() {
-		ptrRect.x = (int) (getWidth() * getVolume() / MAX_VOLUME - PTR_WIDTH / 2);
-	}
-
-	private class MouseHandler implements MouseListener, MouseMotionListener {
+	private class MouseHandler extends MouseAdapter {
 		private int getPosition(int x) {
 			int pos = (int) ((x + 1 - SIDE_PAD) * MAX_VOLUME / (getWidth() - 2 * SIDE_PAD));
 			if (pos < 0) {
@@ -107,34 +93,21 @@ public class NativeVolumeBar extends JPanel {
 			return pos;
 		}
 
-		public void mouseClicked(MouseEvent e) {
-		}
-
+		@Override
 		public void mousePressed(MouseEvent e) {
 			if (!NativeVolumeBar.this.isEnabled())
 				return;
-			setVolume(getPosition(e.getX()));
+			callback.setVolume(getPosition(e.getX()));
 			repaint();
 			requestFocus();
 		}
 
-		public void mouseReleased(MouseEvent e) {
-		}
-
+		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (!NativeVolumeBar.this.isEnabled())
 				return;
-			setVolume(getPosition(e.getX()));
+			callback.setVolume(getPosition(e.getX()));
 			repaint();
-		}
-
-		public void mouseMoved(MouseEvent e) {
-		}
-
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		public void mouseExited(MouseEvent e) {
 		}
 	}
 }

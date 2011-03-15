@@ -12,10 +12,6 @@ public class VolumeTransceiver implements Transmitter, Receiver {
 	private Receiver receiver;
 	private int volume = MAX_VOLUME;
 
-	public VolumeTransceiver(Receiver receiver) {
-		this.receiver = receiver;
-	}
-
 	public void setVolume(int volume) {
 		if (volume < 0 || volume > MAX_VOLUME)
 			throw new IllegalArgumentException();
@@ -42,20 +38,22 @@ public class VolumeTransceiver implements Transmitter, Receiver {
 
 	@Override
 	public void send(MidiMessage message, long timeStamp) {
-		if (message instanceof ShortMessage) {
-			ShortMessage m = (ShortMessage) message;
-			int cmd = m.getCommand();
-			if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF || cmd == ShortMessage.POLY_PRESSURE
-					|| cmd == ShortMessage.CHANNEL_PRESSURE) {
-				try {
-					m.setMessage(cmd, m.getChannel(), m.getData1(), m.getData2() * volume / MAX_VOLUME);
-				}
-				catch (InvalidMidiDataException e) {
-					e.printStackTrace();
+		if (receiver != null) {
+			if (message instanceof ShortMessage) {
+				ShortMessage m = (ShortMessage) message;
+				int cmd = m.getCommand();
+				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF || cmd == ShortMessage.POLY_PRESSURE
+						|| cmd == ShortMessage.CHANNEL_PRESSURE) {
+					try {
+						m.setMessage(cmd, m.getChannel(), m.getData1(), m.getData2() * volume / MAX_VOLUME);
+					}
+					catch (InvalidMidiDataException e) {
+						e.printStackTrace();
+					}
 				}
 			}
-		}
 
-		receiver.send(message, timeStamp);
+			receiver.send(message, timeStamp);
+		}
 	}
 }

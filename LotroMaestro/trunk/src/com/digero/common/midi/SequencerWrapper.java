@@ -18,7 +18,7 @@ import javax.swing.Timer;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
-public class SequencerWrapper {
+public class SequencerWrapper implements IMidiConstants {
 	private Sequencer sequencer;
 	private Receiver receiver;
 	private Transmitter transmitter;
@@ -175,6 +175,27 @@ public class SequencerWrapper {
 				else {
 					transmitter.setReceiver(receiver);
 				}
+
+				try {
+					ShortMessage msg = new ShortMessage();
+					msg.setMessage(ShortMessage.SYSTEM_RESET);
+					receiver.send(msg, -1);
+
+					for (int i = 0; i < CHANNEL_COUNT; i++) {
+						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
+								REGISTERED_PARAM_PITCH_BEND_RANGE);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
+						receiver.send(msg, -1);
+					}
+				}
+				catch (InvalidMidiDataException e) {
+					e.printStackTrace();
+				}
 			}
 			else {
 				oldReset = true;
@@ -188,12 +209,19 @@ public class SequencerWrapper {
 						sequencer.open();
 
 					ShortMessage msg = new ShortMessage();
-					for (int i = 0; i < 16; i++) {
-						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-						receiver.send(msg, -1);
-					}
 					msg.setMessage(ShortMessage.SYSTEM_RESET);
 					receiver.send(msg, -1);
+					for (int i = 0; i < CHANNEL_COUNT; i++) {
+						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
+								REGISTERED_PARAM_PITCH_BEND_RANGE);
+						receiver.send(msg, -1);
+						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
+						receiver.send(msg, -1);
+					}
 				}
 				catch (MidiUnavailableException e) {
 					// Ignore
