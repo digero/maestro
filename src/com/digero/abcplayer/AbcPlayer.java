@@ -89,6 +89,7 @@ import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
+import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.LotroParseException;
@@ -106,7 +107,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
-	private static final Version APP_VERSION = new Version(1, 1, 1);
+	private static final Version APP_VERSION = new Version(1, 2, 0);
 
 	private static AbcPlayer mainWindow = null;
 
@@ -180,6 +181,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private JLabel tempoLabel;
 	private TempoBar tempoBar;
 	private NativeVolumeBar volumeBar;
+	private VolumeTransceiver volumizer;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
 	private JButton playButton, stopButton;
@@ -236,6 +238,33 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		});
 		new DropTarget(this, dropListener);
 
+		if (isVolumeSupportedSafe()) {
+			volumizer = null;
+		}
+		else {
+			volumizer = new VolumeTransceiver();
+			volumizer.setVolume(prefs.getInt("volumizer", VolumeTransceiver.MAX_VOLUME));
+		}
+		volumeBar = new NativeVolumeBar(new NativeVolumeBar.Callback() {
+			@Override
+			public void setVolume(int volume) {
+				if (volumizer == null)
+					AbcPlayer.setVolume((float) volume / NativeVolumeBar.MAX_VOLUME);
+				else {
+					volumizer.setVolume(volume);
+					prefs.putInt("volumizer", volume);
+				}
+			}
+
+			@Override
+			public int getVolume() {
+				if (volumizer == null)
+					return (int) (AbcPlayer.getVolume() * NativeVolumeBar.MAX_VOLUME);
+				else
+					return volumizer.getVolume();
+			}
+		});
+
 		try {
 			Sequencer seqTmp = MidiSystem.getSequencer(false);
 			transmitter = seqTmp.getTransmitter();
@@ -267,7 +296,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			if (!useLotroInstruments) {
 				receiver = MidiSystem.getReceiver();
 			}
-			transmitter.setReceiver(receiver);
+			if (volumizer == null) {
+				transmitter.setReceiver(receiver);
+			}
+			else {
+				volumizer.setReceiver(receiver);
+				transmitter.setReceiver(volumizer);
+			}
 
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
 			sequencer.open();
@@ -345,41 +380,22 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		tempoPanel.add(tempoLabel, BorderLayout.NORTH);
 		tempoPanel.add(tempoBar, BorderLayout.CENTER);
 
-		JPanel volumePanel = null;
-		volumeBar = null;
-		if (isVolumeSupportedSafe()) {
-			volumeBar = new NativeVolumeBar(new NativeVolumeBar.NativeCallback() {
-				@Override
-				public void setVolume(float volume) {
-					AbcPlayer.setVolume(volume);
-				}
-
-				@Override
-				public float getVolume() {
-					return AbcPlayer.getVolume();
-				}
-			});
-			volumePanel = new JPanel(new BorderLayout());
-			volumePanel.add(new JLabel("Volume"), BorderLayout.NORTH);
-			volumePanel.add(volumeBar, BorderLayout.CENTER);
-		}
+		JPanel volumePanel = new JPanel(new BorderLayout());
+		volumePanel.add(new JLabel("Volume"), BorderLayout.NORTH);
+		volumePanel.add(volumeBar, BorderLayout.CENTER);
 
 		controlPanel.add(songPositionBar, "1, 1, 11, 1");
 		controlPanel.add(songPositionLabel, "13, 1");
 		controlPanel.add(playButton, "5, 3");
 		controlPanel.add(stopButton, "7, 3");
 		controlPanel.add(tempoPanel, "2, 3, f, c");
-		if (volumePanel != null)
-			controlPanel.add(volumePanel, "10, 3, f, c");
+		controlPanel.add(volumePanel, "10, 3, f, c");
 		controlPanel.add(barCountLabel, "11, 3, 13, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
 				updateButtonStates();
 				SequencerProperty p = evt.getProperty();
-				if (volumeBar != null)
-					volumeBar.repaint();
-				
 				if (barCountLabel.isVisible() && p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
 					updateBarCountLabel();
 				}
