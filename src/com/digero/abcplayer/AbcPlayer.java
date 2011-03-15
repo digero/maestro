@@ -74,6 +74,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
@@ -334,7 +335,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
 
 		JPanel controlPanel = new JPanel(new TableLayout(new double[] {
-				4, 0.25, PREFERRED, 0.25, 4, PREFERRED, 4, PREFERRED, 4, 0.25, PREFERRED, 0.25, 4, PREFERRED, 4
+				4, SongPositionBar.SIDE_PAD, 0.5, 4, PREFERRED, 4, PREFERRED, 4, 0.5, SongPositionBar.SIDE_PAD, 4,
+				PREFERRED, 4
 		}, new double[] {
 				4, PREFERRED, 4, PREFERRED, 4
 		}));
@@ -375,22 +377,25 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		tempoBar = new TempoBar(sequencer);
 
 		tempoLabel = new JLabel();
+		tempoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		updateTempoLabel();
 		JPanel tempoPanel = new JPanel(new BorderLayout());
 		tempoPanel.add(tempoLabel, BorderLayout.NORTH);
 		tempoPanel.add(tempoBar, BorderLayout.CENTER);
 
 		JPanel volumePanel = new JPanel(new BorderLayout());
-		volumePanel.add(new JLabel("Volume"), BorderLayout.NORTH);
+		JLabel volumeLabel = new JLabel("Volume");
+		volumeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		volumePanel.add(volumeLabel, BorderLayout.NORTH);
 		volumePanel.add(volumeBar, BorderLayout.CENTER);
 
-		controlPanel.add(songPositionBar, "1, 1, 11, 1");
-		controlPanel.add(songPositionLabel, "13, 1");
-		controlPanel.add(playButton, "5, 3");
-		controlPanel.add(stopButton, "7, 3");
-		controlPanel.add(tempoPanel, "2, 3, f, c");
-		controlPanel.add(volumePanel, "10, 3, f, c");
-		controlPanel.add(barCountLabel, "11, 3, 13, 3, r, t");
+		controlPanel.add(songPositionBar, "1, 1, 9, 1");
+		controlPanel.add(songPositionLabel, "11, 1");
+		controlPanel.add(playButton, "4, 3");
+		controlPanel.add(stopButton, "6, 3");
+		controlPanel.add(tempoPanel, "2, 3, c, c");
+		controlPanel.add(volumePanel, "8, 3, c, c");
+		controlPanel.add(barCountLabel, "9, 3, 11, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
