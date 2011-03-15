@@ -3,6 +3,36 @@
 	$pagename = "Release Notes";
 	require('_header.php');
 ?>
+<h2>Version 1.2.0</h2>
+<i>March 15, 2011</i>
+<h3>New Features</h3>
+<ul>
+<li>You can now export songs directly to MP3! Requires the (free) LAME mp3 
+    converter.</li>
+<li>The volume slider is back. If you're using Windows Vista or Windows 7, 
+    it will use the system's per-application volume (kept in sync with the 
+    volume set for ABC Player in the system volume mixer).</li>
+<li>Changed the stereo effect to be less dependent on the order of the parts
+    in the file, and more on the instrument used for the part. For example, 
+    flute will always be panned to the left. If the same instrument is used in 
+    multiple parts, the second part will be be panned to opposite speaker, 
+    and the third part will be panned to the center.</li>
+<li>If a part name includes the word "Left", it will always be panned to the
+    left speaker. Likewise for the words "Right, and "Center" or "Middle".</li>
+</ul>
+<h3>Bug Fixes</h3>
+<ul>
+<li>When a long note is held on a woodwind instrument while stringed 
+    instruments are playing many fast notes, the note on the woodwind should 
+    no longer be cut off before it actually ends.</li>
+<li>If the same note is repeated quickly on a woodwind instrument, the 
+    difference between notes is sharper, and sounds more like it does in LOTRO.</li>
+<li>Staccato (short) notes on woodwind instruments are more... staccato, to 
+    sound more like they do in LOTRO.</li>
+<li>Bagpipe drone notes (C, through ^D,) now sustain forever rather than fading 
+    out after ~8 seconds, to match how they sound in LOTRO.</li>
+</ul>
+<hr/>
 <h2>Version 1.1.0</h2>
 <i>August 18, 2010</i>
 <h3>New Features</h3>

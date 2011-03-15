@@ -2,7 +2,7 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 	
-	$cur_ver = "1.1.0";
+	$cur_ver = "1.2.0";
 	
 	$msi_path = "bin/AbcPlayer_$cur_ver.msi";
 	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
@@ -20,8 +20,10 @@ ABC Player is especially useful for previewing songs with multiple parts, to see
 sound with each other without having to get your band together in game.
 </p>
 
-<!--<p style="color: yellow;">Version <?=$cur_ver?> is here... Now in stereo! Take a look at the 
-<a href="changelog.php">Release Notes</a> to see what's new.</p>-->
+<?php if (time() < strtotime("April 15, 2011")): ?>
+<p style="color: yellow;">Version <?=$cur_ver?> is here. Take a look at the 
+<a href="changelog.php">Release Notes</a> to see what's new.</p>
+<?php endif; ?>
 
 <h2>Downloads</h2>
 <p id="maindownload">
@@ -58,15 +60,15 @@ use a program like <a href="http://lame.sourceforge.net/">LAME</a> to convert th
 
 <h2>Preview</h2>
 <p>
-<img src="abcplayer_1.1.0.png" alt="Screenshot of ABC Player"/>
+<img src="abcplayer_1.2.0.png" alt="Screenshot of ABC Player"/>
 </p>
 <p>
 This is what the song pictured above sounds like when played in ABC Player:
 </p>
-<?php mp3('getaround', 'I Get Around'); ?>
+<?php mp3('herecomesthesun', 'Here Comes the Sun'); ?>
 <p>
-If you want to try the song yourself, download <a class="dnld" href="files/getaround.abc">getaround.abc</a> 
-and either open it in ABC Player, or get 5 friends together and play it in LotRO.
+If you want to try the song yourself, download <a class="dnld" href="files/sun.abc">sun.abc</a> 
+and either open it in ABC Player, or get 9 friends together and play it in LotRO.
 </p>
 
 <?php

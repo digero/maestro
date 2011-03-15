@@ -6,9 +6,9 @@ Todo:
 Version 1.2.0
   - You can now export songs directly to MP3! Requires the (free) LAME mp3 
     converter.
-  - The volume slider makes a triumphant return. If you're using Windows Vista 
-    or Windows 7, it will use the system's per-application volume (kept in 
-    sync with the volume set for ABC Player in the system volume mixer).
+  - The volume slider is back. If you're using Windows Vista or Windows 7, 
+    it will use the system's per-application volume (kept in sync with the 
+    volume set for ABC Player in the system volume mixer).
   - When a long note is held on a woodwind instrument while stringed 
     instruments are playing many fast notes, the note on the woodwind should 
     no longer be cut off before it actually ends.
@@ -24,7 +24,7 @@ Version 1.2.0
     multiple parts, the second part will be be panned to opposite speaker, 
     and the third part will be panned to the center.
   - If a part name includes the word "Left", it will always be panned to the
-    left speaker. Likewise for the words "Right, and "Center" or "Middle". 
+    left speaker. Likewise for the words "Right, and "Center" or "Middle".
 
 Version 1.1.0
   - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
