@@ -29,7 +29,7 @@ public class TempoBar extends JPanel implements SequencerListener {
 
 	public static final int WIDTH = PTR_WIDTH * 7;
 
-	private static final float MID = 0.66f;
+	private static final float MID = 0.5f;
 	private static final float MAX_TEMPO = 2.0f; // Must be at least 2.0
 
 	private SequencerWrapper seq;
@@ -135,7 +135,7 @@ public class TempoBar extends JPanel implements SequencerListener {
 			float tempo = pctToTempo(pct);
 			if (tempo <= 0.05f)
 				tempo = 0.001f;
-			else if (tempo > 0.9f && tempo < 1.2f)
+			else if (tempo > 0.9f && tempo < 1.1f)
 				tempo = 1.0f;
 			else if (tempo <= 1.0f)
 				tempo = (float) Math.round(tempo / 0.10f) * 0.10f;
