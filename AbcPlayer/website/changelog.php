@@ -29,7 +29,7 @@
     difference between notes is sharper, and sounds more like it does in LOTRO.</li>
 <li>Staccato (short) notes on woodwind instruments are more... staccato, to 
     sound more like they do in LOTRO.</li>
-<li>Bagpipe drone notes (C, through ^D,) now sustain forever rather than fading 
+<li>Bagpipe drone notes (C, through B,) now sustain forever rather than fading 
     out after ~8 seconds, to match how they sound in LOTRO.</li>
 </ul>
 <hr/>
