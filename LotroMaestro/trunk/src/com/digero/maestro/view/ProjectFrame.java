@@ -626,8 +626,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			boolean isAbc = fileName.endsWith(".abc") || fileName.endsWith(".txt");
 			sequenceInfo = new SequenceInfo(midiFile, isAbc);
 
-			sequencer.setSequence(sequenceInfo.getSequence());
+			sequencer.setSequence(null);
 			sequencer.reset(true);
+			sequencer.setSequence(sequenceInfo.getSequence());
 			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
 			composerField.setText("");
