@@ -128,126 +128,101 @@ public class SequencerWrapper implements IMidiConstants {
 		setPosition(0);
 
 		boolean oldReset = customSequencer || !fullReset;
-		Sequencer newSequencer = null;
-		Transmitter newTransmitter = null;
-		Receiver newReceiver = null;
 
-		try {
-			if (!oldReset) {
-				try {
-					newSequencer = MidiSystem.getSequencer(false);
-					newSequencer.open();
-					newTransmitter = newSequencer.getTransmitter();
-					newReceiver = MidiSystem.getReceiver();
-				}
-				catch (MidiUnavailableException e1) {
-					e1.printStackTrace();
-				}
-
+		if (!oldReset) {
+			Sequence seqSave = sequencer.getSequence();
+			try {
+				sequencer.setSequence((Sequence) null);
+			}
+			catch (InvalidMidiDataException e) {
+				// This won't happen
+				throw new RuntimeException(e);
 			}
 
-			if (newSequencer != null && newTransmitter != null && newReceiver != null) {
-				try {
-					newSequencer.setSequence(sequencer.getSequence());
-					sequencer.setSequence((Sequence) null);
-				}
-				catch (InvalidMidiDataException e) {
-					// This shouldn't happen
-					throw new RuntimeException(e);
-				}
+			sequencer.close();
+			transmitter.close();
+			receiver.close();
 
-				sequencer.close();
-				transmitter.close();
-				receiver.close();
+			try {
+				sequencer = MidiSystem.getSequencer(false);
+				sequencer.open();
+				transmitter = sequencer.getTransmitter();
+				receiver = MidiSystem.getReceiver();
+			}
+			catch (MidiUnavailableException e1) {
+				throw new RuntimeException(e1);
+			}
 
-				sequencer = newSequencer;
-				transmitter = newTransmitter;
-				receiver = newReceiver;
+			try {
+				sequencer.setSequence(seqSave);
+			}
+			catch (InvalidMidiDataException e) {
+				// This won't happen
+				throw new RuntimeException(e);
+			}
 
-				newSequencer = null;
-				newTransmitter = null;
-				newReceiver = null;
-
-				if (drumFilter != null) {
-					transmitter.setReceiver(drumFilter);
-					drumFilter.setReceiver(receiver);
-				}
-				else {
-					transmitter.setReceiver(receiver);
-				}
-
-				try {
-					ShortMessage msg = new ShortMessage();
-					msg.setMessage(ShortMessage.SYSTEM_RESET);
-					receiver.send(msg, -1);
-
-					for (int i = 0; i < CHANNEL_COUNT; i++) {
-						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
-								REGISTERED_PARAM_PITCH_BEND_RANGE);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
-						receiver.send(msg, -1);
-					}
-				}
-				catch (InvalidMidiDataException e) {
-					e.printStackTrace();
-				}
+			if (drumFilter != null) {
+				transmitter.setReceiver(drumFilter);
+				drumFilter.setReceiver(receiver);
 			}
 			else {
-				oldReset = true;
+				transmitter.setReceiver(receiver);
 			}
 
-			if (oldReset) {
-				// Reset the instruments
-				boolean isOpen = sequencer.isOpen();
-				try {
-					if (!isOpen)
-						sequencer.open();
+			try {
+				ShortMessage msg = new ShortMessage();
+				msg.setMessage(ShortMessage.SYSTEM_RESET);
+				receiver.send(msg, -1);
 
-					ShortMessage msg = new ShortMessage();
-					msg.setMessage(ShortMessage.SYSTEM_RESET);
-					receiver.send(msg, -1);
-					for (int i = 0; i < CHANNEL_COUNT; i++) {
-						msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
-								REGISTERED_PARAM_PITCH_BEND_RANGE);
-						receiver.send(msg, -1);
-						msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
-						receiver.send(msg, -1);
-					}
-				}
-				catch (MidiUnavailableException e) {
-					// Ignore
-				}
-				catch (InvalidMidiDataException e) {
-					// Ignore
-					e.printStackTrace();
-				}
-
-				if (!isOpen)
-					sequencer.close();
+//				for (int i = 0; i < CHANNEL_COUNT; i++) {
+//					msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+//					receiver.send(msg, -1);
+//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
+//					receiver.send(msg, -1);
+//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
+//							REGISTERED_PARAM_PITCH_BEND_RANGE);
+//					receiver.send(msg, -1);
+//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
+//					receiver.send(msg, -1);
+//				}
+			}
+			catch (InvalidMidiDataException e) {
+				e.printStackTrace();
 			}
 		}
-		finally {
-			if (newSequencer != null) {
-				newSequencer.close();
-				newSequencer = null;
+
+		if (oldReset) {
+			// Reset the instruments
+			boolean isOpen = sequencer.isOpen();
+			try {
+				if (!isOpen)
+					sequencer.open();
+
+				ShortMessage msg = new ShortMessage();
+				msg.setMessage(ShortMessage.SYSTEM_RESET);
+				receiver.send(msg, -1);
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
+					receiver.send(msg, -1);
+					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
+					receiver.send(msg, -1);
+//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
+//							REGISTERED_PARAM_PITCH_BEND_RANGE);
+//					receiver.send(msg, -1);
+//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
+//					receiver.send(msg, -1);
+				}
 			}
-			if (newTransmitter != null) {
-				newTransmitter.close();
-				newTransmitter = null;
+			catch (MidiUnavailableException e) {
+				// Ignore
 			}
-			if (newReceiver != null) {
-				newReceiver.close();
-				newReceiver = null;
+			catch (InvalidMidiDataException e) {
+				// Ignore
+				e.printStackTrace();
 			}
+
+			if (!isOpen)
+				sequencer.close();
 		}
 	}
 
@@ -430,7 +405,8 @@ public class SequencerWrapper implements IMidiConstants {
 		if (sequencer.getSequence() != sequence) {
 			boolean preLoaded = isLoaded();
 			sequencer.setSequence(sequence);
-			tempoCache.refresh(sequence);
+			if (sequence != null)
+				tempoCache.refresh(sequence);
 			if (preLoaded != isLoaded())
 				fireChangeEvent(SequencerProperty.IS_LOADED);
 			fireChangeEvent(SequencerProperty.LENGTH);
