@@ -174,6 +174,13 @@ public class AbcPart {
 		long barNumber = 0;
 		StringBuilder sb = new StringBuilder();
 		Dynamics curDyn = null;
+		Dynamics initDyn = null;
+
+		for (Chord c : chords) {
+			initDyn = c.calcDynamics();
+			if (initDyn != null)
+				break;
+		}
 
 		for (Chord c : chords) {
 			if (c.size() == 0) {
@@ -220,7 +227,8 @@ public class AbcPart {
 				Arrays.fill(flats, false);
 			}
 
-			Dynamics newDyn = c.calcDynamics();
+			Dynamics newDyn = (initDyn != null) ? initDyn : c.calcDynamics();
+			initDyn = null;
 			if (newDyn != null && newDyn != curDyn) {
 				sb.append('+').append(newDyn).append("+ ");
 				curDyn = newDyn;
@@ -486,7 +494,7 @@ public class AbcPart {
 			if (ne.endMicros > maxNoteEnd
 			//      Bagpipe notes up to B, can sustain indefinitey; don't break them
 					&& !(getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= Note.B2.id)) {
-				
+
 				// Align with a bar boundary if it extends across 1 or more full bars.
 				if (tm.getBarEnd(ne.startMicros) < tm.getBarStart(maxNoteEnd)) {
 					maxNoteEnd = tm.getBarStart(maxNoteEnd);
