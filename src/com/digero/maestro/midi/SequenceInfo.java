@@ -47,10 +47,9 @@ public class SequenceInfo implements IMidiConstants {
 			sequence = MidiSystem.getSequence(file);
 		}
 
-		// Since the drum track merge is only applicable to type 1 midi sequences, 
-		// do it before we convert this sequence, to avoid doing unnecessary work
-//		mergeDrumTracks(sequence);
-
+		// Since the drum track separation is only applicable to type 1 midi sequences, 
+		// do it before we convert this sequence to type 1, to avoid doing unnecessary work
+		separateDrumTracks(sequence);
 		convertToType1(sequence);
 		fixupTrackLength(sequence);
 
@@ -68,11 +67,8 @@ public class SequenceInfo implements IMidiConstants {
 			TrackInfo track = new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache);
 			trackInfoList.add(track);
 
-			if (track.getNoteCount() > 0)
-				endMicros = Math.max(endMicros, track.getNoteEvents().get(track.getNoteCount() - 1).endMicros);
-
-			if (track.getDrumCount() > 0)
-				endMicros = Math.max(endMicros, track.getDrumEvents().get(track.getDrumCount() - 1).endMicros);
+			if (track.hasEvents())
+				endMicros = Math.max(endMicros, track.getEvents().get(track.getEventCount() - 1).endMicros);
 		}
 
 		tempoBPM = findMainTempo(sequence, tempoCache);
@@ -291,10 +287,9 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	/**
-	 * Ensures that there is at most one drum track, and that track contains
-	 * only drum notes.
+	 * Ensures that there are no tracks with both drums and notes.
 	 */
-	public static void mergeDrumTracks(Sequence song) {
+	public static void separateDrumTracks(Sequence song) {
 		Track[] tracks = song.getTracks();
 		// This doesn't work on Type 0 MIDI files
 		if (tracks.length <= 1)
@@ -305,8 +300,6 @@ public class SequenceInfo implements IMidiConstants {
 		final int MIXED = DRUMS | NOTES;
 
 		int[] trackContents = new int[tracks.length];
-		int firstDrumTrack = -1;
-		boolean hasMultipleDrumTracks = false;
 		boolean hasMixed = false;
 
 		for (int i = 0; i < tracks.length; i++) {
@@ -319,10 +312,6 @@ public class SequenceInfo implements IMidiConstants {
 					if (m.getCommand() == ShortMessage.NOTE_ON) {
 						if (m.getChannel() == DRUM_CHANNEL) {
 							trackContents[i] |= DRUMS;
-							if (firstDrumTrack == -1)
-								firstDrumTrack = i;
-							else if (firstDrumTrack != i)
-								hasMultipleDrumTracks = true;
 						}
 						else {
 							trackContents[i] |= NOTES;
@@ -337,26 +326,15 @@ public class SequenceInfo implements IMidiConstants {
 			}
 		}
 
-		// If there are 0 or 1 pure drum tracks, don't need to do anything
-		if (!hasMultipleDrumTracks && !hasMixed)
+		// If there are no mixed tracks, don't need to do anything
+		if (!hasMixed)
 			return;
 
 		Track drumTrack = song.createTrack();
 		drumTrack.add(MidiFactory.createTrackNameEvent("Drums"));
-		for (int i = firstDrumTrack; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++) {
 			Track track = tracks[i];
-			if (trackContents[i] == DRUMS) {
-				// Pure drum track: copy all events except track name
-				for (int j = 0; j < track.size(); j++) {
-					MidiEvent evt = track.get(j);
-					MidiMessage msg = evt.getMessage();
-					if ((msg instanceof MetaMessage) && ((MetaMessage) msg).getType() == META_TRACK_NAME)
-						continue;
-					drumTrack.add(evt);
-				}
-				song.deleteTrack(track);
-			}
-			else if (trackContents[i] == MIXED) {
+			if (trackContents[i] == MIXED) {
 				// Mixed track: copy only the events on the drum channel
 				for (int j = 0; j < track.size(); j++) {
 					MidiEvent evt = track.get(j);

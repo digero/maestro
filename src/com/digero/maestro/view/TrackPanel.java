@@ -22,7 +22,6 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.sound.midi.Sequence;
@@ -58,7 +57,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	// 0 | [X]                | +----^-+ |  | (note graph) |  |
 	//   |      Instrument(s) | +----v-+ |  +--------------+  |
 	//   +--------------------+----------+--------------------+
-	static final int TITLE_WIDTH = 160;
+	static final int TITLE_WIDTH = 140;
+	static final int TITLE_WIDTH_DRUMS = 180;
 	static final int SPINNER_WIDTH = 48;
 	private static final double DRUM_ROW0 = 32;
 	private static final double NOTE_ROW0 = 48;
@@ -74,12 +74,13 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private AbcPart abcPart;
 
 	private JCheckBox checkBox;
-//	private JSpinner transposeSpinner;
+	private JSpinner transposeSpinner;
 	private NoteGraph noteGraph;
 
 	private AbcPartListener abcListener;
 
 	private boolean showDrumPanels;
+	private boolean wasDrumPart;
 
 	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
@@ -123,13 +124,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		add(noteGraph, "2, 0");
 
-		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
-		String instr = trackInfo.getInstrumentNames();
-		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
-
-		if (trackInfo.hasNotes()) {
+		if (!trackInfo.isDrumTrack()) {
 			int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
-			final JSpinner transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
+			transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
 			transposeSpinner.setToolTipText("Transpose this track by octaves (12 semitones)");
 
 			transposeSpinner.addChangeListener(new ChangeListener() {
@@ -146,21 +143,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				}
 			});
 
-			title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont().deriveFont(Font.BOLD));
-			instr = Util.ellipsis(instr, TITLE_WIDTH - 32, checkBox.getFont());
-			checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
-
 			add(checkBox, "0, 0");
 			add(transposeSpinner, "1, 0, f, c");
 		}
 		else {
 			((TableLayout) getLayout()).setRow(0, DRUM_ROW0);
 			checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
-			title = Util.ellipsis(title, TITLE_WIDTH - 32, checkBox.getFont());
-			checkBox.setText("<html><b>" + title + "</b> (" + instr + ")</html>");
 
 			add(checkBox, "0, 0, 1, 0");
 		}
+
+		updateTitleText();
 
 		abcPart.addAbcListener(abcListener = new AbcPartListener() {
 			public void abcPartChanged(AbcPartEvent e) {
@@ -186,38 +179,67 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		updateState(false);
 	}
 
+	private int curTitleWidth() {
+		return abcPart.isDrumPart() ? TITLE_WIDTH_DRUMS : TITLE_WIDTH;
+	}
+
+	private void updateTitleText() {
+		final int ELLIPSIS_OFFSET = 28;
+
+		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
+		String instr = trackInfo.getInstrumentNames();
+		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
+
+		if (!trackInfo.isDrumTrack()) {
+			title = Util.ellipsis(title, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont().deriveFont(Font.BOLD));
+			instr = Util.ellipsis(instr, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont());
+			checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
+		}
+		else {
+			title = Util.ellipsis(title, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont());
+			checkBox.setText("<html><b>" + title + "</b> (" + instr + ")</html>");
+		}
+	}
+
 	private void updateState(boolean initDrumPanels) {
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
-		boolean inputEnabled = abcPart.isDrumPart() ? trackInfo.hasDrums() : trackInfo.hasNotes();
+		boolean inputEnabled = abcPart.isDrumPart() == trackInfo.isDrumTrack();
 		setBackground(trackEnabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
 		checkBox.setForeground(trackEnabled ? (abcPart.isDrumPart() ? PANEL_DRUM_TEXT_ENABLED : PANEL_TEXT_ENABLED)
 				: (inputEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
 
-		checkBox.setEnabled(inputEnabled);
+//		checkBox.setEnabled(inputEnabled);
 		checkBox.setSelected(trackEnabled);
 
 		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
-		if (initDrumPanels || showDrumPanels != showDrumPanelsNew) {
+		if (initDrumPanels || showDrumPanels != showDrumPanelsNew || wasDrumPart != abcPart.isDrumPart()) {
 			showDrumPanels = showDrumPanelsNew;
+			wasDrumPart = abcPart.isDrumPart();
 
 			for (int i = getComponentCount() - 1; i >= 0; --i) {
 				if (getComponent(i) instanceof DrumPanel) {
 					remove(i);
 				}
 			}
+			if (transposeSpinner != null)
+				transposeSpinner.setVisible(!abcPart.isDrumPart());
 
+			TableLayout layout = (TableLayout) getLayout();
+			layout.setColumn(0, curTitleWidth());
 			if (showDrumPanels) {
 				int row = 1;
-				TableLayout layout = (TableLayout) getLayout();
-				for (int drumId : trackInfo.getDrumsInUse()) {
-					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, drumId);
+				for (int noteId : trackInfo.getNotesInUse()) {
+					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId);
 					if (row <= layout.getNumRow())
 						layout.insertRow(row, PREFERRED);
 					add(panel, "0, " + row + ", 2, " + row);
 				}
+
 			}
 
-			validate();
+			updateTitleText();
+
+			revalidate();
 		}
 	}
 
@@ -355,15 +377,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
 			g2.setColor(noteColor);
 
-			Iterator<NoteEvent> noteEventIter = trackInfo.getNoteEvents().iterator();
-			Iterator<NoteEvent> drumEventIter = trackInfo.getDrumEvents().iterator();
-
-			while (noteEventIter.hasNext() || drumEventIter.hasNext()) {
-				boolean drums;
-				NoteEvent evt = (drums = drumEventIter.hasNext()) ? drumEventIter.next() : noteEventIter.next();
-
+			for (NoteEvent evt : trackInfo.getEvents()) {
 				int id = evt.note.id;
-				if (!drums)
+				if (!trackInfo.isDrumTrack())
 					id += transpose;
 				double width = Math.max(minLength, evt.getLength());
 				double y;
@@ -371,11 +387,11 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 				if (id < minPlayable) {
 					y = Math.max(id, MIN_RENDERED);
-					playable = drums;
+					playable = trackInfo.isDrumTrack();
 				}
 				else if (id > maxPlayable) {
 					y = Math.min(id, MAX_RENDERED);
-					playable = drums;
+					playable = trackInfo.isDrumTrack();
 				}
 				else {
 					y = id;
@@ -389,7 +405,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 					notesUnplayable.add(new Rectangle2D.Double(evt.startMicros, y, width, height));
 				}
 				else {
-					if (drums)
+					if (trackInfo.isDrumTrack())
 						g2.setColor(drumColor);
 					else
 						g2.setColor(noteColor);

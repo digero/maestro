@@ -188,21 +188,12 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
 				int trackNumber = track.getTrackNumber();
-				if (track.hasNotes() || track.hasDrums()) {
+				if (track.hasEvents()) {
 					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart);
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListVGroup.addComponent(trackPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 							GroupLayout.PREFERRED_SIZE);
 					trackListHGroup.addComponent(trackPanel);
-
-//					if (track.hasDrums()) {
-//						for (int drumId : track.getDrumsInUse()) {
-//							DrumPanel panel = new DrumPanel(track, sequencer, abcPart, drumId);
-//							trackListVGroup.addComponent(panel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-//									GroupLayout.PREFERRED_SIZE);
-//							trackListHGroup.addComponent(panel);
-//						}
-//					}
 
 					if (MUTE_DISABLED_TRACKS)
 						sequencer.setTrackMute(trackNumber, !abcPart.isTrackEnabled(trackNumber));
@@ -235,18 +226,9 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 		for (Component child : trackListPanel.getComponents()) {
 			if (child instanceof TrackPanel) {
 				TrackPanel trackPanel = (TrackPanel) child;
-//				child.setVisible(!percussion || trackPanel.getTrackInfo().hasDrums());
-				child.setEnabled(percussion || trackPanel.getTrackInfo().hasNotes());
+				child.setEnabled(percussion || trackPanel.getTrackInfo().hasEvents());
 				if (!setHeight && !percussion) {
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(child.getPreferredSize().height);
-					setHeight = true;
-				}
-			}
-			else if (child instanceof DrumTrackPanel) {
-				child.setVisible(percussion);
-				if (!setHeight && percussion) {
-					trackScrollPane.getVerticalScrollBar()
-							.setUnitIncrement(((DrumTrackPanel) child).getUnitIncrement());
 					setHeight = true;
 				}
 			}
