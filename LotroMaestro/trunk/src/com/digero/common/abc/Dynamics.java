@@ -21,6 +21,10 @@ public enum Dynamics {
 	public final int midiVol;
 	public final int abcVol;
 
+	public int getVol(boolean abc) {
+		return abc ? abcVol : midiVol;
+	}
+
 	private Dynamics(int midiVol, int abcVol) {
 		this.midiVol = midiVol;
 		this.abcVol = abcVol;

@@ -186,6 +186,8 @@ public class AbcPart {
 				System.err.println("Chord has no notes!");
 				continue;
 			}
+			
+			c.sort();
 
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
 				barNumber = c.getStartMicros() / tm.barLength;
@@ -811,8 +813,14 @@ public class AbcPart {
 		if (dstNote == null) {
 			if (isDrumTrack(track))
 				dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
-			else
-				dstNote = Note.isPlayable(srcNote) ? srcNote : DISABLED_DRUM_ID;
+			else {
+				if (instrument == LotroInstrument.COWBELL)
+					dstNote = Note.G2.id; // "Tom High 1"
+				else if (instrument == LotroInstrument.MOOR_COWBELL)
+					dstNote = Note.A2.id; // "Tom High 2"
+				else
+					dstNote = Note.isPlayable(srcNote) ? srcNote : DISABLED_DRUM_ID;
+			}
 			drumNoteMap[track].put(srcNote, dstNote);
 		}
 		return dstNote;
