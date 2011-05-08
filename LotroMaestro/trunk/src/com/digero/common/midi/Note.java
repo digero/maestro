@@ -58,13 +58,19 @@ public enum Note {
 		return id < naturalId;
 	}
 
+	public Note getEnharmonicNote(boolean sharp) {
+		if (isWhiteKey() || sharp == isSharp())
+			return this;
+
+		// Sharps are listed before flats
+		return values()[ordinal() + (sharp ? -1 : 1)];
+	}
+
 	/**
-	 * Returns true if this note has an accidental.
-	 * 
-	 * TODO make this work with keys other than C major.
+	 * Returns true if this note has no accidentals in the key of C major.
 	 */
-	public boolean hasAccidental() {
-		return id != naturalId;
+	public boolean isWhiteKey() {
+		return id == naturalId;
 	}
 
 	public static boolean isPlayable(Note n) {
