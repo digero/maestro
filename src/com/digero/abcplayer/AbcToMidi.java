@@ -49,7 +49,7 @@ public class AbcToMidi {
 		public String getMetadata(char key) {
 			return metadata.get(Character.toUpperCase(key));
 		}
-		
+
 		public String getArtist() {
 			return getMetadata('C');
 		}
@@ -657,8 +657,8 @@ public class AbcToMidi {
 											"The default note length must be the same for all parts of the song",
 											fileName, noteDivisorChangeLine);
 								}
-								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().abcVol,
-										chordStartTick));
+								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().getVol(
+										useLotroInstruments), chordStartTick));
 							}
 
 							if (m.group(NOTE_TIE) != null) {
@@ -686,7 +686,7 @@ public class AbcToMidi {
 											+ TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN);
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
-										.getDynamics().abcVol, noteEndTickTmp);
+										.getDynamics().getVol(useLotroInstruments), noteEndTickTmp);
 								track.add(noteOff);
 								noteOffEvents.add(noteOff);
 

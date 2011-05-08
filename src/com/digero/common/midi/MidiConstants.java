@@ -86,7 +86,7 @@ public class MidiConstants implements IMidiConstants {
 			"Tenor Sax", // 66
 			"Bari Sax", // 67
 			"Oboe", // 68
-			"Englsh Horn", // 69
+			"English Horn", // 69
 			"Bassoon", // 70
 			"Clarinet", // 71
 			"Piccolo", // 72

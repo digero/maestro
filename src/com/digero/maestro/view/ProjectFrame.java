@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -60,6 +61,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abc.TimingInfo;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.DrumFilterTransceiver;
@@ -86,6 +88,7 @@ import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")
@@ -639,10 +642,61 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
 
-			updateAbcButtons();
-			newPartButton.doClick();
+			if (isAbc) {
+				int t = 0;
+				for (TrackInfo trackInfo : sequenceInfo.getTrackList()) {
+					if (!trackInfo.hasEvents()) {
+						t++;
+						continue;
+					}
 
-			sequencer.start();
+					AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
+
+					newPart.setTitle(trackInfo.getName());
+					newPart.setTrackEnabled(t, true);
+
+					Set<Integer> midiInstruments = trackInfo.getInstruments();
+					for (LotroInstrument lotroInst : LotroInstrument.values()) {
+						if (midiInstruments.contains(lotroInst.midiProgramId)) {
+							newPart.setInstrument(lotroInst);
+							break;
+						}
+					}
+
+					// Track name is e.g.:
+					// 4. Hello World
+					int partNumber = t + 1;
+					int dot = trackInfo.getName().indexOf('.');
+					if (dot > 0) {
+						try {
+							partNumber = Integer.parseInt(trackInfo.getName().substring(0, dot));
+						}
+						catch (NumberFormatException nfe) {}
+					}
+					newPart.setPartNumber(partNumber);
+
+					parts.addElement(newPart);
+					newPart.addAbcListener(abcPartListener);
+					t++;
+				}
+
+				updateAbcButtons();
+
+				if (parts.isEmpty()) {
+					newPartButton.doClick();
+				}
+				else {
+					Collections.sort(partsWrapper, partNumberComparator);
+					partsList.clearSelection();
+					partsList.setSelectedValue(partsWrapper.get(0), true);
+					abcPlayButton.doClick();
+				}
+			}
+			else {
+				updateAbcButtons();
+				newPartButton.doClick();
+				sequencer.start();
+			}
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),

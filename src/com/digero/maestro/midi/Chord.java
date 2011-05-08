@@ -23,6 +23,7 @@
 package com.digero.maestro.midi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.digero.common.abc.Dynamics;
@@ -121,5 +122,9 @@ public class Chord {
 			return null;
 
 		return Dynamics.fromMidiVelocity(velocity);
+	}
+	
+	public void sort() {
+		Collections.sort(notes);
 	}
 }

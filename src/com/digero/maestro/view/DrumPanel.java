@@ -6,7 +6,6 @@ import info.clearthought.layout.TableLayoutConstants;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -94,11 +93,17 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		});
 
 		checkBox.setOpaque(false);
-		checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
+//		checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
 
 		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
-		String instr = info.isDrumTrack() ? MidiConstants.getDrumName(drumId) : Note.fromId(drumNoteId)
-				.getDisplayName();
+		String instr;
+		if (info.isDrumTrack())
+			instr = MidiConstants.getDrumName(drumId);
+		else {
+			Note note = Note.fromId(drumNoteId);
+			instr = note.getDisplayName() + " (" + note.abc + ")";
+		}
+
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
 		instr = Util.ellipsis(instr, TITLE_WIDTH, checkBox.getFont());

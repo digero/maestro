@@ -34,7 +34,7 @@ public class TrackInfo implements IMidiConstants {
 	private String name;
 	private TimeSignature timeSignature = null;
 	private KeySignature keySignature = null;
-	private Set<Integer> instruments = new HashSet<Integer>();
+	private Set<Integer> instruments;
 	private List<NoteEvent> noteEvents;
 	private SortedSet<Integer> notesInUse;
 	private boolean isDrumTrack;
@@ -48,6 +48,7 @@ public class TrackInfo implements IMidiConstants {
 
 		Sequence song = sequenceInfo.getSequence();
 
+		instruments = new HashSet<Integer>();
 		noteEvents = new ArrayList<NoteEvent>();
 		notesInUse = new TreeSet<Integer>();
 		List<NoteEvent>[] notesOn = new List[16];
@@ -186,6 +187,7 @@ public class TrackInfo implements IMidiConstants {
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
 		notesInUse = Collections.unmodifiableSortedSet(notesInUse);
+		instruments = Collections.unmodifiableSet(instruments);
 	}
 
 	public SequenceInfo getSequenceInfo() {
@@ -278,6 +280,10 @@ public class TrackInfo implements IMidiConstants {
 
 	public int getInstrumentCount() {
 		return instruments.size();
+	}
+
+	public Set<Integer> getInstruments() {
+		return instruments;
 	}
 
 //	public int[] addNoteVelocities(int[] velocities) {
