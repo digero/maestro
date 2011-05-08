@@ -185,7 +185,7 @@ public class AbcPart {
 				System.err.println("Chord has no notes!");
 				continue;
 			}
-			
+
 			c.sort();
 
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
@@ -788,6 +788,10 @@ public class AbcPart {
 	public boolean isDrumPart() {
 		return instrument.isPercussion;
 	}
+	
+	public boolean isCowbellPart() {
+		return instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL;
+	}
 
 	public boolean isDrumTrack(int track) {
 		return sequenceInfo.getTrackInfo(track).isDrumTrack();
@@ -808,21 +812,24 @@ public class AbcPart {
 	}
 
 	public int getDrumMapping(int track, int srcNote) {
+		if (instrument == LotroInstrument.COWBELL)
+			return Note.G2.id; // "Tom High 1"
+		else if (instrument == LotroInstrument.MOOR_COWBELL)
+			return Note.A2.id; // "Tom High 2"
+
 		Integer dstNote = drumNoteMap[track].get(srcNote);
 		if (dstNote == null) {
 			if (isDrumTrack(track))
 				dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
-			else {
-				if (instrument == LotroInstrument.COWBELL)
-					dstNote = Note.G2.id; // "Tom High 1"
-				else if (instrument == LotroInstrument.MOOR_COWBELL)
-					dstNote = Note.A2.id; // "Tom High 2"
-				else
-					dstNote = Note.isPlayable(srcNote) ? srcNote : DISABLED_DRUM_ID;
-			}
+			else
+				dstNote = Note.isPlayable(srcNote) ? srcNote : DISABLED_DRUM_ID;
 			drumNoteMap[track].put(srcNote, dstNote);
 		}
 		return dstNote;
+	}
+
+	public boolean isDrumPlayable(int track, int drumId) {
+		return getDrumMapping(track, drumId) != DISABLED_DRUM_ID;
 	}
 
 	public boolean isDrumEnabled(int track, int drumId) {
