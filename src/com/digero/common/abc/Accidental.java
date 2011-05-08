@@ -15,4 +15,21 @@ public enum Accidental {
 	public String toString() {
 		return abc;
 	}
+
+	public static Accidental fromDeltaId(int deltaNoteId) {
+		switch (deltaNoteId) {
+		case -2:
+			return DOUBLE_FLAT;
+		case -1:
+			return FLAT;
+		case 0:
+			return NATURAL;
+		case 1:
+			return SHARP;
+		case 2:
+			return DOUBLE_SHARP;
+		default:
+			return NONE;
+		}
+	}
 }

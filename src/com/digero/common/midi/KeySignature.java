@@ -88,8 +88,12 @@ public class KeySignature implements IMidiConstants {
 		return new KeySignature(x, this.mode);
 	}
 
-	public Accidental getAccidental(int noteId) {
-		int id = (noteId - Note.CX.id) % 12;
+	/**
+	 * Computes the default accidental in this key for the given "white-key"
+	 * note (aka natural note ID in the key of C).
+	 */
+	public Accidental getDefaultAccidental(int naturalId) {
+		int id = (naturalId - Note.CX.id) % 12;
 
 		for (int sharp = 0; sharp < sharpsFlats; sharp++) {
 			if (SHARPS[sharp] == id)
@@ -102,6 +106,21 @@ public class KeySignature implements IMidiConstants {
 		}
 
 		return Accidental.NONE;
+	}
+
+	/**
+	 * What accidental should be written for the given note in this key.
+	 */
+	public Accidental getOutputAccidental(Note note) {
+		note = note.getEnharmonicNote(sharpsFlats >= 0);
+		Accidental acc = Accidental.fromDeltaId(note.id - note.naturalId);
+		if (acc.deltaNoteId == getDefaultAccidental(note.naturalId).deltaNoteId)
+			return Accidental.NONE;
+		return acc;
+	}
+
+	public Accidental getOutputAccidental(int noteId) {
+		return getOutputAccidental(Note.fromId(noteId));
 	}
 
 	@Override
@@ -197,6 +216,27 @@ public class KeySignature implements IMidiConstants {
 	}
 
 	public static void main(String[] args) {
+		int[] whiteKeys = {
+				Note.C3.id, Note.D3.id, Note.E3.id, Note.F3.id, Note.G3.id, Note.A3.id, Note.B3.id
+		};
+
+		Note root = Note.GbX;
+		
+		for (int i = -6; i <= 6; i++) {
+			KeySignature key = new KeySignature(i, true);
+			System.out.print(key + ":\t");
+			for (int id : whiteKeys) {
+				id += root.id - Note.CX.id;
+				Note note = Note.fromId(id).getEnharmonicNote(!root.isFlat());
+				Note natural = Note.fromId(note.naturalId);
+				Accidental acc = key.getOutputAccidental(note);
+				System.out.print(acc.toString() + note.toString() + "\t");
+			}
+			System.out.println();
+		}
+	}
+
+	public static void mainOld(String[] args) {
 		System.out.println("Sharps");
 		for (int id : SHARPS) {
 			System.out.print(id + ", ");
