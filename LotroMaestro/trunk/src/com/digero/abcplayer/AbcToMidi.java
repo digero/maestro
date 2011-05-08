@@ -606,7 +606,7 @@ public class AbcToMidi {
 							}
 							else {
 								// Use the key signature to determine the accidental
-								noteDelta = info.getKey().getAccidental(noteId).deltaNoteId;
+								noteDelta = info.getKey().getDefaultAccidental(noteId).deltaNoteId;
 							}
 							lotroNoteId += noteDelta;
 							noteId += noteDelta;

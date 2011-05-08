@@ -122,6 +122,12 @@ public class TrackInfo implements IMidiConstants {
 					int bend = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
+					int bendNew = sequenceCache.getPitchBend(evt);
+					
+					//System.out.println("[" + c + " @ " +Util.formatDuration(micros) + "] Bend Old: " + bend + " / New: " + bendNew);
+				
+					bend = bendNew;
+
 					if (bend != pitchBend[c]) {
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
 						for (NoteEvent ne : notesOn[c]) {
