@@ -14,8 +14,6 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-import sun.awt.shell.ShellFolder;
-
 public class FileFilterDropListener implements DropTargetListener {
 	private FileFilter filter;
 	private boolean acceptMultiple;
@@ -119,14 +117,7 @@ public class FileFilterDropListener implements DropTargetListener {
 				return null;
 
 			for (File file : files) {
-				if (file.getName().toLowerCase().endsWith(".lnk")) {
-					try {
-						file = ShellFolder.getShellFolder(file).getLinkLocation();
-					}
-					catch (Exception e) {
-						return null;
-					}
-				}
+				file = Util.resolveShortcut(file);
 
 				if (file.isDirectory() || !filter.accept(file))
 					return null;

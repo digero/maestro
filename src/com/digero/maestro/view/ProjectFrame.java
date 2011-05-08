@@ -610,6 +610,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private void openSong(File midiFile) {
+		midiFile = Util.resolveShortcut(midiFile);
+
 		for (int i = 0; i < parts.size(); i++) {
 			AbcPart part = (AbcPart) parts.get(i);
 			part.dispose();

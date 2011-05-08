@@ -19,6 +19,8 @@ import java.util.regex.Pattern;
 
 import javax.swing.JFrame;
 
+import sun.awt.shell.ShellFolder;
+
 public final class Util {
 	private Util() {
 		// Can't instantiate class
@@ -162,6 +164,16 @@ public final class Util {
 		}
 		catch (Exception e) {}
 		return false;
+	}
+
+	public static File resolveShortcut(File file) {
+		if (file.getName().toLowerCase().endsWith(".lnk")) {
+			try {
+				return ShellFolder.getShellFolder(file).getLinkLocation();
+			}
+			catch (Exception e) {}
+		}
+		return file;
 	}
 
 	public static void initWinBounds(final JFrame frame, final Preferences prefs, int defaultW, int defaultH) {
