@@ -23,12 +23,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.PartAutoNumberer;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
@@ -38,7 +38,7 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 
 	private AbcPart abcPart;
 	private PartAutoNumberer partAutoNumberer;
-	private SequencerWrapper sequencer;
+	private NoteFilterSequencerWrapper sequencer;
 
 	private JSpinner numberSpinner;
 	private SpinnerNumberModel numberSpinnerModel;
@@ -56,7 +56,7 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 
 	private boolean initialized = false;
 
-	public PartPanel(SequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
+	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));
@@ -253,7 +253,7 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 		trackListLayout.setHorizontalGroup(trackListHGroup = trackListLayout.createParallelGroup());
 	}
 
-	public void setSequencer(SequencerWrapper sequencer) {
+	public void setSequencer(NoteFilterSequencerWrapper sequencer) {
 		AbcPart abcPartTmp = this.abcPart;
 		setAbcPart(null);
 		this.sequencer = sequencer;

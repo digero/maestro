@@ -38,12 +38,12 @@ import javax.swing.event.ChangeListener;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
@@ -70,7 +70,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	};
 
 	private TrackInfo trackInfo;
-	private SequencerWrapper seq;
+	private NoteFilterSequencerWrapper seq;
 	private AbcPart abcPart;
 
 	private JCheckBox checkBox;
@@ -82,7 +82,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private boolean showDrumPanels;
 	private boolean wasDrumPart;
 
-	public TrackPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part) {
+	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));

@@ -1,4 +1,4 @@
-package com.digero.abcplayer;
+package com.digero.common.abctomidi;
 
 import java.io.File;
 import java.util.List;

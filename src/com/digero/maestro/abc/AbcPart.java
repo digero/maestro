@@ -20,7 +20,6 @@ import javax.sound.midi.Track;
 
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.abc.TimingInfo;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
