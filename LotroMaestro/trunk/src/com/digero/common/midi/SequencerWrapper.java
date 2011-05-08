@@ -19,10 +19,9 @@ import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
 public class SequencerWrapper implements IMidiConstants {
-	private Sequencer sequencer;
-	private Receiver receiver;
-	private Transmitter transmitter;
-	private DrumFilterTransceiver drumFilter;
+	protected Sequencer sequencer;
+	protected Receiver receiver;
+	protected Transmitter transmitter;
 	private long dragPosition;
 	private boolean isDragging;
 	private TempoCache tempoCache = new TempoCache();
@@ -38,25 +37,14 @@ public class SequencerWrapper implements IMidiConstants {
 		transmitter = sequencer.getTransmitter();
 		receiver = MidiSystem.getReceiver();
 
-		transmitter.setReceiver(receiver);
+		connectTransmitter();
 
 		updateTimer = new Timer(50, timerTick);
 		updateTimer.start();
 	}
-
-	public SequencerWrapper(DrumFilterTransceiver drumFilter) throws MidiUnavailableException {
-		this.drumFilter = drumFilter;
-
-		sequencer = MidiSystem.getSequencer(false);
-		sequencer.open();
-		transmitter = sequencer.getTransmitter();
-		receiver = MidiSystem.getReceiver();
-
-		transmitter.setReceiver(drumFilter);
-		drumFilter.setReceiver(receiver);
-
-		updateTimer = new Timer(50, timerTick);
-		updateTimer.start();
+	
+	protected void connectTransmitter() {
+		transmitter.setReceiver(receiver);
 	}
 
 	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
@@ -71,25 +59,6 @@ public class SequencerWrapper implements IMidiConstants {
 
 		updateTimer = new Timer(50, timerTick);
 		updateTimer.start();
-	}
-
-	public DrumFilterTransceiver getDrumFilter() {
-		return drumFilter;
-	}
-
-	public void setDrumSolo(int track, int drumId, boolean solo) {
-		if (drumFilter != null && solo != getDrumSolo(track, drumId)) {
-			sequencer.setTrackSolo(track, solo);
-			drumFilter.setDrumSolo(drumId, solo);
-			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
-		}
-	}
-
-	public boolean getDrumSolo(int track, int drumId) {
-		if (drumFilter == null)
-			return false;
-
-		return drumFilter.getDrumSolo(drumId) && sequencer.getTrackSolo(track);
 	}
 
 	private TimerActionListener timerTick = new TimerActionListener();
@@ -161,13 +130,7 @@ public class SequencerWrapper implements IMidiConstants {
 				throw new RuntimeException(e);
 			}
 
-			if (drumFilter != null) {
-				transmitter.setReceiver(drumFilter);
-				drumFilter.setReceiver(receiver);
-			}
-			else {
-				transmitter.setReceiver(receiver);
-			}
+			connectTransmitter();
 
 			try {
 				ShortMessage msg = new ShortMessage();
@@ -331,10 +294,6 @@ public class SequencerWrapper implements IMidiConstants {
 		}
 
 		return !sequencer.getTrackMute(track);
-	}
-
-	public boolean isDrumActive(int track, int drumId) {
-		return isTrackActive(track) && (drumFilter == null || drumFilter.isDrumActive(drumId));
 	}
 
 	/**

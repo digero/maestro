@@ -1,4 +1,4 @@
-package com.digero.abcplayer;
+package com.digero.common.abctomidi;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,8 +23,8 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.abc.Dynamics;
+import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.abc.TimingInfo;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
@@ -32,14 +32,13 @@ import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
-import com.digero.maestro.midi.Chord;
 
 public class AbcToMidi {
 	/** This is a static-only class */
 	private AbcToMidi() {
 	}
 
-	public static class AbcInfo {
+	public static class AbcInfo implements AbcConstants {
 		private boolean empty = true;
 		private String titlePrefix;
 		private Map<Character, String> metadata = new HashMap<Character, String>();
@@ -313,7 +312,7 @@ public class AbcToMidi {
 						try {
 							// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
 							PPQN = info.getPpqn();
-							MPQN = (long) TimingInfo.ONE_MINUTE_MICROS / info.getTempo();
+							MPQN = (long) AbcConstants.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
 							if (abcInfo != null)
@@ -494,7 +493,7 @@ public class AbcToMidi {
 						if (inChord)
 							chordSize++;
 
-						if (enableLotroErrors && inChord && chordSize > Chord.MAX_CHORD_NOTES) {
+						if (enableLotroErrors && inChord && chordSize > AbcConstants.MAX_CHORD_NOTES) {
 							throw new LotroParseException("Too many notes in a chord", fileName, lineNumber, m.start());
 						}
 
@@ -667,11 +666,11 @@ public class AbcToMidi {
 							}
 							else {
 								long lengthMicros = (noteEndTick - chordStartTick) * MPQN / PPQN;
-								if (enableLotroErrors && lengthMicros < TimingInfo.SHORTEST_NOTE_MICROS) {
+								if (enableLotroErrors && lengthMicros < AbcConstants.SHORTEST_NOTE_MICROS) {
 									throw new LotroParseException("Note's duration is too short", fileName, lineNumber,
 											m.start());
 								}
-								else if (enableLotroErrors && lengthMicros > TimingInfo.LONGEST_NOTE_MICROS) {
+								else if (enableLotroErrors && lengthMicros > AbcConstants.LONGEST_NOTE_MICROS) {
 									throw new LotroParseException("Note's duration is too long", fileName, lineNumber,
 											m.start());
 								}
@@ -683,7 +682,7 @@ public class AbcToMidi {
 								long noteEndTickTmp = noteEndTick;
 								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId)) {
 									noteEndTickTmp = Math.max(noteEndTick, chordStartTick
-											+ TimingInfo.ONE_SECOND_MICROS * PPQN / MPQN);
+											+ AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN);
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
 										.getDynamics().getVol(useLotroInstruments), noteEndTickTmp);

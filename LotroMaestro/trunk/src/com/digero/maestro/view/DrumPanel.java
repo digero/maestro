@@ -34,13 +34,13 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroDrumInfo;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
@@ -65,7 +65,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	};
 
 	private TrackInfo trackInfo;
-	private SequencerWrapper seq;
+	private NoteFilterSequencerWrapper seq;
 	private AbcPart abcPart;
 	private int drumId;
 
@@ -73,7 +73,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	private JComboBox drumComboBox;
 	private NoteGraph noteGraph;
 
-	public DrumPanel(TrackInfo info, SequencerWrapper sequencer, AbcPart part, int drumNoteId) {
+	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		this.trackInfo = info;
@@ -126,13 +126,13 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		noteGraph.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setDrumSolo(trackInfo.getTrackNumber(), drumId, true);
+					seq.setNoteSolo(trackInfo.getTrackNumber(), drumId, true);
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setDrumSolo(trackInfo.getTrackNumber(), drumId, false);
+					seq.setNoteSolo(trackInfo.getTrackNumber(), drumId, false);
 				}
 			}
 		});
@@ -236,7 +236,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			List<Rectangle2D> notesPlaying = null;
 
 			int trackNumber = trackInfo.getTrackNumber();
-			if (seq.isDrumActive(trackNumber, drumId)) {
+			if (seq.isNoteActive(trackNumber, drumId)) {
 				if (abcPart.isTrackEnabled(trackNumber) && abcPart.isDrumEnabled(trackNumber, drumId)) {
 					drumColor = NOTE_DRUM_ENABLED;
 					borderColor = GRAPH_BORDER_ENABLED;

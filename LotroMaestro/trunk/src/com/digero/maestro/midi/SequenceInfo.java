@@ -17,7 +17,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
-import com.digero.abcplayer.AbcToMidi;
+import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;

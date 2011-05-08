@@ -27,11 +27,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.digero.common.abc.Dynamics;
+import com.digero.common.abc.AbcConstants;
 import com.digero.common.midi.Note;
 
-public class Chord {
-	public static final int MAX_CHORD_NOTES = 6;
-
+public class Chord implements AbcConstants {
 	private long startMicros;
 	private long endMicros;
 	private boolean hasTooManyNotes = false;

@@ -62,9 +62,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.abc.TimingInfo;
 import com.digero.common.icons.IconLoader;
-import com.digero.common.midi.DrumFilterTransceiver;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.PanGenerator;
@@ -87,6 +85,8 @@ import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.PartAutoNumberer;
+import com.digero.maestro.abc.TimingInfo;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.ListModelWrapper;
@@ -105,7 +105,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private File saveFile;
 	private SequenceInfo sequenceInfo;
-	private SequencerWrapper sequencer;
+	private NoteFilterSequencerWrapper sequencer;
 	private SequencerWrapper abcSequencer;
 	private DefaultListModel parts = new DefaultListModel();
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
@@ -148,7 +148,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), partsWrapper);
 
 		try {
-			this.sequencer = new SequencerWrapper(new DrumFilterTransceiver());
+			this.sequencer = new NoteFilterSequencerWrapper();
 
 			Sequencer abcSeq = MidiSystem.getSequencer(false);
 			Synthesizer lotroSynth = null;
@@ -232,7 +232,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = (AbcPart) partsList.getSelectedValue();
-				sequencer.getDrumFilter().setAbcPart(abcPart);
+				sequencer.getFilter().setAbcPart(abcPart);
 				partPanel.setAbcPart(abcPart);
 			}
 		});
