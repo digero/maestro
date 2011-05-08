@@ -41,6 +41,7 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.Util;
 
 @SuppressWarnings("serial")
 public class SongPositionBar extends JPanel implements SequencerListener {
@@ -135,18 +136,12 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 	private class MouseHandler implements MouseListener, MouseMotionListener {
 		private static final int MAX_MOUSE_DIST = 100;
 
-		private int getPosition(int x) {
+		private long getPosition(int x) {
 			if (seq == null)
 				return 0;
 
-			int pos = (int) ((x + 1 - SIDE_PAD) * seq.getLength() / (getWidth() - 2 * SIDE_PAD));
-			if (pos < 0) {
-				pos = 0;
-			}
-			if (pos > seq.getLength() - 1) {
-				pos = (int) seq.getLength() - 1;
-			}
-			return pos;
+			long pos = (long) ((x + 1 - SIDE_PAD) * seq.getLength() / (getWidth() - 2 * SIDE_PAD));
+			return Util.clamp(pos, 0, seq.getLength() - 1);
 		}
 
 		private void setMouseHovering(MouseEvent e) {
