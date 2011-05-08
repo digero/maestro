@@ -43,8 +43,8 @@ import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.NoteEvent;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
@@ -330,9 +330,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			if (seq.isTrackActive(trackNumber)) {
 				if (abcPart.isTrackEnabled(trackNumber)) {
-					noteColor = abcPart.isDrumPart() ? NOTE_OFF : NOTE_ENABLED;
-					xnoteColor = abcPart.isDrumPart() ? NOTE_BAD_OFF : NOTE_BAD_ENABLED;
-					drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;//NOTE_DRUM_ENABLED;
+					noteColor = /* abcPart.isDrumPart() ? NOTE_OFF : */NOTE_ENABLED;
+					xnoteColor = /* abcPart.isDrumPart() ? NOTE_BAD_OFF : */NOTE_BAD_ENABLED;
+					drumColor = noteColor;//!abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;
 					borderColor = GRAPH_BORDER_ENABLED;
 					bkgdColor = GRAPH_BACKGROUND_ENABLED;
 				}
@@ -385,18 +385,19 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				double y;
 				boolean playable;
 
-				if (id < minPlayable) {
+				if (id < minPlayable)
 					y = Math.max(id, MIN_RENDERED);
-					playable = trackInfo.isDrumTrack();
-				}
-				else if (id > maxPlayable) {
+				else if (id > maxPlayable)
 					y = Math.min(id, MAX_RENDERED);
-					playable = trackInfo.isDrumTrack();
-				}
-				else {
+				else
 					y = id;
+
+				if (abcPart.isDrumPart())
+					playable = abcPart.isDrumPlayable(trackInfo.getTrackNumber(), id);
+				else if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackNumber))
 					playable = true;
-				}
+				else 
+					playable = (id >= minPlayable) && (id <= maxPlayable);
 
 				if (notesPlaying != null && songPos >= evt.startMicros && songPos <= evt.endMicros) {
 					notesPlaying.add(new Rectangle2D.Double(evt.startMicros, y, width, height));

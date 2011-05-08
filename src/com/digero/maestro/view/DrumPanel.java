@@ -30,6 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
@@ -40,8 +41,8 @@ import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroDrumInfo;
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.NoteEvent;
+import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
@@ -173,6 +174,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 				: (trackEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
+		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.DRUMS);
 	}
 
 	private LotroDrumInfo getSelectedDrum() {
@@ -237,13 +239,14 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 			int trackNumber = trackInfo.getTrackNumber();
 			if (seq.isNoteActive(trackNumber, drumId)) {
+				boolean playable = abcPart.isDrumPlayable(trackNumber, drumId);
 				if (abcPart.isTrackEnabled(trackNumber) && abcPart.isDrumEnabled(trackNumber, drumId)) {
-					drumColor = NOTE_DRUM_ENABLED;
+					drumColor = playable ? NOTE_DRUM_ENABLED : NOTE_BAD_ENABLED;
 					borderColor = GRAPH_BORDER_ENABLED;
 					bkgdColor = GRAPH_BACKGROUND_ENABLED;
 				}
 				else {
-					drumColor = NOTE_DRUM_DISABLED;
+					drumColor = playable ? NOTE_DRUM_DISABLED : NOTE_BAD_DISABLED;
 					borderColor = GRAPH_BORDER_DISABLED;
 					bkgdColor = GRAPH_BACKGROUND_DISABLED;
 				}
