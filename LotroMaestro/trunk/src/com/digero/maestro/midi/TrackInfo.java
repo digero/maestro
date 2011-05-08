@@ -36,9 +36,8 @@ public class TrackInfo implements IMidiConstants {
 	private KeySignature keySignature = null;
 	private Set<Integer> instruments = new HashSet<Integer>();
 	private List<NoteEvent> noteEvents;
-	private List<NoteEvent> drumEvents;
-	private SortedSet<Integer> drumsInUse;
-//	private int[] noteVelocities = new int[128];
+	private SortedSet<Integer> notesInUse;
+	private boolean isDrumTrack;
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
@@ -50,8 +49,7 @@ public class TrackInfo implements IMidiConstants {
 		Sequence song = sequenceInfo.getSequence();
 
 		noteEvents = new ArrayList<NoteEvent>();
-		drumEvents = new ArrayList<NoteEvent>();
-		drumsInUse = new TreeSet<Integer>();
+		notesInUse = new TreeSet<Integer>();
 		List<NoteEvent>[] notesOn = new List[16];
 		int notesNotTurnedOff = 0;
 
@@ -64,13 +62,17 @@ public class TrackInfo implements IMidiConstants {
 				ShortMessage m = (ShortMessage) msg;
 				int cmd = m.getCommand();
 				int c = m.getChannel();
-				boolean drums = (c == DRUM_CHANNEL);
+
+				if (noteEvents.isEmpty())
+					isDrumTrack = (c == DRUM_CHANNEL);
+				else if (isDrumTrack != (c == DRUM_CHANNEL))
+					System.err.println("Track contains both notes and drums");
 
 				if (notesOn[c] == null)
 					notesOn[c] = new ArrayList<NoteEvent>();
 
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF) {
-					int noteId = m.getData1() + (drums ? 0 : pitchBend[c]);
+					int noteId = m.getData1() + (isDrumTrack ? 0 : pitchBend[c]);
 					int velocity = m.getData2() * sequenceCache.getVolume(c, evt.getTick()) / MAX_VOLUME;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
@@ -86,24 +88,18 @@ public class TrackInfo implements IMidiConstants {
 							NoteEvent on = onIter.next();
 							if (on.note.id == ne.note.id) {
 								onIter.remove();
-								(drums ? drumEvents : noteEvents).remove(on);
+								noteEvents.remove(on);
 								notesNotTurnedOff++;
 								break;
 							}
 						}
 
-						if (drums) {
-							if (noteEvents.isEmpty())
-								instruments.clear();
-							drumEvents.add(ne);
-							drumsInUse.add(ne.note.id);
-						}
-						else {
-							noteEvents.add(ne);
+						if (!isDrumTrack) {
 							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
 						}
+						noteEvents.add(ne);
+						notesInUse.add(ne.note.id);
 						notesOn[c].add(ne);
-//						noteVelocities[velocity]++;
 					}
 					else {
 						Iterator<NoteEvent> iter = notesOn[c].iterator();
@@ -117,15 +113,15 @@ public class TrackInfo implements IMidiConstants {
 						}
 					}
 				}
-				else if (cmd == ShortMessage.PITCH_BEND && !drums) {
+				else if (cmd == ShortMessage.PITCH_BEND && !isDrumTrack) {
 					final int STEP_SIZE = ((1 << 14) - 1) / 4;
 					int bend = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
 					int bendNew = sequenceCache.getPitchBend(evt);
-					
+
 					//System.out.println("[" + c + " @ " +Util.formatDuration(micros) + "] Bend Old: " + bend + " / New: " + bendNew);
-				
+
 					bend = bendNew;
 
 					if (bend != pitchBend[c]) {
@@ -186,12 +182,10 @@ public class TrackInfo implements IMidiConstants {
 				if (notesOnChannel != null)
 					noteEvents.removeAll(notesOnChannel);
 			}
-			drumEvents.removeAll(notesOn[DRUM_CHANNEL]);
 		}
 
 		noteEvents = Collections.unmodifiableList(noteEvents);
-		drumEvents = Collections.unmodifiableList(drumEvents);
-		drumsInUse = Collections.unmodifiableSortedSet(drumsInUse);
+		notesInUse = Collections.unmodifiableSortedSet(notesInUse);
 	}
 
 	public SequenceInfo getSequenceInfo() {
@@ -229,49 +223,40 @@ public class TrackInfo implements IMidiConstants {
 		return getName();
 	}
 
-	public boolean hasDrums() {
-		return drumEvents.size() > 0;
-	}
-
-	public boolean hasNotes() {
-		return noteEvents.size() > 0;
+	public boolean isDrumTrack() {
+		return isDrumTrack;
 	}
 
 	/** Gets an unmodifiable list of the note events in this track. */
-	public List<NoteEvent> getNoteEvents() {
+	public List<NoteEvent> getEvents() {
 		return noteEvents;
 	}
 
-	public List<NoteEvent> getDrumEvents() {
-		return drumEvents;
+	public boolean hasEvents() {
+		return !noteEvents.isEmpty();
 	}
 
-	public SortedSet<Integer> getDrumsInUse() {
-		return drumsInUse;
+	public SortedSet<Integer> getNotesInUse() {
+		return notesInUse;
 	}
 
-	public int getNoteCount() {
+	public int getEventCount() {
 		return noteEvents.size();
 	}
 
-	public int getDrumCount() {
-		return drumEvents.size();
-	}
-
-	public String getNoteCountString() {
-		if (getNoteCount() == 1) {
+	public String getEventCountString() {
+		if (getEventCount() == 1) {
 			return "1 note";
 		}
-		return getNoteCount() + " notes";
+		return getEventCount() + " notes";
 	}
 
 	public String getInstrumentNames() {
+		if (isDrumTrack)
+			return "Drums";
+
 		if (instruments.size() == 0) {
-			if (hasDrums() && hasNotes())
-				return "Drums, " + MidiConstants.getInstrumentName(0);
-			else if (hasDrums())
-				return "Drums";
-			else if (hasNotes())
+			if (hasEvents())
 				return MidiConstants.getInstrumentName(0);
 			else
 				return "<None>";
@@ -287,9 +272,6 @@ public class TrackInfo implements IMidiConstants {
 
 			names += MidiConstants.getInstrumentName(i);
 		}
-
-		if (hasDrums())
-			names = "Drums, " + names;
 
 		return names;
 	}

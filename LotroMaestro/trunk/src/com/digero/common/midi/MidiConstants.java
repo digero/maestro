@@ -158,7 +158,7 @@ public class MidiConstants implements IMidiConstants {
 			"Metronome Click", // 33
 			"Metronome Bell", // 34
 			"Acou. Bass Drum", // 35
-			"Bass Drum 1", // 36
+			"Bass Drum", // 36
 			"Rim Shot", // 37
 			"Acoustic Snare", // 38
 			"Hand Clap", // 39

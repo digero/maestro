@@ -176,4 +176,8 @@ public enum Note {
 			this.abc = abc.toString();
 		}
 	}
+
+	public String getDisplayName() {
+		return toString().replace('s', '#');
+	}
 }

@@ -29,7 +29,6 @@ import com.digero.common.midi.PanGenerator;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
-import com.digero.maestro.midi.TrackInfo;
 
 public class AbcPart {
 	private SequenceInfo sequenceInfo;
@@ -574,10 +573,7 @@ public class AbcPart {
 	}
 
 	protected List<NoteEvent> getTrackEvents(int track) {
-		if (isDrumPart())
-			return sequenceInfo.getTrackInfo(track).getDrumEvents();
-		else
-			return sequenceInfo.getTrackInfo(track).getNoteEvents();
+		return sequenceInfo.getTrackInfo(track).getEvents();
 	}
 
 	/**
@@ -725,8 +721,7 @@ public class AbcPart {
 	}
 
 	public boolean isTrackEnabled(int track) {
-		TrackInfo trackInfo = getSequenceInfo().getTrackInfo(track);
-		return trackEnabled[track] && (isDrumPart() == trackInfo.hasDrums() || isDrumPart() != trackInfo.hasNotes());
+		return trackEnabled[track];
 	}
 
 	public void setTrackEnabled(int track, boolean enabled) {
@@ -793,6 +788,10 @@ public class AbcPart {
 		return instrument.isPercussion;
 	}
 
+	public boolean isDrumTrack(int track) {
+		return sequenceInfo.getTrackInfo(track).isDrumTrack();
+	}
+
 	public static final int DISABLED_DRUM_ID = LotroDrumInfo.DISABLED.note.id;
 	private Map<Integer, Integer>[] drumNoteMap;
 	private Set<Integer>[] drumsDisabled;
@@ -801,7 +800,8 @@ public class AbcPart {
 	public void setDrumMapping(int track, int srcNote, int dstNote) {
 		if (getDrumMapping(track, srcNote) != dstNote) {
 			drumNoteMap[track].put(srcNote, dstNote);
-			drumPrefs.putInt(Integer.toString(srcNote), dstNote);
+			if (isDrumTrack(track))
+				drumPrefs.putInt(Integer.toString(srcNote), dstNote);
 			fireChangeEvent(true);
 		}
 	}
@@ -809,7 +809,10 @@ public class AbcPart {
 	public int getDrumMapping(int track, int srcNote) {
 		Integer dstNote = drumNoteMap[track].get(srcNote);
 		if (dstNote == null) {
-			dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
+			if (isDrumTrack(track))
+				dstNote = drumPrefs.getInt(Integer.toString(srcNote), DISABLED_DRUM_ID);
+			else
+				dstNote = Note.isPlayable(srcNote) ? srcNote : DISABLED_DRUM_ID;
 			drumNoteMap[track].put(srcNote, dstNote);
 		}
 		return dstNote;

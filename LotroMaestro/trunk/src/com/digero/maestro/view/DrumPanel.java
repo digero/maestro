@@ -21,6 +21,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.sound.midi.Sequence;
@@ -31,6 +32,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerWrapper;
@@ -54,8 +56,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	//   | Instrument(s)      | +-----v+ |  +--------------+  |
 	//   +--------------------+----------+--------------------+
 	private static final int HGAP = 4;
-	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH - 52;
-	private static final int COMBO_WIDTH = TrackPanel.SPINNER_WIDTH + 52;
+	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH_DRUMS - 78;
+	private static final int COMBO_WIDTH = TrackPanel.SPINNER_WIDTH + 78;
 	private static final double[] LAYOUT_COLS = new double[] {
 			TITLE_WIDTH, COMBO_WIDTH, FILL
 	};
@@ -95,10 +97,10 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
 
 		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
-		String instr = MidiConstants.getDrumName(drumId);
+		String instr = info.isDrumTrack() ? MidiConstants.getDrumName(drumId) : Note.fromId(drumNoteId)
+				.getDisplayName();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
-//		title = Util.ellipsis(title, TITLE_WIDTH, titleLabel.getFont().deriveFont(Font.BOLD));
 		instr = Util.ellipsis(instr, TITLE_WIDTH, checkBox.getFont());
 		checkBox.setText(instr);
 
@@ -162,8 +164,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		boolean drumEnabled = abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId);
 		boolean enabled = trackEnabled && drumEnabled;
 		setBackground(enabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
-		checkBox.setForeground(enabled ? PANEL_DRUM_TEXT_ENABLED : (trackEnabled ? PANEL_TEXT_DISABLED
-				: PANEL_TEXT_OFF));
+		checkBox.setForeground(enabled ? PANEL_DRUM_TEXT_ENABLED
+				: (trackEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
 	}
@@ -242,8 +244,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 				}
 
 				// Drum parts don't really need to highlight the notes playing
-//				if (seq.isRunning())
-//					notesPlaying = new ArrayList<Rectangle2D>();
+				if (!trackInfo.isDrumTrack() && seq.isRunning())
+					notesPlaying = new ArrayList<Rectangle2D>();
 			}
 			else {
 				drumColor = NOTE_DRUM_OFF;
@@ -269,7 +271,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
 			g2.setColor(drumColor);
 
-			for (NoteEvent evt : trackInfo.getDrumEvents()) {
+			for (NoteEvent evt : trackInfo.getEvents()) {
 				int id = evt.note.id;
 				if (id != drumId)
 					continue;

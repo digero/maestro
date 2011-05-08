@@ -105,7 +105,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		if (categorySet == null)
 			byCategory.put(category, categorySet = new TreeSet<LotroDrumInfo>());
 
-		String name = category + " " + (categorySet.size() + 1);
+		String name = "[" + note.abc + "] " + category + " " + (categorySet.size() + 1);
 		LotroDrumInfo info = new LotroDrumInfo(note, name, category);
 
 		categorySet.add(info);
