@@ -228,7 +228,7 @@ public class KeySignature implements IMidiConstants {
 			for (int id : whiteKeys) {
 				id += root.id - Note.CX.id;
 				Note note = Note.fromId(id).getEnharmonicNote(!root.isFlat());
-				Note natural = Note.fromId(note.naturalId);
+				//Note natural = Note.fromId(note.naturalId);
 				Accidental acc = key.getOutputAccidental(note);
 				System.out.print(acc.toString() + note.toString() + "\t");
 			}

@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,10 +67,10 @@ public class HighlightTextFrame extends JFrame {
 	}
 
 	public void setRegions(Iterable<Region> newRegions) {
-		ArrayList x;
-		for (Region r : newRegions) {
-			// TODO
-		}
+//		ArrayList x;
+//		for (Region r : newRegions) {
+//			// TODO
+//		}
 	}
 
 	public void removeRegion(int p0, int p1) {
