@@ -3,6 +3,10 @@ Todo:
   - ABC visualization.
   - Part solos
 
+Version 1.2.1
+BUG FIXES
+  - The song position bar now lets you drag past 35:47 on long songs.
+
 Version 1.2.0
   - You can now export songs directly to MP3! Requires the (free) LAME mp3 
     converter.
