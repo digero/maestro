@@ -3,7 +3,7 @@
     <property name="output" value="output"/>
 	<property name="build" value="build"/>
 	<property name="basename" value="AbcPlayer"/>
-	<property name="version" value="1.2.0"/>
+	<property name="version" value="1.2.1"/>
     <target name="AbcPlayerExe">
     	<mkdir dir="${build}"/>
     	<delete file="${build}/*.log"/>
