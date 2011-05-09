@@ -7,7 +7,7 @@
     <target name="AbcPlayerExe">
     	<mkdir dir="${build}"/>
     	<delete file="${build}/*.log"/>
-        <jar destfile="${build}/${basename}.jar" basedir="../bin" excludes="com/digero/maestro/view/**,com/digero/maestro/MaestroMain.class">
+        <jar destfile="${build}/${basename}.jar" basedir="../bin" excludes="com/digero/maestro/**,com/digero/common/icons/unused/**">
             <manifest>
                 <attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer"/>
                 <attribute name="Class-Path" value=". TableLayout.jar gervill.jar"/>
