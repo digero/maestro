@@ -22,8 +22,8 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
-import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.AbcConstants;
+import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
@@ -808,12 +808,14 @@ public class AbcToMidi {
 		private LotroInstrument instrument;
 		private Dynamics dynamics;
 		private boolean compoundMeter;
+		private int meterDenominator;
 
 		public TuneInfo() {
 			partNumber = 0;
 			title = "";
 			key = KeySignature.C_MAJOR;
-			ppqn = 8 * DEFAULT_NOTE_PULSES / 4;
+			meterDenominator = 4;
+			ppqn = 8 * DEFAULT_NOTE_PULSES / meterDenominator;
 			tempo = 120;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
@@ -835,20 +837,19 @@ public class AbcToMidi {
 		}
 
 		public void setNoteDivisor(String str) {
-			this.ppqn = parseDivisor(str) * DEFAULT_NOTE_PULSES / 4;
+			this.ppqn = parseDivisor(str) * DEFAULT_NOTE_PULSES / meterDenominator;
 		}
 
 		public void setMeter(String str) {
 			str = str.trim();
 			int numerator;
-			int denominator;
 			if (str.equals("C")) {
 				numerator = 4;
-				denominator = 4;
+				meterDenominator = 4;
 			}
 			else if (str.equals("C|")) {
 				numerator = 2;
-				denominator = 2;
+				meterDenominator = 2;
 			}
 			else {
 				String[] parts = str.split("[/:| ]");
@@ -857,10 +858,10 @@ public class AbcToMidi {
 							+ "\" is not a valid time signature (expected format: 4/4)");
 				}
 				numerator = Integer.parseInt(parts[0]);
-				denominator = Integer.parseInt(parts[1]);
+				meterDenominator = Integer.parseInt(parts[1]);
 			}
 
-			this.ppqn = ((4 * numerator / denominator) < 3 ? 16 : 8) * DEFAULT_NOTE_PULSES / denominator;
+			this.ppqn = ((4 * numerator / meterDenominator) < 3 ? 16 : 8) * DEFAULT_NOTE_PULSES / meterDenominator;
 			this.compoundMeter = (numerator % 3) == 0;
 		}
 
