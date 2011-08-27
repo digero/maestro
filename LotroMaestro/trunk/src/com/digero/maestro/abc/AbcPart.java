@@ -18,6 +18,7 @@ import java.util.prefs.Preferences;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 
+import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.KeySignature;
@@ -146,16 +147,22 @@ public class AbcPart {
 				out.println("T: " + (metadata.getSongTitle() + " - " + title + " " + metadata.getTitleTag()).trim());
 			else
 				out.println("T: " + (title + " " + metadata.getTitleTag()).trim());
-
+		}
+		else {
+			out.println("T: " + title.trim());
+		}
+		
+		out.println(AbcField.PART_NAME + title.trim());
+		out.println(AbcField.PART_INSTRUMENT + getInstrument().toString());
+		
+		if (metadata != null) {
 			if (metadata.getComposer().length() > 0)
 				out.println("C: " + metadata.getComposer());
 
 			if (metadata.getTranscriber().length() > 0)
 				out.println("Z: " + metadata.getTranscriber());
 		}
-		else {
-			out.println("T: " + title.trim());
-		}
+		
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);

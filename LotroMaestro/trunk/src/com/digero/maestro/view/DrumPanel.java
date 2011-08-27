@@ -169,9 +169,9 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		boolean drumEnabled = abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId);
 		boolean enabled = trackEnabled && drumEnabled;
-		setBackground(enabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
-		checkBox.setForeground(enabled ? PANEL_DRUM_TEXT_ENABLED
-				: (trackEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
+		setBackground(enabled ? ColorTable.PANEL_BACKGROUND_ENABLED.get() : ColorTable.PANEL_BACKGROUND_DISABLED.get());
+		checkBox.setForeground(enabled ? ColorTable.PANEL_DRUM_TEXT_ENABLED.get()
+				: (trackEnabled ? ColorTable.PANEL_TEXT_DISABLED.get() : ColorTable.PANEL_TEXT_OFF.get()));
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
 		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.DRUMS);
@@ -241,14 +241,14 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			if (seq.isNoteActive(trackNumber, drumId)) {
 				boolean playable = abcPart.isDrumPlayable(trackNumber, drumId);
 				if (abcPart.isTrackEnabled(trackNumber) && abcPart.isDrumEnabled(trackNumber, drumId)) {
-					drumColor = playable ? NOTE_DRUM_ENABLED : NOTE_BAD_ENABLED;
-					borderColor = GRAPH_BORDER_ENABLED;
-					bkgdColor = GRAPH_BACKGROUND_ENABLED;
+					drumColor = playable ? ColorTable.NOTE_DRUM_ENABLED.get() : ColorTable.NOTE_BAD_ENABLED.get();
+					borderColor = ColorTable.GRAPH_BORDER_ENABLED.get();
+					bkgdColor = ColorTable.GRAPH_BACKGROUND_ENABLED.get();
 				}
 				else {
-					drumColor = playable ? NOTE_DRUM_DISABLED : NOTE_BAD_DISABLED;
-					borderColor = GRAPH_BORDER_DISABLED;
-					bkgdColor = GRAPH_BACKGROUND_DISABLED;
+					drumColor = playable ? ColorTable.NOTE_DRUM_DISABLED.get() : ColorTable.NOTE_BAD_DISABLED.get();
+					borderColor = ColorTable.GRAPH_BORDER_DISABLED.get();
+					bkgdColor = ColorTable.GRAPH_BACKGROUND_DISABLED.get();
 				}
 
 				// Drum parts don't really need to highlight the notes playing
@@ -256,9 +256,9 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 					notesPlaying = new ArrayList<Rectangle2D>();
 			}
 			else {
-				drumColor = NOTE_DRUM_OFF;
-				borderColor = GRAPH_BORDER_OFF;
-				bkgdColor = GRAPH_BACKGROUND_OFF;
+				drumColor = ColorTable.NOTE_DRUM_OFF.get();
+				borderColor = ColorTable.GRAPH_BORDER_OFF.get();
+				bkgdColor = ColorTable.GRAPH_BACKGROUND_OFF.get();
 			}
 			long songPos = seq.getPosition();
 
@@ -298,7 +298,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 			// Paint the currently playing notes last
 			if (notesPlaying != null) {
-				g2.setColor(NOTE_ON);
+				g2.setColor(ColorTable.NOTE_ON.get());
 				for (Rectangle2D rect : notesPlaying) {
 					g2.fill(rect);
 				}
@@ -306,7 +306,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 			// Draw the indicator line
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-			g2.setColor(INDICATOR_COLOR);
+			g2.setColor(ColorTable.INDICATOR_COLOR.get());
 			long thumbPos = seq.getThumbPosition();
 			lineTmp.setLine(thumbPos, 0, thumbPos, 2 + height);
 			g2.draw(lineTmp);
