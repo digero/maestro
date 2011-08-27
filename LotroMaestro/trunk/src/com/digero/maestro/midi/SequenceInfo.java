@@ -183,6 +183,42 @@ public class SequenceInfo implements IMidiConstants {
 		}
 
 		return bestTempoBPM;
+
+//		tempoLengths.put(curTempoBPM, length);
+//
+//		// Now find the least common multiple of the best tempos 
+//		// that encompass at least 99% of the song, up to 10000 BPM
+//		final double maxPct = 0.99;
+//		final int maxBPM = 10000;
+//
+//		int lcmTempoBPM = bestTempoBPM;
+//		long lcmTempoLength = bestTempoLength;
+//		tempoLengths.remove(bestTempoBPM);
+//
+//		while (!tempoLengths.isEmpty()) {
+//			bestTempoLength = 0;
+//			for (Map.Entry<Integer, Long> entry : tempoLengths.entrySet()) {
+//				if (entry.getValue() > bestTempoLength) {
+//					bestTempoLength = entry.getValue();
+//					bestTempoBPM = entry.getKey();
+//				}
+//			}
+//			if (bestTempoLength == 0)
+//				break;
+//
+//			int tempBPM = Util.lcm(lcmTempoBPM, bestTempoBPM);
+//			if (tempBPM >= maxBPM)
+//				break;
+//
+//			lcmTempoBPM = tempBPM;
+//			lcmTempoLength += bestTempoLength;
+//
+//			double lcmTempoPct = ((double) lcmTempoLength) / sequence.getMicrosecondLength();
+//			if (lcmTempoPct >= maxPct || lcmTempoBPM >= maxBPM)
+//				break;
+//		}
+//
+//		return lcmTempoBPM;
 	}
 
 	public long calcFirstNoteTick() {

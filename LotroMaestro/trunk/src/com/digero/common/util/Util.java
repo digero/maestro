@@ -155,6 +155,36 @@ public final class Util {
 		return value;
 	}
 
+	/** Greatest Common Divisor */
+	public static int gcd(int a, int b) {
+		while (b != 0) {
+			int t = b;
+			b = a % b;
+			a = t;
+		}
+		return a;
+	}
+
+	/** Greatest Common Divisor */
+	public static long gcd(long a, long b) {
+		while (b != 0) {
+			long t = b;
+			b = a % b;
+			a = t;
+		}
+		return a;
+	}
+
+	/** Least Common Multiple */	
+	public static int lcm(int a, int b) {
+		return (a / gcd(a, b)) * b;
+	}
+
+	/** Least Common Multiple */	
+	public static long lcm(long a, long b) {
+		return (a / gcd(a, b)) * b;
+	}
+
 	public static boolean openURL(String url) {
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {

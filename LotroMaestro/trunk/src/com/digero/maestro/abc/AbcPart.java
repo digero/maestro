@@ -26,6 +26,7 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
+import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
@@ -278,7 +279,7 @@ public class AbcPart {
 				int numerator = (int) (evt.getLength() / tm.minNoteLength) * tm.defaultDivisor;
 				int denominator = tm.minNoteDivisor;
 				// Reduce the fraction
-				int gcd = gcd(numerator, denominator);
+				int gcd = Util.gcd(numerator, denominator);
 				numerator /= gcd;
 				denominator /= gcd;
 				if (numerator != 1) {
@@ -564,15 +565,6 @@ public class AbcPart {
 	/** Removes a note and breaks any ties the note has. */
 	private void removeNote(List<NoteEvent> events, NoteEvent ne) {
 		removeNote(events, events.indexOf(ne));
-	}
-
-	private static int gcd(int a, int b) {
-		while (b != 0) {
-			int t = b;
-			b = a % b;
-			a = t;
-		}
-		return a;
 	}
 
 	public void dispose() {
