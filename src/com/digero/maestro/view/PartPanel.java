@@ -59,7 +59,7 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
 		super(new BorderLayout(HGAP, VGAP));
 
-		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
 
 		this.sequencer = sequencer;
 		this.partAutoNumberer = partAutoNumberer;
@@ -123,7 +123,7 @@ public class PartPanel extends JPanel implements TrackPanelConstants, ICompileCo
 		trackListLayout.setHorizontalGroup(trackListHGroup = trackListLayout.createParallelGroup());
 		trackListLayout.setHonorsVisibility(true);
 		trackListPanel.setLayout(trackListLayout);
-		trackListPanel.setBackground(TrackPanel.PANEL_BACKGROUND_DISABLED);// Color.WHITE);
+		trackListPanel.setBackground(ColorTable.PANEL_BACKGROUND_DISABLED.get());
 
 		trackScrollPane = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);

@@ -85,7 +85,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
-		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, PANEL_BORDER));
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
 
 		this.trackInfo = info;
 		this.seq = sequencer;
@@ -204,9 +204,11 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private void updateState(boolean initDrumPanels) {
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		boolean inputEnabled = abcPart.isDrumPart() == trackInfo.isDrumTrack();
-		setBackground(trackEnabled ? PANEL_BACKGROUND_ENABLED : PANEL_BACKGROUND_DISABLED);
-		checkBox.setForeground(trackEnabled ? (abcPart.isDrumPart() ? PANEL_DRUM_TEXT_ENABLED : PANEL_TEXT_ENABLED)
-				: (inputEnabled ? PANEL_TEXT_DISABLED : PANEL_TEXT_OFF));
+		setBackground(trackEnabled ? ColorTable.PANEL_BACKGROUND_ENABLED.get() : ColorTable.PANEL_BACKGROUND_DISABLED
+				.get());
+		checkBox.setForeground(trackEnabled ? (abcPart.isDrumPart() ? ColorTable.PANEL_DRUM_TEXT_ENABLED.get()
+				: ColorTable.PANEL_TEXT_ENABLED.get()) : (inputEnabled ? ColorTable.PANEL_TEXT_DISABLED.get()
+				: ColorTable.PANEL_TEXT_OFF.get()));
 
 //		checkBox.setEnabled(inputEnabled);
 		checkBox.setSelected(trackEnabled);
@@ -330,29 +332,30 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			if (seq.isTrackActive(trackNumber)) {
 				if (abcPart.isTrackEnabled(trackNumber)) {
-					noteColor = /* abcPart.isDrumPart() ? NOTE_OFF : */NOTE_ENABLED;
-					xnoteColor = /* abcPart.isDrumPart() ? NOTE_BAD_OFF : */NOTE_BAD_ENABLED;
-					drumColor = noteColor;//!abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;
-					borderColor = GRAPH_BORDER_ENABLED;
-					bkgdColor = GRAPH_BACKGROUND_ENABLED;
+					noteColor = ColorTable.NOTE_ENABLED.get();
+					xnoteColor = ColorTable.NOTE_BAD_ENABLED.get();
+					drumColor = noteColor;
+					borderColor = ColorTable.GRAPH_BORDER_ENABLED.get();
+					bkgdColor = ColorTable.GRAPH_BACKGROUND_ENABLED.get();
 				}
 				else {
-					noteColor = abcPart.isDrumPart() ? NOTE_OFF : NOTE_DISABLED;
-					xnoteColor = abcPart.isDrumPart() ? NOTE_BAD_OFF : NOTE_BAD_DISABLED;
-					drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_DISABLED;
-					borderColor = GRAPH_BORDER_DISABLED;
-					bkgdColor = GRAPH_BACKGROUND_DISABLED;
+					noteColor = abcPart.isDrumPart() ? ColorTable.NOTE_OFF.get() : ColorTable.NOTE_DISABLED.get();
+					xnoteColor = abcPart.isDrumPart() ? ColorTable.NOTE_BAD_OFF.get() : ColorTable.NOTE_BAD_DISABLED
+							.get();
+					drumColor = !abcPart.isDrumPart() ? ColorTable.NOTE_OFF.get() : ColorTable.NOTE_DRUM_DISABLED.get();
+					borderColor = ColorTable.GRAPH_BORDER_DISABLED.get();
+					bkgdColor = ColorTable.GRAPH_BACKGROUND_DISABLED.get();
 				}
 
 				if (seq.isRunning())
 					notesPlaying = new ArrayList<Rectangle2D>();
 			}
 			else {
-				noteColor = NOTE_OFF;
-				xnoteColor = NOTE_BAD_OFF;
-				drumColor = !abcPart.isDrumPart() ? NOTE_OFF : NOTE_DRUM_OFF;
-				borderColor = GRAPH_BORDER_OFF;
-				bkgdColor = GRAPH_BACKGROUND_OFF;
+				noteColor = ColorTable.NOTE_OFF.get();
+				xnoteColor = ColorTable.NOTE_BAD_OFF.get();
+				drumColor = !abcPart.isDrumPart() ? ColorTable.NOTE_OFF.get() : ColorTable.NOTE_DRUM_OFF.get();
+				borderColor = ColorTable.GRAPH_BORDER_OFF.get();
+				bkgdColor = ColorTable.GRAPH_BACKGROUND_OFF.get();
 			}
 
 			long songPos = seq.getPosition();
@@ -396,7 +399,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 					playable = abcPart.isDrumPlayable(trackInfo.getTrackNumber(), id);
 				else if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackNumber))
 					playable = true;
-				else 
+				else
 					playable = (id >= minPlayable) && (id <= maxPlayable);
 
 				if (notesPlaying != null && songPos >= evt.startMicros && songPos <= evt.endMicros) {
@@ -424,7 +427,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			// Paint the currently playing notes last
 			if (notesPlaying != null) {
-				g2.setColor(NOTE_ON);
+				g2.setColor(ColorTable.NOTE_ON.get());
 				for (Rectangle2D rect : notesPlaying) {
 					g2.fill(rect);
 				}
@@ -432,7 +435,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 			// Draw the indicator line
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-			g2.setColor(INDICATOR_COLOR);
+			g2.setColor(ColorTable.INDICATOR_COLOR.get());
 			long thumbPos = seq.getThumbPosition();
 			lineTmp.setLine(thumbPos, MIN_RENDERED, thumbPos, MAX_RENDERED + height);
 			g2.draw(lineTmp);

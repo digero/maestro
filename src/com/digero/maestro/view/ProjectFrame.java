@@ -61,6 +61,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import com.digero.common.abc.AbcField;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.KeySignature;
@@ -93,6 +94,9 @@ import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource, ICompileConstants {
+	private static final String APP_NAME = "LOTRO Maestro";
+	private static final String APP_URL = "http://lotro.acasylum.com/maestro";
+
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] {
 			180, FILL
@@ -364,7 +368,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
 		abcPartsAndSettings.add(songInfoPanel, BorderLayout.NORTH);
-		abcPartsAndSettings.add(partsListPanel, BorderLayout.CENTER);
+		JPanel partsListAndColorizer = new JPanel(new BorderLayout(HGAP, VGAP));
+		partsListAndColorizer.add(partsListPanel, BorderLayout.CENTER);
+		if (SHOW_COLORIZER)
+			partsListAndColorizer.add(new Colorizer(partPanel), BorderLayout.SOUTH);
+		abcPartsAndSettings.add(partsListAndColorizer, BorderLayout.CENTER);
 		abcPartsAndSettings.add(settingsPanel, BorderLayout.SOUTH);
 
 		JPanel midiPartsAndControls = new JPanel(new BorderLayout(HGAP, VGAP));
@@ -846,12 +854,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-
-		if (parts.getSize() > 1) {
-			PrintStream outWriter = new PrintStream(out);
-			outWriter.println("% " + parts.getSize() + " parts");
-			outWriter.println();
-		}
 		try {
 			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
 
@@ -871,6 +873,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					// Lengthen to an integral number of bars
 					endMicros = tm.barLength * ((lastNoteEnd + tm.barLength - 1) / tm.barLength);
 				}
+			}
+
+			if (parts.getSize() > 1) {
+				PrintStream outWriter = new PrintStream(out);
+				AbcMetadataSource meta = this;
+				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
+				outWriter.println(AbcField.SONG_COMPOSER + meta.getComposer());
+				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
+				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(endMicros - startMicros));
+				outWriter.println();
+				outWriter.println(AbcField.ABC_VERSION + "2.0");
+				outWriter.println(AbcField.ABC_CREATOR + APP_NAME + ", " + APP_URL);
+				outWriter.println();
 			}
 
 			for (int i = 0; i < parts.getSize(); i++) {
