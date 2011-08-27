@@ -312,8 +312,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					abcSequencer.stop();
 				}
 				else {
-					refreshPreviewSequence(true);
-					abcSequencer.start();
+					if (refreshPreviewSequence(true))
+						abcSequencer.start();
 				}
 			}
 		});
@@ -740,18 +740,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private class RefreshPreviewTask implements Runnable {
 		public void run() {
-			if (refreshPreviewPending)
-				refreshPreviewSequence(true);
+			if (refreshPreviewPending) {
+				if (!refreshPreviewSequence(true))
+					abcSequencer.stop();
+			}
 		}
 	}
 
-	private void refreshPreviewSequence(boolean immediate) {
+	private boolean refreshPreviewSequence(boolean immediate) {
 		if (!immediate) {
 			if (!refreshPreviewPending) {
 				refreshPreviewPending = true;
 				SwingUtilities.invokeLater(new RefreshPreviewTask());
 			}
-			return;
+			return true;
 		}
 
 		refreshPreviewPending = false;
@@ -801,13 +803,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			abcSequencer.setRunning(running);
 		}
 		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error exporting ABC",
+			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error previewing ABC",
 					JOptionPane.WARNING_MESSAGE);
+			return false;
 		}
 		catch (AbcConversionException e) {
-			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error exporting ABC",
+			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error previewing ABC",
 					JOptionPane.WARNING_MESSAGE);
+			return false;
 		}
+		
+		return true;
 	}
 
 	private void exportAbc() {
@@ -880,11 +886,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				AbcMetadataSource meta = this;
 				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
 				outWriter.println(AbcField.SONG_COMPOSER + meta.getComposer());
-				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
 				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(endMicros - startMicros));
+				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
 				outWriter.println();
+				outWriter.println(AbcField.ABC_CREATOR + APP_NAME);
 				outWriter.println(AbcField.ABC_VERSION + "2.0");
-				outWriter.println(AbcField.ABC_CREATOR + APP_NAME + ", " + APP_URL);
 				outWriter.println();
 			}
 
