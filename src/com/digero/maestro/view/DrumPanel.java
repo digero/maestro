@@ -170,7 +170,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		boolean drumEnabled = abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId);
 		boolean enabled = trackEnabled && drumEnabled;
 		setBackground(enabled ? ColorTable.PANEL_BACKGROUND_ENABLED.get() : ColorTable.PANEL_BACKGROUND_DISABLED.get());
-		checkBox.setForeground(enabled ? ColorTable.PANEL_DRUM_TEXT_ENABLED.get()
+		checkBox.setForeground(enabled ? ColorTable.PANEL_TEXT_ENABLED.get()
 				: (trackEnabled ? ColorTable.PANEL_TEXT_DISABLED.get() : ColorTable.PANEL_TEXT_OFF.get()));
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
