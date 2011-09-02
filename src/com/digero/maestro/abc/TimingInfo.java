@@ -74,7 +74,7 @@ public class TimingInfo {
 	}
 
 	public int getMPQN() {
-		return 60000000 / getBPM();
+		return ONE_MINUTE_MICROS / getBPM();
 	}
 
 	public int getMidiResolution() {
