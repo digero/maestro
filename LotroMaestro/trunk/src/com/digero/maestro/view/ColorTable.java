@@ -32,7 +32,6 @@ public enum ColorTable {
 	PANEL_BORDER(new Color(0xEEEEEE)), //
 
 	PANEL_TEXT_ENABLED(Color.getHSBColor(0.28f, 0.70f, 1.00f)), //
-	PANEL_DRUM_TEXT_ENABLED(PANEL_TEXT_ENABLED), //
 	PANEL_TEXT_DISABLED(Color.WHITE), //
 	PANEL_TEXT_OFF(new Color(0x777777));
 
