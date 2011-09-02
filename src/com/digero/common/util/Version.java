@@ -90,7 +90,7 @@ public class Version implements Comparable<Version> {
 
 	@Override
 	public int hashCode() {
-		return (major << 15) ^ (minor << 10) ^ (revision << 5) ^ build;
+		return Integer.rotateLeft(major, 15) + Integer.rotateLeft(minor, 10) + Integer.rotateLeft(revision, 5) + build;
 	}
 
 	@Override
