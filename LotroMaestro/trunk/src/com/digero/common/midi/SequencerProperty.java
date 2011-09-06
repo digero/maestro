@@ -3,7 +3,7 @@ package com.digero.common.midi;
 public enum SequencerProperty {
 	POSITION, LENGTH, DRAG_POSITION, IS_DRAGGING, IS_RUNNING, IS_LOADED, TRACK_ACTIVE, TEMPO, SEQUENCE;
 
-	public static final int THUMB_POSITION_MASK = POSITION.mask | DRAG_POSITION.mask;
+	public static final int THUMB_POSITION_MASK = POSITION.mask | DRAG_POSITION.mask | IS_DRAGGING.mask;
 
 	public final int mask;
 
@@ -27,10 +27,10 @@ public enum SequencerProperty {
 		private static int nextMask = 1;
 
 		public static int getNextMask() {
-			int mask = nextMask;
-			nextMask <<= 1;
 			if (nextMask < 0)
 				throw new RuntimeException("Mask overflow; convert int to long");
+			int mask = nextMask;
+			nextMask <<= 1;
 			return mask;
 		}
 	}

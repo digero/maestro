@@ -19,6 +19,9 @@ import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
 public class SequencerWrapper implements IMidiConstants {
+	public static final int UPDATE_FREQUENCY_MILLIS = 50;
+	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
+
 	protected Sequencer sequencer;
 	protected Receiver receiver;
 	protected Transmitter transmitter;
@@ -39,10 +42,10 @@ public class SequencerWrapper implements IMidiConstants {
 
 		connectTransmitter();
 
-		updateTimer = new Timer(50, timerTick);
+		updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, timerTick);
 		updateTimer.start();
 	}
-	
+
 	protected void connectTransmitter() {
 		transmitter.setReceiver(receiver);
 	}
@@ -294,6 +297,14 @@ public class SequencerWrapper implements IMidiConstants {
 		}
 
 		return !sequencer.getTrackMute(track);
+	}
+
+	/**
+	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for
+	 * convienience.
+	 */
+	public boolean isNoteActive(int noteId) {
+		return true;
 	}
 
 	/**
