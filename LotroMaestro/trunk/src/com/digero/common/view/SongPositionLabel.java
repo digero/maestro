@@ -20,7 +20,7 @@ public class SongPositionLabel extends JLabel implements SequencerListener {
 	@Override
 	public void propertyChanged(SequencerEvent evt) {
 		SequencerProperty p = evt.getProperty();
-		if (p == SequencerProperty.POSITION || p == SequencerProperty.DRAG_POSITION || p == SequencerProperty.LENGTH) {
+		if (p.isInMask(SequencerProperty.THUMB_POSITION_MASK | SequencerProperty.LENGTH.mask)) {
 			update();
 		}
 	}
