@@ -13,7 +13,6 @@ public enum AbcField {
 	ABC_CREATOR, //
 	//
 	PART_NAME, //
-	PART_INSTRUMENT, //
 	;
 
 	private static class MetaData {
