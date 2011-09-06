@@ -79,8 +79,10 @@ public class TrackInfo implements IMidiConstants {
 
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
 						Note note = Note.fromId(noteId);
-						if (note == null)
-							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
+						if (note == null) {
+//							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
+							continue; // Note was probably bent out of range. Not great, but not a reason to fail.
+						}
 
 						NoteEvent ne = new NoteEvent(note, velocity, micros, micros);
 
@@ -136,9 +138,13 @@ public class TrackInfo implements IMidiConstants {
 							}
 
 							Note bn = Note.fromId(ne.note.id + bend - pitchBend[c]);
-							NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
-							noteEvents.add(bne);
-							bentNotes.add(bne);
+							// If bn is null , the note was bent out of the 0-127 range. 
+							// Not much we can do except skip it.
+							if (bn != null) {
+								NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
+								noteEvents.add(bne);
+								bentNotes.add(bne);
+							}
 						}
 						notesOn[c] = bentNotes;
 						pitchBend[c] = bend;
