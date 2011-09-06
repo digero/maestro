@@ -152,10 +152,9 @@ public class AbcPart {
 		else {
 			out.println("T: " + title.trim());
 		}
-		
+
 		out.println(AbcField.PART_NAME + title.trim());
-		out.println(AbcField.PART_INSTRUMENT + getInstrument().toString());
-		
+
 		if (metadata != null) {
 			if (metadata.getComposer().length() > 0)
 				out.println("C: " + metadata.getComposer());
@@ -163,7 +162,7 @@ public class AbcPart {
 			if (metadata.getTranscriber().length() > 0)
 				out.println("Z: " + metadata.getTranscriber());
 		}
-		
+
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
@@ -787,7 +786,7 @@ public class AbcPart {
 	public boolean isDrumPart() {
 		return instrument.isPercussion;
 	}
-	
+
 	public boolean isCowbellPart() {
 		return instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL;
 	}
