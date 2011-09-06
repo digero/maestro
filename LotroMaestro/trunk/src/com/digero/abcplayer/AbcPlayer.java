@@ -35,7 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +44,6 @@ import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -335,6 +333,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
+		trackListScroller.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Color.GRAY));
 
 		JPanel controlPanel = new JPanel(new TableLayout(new double[] {
 				4, SongPositionBar.SIDE_PAD, 0.5, 4, PREFERRED, 4, PREFERRED, 4, 0.5, SongPositionBar.SIDE_PAD, 4,
@@ -420,6 +419,24 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		updateButtonStates();
 		initializeWindowBounds();
+	}
+
+	private void updateTitleLabel() {
+		String title = abcInfo.getTitle();
+		String artist = abcInfo.getComposer();
+
+		if (artist != null) {
+			titleLabel.setText("<html>" + title + "&ensp;<span style='font-size:11pt; font-weight:normal'>" + artist
+					+ "</span></html>");
+		}
+		else {
+			titleLabel.setText(title);
+		}
+
+		String tooltip = title;
+		if (artist != null)
+			tooltip += " - " + artist;
+		titleLabel.setToolTipText(tooltip);
 	}
 
 	private void updateTempoLabel() {
@@ -885,16 +902,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 	}
 
-	private void updateTitleLabel() {
-		String text = abcInfo.getTitlePrefix();
-		String artist = abcInfo.getMetadata('C');
-		if (artist != null)
-			text += " - " + artist;
-
-		titleLabel.setText(text);
-		titleLabel.setToolTipText(text);
-	}
-
 	private boolean openSongFromCommandLine(String[] args) {
 		mainWindow.setExtendedState(mainWindow.getExtendedState() & ~JFrame.ICONIFIED);
 
@@ -1298,7 +1305,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		return true;
 	}
 
-	private class LameChecker extends Thread {
+	private static class LameChecker extends Thread {
 		private boolean isLame = false;
 		private File lameExe;
 		private Process process;
@@ -1417,8 +1424,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			mp3Prefs.put("lameExe", lameExe.getAbsolutePath());
 		}
 
-		ExportMp3Dialog mp3Dialog = new ExportMp3Dialog(this, lameExe, mp3Prefs, openedFile, abcInfo.getTitlePrefix(),
-				abcInfo.getArtist());
+		ExportMp3Dialog mp3Dialog = new ExportMp3Dialog(this, lameExe, mp3Prefs, openedFile, abcInfo.getTitle(),
+				abcInfo.getComposer());
 		mp3Dialog.setIconImages(AbcPlayer.this.getIconImages());
 		mp3Dialog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1544,7 +1551,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 				// Only show tracks with at least one note
 				boolean hasNotes = false;
-				String title = null;
 				LotroInstrument instrument = LotroInstrument.LUTE;
 				for (int j = 0; j < track.size(); j++) {
 					MidiEvent evt = track.get(j);
@@ -1562,24 +1568,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 							}
 						}
 					}
-					else if (evt.getMessage() instanceof MetaMessage) {
-						MetaMessage meta = (MetaMessage) evt.getMessage();
-						if (meta.getType() == META_TRACK_NAME) {
-							try {
-								title = new String(meta.getData(), "US-ASCII");
-							}
-							catch (UnsupportedEncodingException e) {
-								// ASCII is supported...
-							}
-						}
-					}
 				}
 
 				if (hasNotes) {
-					if (title == null)
-						title = "Track " + (i + 1);
-
-					JCheckBox checkBox = new JCheckBox(title);
+					JCheckBox checkBox = new JCheckBox(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartName(i));
 					checkBox.putClientProperty(trackIndexKey, i);
 					checkBox.setBackground(getBackground());
 					checkBox.setSelected(!sequencer.getTrackMute(i));
