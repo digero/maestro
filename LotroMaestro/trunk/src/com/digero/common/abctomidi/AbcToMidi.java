@@ -23,6 +23,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.abc.AbcConstants;
+import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.KeySignature;
@@ -39,18 +40,59 @@ public class AbcToMidi {
 	}
 
 	public static class AbcInfo implements AbcConstants {
+		private static class PartInfo {
+			private int number = 1;
+			private String name = null;
+			private boolean nameIsFromExtendedInfo = false;
+		}
+
 		private boolean empty = true;
 		private String titlePrefix;
 		private Map<Character, String> metadata = new HashMap<Character, String>();
 		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
+		private Map<Integer, PartInfo> partInfoByIndex = new HashMap<Integer, PartInfo>();
 		private int tempoBPM = 120;
 
-		public String getMetadata(char key) {
-			return metadata.get(Character.toUpperCase(key));
+		private String songTitle = null;
+		private String songComposer = null;
+		private String songTranscriber = null;
+
+		private void reset() {
+			empty = true;
+			titlePrefix = null;
+			metadata.clear();
+			bars.clear();
+			tempoBPM = 120;
+			songTitle = null;
+			songComposer = null;
+			songTranscriber = null;
 		}
 
-		public String getArtist() {
-			return getMetadata('C');
+		public String getComposer() {
+			return (songComposer != null) ? songComposer : getMetadata('C');
+		}
+
+		public String getTitle() {
+			return (songTitle != null) ? songTitle : getTitlePrefix();
+		}
+
+		public String getTranscriber() {
+			if (songTranscriber != null)
+				return songTranscriber;
+
+			String z = getMetadata('Z');
+			if (z != null) {
+				String lcase = z.toLowerCase();
+
+				if (lcase.startsWith("transcribed by"))
+					z = z.substring("transcribed by".length()).trim();
+				else if (lcase.startsWith("transcribed using"))
+					z = z.substring("transcribed using".length()).trim();
+
+				if (z.equals("LotRO MIDI Player: http://lotro.acasylum.com/midi"))
+					return null;
+			}
+			return z;
 		}
 
 		public int getBarNumber(long tick) {
@@ -72,16 +114,73 @@ public class AbcToMidi {
 			return empty;
 		}
 
+		public int getPartNumber(int trackIndex) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null)
+				return 1;
+			return info.number;
+		}
+
+		public String getPartName(int trackIndex) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null || info.name == null)
+				return "Track " + trackIndex;
+
+			if (info.nameIsFromExtendedInfo || titlePrefix == null || titlePrefix.length() == 0)
+				return info.name;
+
+			return info.name.substring(titlePrefix.length()).trim();
+		}
+
+		private String getMetadata(char key) {
+			return metadata.get(Character.toUpperCase(key));
+		}
+
 		private void setMetadata(char key, String value) {
 			this.empty = false;
+
+			key = Character.toUpperCase(key);
 			if (!metadata.containsKey(key))
 				metadata.put(key, value);
 
-			if (Character.toUpperCase(key) == 'T') {
+			if (key == 'T') {
 				if (titlePrefix == null)
 					titlePrefix = value;
 				else
 					titlePrefix = longestCommonPrefix(titlePrefix, value);
+			}
+		}
+
+		private void setExtendedMetadata(AbcField field, String value) {
+			switch (field) {
+			case SONG_TITLE:
+				songTitle = value.trim();
+				break;
+			case SONG_COMPOSER:
+				songComposer = value.trim();
+				break;
+			case SONG_TRANSCRIBER:
+				songTranscriber = value.trim();
+				break;
+			}
+		}
+
+		private void setPartNumber(int trackIndex, int partNumber) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null)
+				partInfoByIndex.put(trackIndex, info = new PartInfo());
+
+			info.number = partNumber;
+		}
+
+		private void setPartName(int trackIndex, String partName, boolean fromExtendedInfo) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null)
+				partInfoByIndex.put(trackIndex, info = new PartInfo());
+
+			if (fromExtendedInfo || !info.nameIsFromExtendedInfo) {
+				info.name = partName;
+				info.nameIsFromExtendedInfo = fromExtendedInfo;
 			}
 		}
 
@@ -101,7 +200,7 @@ public class AbcToMidi {
 		private static final Pattern trailingPunct = Pattern.compile(openPunct
 				+ "([\\(\\[\\{]\\d{1,2}:\\d{2}[\\)\\]\\}])?" + openPunct + "$");
 
-		public String getTitlePrefix() {
+		private String getTitlePrefix() {
 			if (titlePrefix == null || titlePrefix.length() == 0) {
 				if (metadata.containsKey('T'))
 					return metadata.get('T');
@@ -111,14 +210,6 @@ public class AbcToMidi {
 			String ret = titlePrefix;
 			ret = trailingPunct.matcher(ret).replaceFirst("");
 			return ret;
-		}
-
-		private void reset() {
-			empty = true;
-			titlePrefix = null;
-			metadata.clear();
-			bars.clear();
-			tempoBPM = 120;
 		}
 
 		private static String longestCommonPrefix(String a, String b) {
@@ -138,6 +229,10 @@ public class AbcToMidi {
 	private static final Pattern INFO_PATTERN = Pattern.compile("^([A-Z]):\\s*(.*)\\s*$");
 	private static final int INFO_TYPE = 1;
 	private static final int INFO_VALUE = 2;
+
+	private static final Pattern XINFO_PATTERN = Pattern.compile("^%%([A-Za-z\\-])\\s+(.*)\\s*$");
+	private static final int XINFO_FIELD = 1;
+	private static final int XINFO_VALUE = 2;
 
 	private static final Pattern NOTE_PATTERN = Pattern.compile("(_{1,2}|=|\\^{1,2})?" + "([xzA-Ga-g])"
 			+ "(,{1,5}|'{1,5})?" + "(\\d+)?" + "(//?\\d*)?" + "(>{1,3}|<{1,3})?" + "(-)?");
@@ -217,6 +312,9 @@ public class AbcToMidi {
 		PanGenerator pan = new PanGenerator();
 		MidiEvent lastPanEvent = null;
 
+		if (abcInfo == null)
+			abcInfo = new AbcInfo();
+
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
 		for (FileAndData fileAndData : filesData) {
 			String fileName = fileAndData.file.getName();
@@ -225,10 +323,36 @@ public class AbcToMidi {
 			for (String line : fileAndData.lines) {
 				lineNumber++;
 
-				int comment = line.indexOf('%');
+				// Special handling for extended info
+				boolean isExtendedInfoLine = line.startsWith("%%");
+				int comment = line.indexOf('%', isExtendedInfoLine ? 2 : 0);
 				if (comment >= 0)
 					line = line.substring(0, comment);
 				if (line.trim().length() == 0)
+					continue;
+
+				// Handle extended info
+				if (abcInfo != null) {
+					Matcher xInfoMatcher = XINFO_PATTERN.matcher(line);
+					if (xInfoMatcher.matches()) {
+						AbcField field = AbcField.fromString(xInfoMatcher.group(XINFO_FIELD));
+						if (field != null) {
+							String value = xInfoMatcher.group(XINFO_VALUE).trim();
+
+							abcInfo.setExtendedMetadata(field, value);
+
+							switch (field) {
+							case PART_NAME:
+								info.setTitle(value, true);
+								if (abcInfo != null)
+									abcInfo.setPartName(trackNumber, value, true);
+								break;
+							}
+						}
+					}
+				}
+
+				if (isExtendedInfoLine)
 					continue;
 
 				int chordSize = 0;
@@ -256,6 +380,8 @@ public class AbcToMidi {
 							trackNumber++;
 							partStartLine = lineNumber;
 							chordStartTick = 0;
+							if (abcInfo != null)
+								abcInfo.setPartNumber(trackNumber, info.getPartNumber());
 							track = null; // Will create a new track after the header is done
 							if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
 								info.setInstrument(instrumentOverrideMap.get(trackNumber));
@@ -266,7 +392,9 @@ public class AbcToMidi {
 								throw new ParseException("Can't specify the title in the middle of a part", fileName,
 										lineNumber, 0);
 
-							info.setTitle(value);
+							info.setTitle(value, false);
+							if (abcInfo != null)
+								abcInfo.setPartName(trackNumber, value, false);
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
 								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
 							}
@@ -320,7 +448,14 @@ public class AbcToMidi {
 
 							// Track 0: Title and meta info
 							Track track0 = seq.createTrack();
-							track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
+							if (abcInfo != null) {
+								abcInfo.setPartNumber(0, 0);
+								abcInfo.setPartName(0, info.getTitle(), false);
+							}
+							else {
+								track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
+							}
+
 							track0.add(MidiFactory.createTempoEvent((int) MPQN, 0));
 
 							track = null;
@@ -340,7 +475,9 @@ public class AbcToMidi {
 									partStartLine);
 						track = seq.createTrack();
 
-						track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
+						if (abcInfo == null) {
+							track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
+						}
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 
 						if (stereo) {
@@ -724,6 +861,15 @@ public class AbcToMidi {
 			track.add(MidiFactory.createPanEvent(64, channel));
 		}
 
+		if (abcInfo != null) {
+			Track[] tracks = seq.getTracks();
+
+			tracks[0].add(MidiFactory.createTrackNameEvent(abcInfo.getTitle()));
+			for (int i = 1; i <= trackNumber; i++) {
+				tracks[i].add(MidiFactory.createTrackNameEvent(abcInfo.getPartName(i)));
+			}
+		}
+
 		return seq;
 	}
 
@@ -802,6 +948,7 @@ public class AbcToMidi {
 	private static class TuneInfo {
 		private int partNumber;
 		private String title;
+		private boolean titleIsFromExtendedInfo;
 		private KeySignature key;
 		private long ppqn;
 		private int tempo;
@@ -813,6 +960,7 @@ public class AbcToMidi {
 		public TuneInfo() {
 			partNumber = 0;
 			title = "";
+			titleIsFromExtendedInfo = false;
 			key = KeySignature.C_MAJOR;
 			meterDenominator = 4;
 			ppqn = 8 * DEFAULT_NOTE_PULSES / meterDenominator;
@@ -826,10 +974,15 @@ public class AbcToMidi {
 			this.partNumber = partNumber;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
+			title = "";
+			titleIsFromExtendedInfo = false;
 		}
 
-		public void setTitle(String title) {
-			this.title = title;
+		public void setTitle(String title, boolean fromExtendedInfo) {
+			if (fromExtendedInfo || !titleIsFromExtendedInfo) {
+				this.title = title;
+				titleIsFromExtendedInfo = fromExtendedInfo;
+			}
 		}
 
 		public void setKey(String str) {
