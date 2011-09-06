@@ -18,6 +18,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.abctomidi.AbcToMidi;
+import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
@@ -34,14 +35,20 @@ public class SequenceInfo implements IMidiConstants {
 	private File file;
 	private Sequence sequence;
 	private String title;
+	private String composer;
 	private int tempoBPM;
 	private long endMicros;
 	private List<TrackInfo> trackInfoList;
 
-	public SequenceInfo(File file, boolean isAbc) throws InvalidMidiDataException, IOException, ParseException {
+	public SequenceInfo(File file) throws InvalidMidiDataException, IOException, ParseException {
+		this(file, false, null);
+	}
+
+	public SequenceInfo(File file, boolean isAbc, AbcInfo abcInfo) throws InvalidMidiDataException, IOException,
+			ParseException {
 		this.file = file;
 		if (isAbc) {
-			sequence = AbcToMidi.convert(file, false, null, null, false, true);
+			sequence = AbcToMidi.convert(file, false, null, abcInfo, false, true);
 		}
 		else {
 			sequence = MidiSystem.getSequence(file);
@@ -73,7 +80,12 @@ public class SequenceInfo implements IMidiConstants {
 
 		tempoBPM = findMainTempo(sequence, tempoCache);
 
-		if (trackInfoList.get(0).hasName()) {
+		composer = "";
+		if (isAbc && abcInfo != null) {
+			title = abcInfo.getTitle();
+			composer = abcInfo.getComposer();
+		}
+		else if (trackInfoList.get(0).hasName()) {
 			title = trackInfoList.get(0).getName();
 		}
 		else {
@@ -97,6 +109,10 @@ public class SequenceInfo implements IMidiConstants {
 
 	public String getTitle() {
 		return title;
+	}
+	
+	public String getComposer() {
+		return composer;
 	}
 
 	public int getTrackCount() {

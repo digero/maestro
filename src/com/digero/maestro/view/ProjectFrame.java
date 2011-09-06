@@ -63,6 +63,8 @@ import javax.swing.text.Document;
 
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.abctomidi.AbcToMidi;
+import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
@@ -94,9 +96,6 @@ import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")
 public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource, ICompileConstants {
-	private static final String APP_NAME = "LOTRO Maestro";
-	private static final String APP_URL = "http://lotro.acasylum.com/maestro";
-
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] {
 			180, FILL
@@ -637,14 +636,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		try {
 			String fileName = midiFile.getName().toLowerCase();
 			boolean isAbc = fileName.endsWith(".abc") || fileName.endsWith(".txt");
-			sequenceInfo = new SequenceInfo(midiFile, isAbc);
+			AbcInfo abcInfo = isAbc ? new AbcToMidi.AbcInfo() : null;
+			sequenceInfo = new SequenceInfo(midiFile, isAbc, abcInfo);
 
 			sequencer.setSequence(null);
 			sequencer.reset(true);
 			sequencer.setSequence(sequenceInfo.getSequence());
 			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
-			composerField.setText("");
+			composerField.setText(sequenceInfo.getComposer());
 			transposeSpinner.setValue(0);
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
@@ -660,7 +660,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 					AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
 
-					newPart.setTitle(trackInfo.getName());
+					newPart.setTitle(abcInfo.getPartName(t));
+					newPart.setPartNumber(abcInfo.getPartNumber(t));
 					newPart.setTrackEnabled(t, true);
 
 					Set<Integer> midiInstruments = trackInfo.getInstruments();
@@ -670,18 +671,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 							break;
 						}
 					}
-
-					// Track name is e.g.:
-					// 4. Hello World
-					int partNumber = t + 1;
-					int dot = trackInfo.getName().indexOf('.');
-					if (dot > 0) {
-						try {
-							partNumber = Integer.parseInt(trackInfo.getName().substring(0, dot));
-						}
-						catch (NumberFormatException nfe) {}
-					}
-					newPart.setPartNumber(partNumber);
 
 					parts.addElement(newPart);
 					newPart.addAbcListener(abcPartListener);
@@ -812,7 +801,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -889,7 +878,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(endMicros - startMicros));
 				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
 				outWriter.println();
-				outWriter.println(AbcField.ABC_CREATOR + APP_NAME);
+				outWriter.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
 				outWriter.println(AbcField.ABC_VERSION + "2.0");
 				outWriter.println();
 			}
