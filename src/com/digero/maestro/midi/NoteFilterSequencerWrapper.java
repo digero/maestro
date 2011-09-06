@@ -10,7 +10,7 @@ public class NoteFilterSequencerWrapper extends SequencerWrapper {
 
 	public NoteFilterSequencerWrapper() throws MidiUnavailableException {
 	}
-	
+
 	@Override
 	protected void connectTransmitter() {
 		if (filter == null)
@@ -23,22 +23,23 @@ public class NoteFilterSequencerWrapper extends SequencerWrapper {
 		return filter;
 	}
 
-	public void setNoteSolo(int track, int drumId, boolean solo) {
-		if (filter != null && solo != getNoteSolo(track, drumId)) {
+	public void setNoteSolo(int track, int noteId, boolean solo) {
+		if (filter != null && solo != getNoteSolo(track, noteId)) {
 			sequencer.setTrackSolo(track, solo);
-			filter.setNoteSolo(drumId, solo);
+			filter.setNoteSolo(noteId, solo);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
-	public boolean getNoteSolo(int track, int drumId) {
+	public boolean getNoteSolo(int track, int noteId) {
 		if (filter == null)
 			return false;
 
-		return filter.getNoteSolo(drumId) && sequencer.getTrackSolo(track);
+		return filter.getNoteSolo(noteId) && sequencer.getTrackSolo(track);
 	}
 
-	public boolean isNoteActive(int track, int drumId) {
-		return isTrackActive(track) && (filter == null || filter.isNoteActive(drumId));
+	@Override
+	public boolean isNoteActive(int noteId) {
+		return filter == null || filter.isNoteActive(noteId);
 	}
 }

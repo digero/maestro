@@ -4,7 +4,8 @@ import java.awt.Color;
 
 public enum ColorTable {
 	NOTE_ON(Color.WHITE), //
-	INDICATOR_COLOR(new Color(0xAAFFFFFF, true)), //
+	INDICATOR(new Color(0x99FFFFFF, true)), //
+	INDICATOR_ACTIVE(new Color(0xFFFFFF)), //
 
 	NOTE_ENABLED /*      */(Color.getHSBColor(0.62f, 0.85f, 1.00f)), //
 	NOTE_DISABLED /*     */(Color.getHSBColor(0.62f, 0.65f, 0.75f)), //

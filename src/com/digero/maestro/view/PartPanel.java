@@ -33,7 +33,7 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
-public class PartPanel extends JPanel implements TrackPanelConstants, ICompileConstants {
+public class PartPanel extends JPanel implements ICompileConstants {
 	private static final int HGAP = 4, VGAP = 4;
 
 	private AbcPart abcPart;
