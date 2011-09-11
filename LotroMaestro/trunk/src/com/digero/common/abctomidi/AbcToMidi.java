@@ -39,6 +39,24 @@ public class AbcToMidi {
 	private AbcToMidi() {
 	}
 
+	public static class Params {
+		public List<FileAndData> filesData;
+
+		public boolean useLotroInstruments = true;
+		public Map<Integer, LotroInstrument> instrumentOverrideMap = null;
+		public boolean enableLotroErrors = false;
+		public boolean stereo = true;
+
+		public Params(File file) throws IOException {
+			this.filesData = new ArrayList<FileAndData>();
+			this.filesData.add(new FileAndData(file, readLines(file)));
+		}
+
+		public Params(List<FileAndData> filesData) {
+			this.filesData = filesData;
+		}
+	}
+
 	public static class AbcInfo implements AbcConstants {
 		private static class PartInfo {
 			private int number = 1;
@@ -281,6 +299,11 @@ public class AbcToMidi {
 		}
 	}
 
+	public static Sequence convert(Params params, AbcInfo abcInfo) throws ParseException {
+		return convert(params.filesData, params.useLotroInstruments, params.instrumentOverrideMap, abcInfo,
+				params.enableLotroErrors, params.stereo);
+	}
+
 	public static Sequence convert(File file, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
 			final boolean stereo) throws ParseException, IOException {
@@ -292,7 +315,9 @@ public class AbcToMidi {
 	public static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
 			final boolean stereo) throws ParseException {
-		if (abcInfo != null)
+		if (abcInfo == null)
+			abcInfo = new AbcInfo();
+		else
 			abcInfo.reset();
 
 		TuneInfo info = new TuneInfo();
@@ -311,9 +336,6 @@ public class AbcToMidi {
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 		PanGenerator pan = new PanGenerator();
 		MidiEvent lastPanEvent = null;
-
-		if (abcInfo == null)
-			abcInfo = new AbcInfo();
 
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
 		for (FileAndData fileAndData : filesData) {
