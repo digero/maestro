@@ -54,6 +54,8 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 	private SequencerWrapper seq;
 	private boolean mouseHovering = false;
 
+	private boolean useInvertedColors = false;
+
 	private Rectangle ptrRect = new Rectangle(0, 0, PTR_WIDTH, PTR_HEIGHT);
 
 	public SongPositionBar(SequencerWrapper sequencer) {
@@ -100,12 +102,21 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 		final int y = (PTR_HEIGHT - BAR_HEIGHT) / 2;
 		int right = getWidth() - SIDE_PAD;
 
+		Color fillA = useInvertedColors ? Color.WHITE : Color.DARK_GRAY;
+		Color fillB = useInvertedColors ? Color.LIGHT_GRAY : Color.GRAY;
+		Color bkgdA = useInvertedColors ? Color.DARK_GRAY : Color.LIGHT_GRAY;
+		Color bkgdB = useInvertedColors ? Color.GRAY : Color.WHITE;
+
 		g2.setClip(new RoundRectangle2D.Float(x, y, right - x, BAR_HEIGHT, ROUND, ROUND));
-		g2.setPaint(new GradientPaint(0, y, Color.DARK_GRAY, 0, y + BAR_HEIGHT, Color.GRAY));
+		g2.setPaint(new GradientPaint(0, y, fillA, 0, y + BAR_HEIGHT, fillB));
 		g2.fillRect(x, y, ptrPos - x, BAR_HEIGHT);
 
-		g2.setPaint(new GradientPaint(0, y, Color.LIGHT_GRAY, 0, y + BAR_HEIGHT, Color.WHITE));
+		g2.setPaint(new GradientPaint(0, y, bkgdA, 0, y + BAR_HEIGHT, bkgdB));
 		g2.fillRect(ptrPos, y, right - ptrPos, BAR_HEIGHT);
+
+		g2.setColor(useInvertedColors ? new Color(0xAA000000, true) : new Color(0xAAFFFFFF, true));
+		g2.drawLine(ptrPos - 1, y, ptrPos - 1, y + BAR_HEIGHT);
+
 		g2.setClip(null);
 
 		g2.setColor(Color.BLACK);
@@ -118,10 +129,19 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			final Color PTR_COLOR_2 = Color.LIGHT_GRAY;
 
 			g2.setPaint(new GradientPaint(left, 0, PTR_COLOR_1, left + PTR_WIDTH, 0, PTR_COLOR_2));
-			g2.fillOval(left, 0, PTR_WIDTH, PTR_HEIGHT);
+			g2.fillOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
+			g2.setClip(null);
 			g2.setColor(Color.BLACK);
 			g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 		}
+	}
+
+	public void setUseInvertedColors(boolean usingInvertedColors) {
+		this.useInvertedColors = usingInvertedColors;
+	}
+
+	public boolean isUseInvertedColors() {
+		return useInvertedColors;
 	}
 
 	private void updatePointerRect() {
