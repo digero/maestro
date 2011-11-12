@@ -27,6 +27,7 @@ public class VolumeBar extends JPanel {
 
 	private VolumeTransceiver volumizer;
 	private Rectangle ptrRect = new Rectangle(0, 0, PTR_WIDTH, PTR_HEIGHT);
+	private boolean useInvertedColors;
 
 	public VolumeBar(VolumeTransceiver volumizer) {
 		this.volumizer = volumizer;
@@ -55,11 +56,16 @@ public class VolumeBar extends JPanel {
 		final int y = (PTR_HEIGHT - BAR_HEIGHT) / 2;
 		int right = getWidth();
 
+		Color fillA = useInvertedColors ? Color.WHITE : Color.DARK_GRAY;
+		Color fillB = useInvertedColors ? Color.LIGHT_GRAY : Color.GRAY;
+		Color bkgdA = useInvertedColors ? Color.DARK_GRAY : Color.LIGHT_GRAY;
+		Color bkgdB = useInvertedColors ? Color.GRAY : Color.WHITE;
+
 		g2.setClip(new RoundRectangle2D.Float(x, y, right - x, BAR_HEIGHT, ROUND, ROUND));
-		g2.setPaint(new GradientPaint(0, y, Color.DARK_GRAY, 0, y + BAR_HEIGHT, Color.GRAY));
+		g2.setPaint(new GradientPaint(0, y, fillA, 0, y + BAR_HEIGHT, fillB));
 		g2.fillRect(x, y, ptrPos - x, BAR_HEIGHT);
 
-		g2.setPaint(new GradientPaint(0, y, Color.LIGHT_GRAY, 0, y + BAR_HEIGHT, Color.WHITE));
+		g2.setPaint(new GradientPaint(0, y, bkgdA, 0, y + BAR_HEIGHT, bkgdB));
 		g2.fillRect(ptrPos, y, right - ptrPos, BAR_HEIGHT);
 		g2.setClip(null);
 
@@ -73,13 +79,21 @@ public class VolumeBar extends JPanel {
 		final Color PTR_COLOR_2 = Color.LIGHT_GRAY;
 
 		g2.setPaint(new GradientPaint(left, 0, PTR_COLOR_1, left + PTR_WIDTH, 0, PTR_COLOR_2));
-		g2.fillOval(left, 0, PTR_WIDTH, PTR_HEIGHT);
+		g2.fillOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 		g2.setColor(Color.BLACK);
 		g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 	}
 
 	private void updatePointerRect() {
 		ptrRect.x = (int) (getWidth() * volumizer.getVolume() / VolumeTransceiver.MAX_VOLUME - PTR_WIDTH / 2);
+	}
+
+	public void setUseInvertedColors(boolean useInvertedColors) {
+		this.useInvertedColors = useInvertedColors;
+	}
+
+	public boolean isUseInvertedColors() {
+		return useInvertedColors;
 	}
 
 	private class MouseHandler implements MouseListener, MouseMotionListener {

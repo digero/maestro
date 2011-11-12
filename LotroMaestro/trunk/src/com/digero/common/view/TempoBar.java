@@ -34,6 +34,7 @@ public class TempoBar extends JPanel implements SequencerListener {
 
 	private SequencerWrapper seq;
 	private Rectangle ptrRect = new Rectangle(0, 0, PTR_WIDTH, PTR_HEIGHT);
+	private boolean useInvertedColors;
 
 	public TempoBar(SequencerWrapper seq) {
 		this.seq = seq;
@@ -99,11 +100,16 @@ public class TempoBar extends JPanel implements SequencerListener {
 			fillBright = Color.getHSBColor(0.33f, sat, 0.75f + 0.25f * sat);
 		}
 
+		Color fillA = useInvertedColors ? Color.WHITE : fillDark;
+		Color fillB = useInvertedColors ? fillBright : fill;
+		Color bkgdA = useInvertedColors ? fillDark : fillBright;
+		Color bkgdB = useInvertedColors ? fill : Color.WHITE;
+
 		g2.setClip(new RoundRectangle2D.Float(x, y, right - x, BAR_HEIGHT, ROUND, ROUND));
-		g2.setPaint(new GradientPaint(0, y, fillDark, 0, y + BAR_HEIGHT, fill));
+		g2.setPaint(new GradientPaint(0, y, fillA, 0, y + BAR_HEIGHT, fillB));
 		g2.fillRect(x, y, ptrPos - x, BAR_HEIGHT);
 
-		g2.setPaint(new GradientPaint(0, y, fillBright, 0, y + BAR_HEIGHT, Color.WHITE));
+		g2.setPaint(new GradientPaint(0, y, bkgdA, 0, y + BAR_HEIGHT, bkgdB));
 		g2.fillRect(ptrPos, y, right - ptrPos, BAR_HEIGHT);
 		g2.setClip(null);
 
@@ -117,7 +123,7 @@ public class TempoBar extends JPanel implements SequencerListener {
 		final Color PTR_COLOR_2 = Color.LIGHT_GRAY;
 
 		g2.setPaint(new GradientPaint(left, 0, PTR_COLOR_1, left + PTR_WIDTH, 0, PTR_COLOR_2));
-		g2.fillOval(left, 0, PTR_WIDTH, PTR_HEIGHT);
+		g2.fillOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 		g2.setColor(Color.BLACK);
 		g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 	}
@@ -195,5 +201,13 @@ public class TempoBar extends JPanel implements SequencerListener {
 		if (evt.getProperty() == SequencerProperty.TEMPO) {
 			repaint();
 		}
+	}
+
+	public void setUseInvertedColors(boolean useInvertedColors) {
+		this.useInvertedColors = useInvertedColors;
+	}
+
+	public boolean isUseInvertedColors() {
+		return useInvertedColors;
 	}
 }
