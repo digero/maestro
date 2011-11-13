@@ -15,6 +15,8 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.digero.common.view.ColorTable;
+
 public class Colorizer extends JPanel {
 	private JComboBox picker;
 	private SpinnerNumberModel hue;

@@ -27,6 +27,7 @@ import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.Util;
+import com.digero.common.view.ColorTable;
 import com.digero.common.view.NoteGraph;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
