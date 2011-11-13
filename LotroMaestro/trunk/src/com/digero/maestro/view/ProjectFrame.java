@@ -6,6 +6,7 @@ import info.clearthought.layout.TableLayoutConstants;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,11 +16,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -79,6 +83,7 @@ import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
+import com.digero.common.view.AboutDialog;
 import com.digero.common.view.PlayControlPanel;
 import com.digero.common.view.SongPositionBar;
 import com.digero.maestro.MaestroMain;
@@ -182,6 +187,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			return;
 		}
 
+		try {
+			List<Image> icons = new ArrayList<Image>();
+			icons.add(ImageIO.read(IconLoader.class.getResourceAsStream("maestro_16.png")));
+			icons.add(ImageIO.read(IconLoader.class.getResourceAsStream("maestro_32.png")));
+			setIconImages(icons);
+		}
+		catch (Exception ex) {
+			// Ignore
+			ex.printStackTrace();
+		}
+
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
 		partPanel = new PartPanel(sequencer, partAutoNumberer);
@@ -195,8 +211,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		songTitleField = new JTextField();
 		composerField = new JTextField();
-		titleTagField = new JTextField(prefs.get("titleTag", ""));
-		titleTagField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "titleTag"));
+		if (SHOW_TITLE_TAG_TEXTBOX) {
+			titleTagField = new JTextField(prefs.get("titleTag", ""));
+			titleTagField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "titleTag"));
+		}
 		transcriberField = new JTextField(prefs.get("transcriber", ""));
 		transcriberField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "transcriber"));
 
@@ -276,20 +294,30 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		TableLayout songInfoLayout = new TableLayout(new double[] {
 				PREFERRED, FILL
 		}, new double[] {
-				PREFERRED, PREFERRED, PREFERRED, PREFERRED
+				PREFERRED, PREFERRED, PREFERRED
 		});
 		songInfoLayout.setHGap(HGAP);
 		songInfoLayout.setVGap(VGAP);
 		JPanel songInfoPanel = new JPanel(songInfoLayout);
-		songInfoPanel.add(new JLabel("T:"), "0, 0");
-		songInfoPanel.add(new JLabel("[]"), "0, 1");
-		songInfoPanel.add(new JLabel("C:"), "0, 2");
-		songInfoPanel.add(new JLabel("Z:"), "0, 3");
-		songInfoPanel.add(songTitleField, "1, 0");
-		songInfoPanel.add(titleTagField, "1, 1");
-		songInfoPanel.add(composerField, "1, 2");
-		songInfoPanel.add(transcriberField, "1, 3");
-		songInfoPanel.setBorder(BorderFactory.createTitledBorder("Song Info"));
+		{
+			int row = 0;
+			songInfoPanel.add(new JLabel("T:"), "0, " + row);
+			songInfoPanel.add(songTitleField, "1, " + row);
+			row++;
+			if (SHOW_TITLE_TAG_TEXTBOX) {
+				songInfoLayout.insertRow(row, PREFERRED);
+				songInfoPanel.add(new JLabel("[]"), "0, " + row);
+				songInfoPanel.add(titleTagField, "1, " + row);
+				row++;
+			}
+			songInfoPanel.add(new JLabel("C:"), "0, " + row);
+			songInfoPanel.add(composerField, "1, " + row);
+			row++;
+			songInfoPanel.add(new JLabel("Z:"), "0, " + row);
+			songInfoPanel.add(transcriberField, "1, " + row);
+
+			songInfoPanel.setBorder(BorderFactory.createTitledBorder("Song Info"));
+		}
 
 		JPanel partsButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, HGAP, VGAP));
 		partsButtonPanel.add(newPartButton);
@@ -432,6 +460,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					partPanel.settingsChanged();
 				}
 				dialog.dispose();
+			}
+		});
+
+		JMenuItem aboutItem = toolsMenu.add(new JMenuItem("About " + MaestroMain.APP_NAME + "..."));
+		aboutItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				AboutDialog.show(ProjectFrame.this, MaestroMain.APP_NAME, MaestroMain.APP_VERSION, MaestroMain.APP_URL,
+						"maestro_64.png");
 			}
 		});
 	}
@@ -636,8 +672,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		try {
 			String fileName = midiFile.getName().toLowerCase();
 			boolean isAbc = fileName.endsWith(".abc") || fileName.endsWith(".txt");
-			AbcInfo abcInfo = isAbc ? new AbcToMidi.AbcInfo() : null;
-			sequenceInfo = new SequenceInfo(midiFile, isAbc, abcInfo);
+
+			AbcInfo abcInfo = new AbcInfo();
+
+			if (isAbc) {
+				AbcToMidi.Params params = new AbcToMidi.Params(midiFile);
+				params.useLotroInstruments = false;
+				sequenceInfo = SequenceInfo.fromAbc(params, abcInfo);
+			}
+			else {
+				sequenceInfo = SequenceInfo.fromMidi(midiFile);
+			}
 
 			sequencer.setSequence(null);
 			sequencer.reset(true);
@@ -932,7 +977,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	@Override
 	public String getTitleTag() {
-		return titleTagField.getText();
+		if (SHOW_TITLE_TAG_TEXTBOX)
+			return titleTagField.getText();
+		else
+			return "";
 	}
 
 	@Override

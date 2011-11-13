@@ -9,4 +9,5 @@ public interface ICompileConstants {
 	public static final boolean SHOW_METER_TEXTBOX = true;
 	public static final boolean SHOW_KEY_FIELD = false;
 	public static final boolean SHOW_COLORIZER = false;
+	public static final boolean SHOW_TITLE_TAG_TEXTBOX = false;
 }

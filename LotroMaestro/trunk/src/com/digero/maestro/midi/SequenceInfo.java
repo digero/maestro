@@ -40,19 +40,23 @@ public class SequenceInfo implements IMidiConstants {
 	private long endMicros;
 	private List<TrackInfo> trackInfoList;
 
-	public SequenceInfo(File file) throws InvalidMidiDataException, IOException, ParseException {
-		this(file, false, null);
+	public static SequenceInfo fromAbc(AbcToMidi.Params params, AbcInfo abcInfo) throws InvalidMidiDataException,
+			ParseException {
+		if (abcInfo == null)
+			abcInfo = new AbcInfo();
+		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file, AbcToMidi.convert(params, abcInfo));
+		sequenceInfo.title = abcInfo.getTitle();
+		sequenceInfo.composer = abcInfo.getComposer();
+		return sequenceInfo;
 	}
 
-	public SequenceInfo(File file, boolean isAbc, AbcInfo abcInfo) throws InvalidMidiDataException, IOException,
-			ParseException {
+	public static SequenceInfo fromMidi(File midiFile) throws InvalidMidiDataException, IOException, ParseException {
+		return new SequenceInfo(midiFile, MidiSystem.getSequence(midiFile));
+	}
+
+	private SequenceInfo(File file, Sequence sequence) throws InvalidMidiDataException, ParseException {
 		this.file = file;
-		if (isAbc) {
-			sequence = AbcToMidi.convert(file, false, null, abcInfo, false, true);
-		}
-		else {
-			sequence = MidiSystem.getSequence(file);
-		}
+		this.sequence = sequence;
 
 		// Since the drum track separation is only applicable to type 1 midi sequences, 
 		// do it before we convert this sequence to type 1, to avoid doing unnecessary work
@@ -81,11 +85,7 @@ public class SequenceInfo implements IMidiConstants {
 		tempoBPM = findMainTempo(sequence, tempoCache);
 
 		composer = "";
-		if (isAbc && abcInfo != null) {
-			title = abcInfo.getTitle();
-			composer = abcInfo.getComposer();
-		}
-		else if (trackInfoList.get(0).hasName()) {
+		if (trackInfoList.get(0).hasName()) {
 			title = trackInfoList.get(0).getName();
 		}
 		else {
@@ -110,7 +110,7 @@ public class SequenceInfo implements IMidiConstants {
 	public String getTitle() {
 		return title;
 	}
-	
+
 	public String getComposer() {
 		return composer;
 	}
