@@ -207,7 +207,7 @@ public class MidiConstants implements IMidiConstants {
 			"Cabasa 2", // 82
 			"Bells", // 83
 			"Chimes", // 84
-			"Click", // 85
+			"Castanet", // 85
 			"Muted Large Drum", // 86
 			"Large Drum", // 87
 	};
