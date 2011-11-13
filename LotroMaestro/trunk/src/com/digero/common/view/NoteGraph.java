@@ -1,5 +1,6 @@
 package com.digero.common.view;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -16,6 +17,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
@@ -23,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import com.digero.common.abc.Dynamics;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -31,11 +34,10 @@ import com.digero.common.util.Util;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
-import com.digero.maestro.view.ColorTable;
 
 public class NoteGraph extends JPanel implements SequencerListener, IDisposable {
 	protected final SequencerWrapper sequencer;
-	protected final TrackInfo trackInfo;
+	protected TrackInfo trackInfo;
 
 	protected final int MIN_RENDERED;
 	protected final int MAX_RENDERED;
@@ -45,6 +47,13 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private ColorTable noteColor = ColorTable.NOTE_ENABLED;
 	private ColorTable badNoteColor = ColorTable.NOTE_BAD_ENABLED;
 	private ColorTable noteOnColor = ColorTable.NOTE_ON;
+	private ColorTable noteOnBorder = ColorTable.NOTE_ON_BORDER;
+
+	private Color[] noteColorByDynamics = new Color[Dynamics.values().length];
+	private Color[] badNoteColorByDynamics = new Color[Dynamics.values().length];
+
+//	private Map<Dynamics, Color> noteColorMap = new HashMap<Dynamics, Color>();
+//	private Map<Dynamics, Color> badNoteColorMap = new HashMap<Dynamics, Color>();
 
 	private JPanel indicatorLine;
 
@@ -107,6 +116,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	public final void setNoteColor(ColorTable noteColor) {
 		if (this.noteColor != noteColor) {
 			this.noteColor = noteColor;
+			Arrays.fill(noteColorByDynamics, null);
 			repaint();
 		}
 	}
@@ -114,6 +124,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	public final void setBadNoteColor(ColorTable badNoteColor) {
 		if (this.badNoteColor != badNoteColor) {
 			this.badNoteColor = badNoteColor;
+			Arrays.fill(badNoteColorByDynamics, null);
 			repaint();
 		}
 	}
@@ -123,6 +134,12 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 			this.noteOnColor = noteOnColor;
 			repaint();
 		}
+	}
+
+	public void setTrackInfo(TrackInfo trackInfo) {
+		this.trackInfo = trackInfo;
+		invalidateTransform();
+		repaint();
 	}
 
 	private AffineTransform noteToScreenXForm = null; // Always use getTransform()
@@ -266,19 +283,36 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 
 	private Rectangle2D.Double rectTmp = new Rectangle2D.Double();
 
-	private void fillNote(Graphics2D g2, NoteEvent ne, double minWidth, double height, double inflateHeight) {
-		fillNote(g2, ne, transposeNote(ne.note.id), minWidth, height, inflateHeight);
+	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height) {
+		fillNote(g2, ne, noteId, minWidth, height, 0, 0);
 	}
 
-	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double inflateHeight) {
+	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double extraWidth,
+			double extraHeight) {
 		double width = Math.max(minWidth, ne.getLength());
 		double y = Util.clamp(noteId, MIN_RENDERED, MAX_RENDERED);
-		rectTmp.setRect(ne.startMicros, y - inflateHeight, width, height + 2 * inflateHeight);
+		rectTmp.setRect(ne.startMicros - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2 * extraHeight);
 		g2.fill(rectTmp);
 	}
 
 	private BitSet notesOn = null;
 	private BitSet notesBad = null;
+
+	private static float[] hsb;
+
+	private static Color makeDynamicColor(Color base, Dynamics dyn, float weight) {
+		hsb = Color.RGBtoHSB(base.getRed(), base.getGreen(), base.getBlue(), hsb);
+		hsb[2] *= (1 - weight) + weight * dyn.midiVol / 128.0f;
+		return new Color(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]));
+	}
+
+	private Color getNoteColor(NoteEvent ne) {
+		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity);
+		if (noteColorByDynamics[dyn.ordinal()] == null) {
+			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.35f);
+		}
+		return noteColorByDynamics[dyn.ordinal()];
+	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
@@ -359,7 +393,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 					notesBad.set(i);
 				}
 				else {
-					fillNote(g2, ne, noteId, minLength, height, 0);
+					g2.setColor(getNoteColor(ne));
+					fillNote(g2, ne, noteId, minLength, height);
 				}
 			}
 		}
@@ -367,14 +402,34 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		if (notesBad != null) {
 			g2.setColor(badNoteColor.get());
 			for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1)) {
-				fillNote(g2, noteEvents.get(i), minLength, height, 0);
+				NoteEvent ne = noteEvents.get(i);
+				int noteId = transposeNote(ne.note.id);
+				fillNote(g2, ne, noteId, minLength, height);
 			}
 		}
 
 		if (notesOn != null) {
+			final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
+			final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
+
+			double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
+			double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
+			double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
+			
+			g2.setColor(noteOnBorder.get());
+			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
+				NoteEvent ne = noteEvents.get(i);
+				int noteId = transposeNote(ne.note.id);
+
+				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY + noteOnOutlineWidthY);
+			}
+
 			g2.setColor(noteOnColor.get());
 			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
-				fillNote(g2, noteEvents.get(i), minLength, height, 0.25);
+				NoteEvent ne = noteEvents.get(i);
+				int noteId = transposeNote(ne.note.id);
+
+				fillNote(g2, noteEvents.get(i), noteId, minLength, height, 0, noteOnExtraHeightY);
 			}
 		}
 
