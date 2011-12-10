@@ -23,13 +23,17 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.midi.Note;
+import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.view.ColorTable;
+import com.digero.common.view.NoteGraph;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
+import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
@@ -46,6 +50,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	private JTextField nameTextField;
 	private JComboBox instrumentComboBox;
 
+	private AbcNoteGraph noteGraph;
+
 	private JScrollPane trackScrollPane;
 
 	private JPanel trackListPanel;
@@ -57,7 +63,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private boolean initialized = false;
 
-	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
+	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer,
+			SequencerWrapper abcSequencer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
@@ -108,15 +115,23 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			}
 		});
 
+		noteGraph = new AbcNoteGraph(abcSequencer, null);
+
 		JPanel dataPanel = new JPanel(new BorderLayout(0, VGAP));
-		JPanel dataPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, HGAP, 0));
-		dataPanel2.add(new JLabel("X:"));
-		dataPanel2.add(numberSpinner);
-		dataPanel2.add(new JLabel(" I:"));
-		dataPanel2.add(instrumentComboBox);
-		dataPanel2.add(new JLabel(" T:"));
-		dataPanel.add(dataPanel2, BorderLayout.WEST);
-		dataPanel.add(nameTextField, BorderLayout.CENTER);
+		JPanel dataPanelN = new JPanel(new FlowLayout(FlowLayout.LEFT, HGAP, 0));
+		JPanel dataPanelS = new JPanel(new FlowLayout(FlowLayout.LEFT, HGAP, 0));
+		dataPanelN.add(new JLabel(" T:"));
+		dataPanelN.add(nameTextField);
+		dataPanelS.add(new JLabel("X:"));
+		dataPanelS.add(numberSpinner);
+		dataPanelS.add(new JLabel(" I:"));
+		dataPanelS.add(instrumentComboBox);
+		dataPanel.add(dataPanelN, BorderLayout.NORTH);
+		dataPanel.add(dataPanelS, BorderLayout.SOUTH);
+
+		JPanel abcGraphPanel = new JPanel(new BorderLayout());
+		abcGraphPanel.add(dataPanel, BorderLayout.WEST);
+		abcGraphPanel.add(noteGraph, BorderLayout.CENTER);
 
 		trackListPanel = new JPanel();
 		trackListLayout = new GroupLayout(trackListPanel);
@@ -129,7 +144,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		trackScrollPane = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-		add(dataPanel, BorderLayout.NORTH);
+		add(abcGraphPanel, BorderLayout.NORTH);
 		add(trackScrollPane, BorderLayout.CENTER);
 
 		setAbcPart(null);
@@ -146,6 +161,13 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	public void settingsChanged() {
 		numberSpinnerModel.setStepSize(partAutoNumberer.getIncrement());
+	}
+
+	public void setAbcSequenceInfo(SequenceInfo abcSequenceInfo) {
+		if (abcSequenceInfo == null || abcPart == null)
+			noteGraph.setTrackInfo(null);
+		
+		noteGraph.setTrackInfo(abcSequenceInfo.getTrackInfo(abcPart.getSequenceInfo()));
 	}
 
 	public void setAbcPart(AbcPart abcPart) {
@@ -260,4 +282,29 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		this.sequencer = sequencer;
 		setAbcPart(abcPartTmp);
 	}
+
+	private class AbcNoteGraph extends NoteGraph {
+		public AbcNoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo) {
+			super(sequencer, trackInfo, Note.MIN_PLAYABLE.id - 2, Note.MAX_PLAYABLE.id + 2);
+		}
+
+		@Override
+		protected int transposeNote(int noteId) {
+			LotroInstrument instrument = abcPart.getInstrument();
+			if (instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL)
+				return (Note.MIN_PLAYABLE.id + Note.MAX_PLAYABLE.id) / 2;
+
+			return noteId - 12 * instrument.octaveDelta;
+		}
+
+		@Override
+		protected boolean isNotePlayable(int noteId) {
+			LotroInstrument instrument = abcPart.getInstrument();
+			if (instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL)
+				return true;
+
+			return noteId >= instrument.lowestPlayable.id && noteId <= instrument.highestPlayable.id;
+		}
+	}
+
 }

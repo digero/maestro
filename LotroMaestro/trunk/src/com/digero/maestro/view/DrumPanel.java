@@ -210,6 +210,9 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 		@Override
 		protected boolean isNotePlayable(int noteId) {
+			if (trackInfo == null)
+				return true;
+			
 			return abcPart.isDrumPlayable(trackInfo.getTrackNumber(), drumId);
 		}
 
