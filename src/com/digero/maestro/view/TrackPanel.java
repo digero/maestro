@@ -298,7 +298,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		@Override
 		protected int transposeNote(int noteId) {
-			if (trackInfo != null && !trackInfo.isDrumTrack()) {
+			if (!trackInfo.isDrumTrack()) {
 				noteId += abcPart.getTranspose(trackInfo.getTrackNumber());
 			}
 			return noteId;
@@ -306,18 +306,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		@Override
 		protected boolean isNotePlayable(int noteId) {
-			if (trackInfo != null) {
-				if (abcPart.isDrumPart()) {
-					return abcPart.isDrumPlayable(trackInfo.getTrackNumber(), noteId);
-				}
-				else if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackInfo.getTrackNumber())) {
-					return true;
-				}
+			if (abcPart.isDrumPart()) {
+				return abcPart.isDrumPlayable(trackInfo.getTrackNumber(), noteId);
 			}
-
-			int minPlayable = abcPart.getInstrument().lowestPlayable.id;
-			int maxPlayable = abcPart.getInstrument().highestPlayable.id;
-			return (noteId >= minPlayable) && (noteId <= maxPlayable);
+			else if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackInfo.getTrackNumber())) {
+				return true;
+			}
+			else {
+				int minPlayable = abcPart.getInstrument().lowestPlayable.id;
+				int maxPlayable = abcPart.getInstrument().highestPlayable.id;
+				return (noteId >= minPlayable) && (noteId <= maxPlayable);
+			}
 		}
 	}
 }
