@@ -114,7 +114,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private File saveFile;
 	private SequenceInfo sequenceInfo;
 	private NoteFilterSequencerWrapper sequencer;
-	private SequenceInfo abcSequenceInfo;
 	private SequencerWrapper abcSequencer;
 	private DefaultListModel parts = new DefaultListModel();
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);

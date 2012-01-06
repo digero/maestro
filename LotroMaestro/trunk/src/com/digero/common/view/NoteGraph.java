@@ -198,9 +198,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private long songPos = -1;
 
 	private boolean isShowingNotesOn() {
-		if (trackInfo == null)
-			return false;
-
 		return sequencer.isRunning() && sequencer.isTrackActive(trackInfo.getTrackNumber());
 	}
 
@@ -234,7 +231,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 					+ SequencerWrapper.UPDATE_FREQUENCY_MICROS;
 			songPos = currentSongPos;
 
-			if (trackInfo == null || leftSongPos < 0) {
+			if (leftSongPos < 0) {
 				repaint();
 			}
 			else {
@@ -271,11 +268,12 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		}
 		else {
 			switch (evt.getProperty()) {
-			case LENGTH:
-			case IS_RUNNING:
-			case IS_LOADED:
-			case TRACK_ACTIVE:
-			case SEQUENCE:
+			case DRAG_POSITION:
+			case IS_DRAGGING:
+			case TEMPO:
+				break;
+			default:
+				// Other properties don't change often; just repaint the whole thing
 				repaint();
 				break;
 			}
@@ -318,9 +316,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		if (trackInfo == null)
-			return;
-
 		Graphics2D g2 = (Graphics2D) g;
 
 		Object hintAntialiasSav = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
@@ -420,14 +415,13 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 			double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
 			double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
 			double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
-
+			
 			g2.setColor(noteOnBorder.get());
 			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
 				NoteEvent ne = noteEvents.get(i);
 				int noteId = transposeNote(ne.note.id);
 
-				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY
-						+ noteOnOutlineWidthY);
+				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY + noteOnOutlineWidthY);
 			}
 
 			g2.setColor(noteOnColor.get());
