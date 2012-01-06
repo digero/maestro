@@ -5,7 +5,7 @@ public class Version implements Comparable<Version> {
 		if (versionString == null)
 			return null;
 
-		String[] parts = versionString.trim().split("\\.");
+		String[] parts = versionString.trim().split("[\\._]");
 		int major, minor = 0, revision = 0, build = -1;
 
 		try {

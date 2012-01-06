@@ -97,6 +97,7 @@ import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.util.Version;
+import com.digero.common.view.AboutDialog;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
@@ -108,11 +109,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
-	private static final Version APP_VERSION = new Version(1, 2, 1);
+	private static final Version APP_VERSION = new Version(1, 2, 2);
 
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
+		System.setProperty("sun.sound.useNewAudioEngine", "true");
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
@@ -279,11 +282,37 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					else
 						receiver = synth.getReceiver();
 				}
-				catch (IOException e) {
-					JOptionPane.showMessageDialog(this, "There was an error loading the LOTRO instrument sounds.\n"
-							+ "Playback will use MIDI instruments instead "
-							+ "(drums do not sound good in this mode).\n\nError details:\n" + e.getMessage(),
-							"Failed to load LOTRO instruments", JOptionPane.ERROR_MESSAGE);
+				catch (Exception e) {
+					Version requredJavaVersion = new Version(1, 6, 0, 30);
+
+					JPanel errorMessage = new JPanel(new BorderLayout(0, 12));
+					errorMessage.add(new JLabel(
+							"<html><b>There was an error loading the LOTRO instrument sounds</b><br>"
+									+ "Playback will use standard MIDI instruments instead<br>"
+									+ "(drums do not sound good in this mode).</html>"), BorderLayout.NORTH);
+
+					final String JAVA_URL = "http://www.java.com";
+					if (requredJavaVersion.compareTo(Version.parseVersion(System.getProperty("java.version"))) > 0) {
+						JLabel update = new JLabel(
+								"<html>It is recommended that you install Java 6 update 30 or later.<br>"
+										+ "Get the latest version from <a href='" + JAVA_URL + "'>" + JAVA_URL
+										+ "</a>.</html>");
+						update.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						update.addMouseListener(new MouseAdapter() {
+							public void mouseClicked(MouseEvent e) {
+								if (e.getButton() == MouseEvent.BUTTON1) {
+									Util.openURL(JAVA_URL);
+								}
+							}
+						});
+						errorMessage.add(update, BorderLayout.CENTER);
+					}
+
+					errorMessage.add(new JLabel("<html>Error details:<br>" + e.getMessage() + "</html>"),
+							BorderLayout.SOUTH);
+
+					JOptionPane.showMessageDialog(this, errorMessage, APP_NAME + " failed to load LOTRO instruments",
+							JOptionPane.ERROR_MESSAGE);
 
 					if (synth != null)
 						synth.close();
@@ -308,13 +337,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
 			sequencer.open();
 		}
-		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException(e);
-		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException(e);
+			System.exit(1);
 		}
 
 		content = new JPanel(new TableLayout(new double[] { // Columns
@@ -353,7 +378,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			stopIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("stop.png")));
 		}
 		catch (IOException e1) {
-			throw new RuntimeException(e1);
+			JOptionPane.showMessageDialog(this, "Error loading resources:\n" + e1.getMessage(), "General Error",
+					JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
 		}
 
 		playButton = new JButton(playIcon);
@@ -704,33 +731,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		about.setMnemonic(KeyEvent.VK_A);
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ImageIcon aboutIcon;
-				try {
-					aboutIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("abcplayer_64.png")));
-				}
-				catch (IOException e1) {
-					throw new RuntimeException(e1);
-				}
-				JLabel aboutMessage = new JLabel("<html>" //
-						+ APP_NAME_LONG + "<br>" //
-						+ "Version " + APP_VERSION + "<br>" //
-						+ "Created by Digero of Landroval<br>" //
-						+ "Copyright &copy; 2010 Ben Howell<br>" //
-						+ "<a href='" + APP_URL + "'>" + APP_URL + "</a><br>" //
-						+ "<br>" //
-						+ "No affiliation with Turbine, Inc. or Warner Bros." //
-						+ "</html>");
-				aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-				aboutMessage.addMouseListener(new MouseAdapter() {
-					public void mouseClicked(MouseEvent e) {
-						if (e.getButton() == MouseEvent.BUTTON1) {
-							Util.openURL(APP_URL);
-						}
-					}
-				});
-				String aboutTitle = "About " + APP_NAME;
-				JOptionPane.showMessageDialog(AbcPlayer.this, aboutMessage, aboutTitle,
-						JOptionPane.INFORMATION_MESSAGE, aboutIcon);
+				AboutDialog.show(AbcPlayer.this, APP_NAME_LONG, APP_VERSION, APP_URL, "abcplayer_64.png");
 			}
 		});
 	}
