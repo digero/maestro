@@ -12,6 +12,8 @@ public class MaestroMain {
 	public static final Version APP_VERSION = new Version(0, 2, 1);
 	
 	public static void main(String[] args) throws Exception {
+		System.setProperty("sun.sound.useNewAudioEngine", "true");
+		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
