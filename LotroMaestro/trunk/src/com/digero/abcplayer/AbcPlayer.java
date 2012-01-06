@@ -351,7 +351,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		titleLabel = new JLabel(" ");
 		Font f = titleLabel.getFont();
-		titleLabel.setFont(f.deriveFont(Font.BOLD, f.getSize() + 1));
+		titleLabel.setFont(f.deriveFont(Font.BOLD, 16));
 		titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
 		trackListPanel = new TrackListPanel();
@@ -453,7 +453,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		String artist = abcInfo.getComposer();
 
 		if (artist != null) {
-			titleLabel.setText("<html>" + title + "&ensp;<span style='font-size:11pt; font-weight:normal'>" + artist
+			titleLabel.setText("<html>" + title + "&ensp;<span style='font-size:12pt; font-weight:normal'>" + artist
 					+ "</span></html>");
 		}
 		else {

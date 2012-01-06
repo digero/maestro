@@ -144,7 +144,8 @@ public class AbcToMidi {
 			if (info == null || info.name == null)
 				return "Track " + trackIndex;
 
-			if (info.nameIsFromExtendedInfo || titlePrefix == null || titlePrefix.length() == 0)
+			if (info.nameIsFromExtendedInfo || titlePrefix == null || titlePrefix.length() == 0
+					|| titlePrefix.length() == info.name.length())
 				return info.name;
 
 			return info.name.substring(titlePrefix.length()).trim();
