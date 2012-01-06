@@ -7,7 +7,7 @@
     <target name="AbcPlayerExe">
     	<mkdir dir="${build}"/>
     	<delete file="${build}/*.log"/>
-        <jar destfile="${build}/${basename}.jar" basedir="../bin" excludes="com/digero/maestro/**">
+        <jar destfile="${build}/${basename}.jar" basedir="../bin" excludes="com/digero/maestro/MaestroMain.java,com/digero/maestro/view/*">
             <manifest>
                 <attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer"/>
                 <attribute name="Class-Path" value=". TableLayout.jar gervill.jar"/>
@@ -34,7 +34,7 @@
 	</target>
 	<target name="AbcPlayerZip" depends="AbcPlayerExe">
 	    <mkdir dir="${output}"/>
-		<zip destfile="${output}/${basename}_${version}.zip" basedir="${build}" includes="${basename}.exe,LotroInstruments.sf2,${basename}.jar,TableLayout.jar,gervill.jar"/>
+		<zip destfile="${output}/${basename}_${version}.zip" basedir="${build}" includes="${basename}.exe,LotroInstruments.sf2,${basename}.jar,TableLayout.jar"/>
 	</target>
 	<target name="AbcPlayerDistrib" depends="AbcPlayerInstaller,AbcPlayerZip"/>
 </project>

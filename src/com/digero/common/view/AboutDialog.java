@@ -1,5 +1,6 @@
 package com.digero.common.view;
 
+import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,6 +11,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import com.digero.common.icons.IconLoader;
 import com.digero.common.util.Util;
@@ -26,13 +28,15 @@ public final class AboutDialog {
 			e1.printStackTrace();
 			aboutIcon = null;
 		}
+
 		JLabel aboutMessage = new JLabel("<html>" //
 				+ appName + "<br>" //
 				+ "Version " + appVersion + "<br>" //
 				+ "Created by Digero of Landroval<br>" //
-				+ "Copyright &copy; 2011 Ben Howell<br>" //
+				+ "Copyright &copy; 2010-2012 Ben Howell<br>" //
 				+ "<a href='" + appUrl + "'>" + appUrl + "</a>" //
 				+ "</html>");
+
 		aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		aboutMessage.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -41,8 +45,27 @@ public final class AboutDialog {
 				}
 			}
 		});
+
+		JLabel javaMessage = new JLabel("<html>" //
+				+ "Java version " + System.getProperty("java.version") + "<br>" //
+				+ System.getProperty("java.vendor") + "<br>" //
+				+ "<a href='" + System.getProperty("java.vendor.url") + "'>" + System.getProperty("java.vendor.url") + "</a>" //
+				+ "</html>");
+		javaMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		javaMessage.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					Util.openURL(System.getProperty("java.vendor.url"));
+				}
+			}
+		});
+
+		JPanel aboutPanel = new JPanel(new BorderLayout(0, 8));
+		aboutPanel.add(aboutMessage, BorderLayout.CENTER);
+		aboutPanel.add(javaMessage, BorderLayout.SOUTH);
+
 		String aboutTitle = "About " + appName;
-		JOptionPane.showMessageDialog(parent, aboutMessage, aboutTitle, JOptionPane.INFORMATION_MESSAGE, aboutIcon);
+		JOptionPane.showMessageDialog(parent, aboutPanel, aboutTitle, JOptionPane.INFORMATION_MESSAGE, aboutIcon);
 	}
 
 	/** Static-only class */

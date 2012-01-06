@@ -6,6 +6,7 @@ import info.clearthought.layout.TableLayoutConstants;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -44,22 +45,18 @@ import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
-import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -97,10 +94,14 @@ import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.util.Version;
+import com.digero.common.view.AboutDialog;
+import com.digero.common.view.ColorTable;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
+import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.util.IDisposable;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants {
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
@@ -113,6 +114,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
+		System.setProperty("sun.sound.useNewAudioEngine", "true");
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
@@ -165,6 +168,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	}
 
 	private SequencerWrapper sequencer;
+	private SequenceInfo sequenceInfo;
+	private SequenceInfo sequenceInfoMidiOnly;
 	private Synthesizer synth;
 	private Transmitter transmitter;
 	private Receiver receiver;
@@ -227,6 +232,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 		catch (Exception ex) {
 			// Ignore
+			ex.printStackTrace();
 		}
 
 		FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
@@ -279,11 +285,33 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					else
 						receiver = synth.getReceiver();
 				}
-				catch (IOException e) {
-					JOptionPane.showMessageDialog(this, "There was an error loading the LOTRO instrument sounds.\n"
-							+ "Playback will use MIDI instruments instead "
-							+ "(drums do not sound good in this mode).\n\nError details:\n" + e.getMessage(),
-							"Failed to load LOTRO instruments", JOptionPane.ERROR_MESSAGE);
+				catch (Exception e) {
+					Version requredJavaVersion = new Version(1, 6, 0, 30);
+
+					JPanel errorMessage = new JPanel(new BorderLayout(0, 12));
+					errorMessage.add(new JLabel("<html><b>There was an error loading the LOTRO instrument sounds</b><br>"
+							+ "Playback will use standard MIDI instruments instead<br>"
+							+ "(drums do not sound good in this mode).</html>"), BorderLayout.NORTH);
+
+					if (requredJavaVersion.compareTo(Version.parseVersion(System.getProperty("java.version"))) > 0) {
+						JLabel update = new JLabel("<html>" + APP_NAME + " requires Java 6 update 30 or later.<br>"
+								+ "Install the latest version from "
+								+ "<a href='http://www.java.com'>http://www.java.com</a>.</html>");
+						update.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						update.addMouseListener(new MouseAdapter() {
+							public void mouseClicked(MouseEvent e) {
+								if (e.getButton() == MouseEvent.BUTTON1) {
+									Util.openURL("http://www.java.com");
+								}
+							}
+						});
+						errorMessage.add(update, BorderLayout.CENTER);
+					}
+
+					errorMessage.add(new JLabel("<html>Error details:<br>" + e.getMessage() + "</html>"), BorderLayout.SOUTH);
+
+					JOptionPane.showMessageDialog(this, errorMessage, APP_NAME + " failed to load LOTRO instruments",
+							JOptionPane.ERROR_MESSAGE);
 
 					if (synth != null)
 						synth.close();
@@ -308,13 +336,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
 			sequencer.open();
 		}
-		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException(e);
-		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
-			throw new RuntimeException(e);
+			System.exit(1);
 		}
 
 		content = new JPanel(new TableLayout(new double[] { // Columns
@@ -326,14 +350,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		titleLabel = new JLabel(" ");
 		Font f = titleLabel.getFont();
-		titleLabel.setFont(f.deriveFont(Font.BOLD, f.getSize() + 1));
+		titleLabel.setFont(f.deriveFont(Font.BOLD, 16));
 		titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
 		trackListPanel = new TrackListPanel();
-		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
-		trackListScroller.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Color.GRAY));
+		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT / 8);
+		trackListScroller.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ColorTable.PANEL_BORDER.get()));
 
 		JPanel controlPanel = new JPanel(new TableLayout(new double[] {
 				4, SongPositionBar.SIDE_PAD, 0.5, 4, PREFERRED, 4, PREFERRED, 4, 0.5, SongPositionBar.SIDE_PAD, 4,
@@ -353,7 +377,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			stopIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("stop.png")));
 		}
 		catch (IOException e1) {
-			throw new RuntimeException(e1);
+			JOptionPane.showMessageDialog(this, "Error loading resources:\n" + e1.getMessage(), "General Error",
+					JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
 		}
 
 		playButton = new JButton(playIcon);
@@ -415,18 +441,40 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		add(trackListScroller, "0, 2, 2, 2");
 		add(controlPanel, "1, 4");
 
+		songPositionBar.setUseInvertedColors(true);
+		tempoBar.setUseInvertedColors(true);
+		volumeBar.setUseInvertedColors(true);
+		setColorsRecursive(this, ColorTable.CONTROLS_TEXT.get(), ColorTable.CONTROLS_BACKGROUND.get());
+		trackListPanel.setBackground(ColorTable.PANEL_BACKGROUND_DISABLED.get());
+
 		initMenu();
 
 		updateButtonStates();
 		initializeWindowBounds();
 	}
 
+	private void setColorsRecursive(Container parent, Color foreground, Color background) {
+		for (Component c : parent.getComponents()) {
+			c.setForeground(foreground);
+			c.setBackground(background);
+			if (c instanceof Container) {
+				Container child = (Container) c;
+				setColorsRecursive(child, foreground, background);
+			}
+		}
+	}
+
 	private void updateTitleLabel() {
-		String title = abcInfo.getTitle();
-		String artist = abcInfo.getComposer();
+		if (sequenceInfo == null) {
+			titleLabel.setText(" ");
+			return;
+		}
+
+		String title = sequenceInfo.getTitle();
+		String artist = sequenceInfo.getComposer();
 
 		if (artist != null) {
-			titleLabel.setText("<html>" + title + "&ensp;<span style='font-size:11pt; font-weight:normal'>" + artist
+			titleLabel.setText("<html>" + title + "&ensp;<span style='font-size:12pt; font-weight:normal'>" + artist
 					+ "</span></html>");
 		}
 		else {
@@ -704,33 +752,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		about.setMnemonic(KeyEvent.VK_A);
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ImageIcon aboutIcon;
-				try {
-					aboutIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("abcplayer_64.png")));
-				}
-				catch (IOException e1) {
-					throw new RuntimeException(e1);
-				}
-				JLabel aboutMessage = new JLabel("<html>" //
-						+ APP_NAME_LONG + "<br>" //
-						+ "Version " + APP_VERSION + "<br>" //
-						+ "Created by Digero of Landroval<br>" //
-						+ "Copyright &copy; 2010 Ben Howell<br>" //
-						+ "<a href='" + APP_URL + "'>" + APP_URL + "</a><br>" //
-						+ "<br>" //
-						+ "No affiliation with Turbine, Inc. or Warner Bros." //
-						+ "</html>");
-				aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-				aboutMessage.addMouseListener(new MouseAdapter() {
-					public void mouseClicked(MouseEvent e) {
-						if (e.getButton() == MouseEvent.BUTTON1) {
-							Util.openURL(APP_URL);
-						}
-					}
-				});
-				String aboutTitle = "About " + APP_NAME;
-				JOptionPane.showMessageDialog(AbcPlayer.this, aboutMessage, aboutTitle,
-						JOptionPane.INFORMATION_MESSAGE, aboutIcon);
+				AboutDialog.show(AbcPlayer.this, APP_NAME_LONG, APP_VERSION, APP_URL, "abcplayer_64.png");
 			}
 		});
 	}
@@ -979,14 +1001,23 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		sequencer.stop(); // pause
 		updateButtonStates();
 
-		Sequence song = null;
+		sequenceInfo = null;
+		sequenceInfoMidiOnly = null;
 		AbcInfo info = new AbcInfo();
 		boolean retry;
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, null, info, !lotroErrorsMenuItem.isSelected(),
-						stereoMenuItem.isSelected());
+				AbcToMidi.Params params = new AbcToMidi.Params(data);
+				params.useLotroInstruments = useLotroInstruments;
+				params.instrumentOverrideMap = null;
+				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
+				params.stereo = stereoMenuItem.isSelected();
+
+				sequenceInfo = SequenceInfo.fromAbc(params, abcInfo);
+
+				params.useLotroInstruments = false;
+				sequenceInfoMidiOnly = SequenceInfo.fromAbc(params, null);
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1000,6 +1031,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC", JOptionPane.ERROR_MESSAGE);
 				return false;
 			}
+			catch (InvalidMidiDataException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error reading ABC", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
 		} while (retry);
 
 		this.exportFileDialog = null;
@@ -1010,7 +1045,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		stop();
 
 		try {
-			sequencer.setSequence(song);
+			sequencer.setSequence((sequenceInfo == null) ? null : sequenceInfo.getSequence());
 		}
 		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
@@ -1048,14 +1083,23 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		List<FileAndData> data = new ArrayList<FileAndData>(abcData);
 		data.addAll(appendData);
 
-		Sequence song = null;
+		sequenceInfo = null;
+		sequenceInfoMidiOnly = null;
 		AbcInfo info = new AbcInfo();
 		boolean retry;
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, instrumentOverrideMap, info, !lotroErrorsMenuItem
-						.isSelected(), stereoMenuItem.isSelected());
+				AbcToMidi.Params params = new AbcToMidi.Params(data);
+				params.useLotroInstruments = useLotroInstruments;
+				params.instrumentOverrideMap = instrumentOverrideMap;
+				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
+				params.stereo = stereoMenuItem.isSelected();
+
+				sequenceInfo = SequenceInfo.fromAbc(params, info);
+
+				params.useLotroInstruments = false;
+				sequenceInfoMidiOnly = SequenceInfo.fromAbc(params, null);
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1080,6 +1124,11 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					return false;
 				}
 			}
+			catch (InvalidMidiDataException e) {
+				JOptionPane
+						.showMessageDialog(this, e.getMessage(), "MIDI error reading ABC", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
 		} while (retry);
 
 		this.abcData = data;
@@ -1089,7 +1138,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		try {
 			sequencer.reset(false);
-			sequencer.setSequence(song);
+			sequencer.setSequence((sequenceInfo == null) ? null : sequenceInfo.getSequence());
 			sequencer.setPosition(position);
 			sequencer.setRunning(running);
 		}
@@ -1505,31 +1554,27 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	//
 	// Track list
 	//
-	private static final int TRACKLIST_ROWHEIGHT = 18;
+	private static final int TRACKLIST_ROWHEIGHT = AbcPlayerTrackPanel.PREFERRED_HEIGHT;
 
-	private class TrackListPanel extends JPanel implements ActionListener {
+	private class TrackListPanel extends JPanel {
 		private TableLayout layout;
-
-		private Object trackIndexKey = new Object();
 
 		public TrackListPanel() {
 			super(new TableLayout(new double[] {
-					0, FILL, PREFERRED, 0
+					0, FILL, 0
 			}, new double[] {
 					0, 0
 			}));
 
 			layout = (TableLayout) getLayout();
-			layout.setVGap(4);
-			layout.setHGap(4);
-
-			setBackground(Color.WHITE);
+			layout.setVGap(0);
+			layout.setHGap(0);
 		}
 
 		public void clear() {
 			for (Component c : getComponents()) {
-				if (c instanceof JCheckBox) {
-					((JCheckBox) c).removeActionListener(this);
+				if (c instanceof IDisposable) {
+					((IDisposable) c).dispose();
 				}
 			}
 			removeAll();
@@ -1542,85 +1587,57 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		public void songChanged() {
 			clear();
-			if (sequencer.getSequence() == null)
+			if (sequenceInfoMidiOnly == null)
 				return;
 
-			Track[] tracks = sequencer.getSequence().getTracks();
-			for (int i = 0; i < tracks.length; i++) {
-				Track track = tracks[i];
+			for (int i = 1; i < sequenceInfoMidiOnly.getTrackCount(); i++) {
+				int r = layout.getNumRow() - 1;
+				layout.insertRow(r, PREFERRED);
 
-				// Only show tracks with at least one note
-				boolean hasNotes = false;
-				LotroInstrument instrument = LotroInstrument.LUTE;
-				for (int j = 0; j < track.size(); j++) {
-					MidiEvent evt = track.get(j);
-					if (evt.getMessage() instanceof ShortMessage) {
-						ShortMessage m = (ShortMessage) evt.getMessage();
-						if (m.getCommand() == ShortMessage.NOTE_ON) {
-							hasNotes = true;
-						}
-						else if (m.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-							for (LotroInstrument inst : LotroInstrument.values()) {
-								if (m.getData1() == inst.midiProgramId) {
-									instrument = inst;
-									break;
-								}
-							}
-						}
+				AbcPlayerTrackPanel trackPanel = new AbcPlayerTrackPanel(sequencer, sequenceInfoMidiOnly
+						.getTrackInfo(i));
+
+				trackPanel.addInstrumentChangeListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						AbcPlayerTrackPanel src = (AbcPlayerTrackPanel) e.getSource();
+						instrumentOverrideMap.put(src.getTrackInfo().getTrackNumber(), src.getInstrument());
+						refreshSequence();
+						src.setTrackInfo(sequenceInfoMidiOnly.getTrackInfo(src.getTrackInfo().getTrackNumber()));
 					}
-				}
+				});
 
-				if (hasNotes) {
-					JCheckBox checkBox = new JCheckBox(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartName(i));
-					checkBox.putClientProperty(trackIndexKey, i);
-					checkBox.setBackground(getBackground());
-					checkBox.setSelected(!sequencer.getTrackMute(i));
-					checkBox.addActionListener(this);
+				add(trackPanel, "1, " + r);
 
-					JComboBox comboBox = new JComboBox(LotroInstrument.values());
-					comboBox.setMaximumRowCount(12);
-					comboBox.putClientProperty(trackIndexKey, i);
-					comboBox.setBackground(getBackground());
-					comboBox.setSelectedItem(instrument);
-					comboBox.addActionListener(this);
-
-					int r = layout.getNumRow() - 1;
-					layout.insertRow(r, TRACKLIST_ROWHEIGHT);
-					add(checkBox, "1, " + r);
-					add(comboBox, "2, " + r);
-				}
 			}
 
 			revalidate();
 			repaint();
 		}
-
-		@Override
-		public void actionPerformed(ActionEvent evt) {
-			if (evt.getSource() instanceof JCheckBox) {
-				JCheckBox checkBox = (JCheckBox) evt.getSource();
-				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
-				sequencer.setTrackMute(i, !checkBox.isSelected());
-			}
-			else if (evt.getSource() instanceof JComboBox) {
-				JComboBox comboBox = (JComboBox) evt.getSource();
-				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
-
-				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
-				refreshSequence();
-			}
-		}
 	}
 
 	private void refreshSequence() {
 		long position = sequencer.getPosition();
-		Sequence song;
+
+		SequenceInfo sequenceInfoTemp;
+		SequenceInfo sequenceInfoMidiOnlyTemp;
 
 		try {
-			song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo, false,
-					stereoMenuItem.isSelected());
+			AbcToMidi.Params params = new AbcToMidi.Params(abcData);
+			params.useLotroInstruments = useLotroInstruments;
+			params.instrumentOverrideMap = instrumentOverrideMap;
+			params.enableLotroErrors = false;
+			params.stereo = stereoMenuItem.isSelected();
+
+			sequenceInfoTemp = SequenceInfo.fromAbc(params, abcInfo);
+
+			params.useLotroInstruments = false;
+			sequenceInfoMidiOnlyTemp = SequenceInfo.fromAbc(params, null);
 		}
 		catch (ParseException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		catch (InvalidMidiDataException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1628,7 +1645,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		try {
 			boolean running = sequencer.isRunning();
 			sequencer.reset(false);
-			sequencer.setSequence(song);
+			sequencer.setSequence(sequenceInfoTemp.getSequence());
+			sequenceInfo = sequenceInfoTemp;
+			sequenceInfoMidiOnly = sequenceInfoMidiOnlyTemp;
 			sequencer.setPosition(position);
 			sequencer.setRunning(running);
 		}
