@@ -6,9 +6,9 @@ Todo:
 Version 1.2.2
 BUG FIXES
   - ABC Player now works with Java 6 Update 30+.
-  - The song position bar now lets you drag past 35:47 on long songs.
   - ABC Player's play speed should match LOTRO's play speed if a song has both 
     the M: and L: header fields specified.
+  - The song position bar now lets you drag past 35:47 on long songs.
 
 Version 1.2.0
   - You can now export songs directly to MP3! Requires the (free) LAME mp3 
@@ -94,3 +94,6 @@ AbcPlayerInstaller.vdproj
 	"ProductVersion" = "8:1.1.0"
 	"ProductCode" = "8:{29E777C0-042C-418F-9B68-4DE5EA2CE6EA}"
 	"OutputFilename" = "8:output\\installer\\AbcPlayer_1.1.0.msi"
+
+index.php
+	$cur_ver = "1.2.2";

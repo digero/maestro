@@ -3,6 +3,17 @@
 	$pagename = "Release Notes";
 	require('_header.php');
 ?>
+<h2>Version 1.2.2</h2>
+<i>January 6, 2012</i>
+<h3>Bug Fixes</h3>
+<ul>
+<li>ABC Player now works with Java 6 Update 30+.</li>
+<li>ABC Player's play speed should match LOTRO's play speed if a song has both 
+    the M: and L: header fields specified.</li>
+<li>The song position bar now lets you drag past 35:47 on long songs.</li>
+<li>Misc tweaks to the UI.</li>
+</ul>
+<hr/>
 <h2>Version 1.2.0</h2>
 <i>March 15, 2011</i>
 <h3>New Features</h3>

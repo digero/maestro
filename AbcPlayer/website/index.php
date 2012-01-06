@@ -2,7 +2,7 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 	
-	$cur_ver = "1.2.0";
+	$cur_ver = "1.2.2";
 	
 	$msi_path = "bin/AbcPlayer_$cur_ver.msi";
 	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
@@ -33,7 +33,7 @@ sound with each other without having to get your band together in game.
 <i>The installer will configure your computer to open .abc files using ABC Player.</i>
 </p>
 <p>
-ABC Player requires <a class="dnld" href="http://java.com/">Java 6.0</a> or greater.  
+ABC Player requires <a class="dnld" href="http://java.com/">Java 6</a> or greater.  
 You must have the 32-bit version of Java installed, even if you're running 64-bit Windows.
 </p>
 <p>
@@ -41,17 +41,23 @@ You must have the 32-bit version of Java installed, even if you're running 64-bi
 <a class="dnld" href="<?=$zip_path?>">AbcPlayer_<?=$cur_ver?>.zip</a> <?=$zip_size?><br />
 <i>All of the files needed to run ABC Player in a .zip, if you prefer not to use the installer, or
 want to try running ABC Player on another operating system (like 64-bit Java, MacOS, or Linux). 
-Running ABC Player on another OS is completely untested and unsupported.</i>
+ABC Player has not been tested to run on operating systems other than Windows, your mileage may vary.</i>
 </p>
 
 <h2>How to use</h2>
 <p>
-ABC Player is fairly straightforward.  If you used the installer, you can double-click 
-on an .abc file to play it.  You can also drag and drop an .abc file onto the player, or use File > Open.
+Double-click on an .abc file in Windows Exporer to play it.  You can also drag and drop an .abc 
+file onto the player, or use File > Open.
 </p>
 <p>
-If you have a multi-part song separated into multiple files, simply drag and drop all of the 
+If you have a multi-part song separated into multiple files, drag and drop all of the 
 files in the song onto the player to open them as a single song.
+</p>
+<p>
+You can paste ABC songs that you've copied out of a forum post or website (for example). 
+Use Ctrl+V to paste a new song, or Ctrl+Shift+V to add the contents of the clipboard 
+as a new part of the current song.  The latter is useful when pasting a multi-part song from 
+<a href="http://www.thefatlute.com/">The Fat Lute</a>.
 </p>
 <p>
 You can export the song to a .wav (uncompressed audio) file using File > Save as Wave file.  You can then
