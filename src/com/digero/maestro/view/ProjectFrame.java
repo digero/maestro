@@ -413,7 +413,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi", "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				openSong(dropListener.getDroppedFile());
+				final File file = dropListener.getDroppedFile();
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						openSong(file);
+					}
+				});
 			}
 		});
 		new DropTarget(this, dropListener);
