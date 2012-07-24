@@ -36,12 +36,14 @@ public final class Util {
 	@SuppressWarnings("deprecation")
 	public static String ellipsis(String text, float maxWidth, Font font) {
 		FontMetrics metrics = Toolkit.getDefaultToolkit().getFontMetrics(font);
-		Pattern prevWord = Pattern.compile("\\w*\\W*$");
-		Matcher matcher = prevWord.matcher(text);
 
 		float width = metrics.stringWidth(text);
 		if (width < maxWidth)
 			return text;
+		
+		final boolean trimToWordBoundary = false;
+		Pattern prevWord = Pattern.compile("\\w*\\W*$");
+		Matcher matcher = prevWord.matcher(text);
 
 		int len = 0;
 		int seg = text.length();
@@ -58,10 +60,13 @@ public final class Util {
 			if (left > right)
 				continue;
 
-			// trim at a word boundary using regular expressions 
-			matcher.region(0, left);
-			if (matcher.find())
-				left = matcher.start();
+			if (trimToWordBoundary)
+			{
+				// trim at a word boundary using regular expressions 
+				matcher.region(0, left);
+				if (matcher.find())
+					left = matcher.start();
+			}
 
 			// build and measure a candidate string with ellipsis
 			String tst = text.substring(0, left) + ELLIPSIS;
