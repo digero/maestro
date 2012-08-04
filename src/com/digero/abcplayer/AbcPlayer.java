@@ -81,8 +81,8 @@ import javax.swing.filechooser.FileFilter;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcToMidi;
-import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
+import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.SequencerEvent;
