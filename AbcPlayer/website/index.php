@@ -46,7 +46,7 @@ ABC Player has not been tested to run on operating systems other than Windows, y
 
 <h2>How to use</h2>
 <p>
-Double-click on an .abc file in Windows Exporer to play it.  You can also drag and drop an .abc 
+Double-click on an .abc file in Windows Explorer to play it.  You can also drag and drop an .abc 
 file onto the player, or use File > Open.
 </p>
 <p>
