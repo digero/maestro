@@ -79,11 +79,13 @@ import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.TimeSignature;
+import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
+import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.PlayControlPanel;
 import com.digero.common.view.SongPositionBar;
 import com.digero.maestro.MaestroMain;
@@ -114,10 +116,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private File saveFile;
 	private SequenceInfo sequenceInfo;
 	private NoteFilterSequencerWrapper sequencer;
+	private VolumeTransceiver volumeTransceiver;
 	private SequencerWrapper abcSequencer;
+	private VolumeTransceiver abcVolumeTransceiver;
 	private DefaultListModel parts = new DefaultListModel();
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
 	private PartAutoNumberer partAutoNumberer;
+	private boolean usingNativeVolume;
 
 	private JPanel content;
 	private JTextField songTitleField;
@@ -135,6 +140,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JButton deletePartButton;
 
 	private PartPanel partPanel;
+	private PlayControlPanel playControlPanel;
 
 	private SongPositionBar abcPositionBar;
 	private JButton abcPlayButton;
@@ -155,8 +161,21 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), partsWrapper);
 
+		usingNativeVolume = MaestroMain.isNativeVolumeSupported();
+		if (usingNativeVolume) {
+			volumeTransceiver = null;
+			abcVolumeTransceiver = null;
+		}
+		else {
+			volumeTransceiver = new VolumeTransceiver();
+			volumeTransceiver.setVolume(prefs.getInt("volumizer", NativeVolumeBar.MAX_VOLUME));
+
+			abcVolumeTransceiver = new VolumeTransceiver();
+			abcVolumeTransceiver.setVolume(volumeTransceiver.getVolume());
+		}
+
 		try {
-			this.sequencer = new NoteFilterSequencerWrapper();
+			this.sequencer = new NoteFilterSequencerWrapper(volumeTransceiver);
 
 			Sequencer abcSeq = MidiSystem.getSequencer(false);
 			Synthesizer lotroSynth = null;
@@ -176,7 +195,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			Transmitter transmitter = abcSeq.getTransmitter();
 			Receiver receiver = (lotroSynth == null) ? MidiSystem.getReceiver() : lotroSynth.getReceiver();
-			transmitter.setReceiver(receiver);
+			if (abcVolumeTransceiver == null) {
+				transmitter.setReceiver(receiver);
+			}
+			else {
+				transmitter.setReceiver(abcVolumeTransceiver);
+				abcVolumeTransceiver.setReceiver(receiver);
+			}
 			abcSeq.open();
 			this.abcSequencer = new SequencerWrapper(abcSeq, transmitter, receiver);
 		}
@@ -391,7 +416,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		if (!SHOW_KEY_FIELD)
 			keySignatureField.setEnabled(false);
 
-		PlayControlPanel playControlPanel = new PlayControlPanel(sequencer, "play_blue", "pause_blue", "stop");
+		playControlPanel = new PlayControlPanel(sequencer, new VolumeManager(), "play_blue", "pause_blue", "stop");
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
 		abcPartsAndSettings.add(songInfoPanel, BorderLayout.NORTH);
@@ -475,6 +500,41 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						"maestro_64.png");
 			}
 		});
+	}
+
+	public void onVolumeChanged() {
+		if (playControlPanel != null)
+			playControlPanel.onVolumeChanged();
+	}
+
+	private class VolumeManager implements NativeVolumeBar.Callback {
+		@Override
+		public void setVolume(int volume) {
+			if (usingNativeVolume) {
+				MaestroMain.setVolume((float) volume / NativeVolumeBar.MAX_VOLUME);
+			}
+			else {
+				if (volumeTransceiver != null)
+					volumeTransceiver.setVolume(volume);
+				if (abcVolumeTransceiver != null)
+					abcVolumeTransceiver.setVolume(volume);
+				prefs.putInt("volumizer", volume);
+			}
+		}
+
+		@Override
+		public int getVolume() {
+			if (usingNativeVolume) {
+				return (int) (MaestroMain.getVolume() * NativeVolumeBar.MAX_VOLUME);
+			}
+			else {
+				if (volumeTransceiver != null)
+					return volumeTransceiver.getVolume();
+				if (abcVolumeTransceiver != null)
+					return abcVolumeTransceiver.getVolume();
+				return NativeVolumeBar.MAX_VOLUME;
+			}
+		}
 	}
 
 	private class MainSequencerListener implements SequencerListener {
@@ -660,7 +720,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcPreviewStartMicros = 0;
 	}
 
-	private void openSong(File midiFile) {
+	public void openSong(File midiFile) {
 		midiFile = Util.resolveShortcut(midiFile);
 
 		for (int i = 0; i < parts.size(); i++) {

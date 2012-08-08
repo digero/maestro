@@ -4,9 +4,8 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Transmitter;
 
-public class VolumeTransceiver implements Transmitter, Receiver {
+public class VolumeTransceiver implements Transceiver {
 	public static final int MAX_VOLUME = 127;
 
 	private Receiver receiver;

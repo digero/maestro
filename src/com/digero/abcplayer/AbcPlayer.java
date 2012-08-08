@@ -185,7 +185,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private JLabel tempoLabel;
 	private TempoBar tempoBar;
 	private NativeVolumeBar volumeBar;
-	private VolumeTransceiver volumizer;
+	private VolumeTransceiver volumeTransceiver;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
 	private JButton playButton, stopButton;
@@ -243,29 +243,29 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		new DropTarget(this, dropListener);
 
 		if (isVolumeSupportedSafe()) {
-			volumizer = null;
+			volumeTransceiver = null;
 		}
 		else {
-			volumizer = new VolumeTransceiver();
-			volumizer.setVolume(prefs.getInt("volumizer", VolumeTransceiver.MAX_VOLUME));
+			volumeTransceiver = new VolumeTransceiver();
+			volumeTransceiver.setVolume(prefs.getInt("volumizer", VolumeTransceiver.MAX_VOLUME));
 		}
 		volumeBar = new NativeVolumeBar(new NativeVolumeBar.Callback() {
 			@Override
 			public void setVolume(int volume) {
-				if (volumizer == null)
+				if (volumeTransceiver == null)
 					AbcPlayer.setVolume((float) volume / NativeVolumeBar.MAX_VOLUME);
 				else {
-					volumizer.setVolume(volume);
+					volumeTransceiver.setVolume(volume);
 					prefs.putInt("volumizer", volume);
 				}
 			}
 
 			@Override
 			public int getVolume() {
-				if (volumizer == null)
+				if (volumeTransceiver == null)
 					return (int) (AbcPlayer.getVolume() * NativeVolumeBar.MAX_VOLUME);
 				else
-					return volumizer.getVolume();
+					return volumeTransceiver.getVolume();
 			}
 		});
 
@@ -326,12 +326,12 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			if (!useLotroInstruments) {
 				receiver = MidiSystem.getReceiver();
 			}
-			if (volumizer == null) {
+			if (volumeTransceiver == null) {
 				transmitter.setReceiver(receiver);
 			}
 			else {
-				volumizer.setReceiver(receiver);
-				transmitter.setReceiver(volumizer);
+				volumeTransceiver.setReceiver(receiver);
+				transmitter.setReceiver(volumeTransceiver);
 			}
 
 			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
