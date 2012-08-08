@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.digero.common.icons.IconLoader;
@@ -27,15 +28,18 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 	private Icon playIcon, pauseIcon;
 
-	public PlayControlPanel(SequencerWrapper sequencer) {
-		this(sequencer, "play", "pause", "stop");
+	private NativeVolumeBar volumeBar;
+
+	public PlayControlPanel(SequencerWrapper sequencer, NativeVolumeBar.Callback volumeManager) {
+		this(sequencer, volumeManager, "play", "pause", "stop");
 	}
 
-	public PlayControlPanel(SequencerWrapper seq, String playIconName, String pauseIconName, String stopIconName) {
+	public PlayControlPanel(SequencerWrapper seq, NativeVolumeBar.Callback volumeManager, String playIconName,
+			String pauseIconName, String stopIconName) {
 		super(new TableLayout(new double[] {
-				4, 0.50, PREFERRED, PREFERRED, 0.50, 4, PREFERRED, 4
+				4, 0.50, 4, PREFERRED, PREFERRED, 4, 0.50, 4, PREFERRED, 4
 		}, new double[] {
-				4, PREFERRED, 4, PREFERRED, 4
+				4, PREFERRED, 4, PREFERRED, 2
 		}));
 
 		this.sequencer = seq;
@@ -67,12 +71,32 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 			}
 		});
 
+		JPanel volumePanel = new JPanel();
+		if (volumeManager != null) {
+			volumeBar = new NativeVolumeBar(volumeManager);
+
+			TableLayout volumeLayout = new TableLayout(new double[] {
+					PREFERRED
+			}, new double[] {
+					PREFERRED, PREFERRED
+			});
+			volumePanel.setLayout(volumeLayout);
+			volumePanel.add(new JLabel("Volume"), "0, 0, c, c");
+			volumePanel.add(volumeBar, "0, 1, f, c");
+		}
+
 		updateButtonStates();
 
-		add(songPositionBar, "1, 1, 4, 1");
-		add(songPositionLabel, "6, 1");
-		add(playButton, "2, 3");
-		add(stopButton, "3, 3");
+		add(songPositionBar, "1, 1, 6, 1");
+		add(songPositionLabel, "8, 1");
+		add(playButton, "3, 3, c, c");
+		add(stopButton, "4, 3, c, c");
+		add(volumePanel, "6, 3, c, c");
+	}
+
+	public void onVolumeChanged() {
+		if (volumeBar != null)
+			volumeBar.repaint();
 	}
 
 	private void updateButtonStates() {

@@ -8,14 +8,14 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Transmitter;
 
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.Transceiver;
 import com.digero.common.util.ICompileConstants;
 import com.digero.maestro.abc.AbcPart;
 
-public class NoteFilterTransceiver implements Transmitter, Receiver, IMidiConstants, ICompileConstants {
+public class NoteFilterTransceiver implements Transceiver, IMidiConstants, ICompileConstants {
 	private Receiver receiver = null;
 	private AbcPart abcPart = null;
 	private Set<Integer>[] notesOn;

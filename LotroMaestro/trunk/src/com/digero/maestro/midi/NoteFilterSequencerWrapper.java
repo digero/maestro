@@ -1,9 +1,13 @@
 package com.digero.maestro.midi;
 
+import java.util.List;
+
 import javax.sound.midi.MidiUnavailableException;
 
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.midi.Transceiver;
+import com.digero.common.midi.VolumeTransceiver;
 
 public class NoteFilterSequencerWrapper extends SequencerWrapper {
 	private NoteFilterTransceiver filter;
@@ -11,12 +15,18 @@ public class NoteFilterSequencerWrapper extends SequencerWrapper {
 	public NoteFilterSequencerWrapper() throws MidiUnavailableException {
 	}
 
+	public NoteFilterSequencerWrapper(VolumeTransceiver volumeTransceiver) throws MidiUnavailableException {
+		super(volumeTransceiver);
+	}
+
 	@Override
-	protected void connectTransmitter() {
+	protected List<Transceiver> getTransceivers() {
 		if (filter == null)
 			filter = new NoteFilterTransceiver();
-		transmitter.setReceiver(filter);
-		filter.setReceiver(receiver);
+
+		List<Transceiver> transceivers = super.getTransceivers();
+		transceivers.add(0, filter);
+		return transceivers;
 	}
 
 	public NoteFilterTransceiver getFilter() {
