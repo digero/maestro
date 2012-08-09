@@ -175,7 +175,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 
 		try {
-			this.sequencer = new NoteFilterSequencerWrapper(volumeTransceiver);
+			this.sequencer = new NoteFilterSequencerWrapper();
+			if (volumeTransceiver != null)
+				this.sequencer.addTransceiver(volumeTransceiver);
 
 			Sequencer abcSeq = MidiSystem.getSequencer(false);
 			Synthesizer lotroSynth = null;

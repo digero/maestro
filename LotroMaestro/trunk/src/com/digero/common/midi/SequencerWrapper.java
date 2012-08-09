@@ -25,7 +25,7 @@ public class SequencerWrapper implements IMidiConstants {
 	protected Sequencer sequencer;
 	private Receiver receiver;
 	private Transmitter transmitter;
-	private VolumeTransceiver volumeTransceiver;
+	private List<Transceiver> transceivers = new ArrayList<Transceiver>();
 	private long dragPosition;
 	private boolean isDragging;
 	private TempoCache tempoCache = new TempoCache();
@@ -36,12 +36,6 @@ public class SequencerWrapper implements IMidiConstants {
 	private List<SequencerListener> listeners = null;
 
 	public SequencerWrapper() throws MidiUnavailableException {
-		this(null);
-	}
-
-	public SequencerWrapper(VolumeTransceiver volumeTransceiver) throws MidiUnavailableException {
-		this.volumeTransceiver = volumeTransceiver;
-		
 		sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
 		transmitter = sequencer.getTransmitter();
@@ -53,17 +47,22 @@ public class SequencerWrapper implements IMidiConstants {
 		updateTimer.start();
 	}
 
-	protected List<Transceiver> getTransceivers() {
-		List<Transceiver> transceivers = new ArrayList<Transceiver>();
-		if (volumeTransceiver != null)
-			transceivers.add(volumeTransceiver);
-		return transceivers;
+	public void addTransceiver(Transceiver transceiver) {
+		Transmitter lastTransmitter = transmitter;
+		if (!transceivers.isEmpty())
+			lastTransmitter = transceivers.get(transceivers.size() - 1);
+
+		// Hook up the transceiver in the chain
+		lastTransmitter.setReceiver(transceiver);
+		transceiver.setReceiver(receiver);
+
+		transceivers.add(transceiver);
 	}
 
 	private void connectTransmitter() {
 		// Hook up any transceivers that we have
 		Transmitter prevTransmitter = transmitter;
-		for (Transceiver transceiver : getTransceivers()) {
+		for (Transceiver transceiver : transceivers) {
 			prevTransmitter.setReceiver(transceiver);
 			prevTransmitter = transceiver;
 		}
