@@ -31,7 +31,9 @@ public class SequencerWrapper implements IMidiConstants {
 	private TempoCache tempoCache = new TempoCache();
 	private boolean customSequencer = false;
 
-	private Timer updateTimer;
+	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
+	private long lastUpdatePosition = -1;
+	private boolean lastRunning = false;
 
 	private List<SequencerListener> listeners = null;
 
@@ -40,11 +42,22 @@ public class SequencerWrapper implements IMidiConstants {
 		sequencer.open();
 		transmitter = sequencer.getTransmitter();
 		receiver = MidiSystem.getReceiver();
+		transmitter.setReceiver(receiver);
+	}
 
-		connectTransmitter();
+	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
+		customSequencer = true;
+		this.sequencer = sequencer;
+		this.transmitter = transmitter;
+		this.receiver = receiver;
 
-		updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, timerTick);
-		updateTimer.start();
+		if (sequencer.getSequence() != null) {
+			tempoCache.refresh(sequencer.getSequence());
+		}
+		
+		if (sequencer.isRunning()) {
+			updateTimer.start();
+		}
 	}
 
 	public void addTransceiver(Transceiver transceiver) {
@@ -59,40 +72,10 @@ public class SequencerWrapper implements IMidiConstants {
 		transceivers.add(transceiver);
 	}
 
-	private void connectTransmitter() {
-		// Hook up any transceivers that we have
-		Transmitter prevTransmitter = transmitter;
-		for (Transceiver transceiver : transceivers) {
-			prevTransmitter.setReceiver(transceiver);
-			prevTransmitter = transceiver;
-		}
-		prevTransmitter.setReceiver(receiver);
-	}
-
-	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
-		customSequencer = true;
-		this.sequencer = sequencer;
-		this.transmitter = transmitter;
-		this.receiver = receiver;
-
-		if (sequencer.getSequence() != null) {
-			tempoCache.refresh(sequencer.getSequence());
-		}
-
-		updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, timerTick);
-		updateTimer.start();
-	}
-
-	private TimerActionListener timerTick = new TimerActionListener();
-	private long lastUpdatePosition = -1;
-
 	private class TimerActionListener implements ActionListener {
-		private boolean lastRunning = false;
-
 		public void actionPerformed(ActionEvent e) {
 			if (sequencer != null) {
 				long songPos = sequencer.getMicrosecondPosition();
-				boolean running = sequencer.isRunning();
 				if (songPos >= getLength()) {
 					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
 					// deadlock when calling setMicrosecondPosition(0) exactly when the sequencer 
@@ -102,13 +85,20 @@ public class SequencerWrapper implements IMidiConstants {
 					sequencer.setTickPosition(0);
 					lastUpdatePosition = songPos;
 				}
-				else if (lastUpdatePosition != songPos) {
-					lastUpdatePosition = songPos;
-					fireChangeEvent(SequencerProperty.POSITION);
-				}
-				if (lastRunning != running) {
-					lastRunning = running;
-					fireChangeEvent(SequencerProperty.IS_RUNNING);
+				else {
+					if (lastUpdatePosition != songPos) {
+						lastUpdatePosition = songPos;
+						fireChangeEvent(SequencerProperty.POSITION);
+					}
+					boolean running = sequencer.isRunning();
+					if (lastRunning != running) {
+						lastRunning = running;
+						if (running)
+							updateTimer.start();
+						else
+							updateTimer.stop();
+						fireChangeEvent(SequencerProperty.IS_RUNNING);
+					}
 				}
 			}
 		}
@@ -152,7 +142,13 @@ public class SequencerWrapper implements IMidiConstants {
 				throw new RuntimeException(e);
 			}
 
-			connectTransmitter();
+			// Hook up the transmitter to the receiver through any transceivers that we have
+			Transmitter prevTransmitter = transmitter;
+			for (Transceiver transceiver : transceivers) {
+				prevTransmitter.setReceiver(transceiver);
+				prevTransmitter = transceiver;
+			}
+			prevTransmitter.setReceiver(receiver);
 
 			try {
 				ShortMessage msg = new ShortMessage();
@@ -259,11 +255,16 @@ public class SequencerWrapper implements IMidiConstants {
 
 	public void setRunning(boolean isRunning) {
 		if (isRunning != this.isRunning()) {
-			if (isRunning)
+			if (isRunning) {
 				sequencer.start();
-			else
+				updateTimer.start();
+			}
+			else {
 				sequencer.stop();
-			timerTick.lastRunning = isRunning;
+				updateTimer.stop();
+			}
+			lastRunning = isRunning;
+
 			fireChangeEvent(SequencerProperty.IS_RUNNING);
 		}
 	}
