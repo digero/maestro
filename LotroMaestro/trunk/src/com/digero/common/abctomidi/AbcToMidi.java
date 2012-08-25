@@ -10,9 +10,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +60,7 @@ public class AbcToMidi {
 	public static class AbcInfo implements AbcConstants {
 		private static class PartInfo {
 			private int number = 1;
+			private LotroInstrument instrument = LotroInstrument.LUTE;
 			private String name = null;
 			private boolean nameIsFromExtendedInfo = false;
 		}
@@ -139,6 +140,13 @@ public class AbcToMidi {
 			return info.number;
 		}
 
+		public LotroInstrument getPartInstrument(int trackIndex) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null)
+				return LotroInstrument.LUTE;
+			return info.instrument;
+		}
+
 		public String getPartName(int trackIndex) {
 			PartInfo info = partInfoByIndex.get(trackIndex);
 			if (info == null || info.name == null)
@@ -190,6 +198,14 @@ public class AbcToMidi {
 				partInfoByIndex.put(trackIndex, info = new PartInfo());
 
 			info.number = partNumber;
+		}
+
+		private void setPartInstrument(int trackIndex, LotroInstrument partInstrument) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null)
+				partInfoByIndex.put(trackIndex, info = new PartInfo());
+
+			info.instrument = partInstrument;
 		}
 
 		private void setPartName(int trackIndex, String partName, boolean fromExtendedInfo) {
@@ -335,8 +351,6 @@ public class AbcToMidi {
 		long MPQN = 0;
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
-		PanGenerator pan = new PanGenerator();
-		MidiEvent lastPanEvent = null;
 
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
 		for (FileAndData fileAndData : filesData) {
@@ -355,22 +369,19 @@ public class AbcToMidi {
 					continue;
 
 				// Handle extended info
-				if (abcInfo != null) {
-					Matcher xInfoMatcher = XINFO_PATTERN.matcher(line);
-					if (xInfoMatcher.matches()) {
-						AbcField field = AbcField.fromString(xInfoMatcher.group(XINFO_FIELD));
-						if (field != null) {
-							String value = xInfoMatcher.group(XINFO_VALUE).trim();
+				Matcher xInfoMatcher = XINFO_PATTERN.matcher(line);
+				if (xInfoMatcher.matches()) {
+					AbcField field = AbcField.fromString(xInfoMatcher.group(XINFO_FIELD));
+					if (field != null) {
+						String value = xInfoMatcher.group(XINFO_VALUE).trim();
 
-							abcInfo.setExtendedMetadata(field, value);
+						abcInfo.setExtendedMetadata(field, value);
 
-							switch (field) {
-							case PART_NAME:
-								info.setTitle(value, true);
-								if (abcInfo != null)
-									abcInfo.setPartName(trackNumber, value, true);
-								break;
-							}
+						switch (field) {
+						case PART_NAME:
+							info.setTitle(value, true);
+							abcInfo.setPartName(trackNumber, value, true);
+							break;
 						}
 					}
 				}
@@ -385,8 +396,7 @@ public class AbcToMidi {
 					char type = Character.toUpperCase(infoMatcher.group(INFO_TYPE).charAt(0));
 					String value = infoMatcher.group(INFO_VALUE).trim();
 
-					if (abcInfo != null)
-						abcInfo.setMetadata(type, value);
+					abcInfo.setMetadata(type, value);
 
 					try {
 						switch (type) {
@@ -403,8 +413,7 @@ public class AbcToMidi {
 							trackNumber++;
 							partStartLine = lineNumber;
 							chordStartTick = 0;
-							if (abcInfo != null)
-								abcInfo.setPartNumber(trackNumber, info.getPartNumber());
+							abcInfo.setPartNumber(trackNumber, info.getPartNumber());
 							track = null; // Will create a new track after the header is done
 							if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber)) {
 								info.setInstrument(instrumentOverrideMap.get(trackNumber));
@@ -416,8 +425,7 @@ public class AbcToMidi {
 										lineNumber, 0);
 
 							info.setTitle(value, false);
-							if (abcInfo != null)
-								abcInfo.setPartName(trackNumber, value, false);
+							abcInfo.setPartName(trackNumber, value, false);
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber)) {
 								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
 							}
@@ -466,18 +474,12 @@ public class AbcToMidi {
 							MPQN = (long) AbcConstants.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
-							if (abcInfo != null)
-								abcInfo.setTempoBPM(info.getTempo());
+							abcInfo.setTempoBPM(info.getTempo());
 
 							// Track 0: Title and meta info
 							Track track0 = seq.createTrack();
-							if (abcInfo != null) {
-								abcInfo.setPartNumber(0, 0);
-								abcInfo.setPartName(0, info.getTitle(), false);
-							}
-							else {
-								track0.add(MidiFactory.createTrackNameEvent(info.getTitle()));
-							}
+							abcInfo.setPartNumber(0, 0);
+							abcInfo.setPartName(0, info.getTitle(), false);
 
 							track0.add(MidiFactory.createTempoEvent((int) MPQN, 0));
 
@@ -489,27 +491,14 @@ public class AbcToMidi {
 					}
 
 					if (track == null) {
-						channel = seq.getTracks().length;
-						if (channel >= MidiConstants.DRUM_CHANNEL)
-							channel++;
+						channel = getTrackChannel(seq.getTracks().length);
 						if (channel > MidiConstants.CHANNEL_COUNT - 1)
 							throw new ParseException(
 									"Too many parts (max = " + (MidiConstants.CHANNEL_COUNT - 1) + ")", fileName,
 									partStartLine);
 						track = seq.createTrack();
-
-						if (abcInfo == null) {
-							track.add(MidiFactory.createTrackNameEvent(info.getPartNumber() + ". " + info.getTitle()));
-						}
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
-
-						if (stereo) {
-							track.add(lastPanEvent = MidiFactory.createPanEvent(pan.get(info.getInstrument(), info
-									.getTitle()), channel));
-						}
-						else {
-							track.add(MidiFactory.createPanEvent(64, channel));
-						}
+						abcInfo.setPartInstrument(trackNumber, info.getInstrument());
 					}
 
 					Matcher m = NOTE_PATTERN.matcher(line);
@@ -561,14 +550,14 @@ public class AbcToMidi {
 											lineNumber, i);
 								}
 
-								if (abcInfo != null && trackNumber == 1)
+								if (trackNumber == 1)
 									abcInfo.addBar(chordStartTick);
 
 								accidentals.clear();
 								if (i + 1 < line.length() && line.charAt(i + 1) == ']') {
 									i++; // Skip |]
 								}
-								else if (abcInfo != null && trackNumber == 1) {
+								else if (trackNumber == 1) {
 									abcInfo.addBar(chordStartTick);
 								}
 								break;
@@ -605,8 +594,8 @@ public class AbcToMidi {
 									try {
 										for (int j = i + 1; j < line.length(); j++) {
 											if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i))) {
-												tuplet = new Tuplet(line.substring(i + 1, j + 1), info
-														.isCompoundMeter());
+												tuplet = new Tuplet(line.substring(i + 1, j + 1),
+														info.isCompoundMeter());
 												i = j;
 												break;
 											}
@@ -727,8 +716,8 @@ public class AbcToMidi {
 							octaveStr = "";
 						if (noteLetter == 'z' || noteLetter == 'x') {
 							if (m.group(NOTE_ACCIDENTAL) != null && m.group(NOTE_ACCIDENTAL).length() > 0) {
-								throw new ParseException("Unexpected accidental on a rest", fileName, lineNumber, m
-										.start(NOTE_ACCIDENTAL));
+								throw new ParseException("Unexpected accidental on a rest", fileName, lineNumber,
+										m.start(NOTE_ACCIDENTAL));
 							}
 							if (octaveStr.length() > 0) {
 								throw new ParseException("Unexpected octave indicator on a rest", fileName, lineNumber,
@@ -816,8 +805,8 @@ public class AbcToMidi {
 											"The default note length must be the same for all parts of the song",
 											fileName, noteDivisorChangeLine);
 								}
-								track.add(MidiFactory.createNoteOnEventEx(noteId, channel, info.getDynamics().getVol(
-										useLotroInstruments), chordStartTick));
+								track.add(MidiFactory.createNoteOnEventEx(noteId, channel,
+										info.getDynamics().getVol(useLotroInstruments), chordStartTick));
 							}
 
 							if (m.group(NOTE_TIE) != null) {
@@ -878,22 +867,29 @@ public class AbcToMidi {
 			}
 		}
 
-		if (trackNumber == 1 && track != null && lastPanEvent != null) {
-			// Only one track
-			track.remove(lastPanEvent);
-			track.add(MidiFactory.createPanEvent(64, channel));
-		}
+		PanGenerator pan = null;
+		if (stereo && trackNumber > 1)
+			pan = new PanGenerator();
+		
+		Track[] tracks = seq.getTracks();
+		tracks[0].add(MidiFactory.createTrackNameEvent(abcInfo.getTitle()));
+		for (int i = 1; i <= trackNumber; i++) {
+			tracks[i].add(MidiFactory.createTrackNameEvent(abcInfo.getPartName(i)));
 
-		if (abcInfo != null) {
-			Track[] tracks = seq.getTracks();
-
-			tracks[0].add(MidiFactory.createTrackNameEvent(abcInfo.getTitle()));
-			for (int i = 1; i <= trackNumber; i++) {
-				tracks[i].add(MidiFactory.createTrackNameEvent(abcInfo.getPartName(i)));
-			}
+			int panAmount = PanGenerator.CENTER;
+			if (pan != null)
+				panAmount = pan.get(abcInfo.getPartInstrument(i), abcInfo.getPartName(i));
+			tracks[i].add(MidiFactory.createPanEvent(panAmount, getTrackChannel(i)));
 		}
 
 		return seq;
+	}
+
+	private static int getTrackChannel(int trackNumber) {
+		if (trackNumber < MidiConstants.DRUM_CHANNEL)
+			return trackNumber;
+
+		return trackNumber + 1;
 	}
 
 	@SuppressWarnings("unused")
