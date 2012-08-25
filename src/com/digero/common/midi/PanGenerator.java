@@ -1,6 +1,7 @@
 package com.digero.common.midi;
 
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import com.digero.common.abc.LotroInstrument;
 
@@ -17,17 +18,21 @@ public class PanGenerator {
 		Arrays.fill(count, 0);
 	}
 
+	static final Pattern leftRegex = Pattern.compile("\\b(left)\\b");
+	static final Pattern rightRegex = Pattern.compile("\\b(right)\\b");
+	static final Pattern centerRegex = Pattern.compile("\\b(middle|center)\\b");
+
 	public int get(LotroInstrument instrument, String partTitle) {
 		int pan = get(instrument);
-		
+
 		String titleLower = partTitle.toLowerCase();
-		if (titleLower.contains("left"))
+		if (leftRegex.matcher(titleLower).find())
 			pan = CENTER - Math.abs(pan - CENTER);
-		else if (titleLower.contains("right"))
+		else if (rightRegex.matcher(titleLower).find())
 			pan = CENTER + Math.abs(pan - CENTER);
-		else if (titleLower.contains("center") || titleLower.contains("middle"))
+		else if (centerRegex.matcher(titleLower).find())
 			pan = CENTER;
-		
+
 		return pan;
 	}
 
