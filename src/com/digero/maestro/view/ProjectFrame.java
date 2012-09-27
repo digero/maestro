@@ -38,6 +38,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -133,6 +134,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JSpinner tempoSpinner;
 	private JFormattedTextField keySignatureField;
 	private JFormattedTextField timeSignatureField;
+	private JCheckBox tripletCheckBox;
 	private JButton exportButton;
 
 	private JList partsList;
@@ -256,6 +258,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				+ "Examples: 4/4, 3/8, 2/2</html>");
 
 		transposeSpinner = new JSpinner(new SpinnerNumberModel(0, -48, 48, 1));
+		transposeSpinner.setToolTipText("<html>Transpose the entire song by semitones.<br>"
+				+ "12 semitones = 1 octave</html>");
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				int transpose = getTranspose();
@@ -266,7 +270,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(120, 8, 960, 2));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 2 /* step */));
+
+		tripletCheckBox = new JCheckBox("Triplet timing (experimental)");
+		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets.<br><br>"
+				+ "This can cause short/fast notes to incorrectly be detected as triplets.<br>"
+				+ "Leave it unchecked unless the song contains triplets.</html>");
+		tripletCheckBox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (abcSequencer.isRunning())
+					refreshPreviewSequence(false);
+			}
+		});
 
 		exportButton = new JButton("Export ABC");
 		exportButton.addActionListener(new ActionListener() {
@@ -398,18 +414,36 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		JPanel settingsPanel = new JPanel(settingsLayout);
 		settingsPanel.setBorder(BorderFactory.createTitledBorder("Export Settings"));
-		settingsPanel.add(new JLabel("Transpose:"), "0, 0");
-		settingsPanel.add(new JLabel("Tempo:"), "0, 1");
-		settingsPanel.add(new JLabel("Meter:"), "0, 2");
-		if (SHOW_KEY_FIELD)
-			settingsPanel.add(new JLabel("Key:"), "0, 3");
-		settingsPanel.add(transposeSpinner, "1, 0");
-		settingsPanel.add(tempoSpinner, "1, 1");
-		settingsPanel.add(timeSignatureField, "1, 2, 2, 2, L, F");
-		if (SHOW_KEY_FIELD)
-			settingsPanel.add(keySignatureField, "1, 3, 2, 3, L, F");
-		settingsPanel.add(exportButton, "0, 4, 2, 4, C, F");
-		settingsPanel.add(abcPreviewControls, "0, 5, 2, 5");
+
+		{
+			int row = 0;
+			settingsPanel.add(new JLabel("Transpose:"), "0, " + row);
+			settingsPanel.add(transposeSpinner, "1, " + row);
+
+			row++;
+			settingsPanel.add(new JLabel("Tempo:"), "0, " + row);
+			settingsPanel.add(tempoSpinner, "1, " + row);
+
+			row++;
+			settingsPanel.add(new JLabel("Meter:"), "0, " + row);
+			settingsPanel.add(timeSignatureField, "1, " + row + ", 2, " + row + ", L, F");
+
+			if (SHOW_KEY_FIELD) {
+				row++;
+				settingsLayout.insertRow(row, PREFERRED);
+				settingsPanel.add(new JLabel("Key:"), "0, " + row);
+				settingsPanel.add(keySignatureField, "1, " + row + ", 2, " + row + ", L, F");
+			}
+
+			row++;
+			settingsPanel.add(tripletCheckBox, "0, " + row + ", 2, " + row + ", L, C");
+
+			row++;
+			settingsPanel.add(exportButton, "0, " + row + ", 2, " + row + ", C, F");
+
+			row++;
+			settingsPanel.add(abcPreviewControls, "0, " + row + ", 2, " + row);
+		}
 
 		if (!SHOW_TEMPO_SPINNER)
 			tempoSpinner.setEnabled(false);
@@ -761,6 +795,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
+			tripletCheckBox.setSelected(false);
 
 			if (isAbc) {
 				int t = 0;
@@ -859,7 +894,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		refreshPreviewPending = false;
 		try {
-			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature(), tripletCheckBox.isSelected());
 			Sequence song = new Sequence(Sequence.PPQ, tm.getMidiResolution());
 
 			long startMicros = Long.MAX_VALUE;
@@ -962,7 +997,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			return;
 		}
 		try {
-			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature());
+			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature(), tripletCheckBox.isSelected());
 
 			// Remove silent bars before the song starts
 			long startMicros = Long.MAX_VALUE;
