@@ -6,10 +6,10 @@ public enum ColorTable {
 	NOTE_ON(Color.WHITE), //
 	NOTE_ON_BORDER(new Color(0xAA000000, true)), //
 	INDICATOR(new Color(0x66FFFFFF, true)), //
-	INDICATOR_ACTIVE(new Color(0xFFFFFF)), //
+	INDICATOR_ACTIVE(new Color(0xAAFFFFFF, true)), //
 
 	NOTE_ENABLED /*      */(Color.getHSBColor(0.62f, 0.85f, 1.00f)), //
-	NOTE_DISABLED /*     */(Color.getHSBColor(0.62f, 0.65f, 0.75f)), //
+	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.80f, 0.80f)), //
 	NOTE_OFF /*          */(Color.getHSBColor(0.62f, 0.00f, 0.50f)), //
 
 	NOTE_BAD_ENABLED /*  */(Color.getHSBColor(0.05f, 1.00f, 1.00f)), //
@@ -30,8 +30,8 @@ public enum ColorTable {
 	NOTE_DRUM_OFF(NOTE_OFF), //
 
 	GRAPH_BACKGROUND_ENABLED(Color.BLACK), //
-	GRAPH_BACKGROUND_DISABLED(new Color(0x333333)), //
-	GRAPH_BACKGROUND_OFF(new Color(0x333333)), //
+	GRAPH_BACKGROUND_DISABLED(new Color(0x222222)), //
+	GRAPH_BACKGROUND_OFF(new Color(0x222222)), //
 
 	GRAPH_BORDER_ENABLED(Color.DARK_GRAY), //
 	GRAPH_BORDER_DISABLED(Color.DARK_GRAY), //
@@ -47,7 +47,7 @@ public enum ColorTable {
 	PANEL_TEXT_OFF(new Color(0x777777)), //
 
 	CONTROLS_TEXT(Color.WHITE), //
-	CONTROLS_BACKGROUND(new Color(0x333333));
+	CONTROLS_BACKGROUND(new Color(0x222222));
 
 	private Color value;
 
