@@ -21,7 +21,7 @@ public class TimingInfo {
 	public final int maxNoteLength;
 	public final int barLength;
 
-	public TimingInfo(int tempo, TimeSignature meter) throws AbcConversionException {
+	public TimingInfo(int tempo, TimeSignature meter, boolean useTripletTiming) throws AbcConversionException {
 		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO) {
 			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between " + MIN_TEMPO
 					+ " and " + MAX_TEMPO + ".");
@@ -38,9 +38,12 @@ public class TimingInfo {
 		// 6/8 = 0.75, so the default is an eighth note.
 		this.defaultDivisor = (((double) meter.numerator / meter.denominator < 0.75) ? 16 : 8) * 4 / meter.denominator;
 
+		// Calculate min note length
 		{
-			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (defaultDivisor / 4);
 			int minNoteDivisor = defaultDivisor;
+			if (useTripletTiming)
+				minNoteDivisor *= 3;
+			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (minNoteDivisor / 4);
 			while (minNoteLength < SHORTEST_NOTE_MICROS) {
 				minNoteLength *= 2;
 				minNoteDivisor /= 2;
@@ -78,7 +81,7 @@ public class TimingInfo {
 	}
 
 	public int getMidiResolution() {
-		return minNoteDivisor * 4;
+		return minNoteDivisor * 12;
 	}
 
 	public long getMidiTicks(long micros) {
