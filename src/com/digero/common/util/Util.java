@@ -40,7 +40,7 @@ public final class Util {
 		float width = metrics.stringWidth(text);
 		if (width < maxWidth)
 			return text;
-		
+
 		final boolean trimToWordBoundary = false;
 		Pattern prevWord = Pattern.compile("\\w*\\W*$");
 		Matcher matcher = prevWord.matcher(text);
@@ -60,8 +60,7 @@ public final class Util {
 			if (left > right)
 				continue;
 
-			if (trimToWordBoundary)
-			{
+			if (trimToWordBoundary) {
 				// trim at a word boundary using regular expressions 
 				matcher.region(0, left);
 				if (matcher.find())
@@ -180,12 +179,12 @@ public final class Util {
 		return a;
 	}
 
-	/** Least Common Multiple */	
+	/** Least Common Multiple */
 	public static int lcm(int a, int b) {
 		return (a / gcd(a, b)) * b;
 	}
 
-	/** Least Common Multiple */	
+	/** Least Common Multiple */
 	public static long lcm(long a, long b) {
 		return (a / gcd(a, b)) * b;
 	}
@@ -249,7 +248,7 @@ public final class Util {
 
 		frame.setBounds(x, y, width, height);
 
-		int maximized = prefs.getInt("maximized", 0);
+		int maximized = prefs.getInt("maximized", 0) & JFrame.MAXIMIZED_BOTH;
 		frame.setExtendedState((frame.getExtendedState() & ~JFrame.MAXIMIZED_BOTH) | maximized);
 
 		frame.addComponentListener(new ComponentAdapter() {
@@ -283,6 +282,9 @@ public final class Util {
 	}
 
 	public static String formatDuration(long micros, long maxMicros) {
+		if (maxMicros < micros)
+			maxMicros = micros;
+
 		StringBuilder s = new StringBuilder(5);
 
 		int t = (int) (micros / (1000 * 1000));
