@@ -116,8 +116,8 @@ public class AbcPart {
 				if (!instrument.isSustainable(ne.note.id))
 					ne.endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
 
-				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.abcVol, tm
-						.getMidiTicks(ne.startMicros)));
+				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.abcVol,
+						tm.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
 		}
@@ -378,9 +378,7 @@ public class AbcPart {
 					lastEvent.endMicros = songLengthMicros;
 				}
 				else {
-					events
-							.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros,
-									songLengthMicros));
+					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros, songLengthMicros));
 				}
 			}
 		}
@@ -517,6 +515,18 @@ public class AbcPart {
 						ins = -ins - 1;
 					assert (ins > i);
 					events.add(ins, next);
+
+					/*
+					 * If the final note is less than a full bar length, just
+					 * tie it to the original note rather than creating a hard
+					 * break. We don't want the last piece of a long sustained
+					 * note to be a short blast. LOTRO won't complain about a
+					 * note being too long if it's part of a tie.
+					 */
+					if (next.getLength() < tm.barLength && ne.note != Note.REST) {
+						next.tiesFrom = ne;
+						ne.tiesTo = next;
+					}
 				}
 
 				ne.endMicros = maxNoteEnd;
