@@ -117,15 +117,10 @@ public class TrackInfo implements IMidiConstants {
 					}
 				}
 				else if (cmd == ShortMessage.PITCH_BEND && !isDrumTrack) {
-					final int STEP_SIZE = ((1 << 14) - 1) / 4;
-					int bend = ((m.getData1() | (m.getData2() << 7)) + STEP_SIZE / 2) / STEP_SIZE - 2;
 					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
-					int bendNew = sequenceCache.getPitchBend(evt);
-
-					//System.out.println("[" + c + " @ " +Util.formatDuration(micros) + "] Bend Old: " + bend + " / New: " + bendNew);
-
-					bend = bendNew;
+					double pct = 2 * (((m.getData1() | (m.getData2() << 7)) / (double) (1 << 14)) - 0.5);
+					int bend = (int) Math.round(pct * sequenceCache.getPitchBendRange(m.getChannel(), evt.getTick()));
 
 					if (bend != pitchBend[c]) {
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
