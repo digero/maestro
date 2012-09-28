@@ -20,10 +20,10 @@ public class SequenceDataCache implements IMidiConstants {
 	private final int primaryTempoMPQ;
 	private NavigableMap<Long, Integer> tempo = new TreeMap<Long, Integer>();
 
-	private MapByChannel instruments = new MapByChannel();
-	private MapByChannel volume = new MapByChannel();
-	private MapByChannel pitchBendCoarse = new MapByChannel();
-	private MapByChannel pitchBendFine = new MapByChannel();
+	private MapByChannel instruments = new MapByChannel(DEFAULT_INSTRUMENT);
+	private MapByChannel volume = new MapByChannel(DEFAULT_CHANNEL_VOLUME);
+	private MapByChannel pitchBendCoarse = new MapByChannel(DEFAULT_PITCH_BEND_RANGE_SEMITONES);
+	private MapByChannel pitchBendFine = new MapByChannel(DEFAULT_PITCH_BEND_RANGE_CENTS);
 
 	public SequenceDataCache(Sequence song) {
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
@@ -109,26 +109,15 @@ public class SequenceDataCache implements IMidiConstants {
 	}
 
 	public int getInstrument(int channel, long tick) {
-		return instruments.get(channel, tick, DEFAULT_INSTRUMENT);
+		return instruments.get(channel, tick);
 	}
 
 	public int getVolume(int channel, long tick) {
-		return volume.get(channel, tick, DEFAULT_CHANNEL_VOLUME);
+		return volume.get(channel, tick);
 	}
 
-	public int getPitchBend(MidiEvent evt) {
-		if (!(evt.getMessage() instanceof ShortMessage))
-			return 0;
-		ShortMessage m = (ShortMessage) evt.getMessage();
-		if (m.getCommand() != ShortMessage.PITCH_BEND)
-			return 0;
-
-		double range = pitchBendCoarse.get(m.getChannel(), evt.getTick(), DEFAULT_PITCH_BEND_RANGE_SEMITONES) + 
-				pitchBendFine.get(m.getChannel(), evt.getTick(), DEFAULT_PITCH_BEND_RANGE_CENTS) / 100.0;
-		
-		double pct = 2 * (((m.getData1() | (m.getData2() << 7)) / (double) (1 << 14)) - 0.5);
-
-		return (int) Math.round(pct * range);
+	public double getPitchBendRange(int channel, long tick) {
+		return pitchBendCoarse.get(channel, tick) + (pitchBendFine.get(channel, tick) / 100.0);
 	}
 
 	public int getTempoMPQ(long tick) {
@@ -153,10 +142,12 @@ public class SequenceDataCache implements IMidiConstants {
 
 	private static class MapByChannel {
 		private NavigableMap<Long, Integer>[] map;
+		Integer defaultValue;
 
 		@SuppressWarnings("unchecked")
-		public MapByChannel() {
+		public MapByChannel(int defaultValue) {
 			map = new NavigableMap[CHANNEL_COUNT];
+			this.defaultValue = defaultValue;
 		}
 
 		public void put(int channel, long tick, Integer value) {
@@ -166,7 +157,7 @@ public class SequenceDataCache implements IMidiConstants {
 			map[channel].put(tick, value);
 		}
 
-		public int get(int channel, long tick, Integer defaultValue) {
+		public int get(int channel, long tick) {
 			if (map[channel] == null)
 				return defaultValue;
 
