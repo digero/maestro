@@ -3,9 +3,9 @@ package com.digero.maestro.midi;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
@@ -23,13 +23,16 @@ public class SequenceDataCache implements IMidiConstants {
 	private MapByChannel instruments = new MapByChannel();
 	private MapByChannel volume = new MapByChannel();
 	private MapByChannel pitchBendCoarse = new MapByChannel();
+	private MapByChannel pitchBendFine = new MapByChannel();
 
 	public SequenceDataCache(Sequence song) {
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 		boolean isPPQ = song.getDivisionType() == Sequence.PPQ;
 
 		int[] rpnCoarse = new int[CHANNEL_COUNT];
+		int[] rpnFine = new int[CHANNEL_COUNT];
 		Arrays.fill(rpnCoarse, REGISTERED_PARAM_NONE);
+		Arrays.fill(rpnFine, REGISTERED_PARAM_NONE);
 
 		Track[] tracks = song.getTracks();
 		for (int i = 0; i < tracks.length; i++) {
@@ -58,9 +61,16 @@ public class SequenceDataCache implements IMidiConstants {
 						case REGISTERED_PARAMETER_NUMBER_COARSE:
 							rpnCoarse[ch] = m.getData2();
 							break;
+						case REGISTERED_PARAMETER_NUMBER_FINE:
+							rpnFine[ch] = m.getData2();
+							break;
 						case DATA_ENTRY_COARSE:
 							if (rpnCoarse[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
 								pitchBendCoarse.put(ch, tick, m.getData2());
+							break;
+						case DATA_ENTRY_FINE:
+							if (rpnFine[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
+								pitchBendFine.put(ch, tick, m.getData2());
 							break;
 						}
 					}
@@ -113,8 +123,10 @@ public class SequenceDataCache implements IMidiConstants {
 		if (m.getCommand() != ShortMessage.PITCH_BEND)
 			return 0;
 
-		int range = pitchBendCoarse.get(m.getChannel(), evt.getTick(), DEFAULT_PITCH_BEND_RANGE_SEMITONES);
-		double pct = (m.getData1() | (m.getData2() << 7)) / ((double) (1 << 14) - 1) - 0.5;
+		double range = pitchBendCoarse.get(m.getChannel(), evt.getTick(), DEFAULT_PITCH_BEND_RANGE_SEMITONES) + 
+				pitchBendFine.get(m.getChannel(), evt.getTick(), DEFAULT_PITCH_BEND_RANGE_CENTS) / 100.0;
+		
+		double pct = 2 * (((m.getData1() | (m.getData2() << 7)) / (double) (1 << 14)) - 0.5);
 
 		return (int) Math.round(pct * range);
 	}
