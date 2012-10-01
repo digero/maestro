@@ -30,6 +30,6 @@ public interface IMidiConstants {
 	public static final int DEFAULT_TEMPO_MPQ = 500000;
 	public static final int DEFAULT_INSTRUMENT = 0;
 	public static final int DEFAULT_CHANNEL_VOLUME = MAX_VOLUME;
-	public static final int DEFAULT_PITCH_BEND_RANGE_SEMITONES = 4;
+	public static final int DEFAULT_PITCH_BEND_RANGE_SEMITONES = 2;
 	public static final int DEFAULT_PITCH_BEND_RANGE_CENTS = 0;
 }
