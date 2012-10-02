@@ -173,11 +173,11 @@ public class AbcPart {
 		boolean[] flats = new boolean[Note.C5.id + 1];
 
 		// Write out ABC notation
-		final int LINE_LENGTH = 80;
+		final int LINE_LENGTH = 1; // Setting this to 1 is a hack to force each bar on its own line
 		final int BAR_LENGTH = 160;
 		int lineLength = 0;
 		long barNumber = 0;
-		StringBuilder sb = new StringBuilder();
+		StringBuilder bar = new StringBuilder();
 		Dynamics curDyn = null;
 		Dynamics initDyn = null;
 
@@ -195,6 +195,7 @@ public class AbcPart {
 
 			c.sort();
 
+			// Is this the start of a new bar?
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
 				barNumber = c.getStartMicros() / tm.barLength;
 
@@ -203,32 +204,32 @@ public class AbcPart {
 					out.println("% Bar " + barNumber);
 					lineLength = 0;
 				}
-				else if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH) {
+				else if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH) {
 					out.println();
 					lineLength = 0;
 				}
 
 				// Trim end
-				int length = sb.length();
-				while (Character.isWhitespace(sb.charAt(length - 1)))
+				int length = bar.length();
+				while (Character.isWhitespace(bar.charAt(length - 1)))
 					length--;
-				sb.setLength(length);
+				bar.setLength(length);
 
 				// Insert line breaks inside very long bars
-				for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
+				for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH) {
 					for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
-						if (sb.charAt(i) == ' ') {
-							sb.replace(i, i + 1, "\r\n\t");
+						if (bar.charAt(i) == ' ') {
+							bar.replace(i, i + 1, "\r\n\t");
 							i += "\r\n\t".length() - 1;
 							break;
 						}
 					}
 				}
 
-				out.print(sb);
-				out.print("  |  ");
-				lineLength += sb.length() + 2;
-				sb.setLength(0);
+				out.print(bar);
+				out.print(" |");
+				lineLength += bar.length() + 2;
+				bar.setLength(0);
 
 				Arrays.fill(sharps, false);
 				Arrays.fill(flats, false);
@@ -237,12 +238,12 @@ public class AbcPart {
 			Dynamics newDyn = (initDyn != null) ? initDyn : c.calcDynamics();
 			initDyn = null;
 			if (newDyn != null && newDyn != curDyn) {
-				sb.append('+').append(newDyn).append("+ ");
+				bar.append('+').append(newDyn).append("+ ");
 				curDyn = newDyn;
 			}
 
 			if (c.size() > 1) {
-				sb.append('[');
+				bar.append('[');
 			}
 
 			int notesWritten = 0;
@@ -270,11 +271,11 @@ public class AbcPart {
 					else if (sharps[evt.note.id] || flats[evt.note.id]) {
 						sharps[evt.note.id] = false;
 						flats[evt.note.id] = false;
-						sb.append('=');
+						bar.append('=');
 					}
 				}
 
-				sb.append(noteAbc);
+				bar.append(noteAbc);
 				int numerator = (int) (evt.getLength() / tm.minNoteLength) * tm.defaultDivisor;
 				int denominator = tm.minNoteDivisor;
 				// Reduce the fraction
@@ -282,16 +283,16 @@ public class AbcPart {
 				numerator /= gcd;
 				denominator /= gcd;
 				if (numerator != 1) {
-					sb.append(numerator);
+					bar.append(numerator);
 				}
 				if (denominator != 1) {
-					sb.append('/');
+					bar.append('/');
 					if (numerator != 1 || denominator != 2)
-						sb.append(denominator);
+						bar.append(denominator);
 				}
 
 				if (evt.tiesTo != null)
-					sb.append('-');
+					bar.append('-');
 
 				notesWritten++;
 			}
@@ -299,30 +300,30 @@ public class AbcPart {
 			if (c.size() > 1) {
 				if (notesWritten == 0) {
 					// Remove the [
-					sb.delete(sb.length() - 1, sb.length());
+					bar.delete(bar.length() - 1, bar.length());
 				}
 				else {
-					sb.append(']');
+					bar.append(']');
 				}
 			}
 
-			sb.append(' ');
+			bar.append(' ');
 		}
 
 		// Insert line breaks
-		for (int i = BAR_LENGTH; i < sb.length(); i += BAR_LENGTH) {
+		for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH) {
 			for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
-				if (sb.charAt(i) == ' ') {
-					sb.replace(i, i + 1, "\r\n");
+				if (bar.charAt(i) == ' ') {
+					bar.replace(i, i + 1, "\r\n");
 					i++;
 					break;
 				}
 			}
 		}
 
-		if (lineLength > 0 && (lineLength + sb.length()) > LINE_LENGTH)
+		if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH)
 			out.println();
-		out.print(sb);
+		out.print(bar);
 		out.print(" |]");
 		out.println();
 		out.println();
