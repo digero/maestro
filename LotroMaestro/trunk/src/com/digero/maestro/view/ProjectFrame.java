@@ -780,6 +780,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				AbcToMidi.Params params = new AbcToMidi.Params(midiFile);
 				params.useLotroInstruments = false;
 				sequenceInfo = SequenceInfo.fromAbc(params, abcInfo);
+				saveFile = midiFile;
 			}
 			else {
 				sequenceInfo = SequenceInfo.fromMidi(midiFile);
@@ -825,6 +826,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 
 				updateAbcButtons();
+				
+				tripletCheckBox.setSelected(abcInfo.hasTriplets());
 
 				if (parts.isEmpty()) {
 					newPartButton.doClick();
