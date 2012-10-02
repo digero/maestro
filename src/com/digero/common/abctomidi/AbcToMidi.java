@@ -71,6 +71,7 @@ public class AbcToMidi {
 		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
 		private Map<Integer, PartInfo> partInfoByIndex = new HashMap<Integer, PartInfo>();
 		private int tempoBPM = 120;
+		private boolean hasTriplets = false;
 
 		private String songTitle = null;
 		private String songComposer = null;
@@ -85,6 +86,7 @@ public class AbcToMidi {
 			songTitle = null;
 			songComposer = null;
 			songTranscriber = null;
+			hasTriplets = false;
 		}
 
 		public String getComposer() {
@@ -131,6 +133,10 @@ public class AbcToMidi {
 
 		public boolean isEmpty() {
 			return empty;
+		}
+
+		public boolean hasTriplets() {
+			return hasTriplets;
 		}
 
 		public int getPartNumber(int trackIndex) {
@@ -229,6 +235,10 @@ public class AbcToMidi {
 		private void setTempoBPM(int tempoBPM) {
 			this.tempoBPM = tempoBPM;
 			this.empty = false;
+		}
+
+		private void setHasTriplets(boolean hasTriplets) {
+			this.hasTriplets = hasTriplets;
 		}
 
 		private static final String openPunct = "[-:;\\(\\[\\{\\s]*";
@@ -705,6 +715,11 @@ public class AbcToMidi {
 								tuplet = null;
 						}
 
+						// Try to guess if this note is using triplet timing
+						if ((denominator % 3 == 0) && (numerator % 3 != 0)) {
+							abcInfo.setHasTriplets(true);
+						}
+
 						long noteEndTick = chordStartTick + DEFAULT_NOTE_PULSES * numerator / denominator;
 						// A chord is as long as its shortest note
 						if (chordEndTick == chordStartTick || noteEndTick < chordEndTick)
@@ -870,7 +885,7 @@ public class AbcToMidi {
 		PanGenerator pan = null;
 		if (stereo && trackNumber > 1)
 			pan = new PanGenerator();
-		
+
 		Track[] tracks = seq.getTracks();
 		tracks[0].add(MidiFactory.createTrackNameEvent(abcInfo.getTitle()));
 		for (int i = 1; i <= trackNumber; i++) {
