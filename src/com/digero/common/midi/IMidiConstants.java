@@ -13,8 +13,8 @@ public interface IMidiConstants {
 
 	public static final int CHANNEL_VOLUME_CONTROLLER_COARSE = 0x07;
 	public static final int ALL_CONTROLLERS_OFF = 0x79;
-	public static final int REGISTERED_PARAMETER_NUMBER_COARSE = 0x65;
-	public static final int REGISTERED_PARAMETER_NUMBER_FINE = 0x64;
+	public static final int REGISTERED_PARAMETER_NUMBER_MSB = 0x65;
+	public static final int REGISTERED_PARAMETER_NUMBER_LSB = 0x64;
 	public static final int DATA_ENTRY_COARSE = 0x06;
 	public static final int DATA_ENTRY_FINE = 0x26;
 	public static final int REGISTERED_PARAM_PITCH_BEND_RANGE = 0x0000;
@@ -22,10 +22,13 @@ public interface IMidiConstants {
 
 	public static final int DRUM_CHANNEL = 9;
 	public static final int CHANNEL_COUNT = 16;
+	public static final int LOWEST_NOTE_ID = 0;
+	public static final int HIGHEST_NOTE_ID = 127;
+	public static final int NOTE_COUNT = HIGHEST_NOTE_ID - LOWEST_NOTE_ID + 1;
 	public static final int MAX_VOLUME = 127;
-	
+
 	public static final int PAN_CONTROL = 0x0A;
-	
+
 	public static final int DEFAULT_TEMPO_BPM = 120;
 	public static final int DEFAULT_TEMPO_MPQ = 500000;
 	public static final int DEFAULT_INSTRUMENT = 0;

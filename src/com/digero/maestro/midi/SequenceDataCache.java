@@ -29,10 +29,9 @@ public class SequenceDataCache implements IMidiConstants {
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 		boolean isPPQ = song.getDivisionType() == Sequence.PPQ;
 
-		int[] rpnCoarse = new int[CHANNEL_COUNT];
-		int[] rpnFine = new int[CHANNEL_COUNT];
-		Arrays.fill(rpnCoarse, REGISTERED_PARAM_NONE);
-		Arrays.fill(rpnFine, REGISTERED_PARAM_NONE);
+		// Keep track of the active registered paramater number for pitch bend range
+		int[] rpn = new int[CHANNEL_COUNT];
+		Arrays.fill(rpn, REGISTERED_PARAM_NONE);
 
 		Track[] tracks = song.getTracks();
 		for (int i = 0; i < tracks.length; i++) {
@@ -58,18 +57,18 @@ public class SequenceDataCache implements IMidiConstants {
 						case CHANNEL_VOLUME_CONTROLLER_COARSE:
 							volume.put(ch, tick, m.getData2());
 							break;
-						case REGISTERED_PARAMETER_NUMBER_COARSE:
-							rpnCoarse[ch] = m.getData2();
+						case REGISTERED_PARAMETER_NUMBER_MSB:
+							rpn[ch] = (rpn[ch] & 0x7F) | ((m.getData2() & 0x7F) << 7);
 							break;
-						case REGISTERED_PARAMETER_NUMBER_FINE:
-							rpnFine[ch] = m.getData2();
+						case REGISTERED_PARAMETER_NUMBER_LSB:
+							rpn[ch] = (rpn[ch] & (0x7F << 7)) | (m.getData2() & 0x7F);
 							break;
 						case DATA_ENTRY_COARSE:
-							if (rpnCoarse[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
+							if (rpn[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
 								pitchBendCoarse.put(ch, tick, m.getData2());
 							break;
 						case DATA_ENTRY_FINE:
-							if (rpnFine[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
+							if (rpn[ch] == REGISTERED_PARAM_PITCH_BEND_RANGE)
 								pitchBendFine.put(ch, tick, m.getData2());
 							break;
 						}
@@ -142,7 +141,7 @@ public class SequenceDataCache implements IMidiConstants {
 
 	private static class MapByChannel {
 		private NavigableMap<Long, Integer>[] map;
-		Integer defaultValue;
+		private int defaultValue;
 
 		@SuppressWarnings("unchecked")
 		public MapByChannel(int defaultValue) {
