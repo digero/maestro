@@ -151,18 +151,18 @@ public class MidiConstants implements IMidiConstants {
 	private static final String[] DRUM_NAMES = {
 			"Synth Zap", // 27
 			"Unknown", // 28
-			"Record Scratch 1", // 29
-			"Record Scratch 2", // 30
+			"Scratch 1", // 29
+			"Scratch 2", // 30
 			"Drum Sticks", // 31
 			"Unknown", // 32
-			"Metronome Click", // 33
-			"Metronome Bell", // 34
-			"Acou. Bass Drum", // 35
+			"Metr. Click", // 33
+			"Metr. Bell", // 34
+			"Acou. Bass", // 35
 			"Bass Drum", // 36
 			"Rim Shot", // 37
-			"Acoustic Snare", // 38
+			"Acou. Snare", // 38
 			"Hand Clap", // 39
-			"Electric Snare", // 40
+			"Elec. Snare", // 40
 			"Low Tom A", // 41
 			"Closed Hi-Hat", // 42
 			"Low Tom B", // 43
@@ -171,17 +171,17 @@ public class MidiConstants implements IMidiConstants {
 			"Open Hi-Hat", // 46
 			"Mid Tom B", // 47
 			"High Tom A", // 48
-			"Crash Cymbal 1", // 49
+			"Crash Cym. 1", // 49
 			"High Tom B", // 50
-			"Ride Cymbal 1", // 51
-			"Chinese Cymbal", // 52
+			"Ride Cym. 1", // 51
+			"Chinese Cym.", // 52
 			"Ride Bell", // 53
 			"Tambourine", // 54
-			"Splash Cymbal", // 55
+			"Splash Cym.", // 55
 			"Cowbell", // 56
-			"Crash Cymbal 2", // 57
+			"Crash Cym. 2", // 57
 			"Vibraslap", // 58
-			"Ride Cymbal 2", // 59
+			"Ride Cym. 2", // 59
 			"Hi Bongo", // 60
 			"Low Bongo", // 61
 			"Mute Hi Conga", // 62
@@ -198,8 +198,8 @@ public class MidiConstants implements IMidiConstants {
 			"Short Guiro", // 73
 			"Long Guiro", // 74
 			"Claves", // 75
-			"Hi Wood Block", // 76
-			"Low Wood Block", // 77
+			"High Block", // 76
+			"Low Block", // 77
 			"Mute Cuica", // 78
 			"Open Cuica", // 79
 			"Mute Triangle", // 80
@@ -208,7 +208,7 @@ public class MidiConstants implements IMidiConstants {
 			"Bells", // 83
 			"Chimes", // 84
 			"Castanet", // 85
-			"Muted Large Drum", // 86
+			"Muted Lg Drum", // 86
 			"Large Drum", // 87
 	};
 	public static final int HIGHEST_DRUM_ID = LOWEST_DRUM_ID + DRUM_NAMES.length - 1;
