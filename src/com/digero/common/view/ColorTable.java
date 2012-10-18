@@ -45,6 +45,7 @@ public enum ColorTable {
 	PANEL_TEXT_ENABLED(Color.getHSBColor(0.28f, 0.70f, 1.00f)), //
 	PANEL_TEXT_DISABLED(Color.WHITE), //
 	PANEL_TEXT_OFF(new Color(0x777777)), //
+	PANEL_LINK(Color.getHSBColor(0.60f, 0.70f, 1.00f)), //
 
 	CONTROLS_TEXT(Color.WHITE), //
 	CONTROLS_BACKGROUND(new Color(0x222222));

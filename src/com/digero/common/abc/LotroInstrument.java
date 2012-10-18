@@ -54,7 +54,11 @@ public enum LotroInstrument {
 	}
 
 	public boolean isSustainable(int noteId) {
-		return sustainable && noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
+		return sustainable && isPlayable(noteId);
+	}
+	
+	public boolean isPlayable(int noteId) {
+		return noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
 	}
 
 	@Override

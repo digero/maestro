@@ -4,6 +4,7 @@ import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,9 +12,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -25,35 +34,45 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.ICompileConstants;
+import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
+import com.digero.common.view.LinkButton;
 import com.digero.common.view.NoteGraph;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.DrumNoteMap;
+import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
 public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
+	private static final String DRUM_NOTE_MAP_DIR_PREF_KEY = "DrumNoteMap.directory";
+
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   |      TRACK NAME    | octave   |  +--------------+  |
 	// 0 | [X]                | +----^-+ |  | (note graph) |  |
 	//   |      Instrument(s) | +----v-+ |  +--------------+  |
-	//   +--------------------+----------+--------------------+
-	static final int TITLE_WIDTH = 140;
-	static final int TITLE_WIDTH_DRUMS = 180;
-	static final int SPINNER_WIDTH = 48;
-	private static final double DRUM_ROW0 = 32;
-	private static final double NOTE_ROW0 = 48;
+	//   +--------------------+----------+                    |
+	// 1 | Drum save controls (optional) |                    |
+	//   +-------------------------------+--------------------+
+	static final int TITLE_COLUMN = 0;
+	static final int CONTROL_COLUMN = 1;
+	static final int NOTE_COLUMN = 2;
+
+	static final int TITLE_WIDTH = 164;
+	static final int CONTROL_WIDTH = 48;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, SPINNER_WIDTH, FILL
+			TITLE_WIDTH, CONTROL_WIDTH, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-		NOTE_ROW0
+			48, PREFERRED
 	};
 
 	private final TrackInfo trackInfo;
@@ -62,6 +81,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 	private JCheckBox checkBox;
 	private JSpinner transposeSpinner;
+	private JPanel drumSavePanel;
 	private TrackNoteGraph noteGraph;
 
 	private AbcPartListener abcListener;
@@ -109,8 +129,6 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 		});
 
-		add(noteGraph, "2, 0");
-
 		if (!trackInfo.isDrumTrack()) {
 			int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
 			transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
@@ -129,16 +147,12 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 					}
 				}
 			});
-
-			add(checkBox, "0, 0");
-			add(transposeSpinner, "1, 0, f, c");
 		}
-		else {
-			((TableLayout) getLayout()).setRow(0, DRUM_ROW0);
-			checkBox.setFont(checkBox.getFont().deriveFont(Font.ITALIC));
-
-			add(checkBox, "0, 0, 1, 0");
-		}
+		
+		add(checkBox, TITLE_COLUMN + ", 0");
+		if (transposeSpinner != null)
+			add(transposeSpinner, CONTROL_COLUMN + ", 0, f, c");
+		add(noteGraph, NOTE_COLUMN + ", 0, " + NOTE_COLUMN + ", 1");
 
 		updateTitleText();
 
@@ -166,6 +180,40 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		updateState(true);
 	}
+	
+	private void initDrumSavePanel() {
+		JLabel intro = new JLabel("Drum Map: ");
+		intro.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
+		
+		LinkButton saveButton = new LinkButton("<html><u>Save</u></html>");
+		saveButton.setForeground(ColorTable.PANEL_LINK.get());
+		saveButton.setOpaque(false);
+		saveButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveDrumMapping();
+			}
+		});
+		
+		JLabel divider = new JLabel(" | ");
+		divider.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
+		
+		LinkButton loadButton = new LinkButton("<html><u>Load</u></html>");
+		loadButton.setForeground(ColorTable.PANEL_LINK.get());
+		loadButton.setOpaque(false);
+		loadButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadDrumMapping();
+			}
+		});
+		
+		drumSavePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+		drumSavePanel.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 0));
+		drumSavePanel.setOpaque(false);
+		drumSavePanel.add(intro);
+		drumSavePanel.add(loadButton);
+		drumSavePanel.add(divider);
+		drumSavePanel.add(saveButton);
+	}
 
 	public TrackInfo getTrackInfo() {
 		return trackInfo;
@@ -175,10 +223,6 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		updateState(false);
 	}
 
-	private int curTitleWidth() {
-		return abcPart.isDrumPart() ? TITLE_WIDTH_DRUMS : TITLE_WIDTH;
-	}
-
 	private void updateTitleText() {
 		final int ELLIPSIS_OFFSET = 28;
 
@@ -186,15 +230,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		String instr = trackInfo.getInstrumentNames();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
-		if (!trackInfo.isDrumTrack()) {
-			title = Util.ellipsis(title, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont().deriveFont(Font.BOLD));
-			instr = Util.ellipsis(instr, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont());
-			checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
-		}
-		else {
-			title = Util.ellipsis(title, curTitleWidth() - ELLIPSIS_OFFSET, checkBox.getFont());
-			checkBox.setText("<html><b>" + title + "</b> (" + instr + ")</html>");
-		}
+		title = Util.ellipsis(title, TITLE_WIDTH - ELLIPSIS_OFFSET, checkBox.getFont().deriveFont(Font.BOLD));
+		instr = Util.ellipsis(instr, TITLE_WIDTH - ELLIPSIS_OFFSET, checkBox.getFont());
+		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
 	}
 
 	private void updateColors() {
@@ -236,7 +274,10 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
 		if (initDrumPanels || showDrumPanels != showDrumPanelsNew || wasDrumPart != abcPart.isDrumPart()) {
-			showDrumPanels = showDrumPanelsNew;
+			if (showDrumPanels != showDrumPanelsNew) {
+				noteGraph.repaint();
+				showDrumPanels = showDrumPanelsNew;
+			}
 			wasDrumPart = abcPart.isDrumPart();
 
 			for (int i = getComponentCount() - 1; i >= 0; --i) {
@@ -246,26 +287,108 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 					remove(i);
 				}
 			}
+			if (drumSavePanel != null)
+				remove(drumSavePanel);
+
 			if (transposeSpinner != null)
 				transposeSpinner.setVisible(!abcPart.isDrumPart());
 
 			TableLayout layout = (TableLayout) getLayout();
-			layout.setColumn(0, curTitleWidth());
 			if (showDrumPanels) {
-				int row = 1;
+				if (drumSavePanel == null)
+					initDrumSavePanel();
+				
+				add(drumSavePanel, TITLE_COLUMN + ", 1, l, c");
+				int row = LAYOUT_ROWS.length;
 				for (int noteId : trackInfo.getNotesInUse()) {
 					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId);
 					if (row <= layout.getNumRow())
 						layout.insertRow(row, PREFERRED);
 					add(panel, "0, " + row + ", 2, " + row);
 				}
-
 			}
 
 			updateTitleText();
 
 			revalidate();
 		}
+	}
+
+	private boolean saveDrumMapping() {
+		Preferences prefs = Preferences.userNodeForPackage(TrackPanel.class);
+
+		String dirPath = prefs.get(DRUM_NOTE_MAP_DIR_PREF_KEY, null);
+		File dir;
+		if (dirPath == null || !(dir = new File(dirPath)).isDirectory())
+			dir = Util.getLotroMusicPath(false /* create */);
+
+		JFileChooser fileChooser = new JFileChooser(dir);
+		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map", DrumNoteMap.FILE_SUFFIX));
+
+		File saveFile;
+		do {
+			if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+				return false;
+
+			saveFile = fileChooser.getSelectedFile();
+
+			if (!Util.stringEndsWithIgnoreCase(saveFile.getName(), "." + DrumNoteMap.FILE_SUFFIX)) {
+				saveFile = new File(saveFile.getParentFile(), saveFile.getName() + "." + DrumNoteMap.FILE_SUFFIX);
+			}
+
+			if (saveFile.exists()) {
+				int result = JOptionPane.showConfirmDialog(this, "File " + saveFile.getName()
+						+ " already exists. Overwrite?", "Confirm overwrite", JOptionPane.OK_CANCEL_OPTION);
+				if (result != JOptionPane.OK_OPTION)
+					continue;
+			}
+		} while (false);
+
+		try {
+			abcPart.getDrumMap(trackInfo.getTrackNumber()).save(saveFile);
+		}
+		catch (IOException e) {
+			JOptionPane.showMessageDialog(this, "Failed to save drum map:\n\n" + e.getMessage(),
+					"Failed to save drum map", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		prefs.put(DRUM_NOTE_MAP_DIR_PREF_KEY, fileChooser.getCurrentDirectory().getAbsolutePath());
+		return true;
+	}
+
+	private boolean loadDrumMapping() {
+		Preferences prefs = Preferences.userNodeForPackage(TrackPanel.class);
+
+		String dirPath = prefs.get(DRUM_NOTE_MAP_DIR_PREF_KEY, null);
+		File dir;
+		if (dirPath == null || !(dir = new File(dirPath)).isDirectory())
+			dir = Util.getLotroMusicPath(false /* create */);
+
+		JFileChooser fileChooser = new JFileChooser(dir);
+		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map", DrumNoteMap.FILE_SUFFIX));
+
+		if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+			return false;
+
+		File loadFile = fileChooser.getSelectedFile();
+
+		try {
+			abcPart.getDrumMap(trackInfo.getTrackNumber()).load(loadFile);
+		}
+		catch (IOException e) {
+			JOptionPane.showMessageDialog(this, "Failed to load drum map:\n\n" + e.getMessage(),
+					"Failed to load drum map", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		catch (ParseException e) {
+			JOptionPane.showMessageDialog(this, "Failed to load drum map:\n\n" + e.getMessage(),
+					"Failed to load drum map", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		prefs.put(DRUM_NOTE_MAP_DIR_PREF_KEY, fileChooser.getCurrentDirectory().getAbsolutePath());
+		return true;
 	}
 
 	public void dispose() {
@@ -317,6 +440,14 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 				return (noteId >= minPlayable) && (noteId <= maxPlayable);
 			}
+		}
+
+		@Override
+		protected List<NoteEvent> getEvents() {
+			if (showDrumPanels)
+				return Collections.emptyList();
+
+			return super.getEvents();
 		}
 	}
 }

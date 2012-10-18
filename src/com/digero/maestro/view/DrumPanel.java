@@ -44,8 +44,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	//   | Instrument(s)      | +-----v+ |  +--------------+  |
 	//   +--------------------+----------+--------------------+
 	private static final int HGAP = 4;
-	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH_DRUMS - 78;
-	private static final int COMBO_WIDTH = TrackPanel.SPINNER_WIDTH + 78;
+	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH - 70;
+	private static final int COMBO_WIDTH = TrackPanel.CONTROL_WIDTH + 70;
 	private static final double[] LAYOUT_COLS = new double[] {
 			TITLE_WIDTH, COMBO_WIDTH, FILL
 	};
@@ -103,7 +103,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		drumComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				LotroDrumInfo selected = (LotroDrumInfo) drumComboBox.getSelectedItem();
-				abcPart.setDrumMapping(trackInfo.getTrackNumber(), drumId, selected.note.id);
+				abcPart.getDrumMap(trackInfo.getTrackNumber()).set(drumId, selected.note.id);
 			}
 		});
 
@@ -195,7 +195,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	}
 
 	private LotroDrumInfo getSelectedDrum() {
-		return LotroDrumInfo.getById(abcPart.getDrumMapping(trackInfo.getTrackNumber(), drumId));
+		return LotroDrumInfo.getById(abcPart.getDrumMap(trackInfo.getTrackNumber()).get(drumId));
 	}
 
 	private class DrumNoteGraph extends NoteGraph {

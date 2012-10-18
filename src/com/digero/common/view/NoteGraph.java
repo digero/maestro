@@ -52,9 +52,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private Color[] noteColorByDynamics = new Color[Dynamics.values().length];
 	private Color[] badNoteColorByDynamics = new Color[Dynamics.values().length];
 
-//	private Map<Dynamics, Color> noteColorMap = new HashMap<Dynamics, Color>();
-//	private Map<Dynamics, Color> badNoteColorMap = new HashMap<Dynamics, Color>();
-
 	private JPanel indicatorLine;
 
 	public NoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo, int minRenderedNoteId, int maxRenderedNoteId) {
@@ -140,6 +137,10 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		this.trackInfo = trackInfo;
 		invalidateTransform();
 		repaint();
+	}
+
+	protected List<NoteEvent> getEvents() {
+		return trackInfo.getEvents();
 	}
 
 	private AffineTransform noteToScreenXForm = null; // Always use getTransform()
@@ -242,7 +243,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 				// The song position changes frequently, so only repaint the rect that 
 				// contains the notes that were/are playing
 				if (isShowingNotesOn()) {
-					for (NoteEvent ne : trackInfo.getEvents()) {
+					for (NoteEvent ne : getEvents()) {
 						if (ne.endMicros < leftSongPos)
 							continue;
 						if (ne.startMicros > rightSongPos)
@@ -362,7 +363,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		lastPaintedMinSongPos = minSongPos;
 		lastPaintedSongPos = songPos;
 
-		List<NoteEvent> noteEvents = trackInfo.getEvents();
+		List<NoteEvent> noteEvents = getEvents();
 
 		if (notesOn != null)
 			notesOn.clear();
@@ -415,13 +416,14 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 			double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
 			double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
 			double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
-			
+
 			g2.setColor(noteOnBorder.get());
 			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
 				NoteEvent ne = noteEvents.get(i);
 				int noteId = transposeNote(ne.note.id);
 
-				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY + noteOnOutlineWidthY);
+				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY
+						+ noteOnOutlineWidthY);
 			}
 
 			g2.setColor(noteOnColor.get());
