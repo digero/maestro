@@ -78,11 +78,11 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 						if (newInc == 1) {
 							spinner.getModel().setMaximum(999);
-							spinner.getModel().setStepSize(10);
+//							spinner.getModel().setStepSize(10);
 						}
 						else {
 							spinner.getModel().setMaximum(10);
-							spinner.getModel().setStepSize(1);
+//							spinner.getModel().setStepSize(1);
 						}
 					}
 				}

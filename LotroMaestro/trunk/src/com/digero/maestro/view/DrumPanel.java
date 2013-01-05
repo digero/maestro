@@ -170,7 +170,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		drumComboBox.setEnabled(trackEnabled);
 		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.DRUMS);
 
-		if (!seq.isNoteActive(drumId)) {
+		if (!seq.isTrackActive(trackNumber) || !seq.isNoteActive(drumId)) {
 			noteGraph.setNoteColor(ColorTable.NOTE_DRUM_OFF);
 			noteGraph.setBadNoteColor(ColorTable.NOTE_DRUM_OFF);
 
@@ -185,11 +185,11 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 			checkBox.setForeground(ColorTable.PANEL_TEXT_ENABLED.get());
 		}
 		else {
-			noteGraph.setNoteColor(ColorTable.NOTE_DRUM_DISABLED);
-			noteGraph.setBadNoteColor(ColorTable.NOTE_BAD_DISABLED);
+			noteGraph.setNoteColor(ColorTable.NOTE_DRUM_OFF);
+			noteGraph.setBadNoteColor(ColorTable.NOTE_BAD_OFF);
 
-			setBackground(ColorTable.GRAPH_BACKGROUND_DISABLED.get());
-			checkBox.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
+			setBackground(ColorTable.GRAPH_BACKGROUND_OFF.get());
+			checkBox.setForeground(ColorTable.PANEL_TEXT_OFF.get());
 		}
 
 	}
