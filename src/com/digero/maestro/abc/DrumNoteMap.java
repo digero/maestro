@@ -20,6 +20,7 @@ import javax.swing.event.ChangeListener;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.util.ParseException;
+import com.digero.maestro.MaestroMain;
 import com.digero.maestro.util.IDisposable;
 
 public class DrumNoteMap implements IDisposable {
@@ -139,9 +140,15 @@ public class DrumNoteMap implements IDisposable {
 		ensureMap();
 
 		out.println("% LOTRO Drum Map");
+		out.println("% Created using " + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
 		out.println("%");
-		out.println("% Format is: MIDI Drum ID => LOTRO Drum ID");
-		out.println("% Comments begin with a percent sign");
+		out.println("% Format is: [MIDI Drum ID] => [LOTRO Drum ID]");
+		out.format("%% LOTRO Drum IDs are in the range %d (= %s) to %d (= %s)", //
+				Note.MIN_PLAYABLE.id, Note.MIN_PLAYABLE.abc, //
+				Note.MAX_PLAYABLE.id, Note.MAX_PLAYABLE.abc);
+		out.println();
+		out.println("% A LOTRO Drum ID of -1 indicates that the drum is not mapped");
+		out.println("% Comments begin with %");
 		out.println();
 
 		int maxDrumLen = MidiConstants.getDrumName(MidiConstants.LOWEST_DRUM_ID - 1).length();
@@ -166,8 +173,12 @@ public class DrumNoteMap implements IDisposable {
 			if (lotroDrum == null)
 				lotroDrum = LotroDrumInfo.DISABLED;
 
-			out.format("%2d => %2d  %% %-" + maxDrumLen + "s => %s", midiNoteId, note.id,
-					MidiConstants.getDrumName(midiNoteId), lotroDrum.toString());
+			String drumName = MidiConstants.getDrumName(midiNoteId);
+			if (drumName.equals("Unknown"))
+				drumName = "(" + drumName + ")";
+
+			out.format("%2d => %2d  %% %-" + maxDrumLen + "s => %s", midiNoteId, note.id, drumName,
+					lotroDrum.toString());
 			out.println();
 		}
 	}

@@ -148,6 +148,7 @@ public class MidiConstants implements IMidiConstants {
 	};
 
 	public static final int LOWEST_DRUM_ID = 27;
+	public static final int COWBELL_DRUM_ID = 56;
 	private static final String[] DRUM_NAMES = {
 			"Synth Zap", // 27
 			"Unknown", // 28

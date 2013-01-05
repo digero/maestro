@@ -160,6 +160,7 @@ public class AbcPart implements IDisposable {
 		out.println("M: " + tm.meter);
 		out.println("Q: " + tm.tempo);
 		out.println("K: " + key);
+		out.println();
 
 		// Keep track of which notes have been sharped or flatted so 
 		// we can naturalize them the next time they show up.
@@ -193,9 +194,12 @@ public class AbcPart implements IDisposable {
 			if (barNumber != (c.getStartMicros() / tm.barLength)) {
 				barNumber = c.getStartMicros() / tm.barLength;
 
-				if (barNumber % 10 == 1) {
+				if (barNumber % 10 == 0) {
 					out.println();
-					out.println("% Bar " + barNumber);
+					out.print("% Bar " + barNumber); 
+					if (barNumber > 1)
+						out.print(" (" + Util.formatDuration((barNumber - 1) * tm.barLength) + ")");
+					out.println();
 					lineLength = 0;
 				}
 				else if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH) {
@@ -816,6 +820,7 @@ public class AbcPart implements IDisposable {
 
 	private DrumNoteMap[] drumNoteMap;
 	private BitSet[] drumsEnabled;
+	private BitSet[] cowbellsEnabled;
 	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
 	public DrumNoteMap getDrumMap(int track) {
@@ -858,10 +863,12 @@ public class AbcPart implements IDisposable {
 	}
 
 	public boolean isDrumEnabled(int track, int drumId) {
-		if (drumsEnabled == null || drumsEnabled[track] == null)
-			return true;
+		BitSet[] enabledSet = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
 
-		return drumsEnabled[track].get(drumId);
+		if (enabledSet == null || enabledSet[track] == null)
+			return !isCowbellPart() || (drumId == MidiConstants.COWBELL_DRUM_ID);
+
+		return enabledSet[track].get(drumId);
 	}
 
 	public void setDrumEnabled(int track, int drumId, boolean enabled) {
@@ -869,11 +876,19 @@ public class AbcPart implements IDisposable {
 			if (drumsEnabled == null) {
 				drumsEnabled = new BitSet[getTrackCount()];
 			}
-			if (drumsEnabled[track] == null) {
-				drumsEnabled[track] = new BitSet(MidiConstants.NOTE_COUNT);
-				drumsEnabled[track].set(0, MidiConstants.NOTE_COUNT, true);
+			if (cowbellsEnabled == null) {
+				cowbellsEnabled = new BitSet[getTrackCount()];
 			}
-			drumsEnabled[track].set(drumId, enabled);
+
+			BitSet[] enabledSet = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
+			if (enabledSet[track] == null) {
+				enabledSet[track] = new BitSet(MidiConstants.NOTE_COUNT);
+				if (isCowbellPart())
+					enabledSet[track].set(MidiConstants.COWBELL_DRUM_ID, true);
+				else
+					enabledSet[track].set(0, MidiConstants.NOTE_COUNT, true);
+			}
+			enabledSet[track].set(drumId, enabled);
 			fireChangeEvent(true);
 		}
 	}
