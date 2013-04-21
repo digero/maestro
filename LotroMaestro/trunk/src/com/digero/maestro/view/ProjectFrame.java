@@ -115,6 +115,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 
 	private File saveFile;
+	private boolean allowOverwriteSaveFile = false;
 	private SequenceInfo sequenceInfo;
 	private NoteFilterSequencerWrapper sequencer;
 	private VolumeTransceiver volumeTransceiver;
@@ -749,6 +750,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		parts.clear();
 
 		saveFile = null;
+		allowOverwriteSaveFile = false;
 		sequencer.clearSequence();
 		abcSequencer.clearSequence();
 		sequencer.reset(false);
@@ -781,6 +783,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				params.useLotroInstruments = false;
 				sequenceInfo = SequenceInfo.fromAbc(params, abcInfo);
 				saveFile = midiFile;
+				allowOverwriteSaveFile = false;
 			}
 			else {
 				sequenceInfo = SequenceInfo.fromMidi(midiFile);
@@ -826,7 +829,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 
 				updateAbcButtons();
-				
+
 				tripletCheckBox.setSelected(abcInfo.hasTriplets());
 
 				if (parts.isEmpty()) {
@@ -982,13 +985,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			fileName += ".abc";
 
 		File saveFileTmp = new File(jfc.getSelectedFile().getParent(), fileName);
-		if (!saveFileTmp.equals(origSaveFile) && saveFileTmp.exists()) {
+		if (saveFileTmp.exists() && (!saveFileTmp.equals(origSaveFile) || !allowOverwriteSaveFile)) {
 			int res = JOptionPane.showConfirmDialog(this, "File " + fileName + " already exists. Overwrite?",
 					"Confirm Overwrite", JOptionPane.YES_NO_OPTION);
 			if (res != JOptionPane.YES_OPTION)
 				return;
 		}
 		saveFile = saveFileTmp;
+		allowOverwriteSaveFile = true;
 
 		FileOutputStream out;
 		try {
