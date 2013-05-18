@@ -682,7 +682,7 @@ public class AbcPart implements IDisposable {
 
 		if (!this.title.equals(name)) {
 			this.title = name;
-			fireChangeEvent(false);
+			fireChangeEvent(AbcPartProperty.TITLE);
 		}
 	}
 
@@ -701,7 +701,14 @@ public class AbcPart implements IDisposable {
 
 		if (this.instrument != instrument) {
 			this.instrument = instrument;
-			fireChangeEvent(true);
+			boolean affectsPreview = false;
+			for (boolean enabled : trackEnabled) {
+				if (enabled) {
+					affectsPreview = true;
+					break;
+				}
+			}
+			fireChangeEvent(AbcPartProperty.INSTRUMENT, affectsPreview);
 		}
 	}
 
@@ -712,7 +719,7 @@ public class AbcPart implements IDisposable {
 	public void setEnabled(boolean partEnabled) {
 		if (this.enabled != partEnabled) {
 			this.enabled = partEnabled;
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.ENABLED);
 		}
 	}
 
@@ -723,7 +730,7 @@ public class AbcPart implements IDisposable {
 	public void setBaseTranspose(int baseTranspose) {
 		if (this.baseTranspose != baseTranspose) {
 			this.baseTranspose = baseTranspose;
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.BASE_TRANSPOSE, !isDrumPart() /* affectsAbcPreview */);
 		}
 	}
 
@@ -734,7 +741,7 @@ public class AbcPart implements IDisposable {
 	public void setTrackTranspose(int track, int transpose) {
 		if (trackTranspose[track] != transpose) {
 			trackTranspose[track] = transpose;
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.TRACK_TRANSPOSE, isTrackEnabled(track) /* previewRelated */);
 		}
 	}
 
@@ -749,7 +756,7 @@ public class AbcPart implements IDisposable {
 	public void setTrackEnabled(int track, boolean enabled) {
 		if (trackEnabled[track] != enabled) {
 			trackEnabled[track] = enabled;
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.TRACK_ENABLED);
 		}
 	}
 
@@ -760,7 +767,7 @@ public class AbcPart implements IDisposable {
 	public void setPartNumber(int partNumber) {
 		if (this.partNumber != partNumber) {
 			this.partNumber = partNumber;
-			firePartNumberChanged();
+			fireChangeEvent(AbcPartProperty.PART_NUMBER);
 		}
 	}
 
@@ -771,7 +778,7 @@ public class AbcPart implements IDisposable {
 	public void setDynamicVolume(boolean dynamicVolume) {
 		if (this.dynamicVolume != dynamicVolume) {
 			this.dynamicVolume = dynamicVolume;
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.DYNAMIC_VOLUME);
 		}
 	}
 
@@ -783,17 +790,13 @@ public class AbcPart implements IDisposable {
 		changeListeners.remove(l);
 	}
 
-	protected void firePartNumberChanged() {
-		fireChangeEventEx(false, true);
+	protected void fireChangeEvent(AbcPartProperty property) {
+		fireChangeEvent(property, property.isAbcPreviewRelated());
 	}
 
-	protected void fireChangeEvent(boolean previewRelated) {
-		fireChangeEventEx(previewRelated, false);
-	}
-
-	protected void fireChangeEventEx(boolean previewRelated, boolean isPartNumber) {
+	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated) {
 		if (changeListeners.size() > 0) {
-			AbcPartEvent e = new AbcPartEvent(this, previewRelated, isPartNumber);
+			AbcPartEvent e = new AbcPartEvent(this, property, abcPreviewRelated);
 			// Listener list might be modified in the callback
 			List<AbcPartListener> listenerListCopy = new ArrayList<AbcPartListener>(changeListeners);
 			for (AbcPartListener l : listenerListCopy) {
@@ -850,7 +853,7 @@ public class AbcPart implements IDisposable {
 				if (!(map instanceof PassThroughDrumNoteMap))
 					map.save(drumPrefs);
 
-				fireChangeEvent(true /* previewRelated */);
+				fireChangeEvent(AbcPartProperty.DRUM_MAPPING);
 			}
 		}
 	};
@@ -891,7 +894,7 @@ public class AbcPart implements IDisposable {
 					enabledSet[track].set(0, MidiConstants.NOTE_COUNT, true);
 			}
 			enabledSet[track].set(drumId, enabled);
-			fireChangeEvent(true);
+			fireChangeEvent(AbcPartProperty.DRUM_ENABLED);
 		}
 	}
 }

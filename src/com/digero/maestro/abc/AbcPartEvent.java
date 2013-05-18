@@ -3,21 +3,25 @@ package com.digero.maestro.abc;
 import java.util.EventObject;
 
 public class AbcPartEvent extends EventObject {
-	private final boolean previewRelated;
-	private final boolean isPartNumber;
+	private final boolean abcPreviewRelated;
+	private final AbcPartProperty property;
 
-	public AbcPartEvent(AbcPart source, boolean previewRelated, boolean isPartNumber) {
+	public AbcPartEvent(AbcPart source, AbcPartProperty property, boolean abcPreviewRelated) {
 		super(source);
-		this.previewRelated = previewRelated;
-		this.isPartNumber = isPartNumber;
+		this.property = property;
+		this.abcPreviewRelated = abcPreviewRelated;
 	}
-	
-	public boolean isPreviewRelated() {
-		return previewRelated;
+
+	public AbcPartProperty getProperty() {
+		return property;
 	}
-	
-	public boolean isPartNumber() {
-		return isPartNumber;
+
+	public boolean isNoteGraphRelated() {
+		return property.isNoteGraphRelated();
+	}
+
+	public boolean isAbcPreviewRelated() {
+		return abcPreviewRelated;
 	}
 
 	@Override
