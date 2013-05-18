@@ -146,7 +146,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
-			if (e.isPreviewRelated()) {
+			if (e.isNoteGraphRelated()) {
 				checkBox.setEnabled(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
 				checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
 				drumComboBox.setSelectedItem(getSelectedDrum());

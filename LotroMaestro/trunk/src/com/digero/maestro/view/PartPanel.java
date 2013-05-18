@@ -28,6 +28,7 @@ import com.digero.common.view.ColorTable;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
@@ -138,7 +139,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
-			if (e.isPartNumber()) {
+			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
 				numberSpinner.setValue(abcPart.getPartNumber());
 			}
 		}

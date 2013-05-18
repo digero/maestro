@@ -95,6 +95,7 @@ import com.digero.maestro.abc.AbcMetadataSource;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
@@ -680,7 +681,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
 		public void abcPartChanged(AbcPartEvent e) {
-			if (e.isPartNumber()) {
+			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
 				int idx;
 				Object selected = partsList.getSelectedValue();
 				Collections.sort(partsWrapper, partNumberComparator);
@@ -693,7 +694,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			partsList.repaint();
 
-			if (e.isPreviewRelated() && abcSequencer.isRunning()) {
+			if (e.isAbcPreviewRelated() && abcSequencer.isRunning()) {
 				refreshPreviewSequence(false);
 			}
 		}

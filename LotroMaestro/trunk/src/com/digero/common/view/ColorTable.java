@@ -7,6 +7,7 @@ public enum ColorTable {
 	NOTE_ON_BORDER(new Color(0xAA000000, true)), //
 	INDICATOR(new Color(0x66FFFFFF, true)), //
 	INDICATOR_ACTIVE(new Color(0xAAFFFFFF, true)), //
+	OCTAVE_LINE(new Color(0x3C3C3C)), //
 
 	NOTE_ENABLED /*      */(Color.getHSBColor(0.62f, 0.85f, 1.00f)), //
 	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.80f, 0.80f)), //

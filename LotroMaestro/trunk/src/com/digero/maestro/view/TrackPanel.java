@@ -129,6 +129,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 		});
 
+		noteGraph.setOctaveLinesVisible(!trackInfo.isDrumTrack());
+
 		if (!trackInfo.isDrumTrack()) {
 			int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
 			transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
@@ -148,7 +150,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				}
 			});
 		}
-		
+
 		add(checkBox, TITLE_COLUMN + ", 0");
 		if (transposeSpinner != null)
 			add(transposeSpinner, CONTROL_COLUMN + ", 0, f, c");
@@ -158,7 +160,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		abcPart.addAbcListener(abcListener = new AbcPartListener() {
 			public void abcPartChanged(AbcPartEvent e) {
-				if (e.isPreviewRelated()) {
+				if (e.isNoteGraphRelated()) {
 					updateState();
 					noteGraph.repaint();
 				}
@@ -180,11 +182,11 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		updateState(true);
 	}
-	
+
 	private void initDrumSavePanel() {
 		JLabel intro = new JLabel("Drum Map: ");
 		intro.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
-		
+
 		LinkButton saveButton = new LinkButton("<html><u>Export</u></html>");
 		saveButton.setForeground(ColorTable.PANEL_LINK.get());
 		saveButton.setOpaque(false);
@@ -193,10 +195,10 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				saveDrumMapping();
 			}
 		});
-		
+
 		JLabel divider = new JLabel(" | ");
 		divider.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
-		
+
 		LinkButton loadButton = new LinkButton("<html><u>Import</u></html>");
 		loadButton.setForeground(ColorTable.PANEL_LINK.get());
 		loadButton.setOpaque(false);
@@ -205,7 +207,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				loadDrumMapping();
 			}
 		});
-		
+
 		drumSavePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
 		drumSavePanel.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 0));
 		drumSavePanel.setOpaque(false);
@@ -297,7 +299,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			if (showDrumPanels) {
 				if (drumSavePanel == null)
 					initDrumSavePanel();
-				
+
 				add(drumSavePanel, TITLE_COLUMN + ", 1, l, c");
 				int row = LAYOUT_ROWS.length;
 				for (int noteId : trackInfo.getNotesInUse()) {

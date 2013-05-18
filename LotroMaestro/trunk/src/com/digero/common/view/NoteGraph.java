@@ -43,11 +43,15 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	protected final int MAX_RENDERED;
 	protected final double NOTE_WIDTH_PX;
 	protected final double NOTE_HEIGHT_PX;
+	private final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
+	private final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
 
 	private ColorTable noteColor = ColorTable.NOTE_ENABLED;
 	private ColorTable badNoteColor = ColorTable.NOTE_BAD_ENABLED;
 	private ColorTable noteOnColor = ColorTable.NOTE_ON;
 	private ColorTable noteOnBorder = ColorTable.NOTE_ON_BORDER;
+
+	private boolean octaveLinesVisible = false;
 
 	private Color[] noteColorByDynamics = new Color[Dynamics.values().length];
 	private Color[] badNoteColorByDynamics = new Color[Dynamics.values().length];
@@ -110,6 +114,17 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		return true;
 	}
 
+	public void setOctaveLinesVisible(boolean octaveLinesVisible) {
+		if (this.octaveLinesVisible != octaveLinesVisible) {
+			this.octaveLinesVisible = octaveLinesVisible;
+			repaint();
+		}
+	}
+
+	public boolean isOctaveLinesVisible() {
+		return octaveLinesVisible;
+	}
+
 	public final void setNoteColor(ColorTable noteColor) {
 		if (this.noteColor != noteColor) {
 			this.noteColor = noteColor;
@@ -162,9 +177,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 			// whenever any of its dependencies changes.
 
 			double scrnX = 0;
-			double scrnY = 2 * NOTE_HEIGHT_PX;
+			double scrnY = NOTE_HEIGHT_PX;
 			double scrnW = getWidth();
-			double scrnH = getHeight() - 3 * NOTE_HEIGHT_PX;
+			double scrnH = getHeight() - NOTE_HEIGHT_PX;
 
 			double noteX = 0;
 			double noteY = MAX_RENDERED; // The max note gets mapped to 0
@@ -260,10 +275,10 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 				// Transform to screen coordinates
 				Point2D.Double pt = new Point2D.Double(left, 0);
 				xform.transform(pt, pt);
-				int x = (int) Math.floor(pt.x) - 2;
+				int x = (int) Math.floor(pt.x - NOTE_ON_OUTLINE_WIDTH_PX) - 2;
 				pt.setLocation(right, 0);
 				xform.transform(pt, pt);
-				int width = (int) Math.ceil(pt.x) - x + 4;
+				int width = (int) Math.ceil(pt.x + 2 * NOTE_ON_OUTLINE_WIDTH_PX) - x + 4;
 				repaint(x, 0, width, getHeight());
 			}
 		}
@@ -322,8 +337,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		Object hintAntialiasSav = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		AffineTransform xformSav = g2.getTransform();
 
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
 		AffineTransform xform = getTransform();
 		double minLength = NOTE_WIDTH_PX / xform.getScaleX();
 		double height = Math.abs(NOTE_HEIGHT_PX / xform.getScaleY());
@@ -350,13 +363,28 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 
 		g2.transform(xform);
 
+		if (octaveLinesVisible) {
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+
+			int minBarOctave = MIN_RENDERED / 12 + 1;
+			int maxBarOctave = MAX_RENDERED / 12 - 1;
+			double lineHeight = Math.abs(1 / xform.getScaleY());
+			g2.setColor(ColorTable.OCTAVE_LINE.get());
+			for (int barOctave = minBarOctave; barOctave <= maxBarOctave; barOctave++) {
+				rectTmp.setRect(0, barOctave * 12, sequencer.getLength(), lineHeight);
+				g2.fill(rectTmp);
+			}
+		}
+
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
 		boolean showNotesOn = isShowingNotesOn() && songPos >= 0;
 		long minSongPos = songPos;
 
 		if (showNotesOn) {
 			// Highlight all notes that are on, or were on since we last painted (up to 100ms ago) 
 			if (lastPaintedSongPos >= 0 && lastPaintedSongPos < songPos) {
-				minSongPos = Math.max(lastPaintedSongPos, songPos - 2 * SequencerWrapper.UPDATE_FREQUENCY_MICROS);
+				minSongPos = Math.max(lastPaintedSongPos, songPos - 4 * SequencerWrapper.UPDATE_FREQUENCY_MICROS);
 			}
 		}
 
@@ -410,9 +438,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		}
 
 		if (notesOn != null) {
-			final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
-			final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
-
 			double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
 			double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
 			double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
