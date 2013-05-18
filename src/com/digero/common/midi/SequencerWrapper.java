@@ -19,7 +19,7 @@ import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
 public class SequencerWrapper implements IMidiConstants {
-	public static final int UPDATE_FREQUENCY_MILLIS = 50;
+	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
 
 	protected Sequencer sequencer;
