@@ -136,6 +136,7 @@ public class AbcPart implements IDisposable {
 			throw new AbcConversionException("Only C major and A minor are currently supported");
 
 		PrintStream out = new PrintStream(os);
+		out.println();
 		out.println("X: " + partNumber);
 		if (metadata != null) {
 			if (metadata.getSongTitle().length() > 0)
@@ -196,7 +197,7 @@ public class AbcPart implements IDisposable {
 
 				if (barNumber % 10 == 0) {
 					out.println();
-					out.print("% Bar " + barNumber); 
+					out.print("% Bar " + barNumber);
 					if (barNumber > 1)
 						out.print(" (" + Util.formatDuration((barNumber - 1) * tm.barLength) + ")");
 					out.println();
@@ -322,8 +323,7 @@ public class AbcPart implements IDisposable {
 		if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH)
 			out.println();
 		out.print(bar);
-		out.print(" |]");
-		out.println();
+		out.println("|]");
 		out.println();
 	}
 
@@ -865,8 +865,10 @@ public class AbcPart implements IDisposable {
 	public boolean isDrumEnabled(int track, int drumId) {
 		BitSet[] enabledSet = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
 
-		if (enabledSet == null || enabledSet[track] == null)
-			return !isCowbellPart() || (drumId == MidiConstants.COWBELL_DRUM_ID);
+		if (enabledSet == null || enabledSet[track] == null) {
+			return !isCowbellPart() || (drumId == MidiConstants.COWBELL_DRUM_ID)
+					|| !sequenceInfo.getTrackInfo(track).isDrumTrack();
+		}
 
 		return enabledSet[track].get(drumId);
 	}
