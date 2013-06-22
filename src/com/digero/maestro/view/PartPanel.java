@@ -45,7 +45,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	private JSpinner numberSpinner;
 	private SpinnerNumberModel numberSpinnerModel;
 	private JTextField nameTextField;
-	private JComboBox instrumentComboBox;
+	private JComboBox<LotroInstrument> instrumentComboBox;
 
 	private JScrollPane trackScrollPane;
 
@@ -93,7 +93,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			}
 		});
 
-		instrumentComboBox = new JComboBox();
+		instrumentComboBox = new JComboBox<LotroInstrument>();
 		instrumentComboBox.setMaximumRowCount(12);
 		instrumentComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -166,7 +166,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			numberSpinner.setEnabled(false);
 			nameTextField.setEnabled(false);
 			instrumentComboBox.setEnabled(false);
-			instrumentComboBox.setModel(new DefaultComboBoxModel(LotroInstrument.values()));
+			instrumentComboBox.setModel(new DefaultComboBoxModel<LotroInstrument>(LotroInstrument.values()));
 
 			numberSpinner.setValue(0);
 			nameTextField.setText("");
@@ -182,7 +182,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 			numberSpinner.setValue(abcPart.getPartNumber());
 			nameTextField.setText(abcPart.getTitle());
-			instrumentComboBox.setModel(new DefaultComboBoxModel(abcPart.getSupportedInstruments()));
+			instrumentComboBox.setModel(new DefaultComboBoxModel<LotroInstrument>(abcPart.getSupportedInstruments()));
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
 			lastSelectedInstrument = abcPart.getInstrument();
 

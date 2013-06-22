@@ -18,7 +18,7 @@ import javax.swing.event.ChangeListener;
 import com.digero.common.view.ColorTable;
 
 public class Colorizer extends JPanel {
-	private JComboBox picker;
+	private JComboBox<ColorTable> picker;
 	private SpinnerNumberModel hue;
 	private SpinnerNumberModel sat;
 	private SpinnerNumberModel brt;
@@ -28,7 +28,7 @@ public class Colorizer extends JPanel {
 	public Colorizer(JPanel coloredPanel) {
 		super(new BorderLayout());
 		this.refresher = coloredPanel;
-		picker = new JComboBox(ColorTable.values());
+		picker = new JComboBox<ColorTable>(ColorTable.values());
 
 		picker.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

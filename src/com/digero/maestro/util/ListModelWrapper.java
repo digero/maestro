@@ -4,16 +4,20 @@ import java.util.AbstractList;
 
 import javax.swing.DefaultListModel;
 
-@SuppressWarnings("unchecked")
 public class ListModelWrapper<E> extends AbstractList<E> {
-	private DefaultListModel listModel;
+	private DefaultListModel<E> listModel;
 
-	public ListModelWrapper(DefaultListModel listModel) {
+	public ListModelWrapper(DefaultListModel<E> listModel) {
 		this.listModel = listModel;
 	}
-	
-	public DefaultListModel getListModel() {
+
+	public DefaultListModel<E> getListModel() {
 		return listModel;
+	}
+
+	@Override
+	public void clear() {
+		listModel.clear();
 	}
 
 	@Override
