@@ -59,7 +59,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	private int drumId;
 
 	private JCheckBox checkBox;
-	private JComboBox drumComboBox;
+	private JComboBox<LotroDrumInfo> drumComboBox;
 	private DrumNoteGraph noteGraph;
 
 	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId) {
@@ -97,7 +97,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		instr = Util.ellipsis(instr, TITLE_WIDTH, checkBox.getFont());
 		checkBox.setText(instr);
 
-		drumComboBox = new JComboBox(LotroDrumInfo.ALL_DRUMS.toArray());
+		drumComboBox = new JComboBox<LotroDrumInfo>(LotroDrumInfo.ALL_DRUMS.toArray(new LotroDrumInfo[0]));
 		drumComboBox.setSelectedItem(getSelectedDrum());
 		drumComboBox.setMaximumRowCount(20);
 		drumComboBox.addActionListener(new ActionListener() {

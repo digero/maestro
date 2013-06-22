@@ -33,7 +33,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 	private JPanel mainPanel;
 
 	private JPanel numberingPanel;
-	private JComboBox incrementComboBox;
+	private JComboBox<Integer> incrementComboBox;
 
 	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings) {
 		super(owner, "Settings", true);
@@ -55,7 +55,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		JPanel incrementPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JLabel incrementLabel = new JLabel("Increment: ");
-		incrementComboBox = new JComboBox(new Integer[] {
+		incrementComboBox = new JComboBox<Integer>(new Integer[] {
 				1, 10
 		});
 		incrementComboBox.setSelectedItem(numbererSettings.getIncrement());

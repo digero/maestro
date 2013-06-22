@@ -122,7 +122,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private VolumeTransceiver volumeTransceiver;
 	private SequencerWrapper abcSequencer;
 	private VolumeTransceiver abcVolumeTransceiver;
-	private DefaultListModel parts = new DefaultListModel();
+	private DefaultListModel<AbcPart> parts = new DefaultListModel<AbcPart>();
 	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
 	private PartAutoNumberer partAutoNumberer;
 	private boolean usingNativeVolume;
@@ -139,7 +139,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JCheckBox tripletCheckBox;
 	private JButton exportButton;
 
-	private JList partsList;
+	private JList<AbcPart> partsList;
 	private JButton newPartButton;
 	private JButton deletePartButton;
 
@@ -293,7 +293,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		partsList = new JList(parts);
+		partsList = new JList<AbcPart>(parts);
 		partsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
