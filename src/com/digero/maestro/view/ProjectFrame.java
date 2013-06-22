@@ -509,6 +509,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		initMenu();
 	}
 
+	@Override
+	public void dispose() {
+		for (AbcPart part : partsWrapper) {
+			part.dispose();
+		}
+		partsWrapper.clear();
+
+		sequencer.dispose();
+		abcSequencer.dispose();
+
+		super.dispose();
+	}
+
 	private void initMenu() {
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
