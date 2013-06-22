@@ -15,10 +15,11 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
+import com.digero.maestro.util.IDisposable;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
-public class SequencerWrapper implements IMidiConstants {
+public class SequencerWrapper implements IMidiConstants, IDisposable {
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
 
@@ -45,6 +46,33 @@ public class SequencerWrapper implements IMidiConstants {
 		transmitter.setReceiver(receiver);
 	}
 
+	@Override
+	public void dispose() {
+		if (sequencer != null) {
+			stop();
+		}
+
+		listeners = null;
+
+		if (updateTimer != null)
+			updateTimer.stop();
+
+		if (transceivers != null) {
+			for (Transceiver t : transceivers)
+				t.close();
+			transceivers = null;
+		}
+
+		if (transmitter != null)
+			transmitter.close();
+
+		if (receiver != null)
+			receiver.close();
+
+		if (sequencer != null)
+			sequencer.close();
+	}
+
 	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
 		customSequencer = true;
 		this.sequencer = sequencer;
@@ -54,7 +82,7 @@ public class SequencerWrapper implements IMidiConstants {
 		if (sequencer.getSequence() != null) {
 			tempoCache.refresh(sequencer.getSequence());
 		}
-		
+
 		if (sequencer.isRunning()) {
 			updateTimer.start();
 		}
