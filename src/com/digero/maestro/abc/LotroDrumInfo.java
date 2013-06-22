@@ -28,7 +28,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 
 		add(Note.C2, "Conga High");
 		add(Note.Cs2, "Rattle Short");
-		add(Note.D2, "Conga High");
+		add(Note.D2, "Bongo High");
 		add(Note.Ds2, "Slap");
 		add(Note.E2, "Slap");
 		add(Note.F2, "Muted");
@@ -48,7 +48,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		add(Note.G3, "Rattle");
 		add(Note.Gs3, "Bass");
 		add(Note.A3, "Rattle Long");
-		add(Note.As3, "Bass");
+		add(Note.As3, "Bass Open");
 		add(Note.B3, "Rattle");
 		add(Note.C4, "Rattle");
 		add(Note.Cs4, "Muted");
@@ -59,8 +59,8 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		add(Note.Fs4, "Slap");
 		add(Note.G4, "Conga Low");
 		add(Note.Gs4, "Slap");
-		add(Note.A4, "Conga Low");
-		add(Note.As4, "Muff");
+		add(Note.A4, "Bongo Low");
+		add(Note.As4, "Conga High");
 		add(Note.B4, "Conga Mid");
 		add(Note.C5, "Slap");
 
@@ -102,10 +102,28 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 
 	private static void add(Note note, String category) {
 		SortedSet<LotroDrumInfo> categorySet = byCategory.get(category);
-		if (categorySet == null)
+		if (categorySet == null) {
 			byCategory.put(category, categorySet = new TreeSet<LotroDrumInfo>());
+		}
+		else if (categorySet.size() == 1) {
+			// We're about to add a second one to the category...
+			// add the "1" to the name of the existing element
+			Note prevNote = categorySet.first().note;
+			String prevName = category + " 1 (" + prevNote.abc + ")";
+			LotroDrumInfo prevInfo = new LotroDrumInfo(prevNote, prevName, category);
+			categorySet.clear();
+			categorySet.add(prevInfo);
+			byId.put(prevNote.id, prevInfo);
+		}
 
-		String name = category + " " + (categorySet.size() + 1) + " (" + note.abc + ")";
+		String name;
+		if (categorySet.isEmpty()) {
+			// If this is the first item in the category, don't add its number to the list
+			name = category + " (" + note.abc + ")";
+		}
+		else {
+			name = category + " " + (categorySet.size() + 1) + " (" + note.abc + ")";
+		}
 		LotroDrumInfo info = new LotroDrumInfo(note, name, category);
 
 		categorySet.add(info);
