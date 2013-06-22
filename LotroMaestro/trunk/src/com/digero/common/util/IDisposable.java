@@ -1,4 +1,4 @@
-package com.digero.maestro.util;
+package com.digero.common.util;
 
 public interface IDisposable {
 	public void dispose();
