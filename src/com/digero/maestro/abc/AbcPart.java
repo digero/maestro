@@ -25,11 +25,11 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
+import com.digero.common.util.IDisposable;
 import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
-import com.digero.maestro.util.IDisposable;
 
 public class AbcPart implements IDisposable {
 	private SequenceInfo sequenceInfo;

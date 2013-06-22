@@ -23,6 +23,7 @@ import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
+import com.digero.common.util.IDisposable;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.common.view.NoteGraph;
@@ -33,7 +34,6 @@ import com.digero.maestro.abc.LotroDrumInfo;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
-import com.digero.maestro.util.IDisposable;
 
 @SuppressWarnings("serial")
 public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {

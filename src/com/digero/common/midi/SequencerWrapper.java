@@ -15,7 +15,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
-import com.digero.maestro.util.IDisposable;
+import com.digero.common.util.IDisposable;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 

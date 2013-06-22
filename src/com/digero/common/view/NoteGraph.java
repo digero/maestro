@@ -30,10 +30,10 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.IDisposable;
 import com.digero.common.util.Util;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
-import com.digero.maestro.util.IDisposable;
 
 public class NoteGraph extends JPanel implements SequencerListener, IDisposable {
 	protected final SequencerWrapper sequencer;

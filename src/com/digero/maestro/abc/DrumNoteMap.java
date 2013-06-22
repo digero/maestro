@@ -19,9 +19,9 @@ import javax.swing.event.ChangeListener;
 
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
+import com.digero.common.util.IDisposable;
 import com.digero.common.util.ParseException;
 import com.digero.maestro.MaestroMain;
-import com.digero.maestro.util.IDisposable;
 
 public class DrumNoteMap implements IDisposable {
 	public static final String FILE_SUFFIX = "drummap";
