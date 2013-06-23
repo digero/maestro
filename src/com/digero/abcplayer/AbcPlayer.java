@@ -284,6 +284,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				}
 				catch (Exception e) {
 					Version requredJavaVersion = new Version(1, 6, 0, 30);
+					Version recommendedJavaVersion = new Version(1, 7, 0, 25);
 
 					JPanel errorMessage = new JPanel(new BorderLayout(0, 12));
 					errorMessage.add(new JLabel(
@@ -293,10 +294,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 					final String JAVA_URL = "http://www.java.com";
 					if (requredJavaVersion.compareTo(Version.parseVersion(System.getProperty("java.version"))) > 0) {
-						JLabel update = new JLabel(
-								"<html>It is recommended that you install Java 6 update 30 or later.<br>"
-										+ "Get the latest version from <a href='" + JAVA_URL + "'>" + JAVA_URL
-										+ "</a>.</html>");
+						JLabel update = new JLabel("<html>It is recommended that you install Java "
+								+ recommendedJavaVersion.getMinor() + " update " + recommendedJavaVersion.getRevision()
+								+ " or later.<br>" + "Get the latest version from <a href='" + JAVA_URL + "'>"
+								+ JAVA_URL + "</a>.</html>");
 						update.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 						update.addMouseListener(new MouseAdapter() {
 							public void mouseClicked(MouseEvent e) {
@@ -387,10 +388,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		playButton.setEnabled(false);
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (sequencer.isRunning())
-					sequencer.stop();
-				else
-					sequencer.start();
+				playPause();
 			}
 		});
 
@@ -427,8 +425,11 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		sequencer.addChangeListener(new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
-				updateButtonStates();
 				SequencerProperty p = evt.getProperty();
+				if (!p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
+					updateButtonStates();
+				}
+
 				if (barCountLabel.isVisible() && p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
 					updateBarCountLabel();
 				}
@@ -1055,8 +1056,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, instrumentOverrideMap, info, !lotroErrorsMenuItem
-						.isSelected(), stereoMenuItem.isSelected());
+				song = AbcToMidi.convert(data, useLotroInstruments, instrumentOverrideMap, info,
+						!lotroErrorsMenuItem.isSelected(), stereoMenuItem.isSelected());
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1159,6 +1160,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				out.close();
 		}
 		return true;
+	}
+
+	private void playPause() {
+		if (sequencer.isRunning())
+			sequencer.stop();
+		else
+			sequencer.start();
 	}
 
 	private void stop() {
@@ -1578,7 +1586,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					checkBox.setSelected(!sequencer.getTrackMute(i));
 					checkBox.addActionListener(this);
 
-					JComboBox comboBox = new JComboBox(LotroInstrument.values());
+					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(LotroInstrument.values());
 					comboBox.setMaximumRowCount(12);
 					comboBox.putClientProperty(trackIndexKey, i);
 					comboBox.setBackground(getBackground());
@@ -1604,7 +1612,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				sequencer.setTrackMute(i, !checkBox.isSelected());
 			}
 			else if (evt.getSource() instanceof JComboBox) {
-				JComboBox comboBox = (JComboBox) evt.getSource();
+				JComboBox<?> comboBox = (JComboBox<?>) evt.getSource();
 				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
 
 				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
