@@ -53,7 +53,9 @@ public class MaestroMain {
 		if (mainWindow == null)
 			return;
 
-		mainWindow.setExtendedState(mainWindow.getExtendedState() & ~JFrame.ICONIFIED);
+		int state = mainWindow.getExtendedState();
+		if ((state & JFrame.ICONIFIED) != 0)
+			mainWindow.setExtendedState(state & ~JFrame.ICONIFIED);
 
 		if (args.length > 0) {
 			File file = new File(args[0]);
