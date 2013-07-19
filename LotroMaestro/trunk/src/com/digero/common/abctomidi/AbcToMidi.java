@@ -46,6 +46,7 @@ public class AbcToMidi {
 		public Map<Integer, LotroInstrument> instrumentOverrideMap = null;
 		public boolean enableLotroErrors = false;
 		public boolean stereo = true;
+		public AbcInfo abcInfo = null;
 
 		public Params(File file) throws IOException {
 			this.filesData = new ArrayList<FileAndData>();
@@ -326,20 +327,12 @@ public class AbcToMidi {
 		}
 	}
 
-	public static Sequence convert(Params params, AbcInfo abcInfo) throws ParseException {
-		return convert(params.filesData, params.useLotroInstruments, params.instrumentOverrideMap, abcInfo,
+	public static Sequence convert(Params params) throws ParseException {
+		return convert(params.filesData, params.useLotroInstruments, params.instrumentOverrideMap, params.abcInfo,
 				params.enableLotroErrors, params.stereo);
 	}
 
-	public static Sequence convert(File file, boolean useLotroInstruments,
-			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
-			final boolean stereo) throws ParseException, IOException {
-		List<FileAndData> filesData = new ArrayList<FileAndData>();
-		filesData.add(new FileAndData(file, readLines(file)));
-		return convert(filesData, useLotroInstruments, instrumentOverrideMap, abcInfo, enableLotroErrors, stereo);
-	}
-
-	public static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
+	private static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
 			final boolean stereo) throws ParseException {
 		if (abcInfo == null)
