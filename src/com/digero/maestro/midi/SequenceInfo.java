@@ -40,13 +40,13 @@ public class SequenceInfo implements IMidiConstants {
 	private long endMicros;
 	private List<TrackInfo> trackInfoList;
 
-	public static SequenceInfo fromAbc(AbcToMidi.Params params, AbcInfo abcInfo) throws InvalidMidiDataException,
+	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException,
 			ParseException {
-		if (abcInfo == null)
-			abcInfo = new AbcInfo();
-		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file, AbcToMidi.convert(params, abcInfo));
-		sequenceInfo.title = abcInfo.getTitle();
-		sequenceInfo.composer = abcInfo.getComposer();
+		if (params.abcInfo == null)
+			params.abcInfo = new AbcInfo();
+		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file, AbcToMidi.convert(params));
+		sequenceInfo.title = params.abcInfo.getTitle();
+		sequenceInfo.composer = params.abcInfo.getComposer();
 		return sequenceInfo;
 	}
 

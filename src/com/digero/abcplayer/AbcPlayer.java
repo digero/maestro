@@ -987,8 +987,12 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, null, info, !lotroErrorsMenuItem.isSelected(),
-						stereoMenuItem.isSelected());
+				AbcToMidi.Params params = new AbcToMidi.Params(data);
+				params.useLotroInstruments = useLotroInstruments;
+				params.abcInfo = info;
+				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
+				params.stereo = stereoMenuItem.isSelected();
+				song = AbcToMidi.convert(params);
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1056,8 +1060,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		do {
 			retry = false;
 			try {
-				song = AbcToMidi.convert(data, useLotroInstruments, instrumentOverrideMap, info,
-						!lotroErrorsMenuItem.isSelected(), stereoMenuItem.isSelected());
+				AbcToMidi.Params params = new AbcToMidi.Params(data);
+				params.useLotroInstruments = useLotroInstruments;
+				params.instrumentOverrideMap = instrumentOverrideMap;
+				params.abcInfo = info;
+				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
+				params.stereo = stereoMenuItem.isSelected();
+				song = AbcToMidi.convert(params);
 			}
 			catch (LotroParseException e) {
 				if (onLotroParseError(e)) {
@@ -1626,8 +1635,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		Sequence song;
 
 		try {
-			song = AbcToMidi.convert(abcData, useLotroInstruments, instrumentOverrideMap, abcInfo, false,
-					stereoMenuItem.isSelected());
+			AbcToMidi.Params params = new AbcToMidi.Params(abcData);
+			params.useLotroInstruments = useLotroInstruments;
+			params.instrumentOverrideMap = instrumentOverrideMap;
+			params.abcInfo = abcInfo;
+			params.enableLotroErrors = false;
+			params.stereo = stereoMenuItem.isSelected();
+			song = AbcToMidi.convert(params);
 		}
 		catch (ParseException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error changing instrument", JOptionPane.ERROR_MESSAGE);

@@ -794,8 +794,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			if (isAbc) {
 				AbcToMidi.Params params = new AbcToMidi.Params(midiFile);
+				params.abcInfo = abcInfo;
 				params.useLotroInstruments = false;
-				sequenceInfo = SequenceInfo.fromAbc(params, abcInfo);
+				sequenceInfo = SequenceInfo.fromAbc(params);
 				saveFile = midiFile;
 				allowOverwriteSaveFile = false;
 			}
