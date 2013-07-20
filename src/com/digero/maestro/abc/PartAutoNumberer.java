@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
 import com.digero.common.abc.LotroInstrument;
@@ -19,12 +19,15 @@ public class PartAutoNumberer {
 			firstNumber = new HashMap<LotroInstrument, Integer>(LotroInstrument.values().length);
 			int i = 0;
 			for (LotroInstrument instrument : LotroInstrument.values()) {
-				if (instrument != LotroInstrument.MOOR_COWBELL)
+				if (instrument != LotroInstrument.MOOR_COWBELL && instrument != LotroInstrument.PIBGORN)
 					firstNumber.put(instrument, prefs.getInt(instrument.toString(), ++i));
 			}
+			// Pibgorn defaults to the bagpipe number
+			firstNumber.put(LotroInstrument.PIBGORN,
+					prefs.getInt(LotroInstrument.PIBGORN.toString(), firstNumber.get(LotroInstrument.BAGPIPE)));
 			// Moor cowbell defaults to the cowbell number
-			firstNumber.put(LotroInstrument.MOOR_COWBELL, prefs.getInt(LotroInstrument.MOOR_COWBELL.toString(),
-					firstNumber.get(LotroInstrument.COWBELL)));
+			firstNumber.put(LotroInstrument.MOOR_COWBELL,
+					prefs.getInt(LotroInstrument.MOOR_COWBELL.toString(), firstNumber.get(LotroInstrument.COWBELL)));
 
 			incrementByTen = prefs.getBoolean("incrementByTen", true);
 		}
