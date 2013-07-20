@@ -8,9 +8,9 @@ public enum Dynamics {
 	p(48, 85), //
 	mp(64, 92), //
 	mf(80, 100), //
-	f(92, 106), //
-	ff(104, 113), //
-	fff(116, 120), //
+	f(96, 106), //
+	ff(112, 113), //
+	fff(127, 120), //
 	ffff(127, 127);
 
 	public static final Dynamics DEFAULT = mf;
