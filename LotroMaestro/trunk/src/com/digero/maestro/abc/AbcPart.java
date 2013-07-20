@@ -351,7 +351,7 @@ public class AbcPart implements IDisposable {
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
 						int velocity = ne.velocity;
 						if (dynamicVolume)
-							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.fff.midiVol);
+							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.MAXIMUM.midiVol);
 						events.add(new NoteEvent(mappedNote, velocity, start, end));
 					}
 				}
