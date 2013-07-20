@@ -68,6 +68,8 @@ public class PanGenerator {
 			return CENTER + sign * -15;
 		case DRUMS:
 			return CENTER + sign * 15;
+		case PIBGORN:
+			return CENTER + sign * 20;
 		case HORN:
 			return CENTER + sign * 25;
 		case LUTE:

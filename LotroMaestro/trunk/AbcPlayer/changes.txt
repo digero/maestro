@@ -2,6 +2,10 @@ Todo:
   - Separate LotroInstruments.sf2 from the installer. Make it a download.
   - ABC visualization.
   - Part solos
+  
+ Version 1.3.0
+   - Pibgorn support
+   - Support for +pppp+ and +ffff+ dynamics
 
 Version 1.2.2
 BUG FIXES

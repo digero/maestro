@@ -32,6 +32,7 @@ public enum LotroInstrument {
 	CLARINET(Note.D2, Note.C5, true, 71, 1, false), //
 	HORN(Note.Cs2, Note.C5, true, 69, 0, false), //
 	BAGPIPE(Note.C2, Note.C5, true, 109, 1, false), //
+	PIBGORN(Note.D2, Note.C5, true, 84, 2, false), //
 	DRUMS(Note.C2, Note.C5, false, 118, 0, true), //
 	COWBELL(Note.C2, Note.C5, false, 115, 0, true), //
 	MOOR_COWBELL(Note.C2, Note.C5, false, 114, 0, true);
@@ -56,7 +57,7 @@ public enum LotroInstrument {
 	public boolean isSustainable(int noteId) {
 		return sustainable && isPlayable(noteId);
 	}
-	
+
 	public boolean isPlayable(int noteId) {
 		return noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
 	}
