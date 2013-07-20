@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1595,7 +1597,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					checkBox.setSelected(!sequencer.getTrackMute(i));
 					checkBox.addActionListener(this);
 
-					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(LotroInstrument.values());
+					LotroInstrument[] instruments = LotroInstrument.values();
+					Arrays.sort(instruments, new Comparator<LotroInstrument>() {
+						@Override
+						public int compare(LotroInstrument a, LotroInstrument b) {
+							return a.toString().compareTo(b.toString());
+						}
+					});
+					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(instruments);
 					comboBox.setMaximumRowCount(12);
 					comboBox.putClientProperty(trackIndexKey, i);
 					comboBox.setBackground(getBackground());
