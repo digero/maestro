@@ -12,6 +12,7 @@ import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -73,6 +74,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -1527,17 +1529,25 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	//
 	private static final int TRACKLIST_ROWHEIGHT = 18;
 
-	private class TrackListPanel extends JPanel implements ActionListener {
+	private class TrackListPanel extends JPanel {
 		private TableLayout layout;
 
 		private Object trackIndexKey = new Object();
+		LotroInstrument[] sortedInstruments = LotroInstrument.values();
 
 		public TrackListPanel() {
 			super(new TableLayout(new double[] {
-					0, FILL, PREFERRED, 0
+					0, FILL, PREFERRED, PREFERRED, 0
 			}, new double[] {
 					0, 0
 			}));
+
+			Arrays.sort(sortedInstruments, new Comparator<LotroInstrument>() {
+				@Override
+				public int compare(LotroInstrument a, LotroInstrument b) {
+					return a.toString().compareTo(b.toString());
+				}
+			});
 
 			layout = (TableLayout) getLayout();
 			layout.setVGap(4);
@@ -1546,10 +1556,15 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			setBackground(Color.WHITE);
 		}
 
+		@SuppressWarnings("rawtypes")
 		public void clear() {
 			for (Component c : getComponents()) {
 				if (c instanceof JCheckBox) {
-					((JCheckBox) c).removeActionListener(this);
+					((JCheckBox) c).removeActionListener(trackMuteListener);
+					((JCheckBox) c).removeActionListener(trackSoloListener);
+				}
+				if (c instanceof JComboBox) {
+					((JComboBox) c).removeActionListener(instrumentChangeListener);
 				}
 			}
 			removeAll();
@@ -1595,26 +1610,28 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					checkBox.putClientProperty(trackIndexKey, i);
 					checkBox.setBackground(getBackground());
 					checkBox.setSelected(!sequencer.getTrackMute(i));
-					checkBox.addActionListener(this);
+					checkBox.addActionListener(trackMuteListener);
+					
+					JToggleButton soloButton = new JToggleButton("S");
+					soloButton.setMargin(new Insets(3, 4, 3, 3));
+					soloButton.setToolTipText("Play only this part (Solo)");
+					soloButton.putClientProperty(trackIndexKey, i);
+					soloButton.setBackground(getBackground());
+					soloButton.setSelected(sequencer.getTrackSolo(i));
+					soloButton.addActionListener(trackSoloListener);
 
-					LotroInstrument[] instruments = LotroInstrument.values();
-					Arrays.sort(instruments, new Comparator<LotroInstrument>() {
-						@Override
-						public int compare(LotroInstrument a, LotroInstrument b) {
-							return a.toString().compareTo(b.toString());
-						}
-					});
-					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(instruments);
+					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(sortedInstruments);
 					comboBox.setMaximumRowCount(12);
 					comboBox.putClientProperty(trackIndexKey, i);
 					comboBox.setBackground(getBackground());
 					comboBox.setSelectedItem(instrument);
-					comboBox.addActionListener(this);
+					comboBox.addActionListener(instrumentChangeListener);
 
 					int r = layout.getNumRow() - 1;
 					layout.insertRow(r, TRACKLIST_ROWHEIGHT);
 					add(checkBox, "1, " + r);
-					add(comboBox, "2, " + r);
+					add(soloButton, "2, " + r);
+					add(comboBox, "3, " + r);
 				}
 			}
 
@@ -1622,21 +1639,33 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			repaint();
 		}
 
-		@Override
-		public void actionPerformed(ActionEvent evt) {
-			if (evt.getSource() instanceof JCheckBox) {
-				JCheckBox checkBox = (JCheckBox) evt.getSource();
+		private ActionListener trackMuteListener = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JCheckBox checkBox = (JCheckBox) e.getSource();
 				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
 				sequencer.setTrackMute(i, !checkBox.isSelected());
 			}
-			else if (evt.getSource() instanceof JComboBox) {
-				JComboBox<?> comboBox = (JComboBox<?>) evt.getSource();
-				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
+		};
 
+		private ActionListener trackSoloListener = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JToggleButton checkBox = (JToggleButton) e.getSource();
+				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
+				sequencer.setTrackSolo(i, checkBox.isSelected());
+			}
+		};
+
+		private ActionListener instrumentChangeListener = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JComboBox<?> comboBox = (JComboBox<?>) e.getSource();
+				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
 				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
 				refreshSequence();
 			}
-		}
+		};
 	}
 
 	private void refreshSequence() {
