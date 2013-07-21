@@ -20,7 +20,7 @@ ABC Player is especially useful for previewing songs with multiple parts, to see
 sound with each other without having to get your band together in game.
 </p>
 
-<?php if (time() < strtotime("April 15, 2011")): ?>
+<?php if (time() < strtotime("August 15, 2013")): ?>
 <p style="color: yellow;">Version <?=$cur_ver?> is here. Take a look at the 
 <a href="changelog.php">Release Notes</a> to see what's new.</p>
 <?php endif; ?>
@@ -33,7 +33,7 @@ sound with each other without having to get your band together in game.
 <i>The installer will configure your computer to open .abc files using ABC Player.</i>
 </p>
 <p>
-ABC Player requires <a class="dnld" href="http://java.com/">Java 6</a> or greater.  
+ABC Player requires <a class="dnld" href="http://java.com/">Java 7</a> or greater.  
 You must have the 32-bit version of Java installed, even if you're running 64-bit Windows.
 </p>
 <p>
@@ -66,7 +66,7 @@ use a program like <a href="http://lame.sourceforge.net/">LAME</a> to convert th
 
 <h2>Preview</h2>
 <p>
-<img src="abcplayer_1.2.0.png" alt="Screenshot of ABC Player"/>
+<img src="abcplayer_1.3.0.png" alt="Screenshot of ABC Player"/>
 </p>
 <p>
 This is what the song pictured above sounds like when played in ABC Player:

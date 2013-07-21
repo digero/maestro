@@ -13,7 +13,7 @@
 	
 	<div id="footer">
 		Created by Digero of Landroval<br />
-		Copyright &copy; 2010-2011 Ben Howell<br />
+		Copyright &copy; 2010-2013 Ben Howell<br />
 		No affiliation with Turbine, Inc. or Warner Bros.
 		<div id="copyright">
 			<a href="http://www.free-css-templates.com/">Free CSS Templates</a> | <a href="http://www.openwebdesign.org/">pro web design</a>
