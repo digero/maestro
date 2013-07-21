@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.AbcConstants;
+import com.digero.common.abc.Dynamics;
 import com.digero.common.midi.Note;
 
 public class Chord implements AbcConstants {
@@ -35,9 +35,6 @@ public class Chord implements AbcConstants {
 	private long endMicros;
 	private boolean hasTooManyNotes = false;
 	private List<NoteEvent> notes = new ArrayList<NoteEvent>();
-
-	public Chord() {
-	}
 
 	public Chord(NoteEvent firstNote) {
 		startMicros = firstNote.startMicros;
@@ -95,14 +92,9 @@ public class Chord implements AbcConstants {
 			return null;
 
 		NoteEvent ne = notes.remove(i);
-		if (ne.endMicros == this.endMicros) {
-			this.endMicros = notes.get(0).endMicros;
-			for (int k = 1; k < notes.size(); k++) {
-				if (notes.get(k).endMicros < endMicros) {
-					this.endMicros = notes.get(k).endMicros;
-				}
-			}
-		}
+		if (ne.endMicros == this.endMicros)
+			recalcEndMicros();
+
 		return ne;
 	}
 
@@ -122,7 +114,18 @@ public class Chord implements AbcConstants {
 
 		return Dynamics.fromMidiVelocity(velocity);
 	}
-	
+
+	public void recalcEndMicros() {
+		if (!notes.isEmpty()) {
+			this.endMicros = notes.get(0).endMicros;
+			for (int k = 1; k < notes.size(); k++) {
+				if (notes.get(k).endMicros < endMicros) {
+					this.endMicros = notes.get(k).endMicros;
+				}
+			}
+		}
+	}
+
 	public void sort() {
 		Collections.sort(notes);
 	}
