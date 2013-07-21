@@ -331,8 +331,8 @@ public class AbcPart implements IDisposable {
 	 * Combine the tracks into one, quantize the note lengths, separate into
 	 * chords.
 	 */
-	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, final long songStartMicros,
-			final long songEndMicros, int deltaVelocity) throws AbcConversionException {
+	private List<Chord> combineAndQuantize(TimingInfo tm, boolean breakAndTieNotesAcrossBarLines,
+			final long songStartMicros, final long songEndMicros, int deltaVelocity) throws AbcConversionException {
 
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
@@ -432,7 +432,7 @@ public class AbcPart implements IDisposable {
 			notesOn.add(ne);
 		}
 
-		breakLongNotes(events, tm, addTies);
+		breakLongNotes(events, tm, breakAndTieNotesAcrossBarLines);
 
 		List<Chord> chords = new ArrayList<Chord>(events.size() / 2);
 		List<NoteEvent> tmpEvents = new ArrayList<NoteEvent>();
@@ -447,6 +447,7 @@ public class AbcPart implements IDisposable {
 				if (!curChord.add(ne)) {
 					// Couldn't add the note (too many notes in the chord)
 					removeNote(events, i);
+					i--;
 				}
 			}
 			else {
@@ -475,7 +476,7 @@ public class AbcPart implements IDisposable {
 					tmpEvents.clear();
 					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(), nextChord
 							.getStartMicros()));
-					breakLongNotes(tmpEvents, tm, addTies);
+					breakLongNotes(tmpEvents, tm, breakAndTieNotesAcrossBarLines);
 
 					for (NoteEvent restEvent : tmpEvents)
 						chords.add(new Chord(restEvent));
@@ -489,7 +490,7 @@ public class AbcPart implements IDisposable {
 		return chords;
 	}
 
-	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean addTies) {
+	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean breakAndTieNotesAcrossBarLines) {
 		for (int i = 0; i < events.size(); i++) {
 			NoteEvent ne = events.get(i);
 
@@ -531,7 +532,7 @@ public class AbcPart implements IDisposable {
 				ne.endMicros = maxNoteEnd;
 			}
 
-			if (addTies) {
+			if (breakAndTieNotesAcrossBarLines) {
 				// Make a soft break (tie) for notes that cross bar boundaries
 				long barEnd = tm.getBarEnd(ne.startMicros);
 				if (ne.endMicros > barEnd) {
