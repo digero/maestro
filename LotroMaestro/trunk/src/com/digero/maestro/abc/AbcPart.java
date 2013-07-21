@@ -465,13 +465,8 @@ public class AbcPart implements IDisposable {
 						NoteEvent jne = curChord.get(j);
 						if (jne.endMicros > targetEndMicros) {
 							// This note extends past the end of the chord; break it into two tied notes
-							NoteEvent next = new NoteEvent(jne.note, jne.velocity, targetEndMicros, jne.endMicros);
-							if (jne.note != Note.REST) {
-								next.tiesFrom = jne;
-								jne.tiesTo = next;
-							}
-							jne.endMicros = targetEndMicros;
-
+							NoteEvent next = jne.splitWithTie(targetEndMicros);
+							
 							int ins = Collections.binarySearch(events, next);
 							if (ins < 0)
 								ins = -ins - 1;
@@ -581,20 +576,12 @@ public class AbcPart implements IDisposable {
 				// Make a soft break (tie) for notes that cross bar boundaries
 				long barEnd = tm.getBarEnd(ne.startMicros);
 				if (ne.endMicros > barEnd) {
-					NoteEvent next = new NoteEvent(ne.note, ne.velocity, barEnd, ne.endMicros);
+					NoteEvent next = ne.splitWithTie(barEnd);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
 						ins = -ins - 1;
 					assert (ins > i);
-					events.add((ins < 0) ? (-ins - 1) : ins, next);
-
-					// Rests don't need to be tied
-					if (ne.note != Note.REST) {
-						next.tiesFrom = ne;
-						ne.tiesTo = next;
-					}
-
-					ne.endMicros = barEnd;
+					events.add(ins, next);
 				}
 			}
 		}

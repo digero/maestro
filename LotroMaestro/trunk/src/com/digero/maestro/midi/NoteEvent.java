@@ -25,12 +25,12 @@ package com.digero.maestro.midi;
 import com.digero.common.midi.Note;
 
 public class NoteEvent implements Comparable<NoteEvent> {
+	public final Note note;
+	public final int velocity;
 	public long startMicros;
 	public long endMicros;
-	public Note note;
 	public NoteEvent tiesFrom = null;
 	public NoteEvent tiesTo = null;
-	public final int velocity;
 
 	public NoteEvent(Note note, int velocity, long startMicros, long endMicros) {
 		this.note = note;
@@ -63,6 +63,30 @@ public class NoteEvent implements Comparable<NoteEvent> {
 			return this;
 		assert tiesTo.endMicros > this.endMicros;
 		return tiesTo.getTieEnd();
+	}
+	
+	/**
+	 * Splits the NoteEvent into two events with a tie between them. 
+	 * 
+	 * @param splitPointMicros The time index to split the NoteEvent.
+	 * @return The new NoteEvent that was created starting at splitPointMicros.
+	 */
+	public NoteEvent splitWithTie(long splitPointMicros) {
+		assert splitPointMicros > startMicros && splitPointMicros < endMicros;
+		
+		NoteEvent next = new NoteEvent(note, velocity, splitPointMicros, endMicros);
+		this.endMicros = splitPointMicros;
+		
+		if (note != Note.REST) {
+			if (this.tiesTo != null) {
+				next.tiesTo = this.tiesTo;
+				this.tiesTo.tiesFrom = next;
+			}
+			next.tiesFrom = this;
+			this.tiesTo = next;
+		}
+		
+		return next;
 	}
 
 	@Override
