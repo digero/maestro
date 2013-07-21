@@ -39,9 +39,9 @@ public class SequenceInfo implements IMidiConstants {
 	private int tempoBPM;
 	private long endMicros;
 	private List<TrackInfo> trackInfoList;
+//	private NavigableMap<Long, Integer> microsToTempoMap;
 
-	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException,
-			ParseException {
+	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException {
 		if (params.abcInfo == null)
 			params.abcInfo = new AbcInfo();
 		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file, AbcToMidi.convert(params));
@@ -82,7 +82,15 @@ public class SequenceInfo implements IMidiConstants {
 				endMicros = Math.max(endMicros, track.getEvents().get(track.getEventCount() - 1).endMicros);
 		}
 
-		tempoBPM = findMainTempo(sequence, tempoCache);
+		tempoBPM = sequenceCache.getPrimaryTempoBPM();
+
+//		microsToTempoMap = new TreeMap<Long, Integer>();
+//		for (Entry<Long, Integer> tickToMPQ : sequenceCache.getTickToTempoMPQMap().entrySet()) {
+//			long micros = MidiUtils.tick2microsecond(sequence, tickToMPQ.getKey(), tempoCache);
+//			int bpm = (int) Math.round(MidiUtils.convertTempo(tickToMPQ.getValue()));
+//
+//			microsToTempoMap.put(micros, bpm);
+//		}
 
 		composer = "";
 		if (trackInfoList.get(0).hasName()) {
@@ -151,12 +159,17 @@ public class SequenceInfo implements IMidiConstants {
 		return TimeSignature.FOUR_FOUR;
 	}
 
+//	/** Microseconds to BPM */
+//	public NavigableMap<Long, Integer> getMicrosToTempoMap() {
+//		return microsToTempoMap;
+//	}
+
 	@Override
 	public String toString() {
 		return getTitle();
 	}
 
-	public static int findMainTempo(Sequence sequence, TempoCache tempoCache) {
+	private static int findMainTempo(Sequence sequence, TempoCache tempoCache) {
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 
 		long bestTempoLength = 0;
