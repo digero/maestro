@@ -5,9 +5,14 @@ Todo:
   
  Version 1.3.0
  NEW FEATURES
-   - Pibgorn support
-   - Support for +pppp+ and +ffff+ dynamics
-   - The instrument list is sorted by instrument name
+  - Added support for the Pibgorn instrument. There are several notes that play 
+    at the wrong pitch to match the broken behavior of the Pibgorn in the game.
+  - Added a Solo button [S] to let you easily listen to a single part solo without 
+    having to mute the rest of the tracks.
+  - The instrument dropdown is now sorted by name.
+
+BUG FIXES
+  - The +pppp+ and +ffff+ dynamics specifiers should no longer cause errors.
 
 Version 1.2.2
 BUG FIXES

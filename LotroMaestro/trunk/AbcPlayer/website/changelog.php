@@ -3,6 +3,21 @@
 	$pagename = "Release Notes";
 	require('_header.php');
 ?>
+<h2>Version 1.3.0</h2>
+<i>July 20, 2013</i>
+<h3>New Features</h3>
+<ul>
+<li>Added support for the Pibgorn instrument. There are several notes that play 
+    at the wrong pitch to match the broken behavior of the Pibgorn in the game.</li>
+<li>Added a Solo button [S] to let you easily listen to a single part solo without 
+    having to mute the rest of the tracks.</li>
+<li>The instrument dropdown is now sorted by name.</li>
+</ul>
+<h3>Bug Fixes</h3>
+<ul>
+<li>The +pppp+ and +ffff+ dynamics specifiers should no longer cause errors.</li>
+</ul>
+<hr/>
 <h2>Version 1.2.2</h2>
 <i>January 6, 2012</i>
 <h3>Bug Fixes</h3>
