@@ -2,7 +2,7 @@
 	define('_ABCPLAYER_', true);
 	require('_header.php');
 	
-	$cur_ver = "1.2.2";
+	$cur_ver = "1.3.0";
 	
 	$msi_path = "bin/AbcPlayer_$cur_ver.msi";
 	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
