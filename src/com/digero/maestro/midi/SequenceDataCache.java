@@ -139,6 +139,10 @@ public class SequenceDataCache implements IMidiConstants {
 		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
+	public NavigableMap<Long, Integer> getTickToTempoMPQMap() {
+		return tempo;
+	}
+
 	private static class MapByChannel {
 		private NavigableMap<Long, Integer>[] map;
 		private int defaultValue;
