@@ -331,8 +331,8 @@ public class AbcPart implements IDisposable {
 	 * Combine the tracks into one, quantize the note lengths, separate into
 	 * chords.
 	 */
-	private List<Chord> combineAndQuantize(TimingInfo tm, boolean breakAndTieNotesAcrossBarLines,
-			final long songStartMicros, final long songEndMicros, int deltaVelocity) throws AbcConversionException {
+	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, final long songStartMicros,
+			final long songEndMicros, int deltaVelocity) throws AbcConversionException {
 
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
@@ -432,7 +432,7 @@ public class AbcPart implements IDisposable {
 			notesOn.add(ne);
 		}
 
-		breakLongNotes(events, tm, breakAndTieNotesAcrossBarLines);
+		breakLongNotes(events, tm, addTies);
 
 		List<Chord> chords = new ArrayList<Chord>(events.size() / 2);
 		List<NoteEvent> tmpEvents = new ArrayList<NoteEvent>();
@@ -454,29 +454,74 @@ public class AbcPart implements IDisposable {
 				// Create a new chord
 				Chord nextChord = new Chord(ne);
 
-				// The next chord starts playing immediately after the *shortest* note (or rest) in
-				// the current chord is finished, so we may need to add a rest inside the chord to
-				// shorten it, or a rest after the chord to add a pause.
+				if (addTies) {
+					// The curChord has all the notes it will get. But before continuing, 
+					// normalize the chord so that all notes end at the same time and end 
+					// before the next chord starts.
+					boolean reprocessCurrentNote = false;
+					long targetEndMicros = Math.min(nextChord.getStartMicros(), curChord.getEndMicros());
 
-				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
-					// Make sure there's room to add the rest
-					while (curChord.size() >= Chord.MAX_CHORD_NOTES) {
-						removeNote(events, curChord.remove(curChord.size() - 1));
+					for (int j = 0; j < curChord.size(); j++) {
+						NoteEvent jne = curChord.get(j);
+						if (jne.endMicros > targetEndMicros) {
+							// This note extends past the end of the chord; break it into two tied notes
+							NoteEvent next = new NoteEvent(jne.note, jne.velocity, targetEndMicros, jne.endMicros);
+							if (jne.note != Note.REST) {
+								next.tiesFrom = jne;
+								jne.tiesTo = next;
+							}
+							jne.endMicros = targetEndMicros;
+
+							int ins = Collections.binarySearch(events, next);
+							if (ins < 0)
+								ins = -ins - 1;
+							assert (ins >= i);
+							// If we're inserting before the current note, back up and process the added note
+							if (ins == i)
+								reprocessCurrentNote = true;
+
+							events.add(ins, next);
+						}
+					}
+
+					// The shorter notes will have changed the chord's duration
+					if (targetEndMicros < curChord.getEndMicros())
+						curChord.recalcEndMicros();
+
+					if (reprocessCurrentNote) {
+						i--;
+						continue;
+					}
+				}
+				else {
+					// If we're note allowed to add ties, use the old method of shortening the 
+					// chord by inserting a short rest. 
+
+					// The next chord starts playing immediately after the *shortest* note (or rest) in
+					// the current chord is finished, so we may need to add a rest inside the chord to
+					// shorten it, or a rest after the chord to add a pause.
+
+					if (curChord.getEndMicros() > nextChord.getStartMicros()) {
+						// Make sure there's room to add the rest
+						while (curChord.size() >= Chord.MAX_CHORD_NOTES) {
+							removeNote(events, curChord.remove(curChord.size() - 1));
+						}
+					}
+
+					// Check the chord length again, since removing a note might have changed its length
+					if (curChord.getEndMicros() > nextChord.getStartMicros()) {
+						// If the chord is too long, add a short rest in the chord to shorten it
+						curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getStartMicros(),
+								nextChord.getStartMicros()));
 					}
 				}
 
-				// Check the chord length again, since removing a note might have changed its length
-				if (curChord.getEndMicros() > nextChord.getStartMicros()) {
-					// If the chord is too long, add a short rest in the chord to shorten it
-					curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getStartMicros(),
-							nextChord.getStartMicros()));
-				}
-				else if (curChord.getEndMicros() < nextChord.getStartMicros()) {
-					// If the chord is too short, insert a rest to fill the gap
+				// Insert a rest between the chords if needed
+				if (curChord.getEndMicros() < nextChord.getStartMicros()) {
 					tmpEvents.clear();
 					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(), nextChord
 							.getStartMicros()));
-					breakLongNotes(tmpEvents, tm, breakAndTieNotesAcrossBarLines);
+					breakLongNotes(tmpEvents, tm, addTies);
 
 					for (NoteEvent restEvent : tmpEvents)
 						chords.add(new Chord(restEvent));
@@ -490,7 +535,7 @@ public class AbcPart implements IDisposable {
 		return chords;
 	}
 
-	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean breakAndTieNotesAcrossBarLines) {
+	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean addTies) {
 		for (int i = 0; i < events.size(); i++) {
 			NoteEvent ne = events.get(i);
 
@@ -532,7 +577,7 @@ public class AbcPart implements IDisposable {
 				ne.endMicros = maxNoteEnd;
 			}
 
-			if (breakAndTieNotesAcrossBarLines) {
+			if (addTies) {
 				// Make a soft break (tie) for notes that cross bar boundaries
 				long barEnd = tm.getBarEnd(ne.startMicros);
 				if (ne.endMicros > barEnd) {
