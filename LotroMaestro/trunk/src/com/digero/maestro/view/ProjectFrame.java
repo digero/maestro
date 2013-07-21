@@ -274,8 +274,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 2 /* step */));
 
-		tripletCheckBox = new JCheckBox("Triplet timing (experimental)");
-		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets.<br><br>"
+		tripletCheckBox = new JCheckBox("Use triplets/swing rhythm");
+		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets (also used in songs with a swing rhythm).<br><br>"
 				+ "This can cause short/fast notes to incorrectly be detected as triplets.<br>"
 				+ "Leave it unchecked unless the song contains triplets.</html>");
 		tripletCheckBox.addActionListener(new ActionListener() {
@@ -1039,7 +1039,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 			}
 
-			if (parts.getSize() > 1) {
+			if (parts.getSize() > 0) {
 				PrintStream outWriter = new PrintStream(out);
 				AbcMetadataSource meta = this;
 				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
