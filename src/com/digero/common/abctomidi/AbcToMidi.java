@@ -63,6 +63,7 @@ public class AbcToMidi {
 			private int number = 1;
 			private LotroInstrument instrument = LotroInstrument.LUTE;
 			private String name = null;
+			private String rawName = null;
 			private boolean nameIsFromExtendedInfo = false;
 		}
 
@@ -166,6 +167,17 @@ public class AbcToMidi {
 			return info.name.substring(titlePrefix.length()).trim();
 		}
 
+		public String getPartFullName(int trackIndex) {
+			PartInfo info = partInfoByIndex.get(trackIndex);
+			if (info == null || info.rawName == null) {
+				if (info.name != null)
+					return info.name;
+				return "Track " + trackIndex;
+			}
+
+			return info.rawName;
+		}
+
 		private String getMetadata(char key) {
 			return metadata.get(Character.toUpperCase(key));
 		}
@@ -224,6 +236,10 @@ public class AbcToMidi {
 				info.name = partName;
 				info.nameIsFromExtendedInfo = fromExtendedInfo;
 			}
+
+			if (!fromExtendedInfo) {
+				info.rawName = partName;
+			}
 		}
 
 		private void addBar(long chordStartTick) {
@@ -276,7 +292,7 @@ public class AbcToMidi {
 	private static final int INFO_TYPE = 1;
 	private static final int INFO_VALUE = 2;
 
-	private static final Pattern XINFO_PATTERN = Pattern.compile("^%%([A-Za-z\\-])\\s+(.*)\\s*$");
+	private static final Pattern XINFO_PATTERN = Pattern.compile("^%%([A-Za-z\\-]+)\\s+(.*)\\s*$");
 	private static final int XINFO_FIELD = 1;
 	private static final int XINFO_VALUE = 2;
 
