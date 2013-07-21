@@ -1,4 +1,4 @@
-package com.digero.common.view;
+package com.digero.maestro.view;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -32,6 +32,7 @@ import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDisposable;
 import com.digero.common.util.Util;
+import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 

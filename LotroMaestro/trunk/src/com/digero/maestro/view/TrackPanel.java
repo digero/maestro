@@ -41,7 +41,6 @@ import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.common.view.LinkButton;
-import com.digero.common.view.NoteGraph;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
