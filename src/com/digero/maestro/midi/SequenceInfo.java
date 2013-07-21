@@ -39,6 +39,7 @@ public class SequenceInfo implements IMidiConstants {
 	private int tempoBPM;
 	private long endMicros;
 	private List<TrackInfo> trackInfoList;
+
 //	private NavigableMap<Long, Integer> microsToTempoMap;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException {
@@ -82,7 +83,7 @@ public class SequenceInfo implements IMidiConstants {
 				endMicros = Math.max(endMicros, track.getEvents().get(track.getEventCount() - 1).endMicros);
 		}
 
-		tempoBPM = sequenceCache.getPrimaryTempoBPM();
+		tempoBPM = findMainTempo(sequence, tempoCache); //sequenceCache.getPrimaryTempoBPM(); 
 
 //		microsToTempoMap = new TreeMap<Long, Integer>();
 //		for (Entry<Long, Integer> tickToMPQ : sequenceCache.getTickToTempoMPQMap().entrySet()) {
