@@ -1607,6 +1607,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 				if (hasNotes) {
 					JCheckBox checkBox = new JCheckBox(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartName(i));
+					checkBox.setToolTipText(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartFullName(i));
 					checkBox.putClientProperty(trackIndexKey, i);
 					checkBox.setBackground(getBackground());
 					checkBox.setSelected(!sequencer.getTrackMute(i));
