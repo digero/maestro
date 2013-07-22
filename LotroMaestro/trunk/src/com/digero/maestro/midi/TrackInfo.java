@@ -18,6 +18,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
@@ -29,7 +30,6 @@ import com.sun.media.sound.MidiUtils;
 public class TrackInfo implements IMidiConstants {
 	private SequenceInfo sequenceInfo;
 
-	private Track track;
 	private int trackNumber;
 	private String name;
 	private TimeSignature timeSignature = null;
@@ -43,7 +43,6 @@ public class TrackInfo implements IMidiConstants {
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
 			SequenceDataCache sequenceCache) throws InvalidMidiDataException {
 		this.sequenceInfo = parent;
-		this.track = track;
 		this.trackNumber = trackNumber;
 
 		Sequence song = sequenceInfo.getSequence();
@@ -191,12 +190,29 @@ public class TrackInfo implements IMidiConstants {
 		instruments = Collections.unmodifiableSet(instruments);
 	}
 
-	public SequenceInfo getSequenceInfo() {
-		return sequenceInfo;
+	public TrackInfo(SequenceInfo parent, int trackNumber, String name, LotroInstrument instrument,
+			TimeSignature timeSignature, KeySignature keySignature, List<NoteEvent> noteEvents) {
+		this.sequenceInfo = parent;
+		this.trackNumber = trackNumber;
+		this.name = name;
+		this.timeSignature = timeSignature;
+		this.keySignature = keySignature;
+		this.instruments = new HashSet<Integer>();
+		this.instruments.add(instrument.midiProgramId);
+		this.noteEvents = noteEvents;
+		this.notesInUse = new TreeSet<Integer>();
+		for (NoteEvent ne : noteEvents) {
+			this.notesInUse.add(ne.note.id);
+		}
+		this.isDrumTrack = false;
+
+		this.noteEvents = Collections.unmodifiableList(this.noteEvents);
+		this.notesInUse = Collections.unmodifiableSortedSet(this.notesInUse);
+		this.instruments = Collections.unmodifiableSet(this.instruments);
 	}
 
-	public Track getTrack() {
-		return track;
+	public SequenceInfo getSequenceInfo() {
+		return sequenceInfo;
 	}
 
 	public int getTrackNumber() {
