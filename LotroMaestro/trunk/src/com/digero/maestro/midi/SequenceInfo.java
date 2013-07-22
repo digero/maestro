@@ -141,9 +141,10 @@ public class SequenceInfo implements IMidiConstants {
 			int pan = !parts.isEmpty() ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
 			TrackInfo trackInfo = part.exportToPreview(this, tm, key, 0, songStartMicros, songEndMicros, pan);
 
-			if (trackInfo.hasEvents())
+			if (trackInfo.hasEvents()) {
 				this.endMicros = Math.max(this.endMicros,
 						trackInfo.getEvents().get(trackInfo.getEventCount() - 1).endMicros);
+			}
 
 			trackInfoList.add(trackInfo);
 		}
