@@ -1,5 +1,7 @@
 package com.digero.maestro.abc;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -159,5 +161,20 @@ public class PartAutoNumberer {
 			partToChange.setInstrument(newInstrument);
 			onPartAdded(partToChange);
 		}
+	}
+
+	public LotroInstrument[] getSortedInstrumentList() {
+		LotroInstrument[] instruments = LotroInstrument.values();
+		Arrays.sort(instruments, new Comparator<LotroInstrument>() {
+			@Override
+			public int compare(LotroInstrument a, LotroInstrument b) {
+				int diff = getFirstNumber(a) - getFirstNumber(b);
+				if (diff != 0)
+					return diff;
+				
+				return a.toString().compareTo(b.toString());
+			}
+		});
+		return instruments;
 	}
 }
