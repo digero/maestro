@@ -30,6 +30,7 @@ import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.midi.TrackInfo;
 
 public class AbcPart implements IDisposable {
 	private SequenceInfo sequenceInfo;
@@ -71,9 +72,15 @@ public class AbcPart implements IDisposable {
 		}
 
 		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
-		int channel = out.getTracks().length;
+		exportToMidi(out, tm, chords, pan);
+	}
+
+	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan) {
+		int trackNumber = out.getTracks().length;
+		int channel = trackNumber;
 		if (channel >= MidiConstants.DRUM_CHANNEL)
 			channel++;
+
 		Track track = out.createTrack();
 
 		track.add(MidiFactory.createTrackNameEvent(title));
@@ -119,6 +126,27 @@ public class AbcPart implements IDisposable {
 		for (NoteEvent on : notesOn) {
 			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.getTieEnd().endMicros)));
 		}
+
+		return trackNumber;
+	}
+
+	public TrackInfo exportToPreview(SequenceInfo sequenceInfo, TimingInfo tm, KeySignature key, int deltaVelocity,
+			long songStartMicros, long songEndMicros, int pan) throws AbcConversionException {
+
+		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
+
+		List<NoteEvent> noteEvents = new ArrayList<NoteEvent>(chords.size());
+		for (Chord chord : chords) {
+			for (int i = 0; i < chord.size(); i++) {
+				NoteEvent ne = chord.get(i);
+				if (ne.note != Note.REST)
+					noteEvents.add(new NoteEvent(ne.note, ne.velocity, ne.startMicros, ne.endMicros));
+			}
+		}
+
+		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan);
+
+		return new TrackInfo(sequenceInfo, trackNumber, getTitle(), getInstrument(), tm.meter, key, noteEvents);
 	}
 
 	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
@@ -466,7 +494,7 @@ public class AbcPart implements IDisposable {
 						if (jne.endMicros > targetEndMicros) {
 							// This note extends past the end of the chord; break it into two tied notes
 							NoteEvent next = jne.splitWithTie(targetEndMicros);
-							
+
 							int ins = Collections.binarySearch(events, next);
 							if (ins < 0)
 								ins = -ins - 1;

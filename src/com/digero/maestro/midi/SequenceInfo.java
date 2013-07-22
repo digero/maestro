@@ -22,8 +22,13 @@ import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.PanGenerator;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.ParseException;
+import com.digero.maestro.abc.AbcConversionException;
+import com.digero.maestro.abc.AbcMetadataSource;
+import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
@@ -32,8 +37,8 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  * type 1.
  */
 public class SequenceInfo implements IMidiConstants {
-	private File file;
 	private Sequence sequence;
+	private String fileName;
 	private String title;
 	private String composer;
 	private int tempoBPM;
@@ -45,18 +50,24 @@ public class SequenceInfo implements IMidiConstants {
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException {
 		if (params.abcInfo == null)
 			params.abcInfo = new AbcInfo();
-		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file, AbcToMidi.convert(params));
+		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file.getName(), AbcToMidi.convert(params));
 		sequenceInfo.title = params.abcInfo.getTitle();
 		sequenceInfo.composer = params.abcInfo.getComposer();
 		return sequenceInfo;
 	}
 
 	public static SequenceInfo fromMidi(File midiFile) throws InvalidMidiDataException, IOException, ParseException {
-		return new SequenceInfo(midiFile, MidiSystem.getSequence(midiFile));
+		return new SequenceInfo(midiFile.getName(), MidiSystem.getSequence(midiFile));
 	}
 
-	private SequenceInfo(File file, Sequence sequence) throws InvalidMidiDataException, ParseException {
-		this.file = file;
+	public static SequenceInfo fromAbcParts(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm,
+			KeySignature key, long songStartMicros, long songEndMicros) throws InvalidMidiDataException,
+			AbcConversionException {
+		return new SequenceInfo(parts, metadata, tm, key, songStartMicros, songEndMicros);
+	}
+
+	private SequenceInfo(String fileName, Sequence sequence) throws InvalidMidiDataException, ParseException {
+		this.fileName = fileName;
 		this.sequence = sequence;
 
 		// Since the drum track separation is only applicable to type 1 midi sequences, 
@@ -98,7 +109,7 @@ public class SequenceInfo implements IMidiConstants {
 			title = trackInfoList.get(0).getName();
 		}
 		else {
-			title = file.getName();
+			title = fileName;
 			int dot = title.lastIndexOf('.');
 			if (dot > 0)
 				title = title.substring(0, dot);
@@ -108,8 +119,40 @@ public class SequenceInfo implements IMidiConstants {
 		trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
-	public File getFile() {
-		return file;
+	private SequenceInfo(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm, KeySignature key,
+			long songStartMicros, long songEndMicros) throws InvalidMidiDataException, AbcConversionException {
+
+		this.fileName = metadata.getSongTitle() + ".abc";
+		this.tempoBPM = tm.tempo;
+		this.composer = metadata.getComposer();
+		this.title = metadata.getSongTitle();
+
+		this.sequence = new Sequence(Sequence.PPQ, tm.getMidiResolution());
+
+		// Track 0: Title and meta info
+		Track track0 = sequence.createTrack();
+		track0.add(MidiFactory.createTrackNameEvent(this.title));
+		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
+
+		PanGenerator panner = new PanGenerator();
+		this.trackInfoList = new ArrayList<TrackInfo>(parts.size());
+		this.endMicros = 0;
+		for (AbcPart part : parts) {
+			int pan = !parts.isEmpty() ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
+			TrackInfo trackInfo = part.exportToPreview(this, tm, key, 0, songStartMicros, songEndMicros, pan);
+
+			if (trackInfo.hasEvents())
+				this.endMicros = Math.max(this.endMicros,
+						trackInfo.getEvents().get(trackInfo.getEventCount() - 1).endMicros);
+
+			trackInfoList.add(trackInfo);
+		}
+
+		this.trackInfoList = Collections.unmodifiableList(this.trackInfoList);
+	}
+
+	public String getFileName() {
+		return fileName;
 	}
 
 	public Sequence getSequence() {
