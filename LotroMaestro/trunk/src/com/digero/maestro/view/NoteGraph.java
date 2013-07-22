@@ -19,6 +19,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -156,6 +157,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	}
 
 	protected List<NoteEvent> getEvents() {
+		if (trackInfo == null)
+			return Collections.emptyList();
+
 		return trackInfo.getEvents();
 	}
 
@@ -215,6 +219,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private long songPos = -1;
 
 	private boolean isShowingNotesOn() {
+		if (trackInfo == null)
+			return false;
+
 		return sequencer.isRunning() && sequencer.isTrackActive(trackInfo.getTrackNumber());
 	}
 
@@ -485,6 +492,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		}
 
 		private boolean isDragCanceled(MouseEvent e) {
+			if (getEvents().isEmpty())
+				return true;
+
 			// Allow drag to continue anywhere within the scroll pane
 			Component dragArea = SwingUtilities.getAncestorOfClass(JScrollPane.class, NoteGraph.this);
 			if (dragArea == null)
@@ -495,7 +505,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 		}
 
 		public void mousePressed(MouseEvent e) {
-			if (e.getButton() == MouseEvent.BUTTON1) {
+			if (e.getButton() == MouseEvent.BUTTON1 && !getEvents().isEmpty()) {
 				sequencer.setDragging(true);
 				sequencer.setDragPosition(positionFromEvent(e));
 			}
