@@ -333,7 +333,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private Color getNoteColor(NoteEvent ne) {
 		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity);
 		if (noteColorByDynamics[dyn.ordinal()] == null) {
-			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.35f);
+			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.20f);
 		}
 		return noteColorByDynamics[dyn.ordinal()];
 	}
