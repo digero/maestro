@@ -28,10 +28,8 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -72,8 +70,6 @@ import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.KeySignature;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.PanGenerator;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -122,8 +118,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private VolumeTransceiver volumeTransceiver;
 	private SequencerWrapper abcSequencer;
 	private VolumeTransceiver abcVolumeTransceiver;
-	private DefaultListModel<AbcPart> parts = new DefaultListModel<AbcPart>();
-	private ListModelWrapper<AbcPart> partsWrapper = new ListModelWrapper<AbcPart>(parts);
+	private ListModelWrapper<AbcPart> parts = new ListModelWrapper<AbcPart>(new DefaultListModel<AbcPart>());
 	private PartAutoNumberer partAutoNumberer;
 	private boolean usingNativeVolume;
 
@@ -163,7 +158,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
-		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), partsWrapper);
+		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), parts);
 
 		usingNativeVolume = MaestroMain.isNativeVolumeSupported();
 		if (usingNativeVolume) {
@@ -265,8 +260,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		transposeSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				int transpose = getTranspose();
-				for (int i = 0; i < parts.getSize(); i++) {
-					AbcPart part = (AbcPart) parts.getElementAt(i);
+				for (AbcPart part : parts) {
 					part.setBaseTranspose(transpose);
 				}
 			}
@@ -275,9 +269,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 2 /* step */));
 
 		tripletCheckBox = new JCheckBox("Use triplets/swing rhythm");
-		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets (also used in songs with a swing rhythm).<br><br>"
+		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets or a swing rhythm.<br><br>"
 				+ "This can cause short/fast notes to incorrectly be detected as triplets.<br>"
-				+ "Leave it unchecked unless the song contains triplets.</html>");
+				+ "Leave it unchecked unless the song has triplets or a swing rhythm.</html>");
 		tripletCheckBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -293,11 +287,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		partsList = new JList<AbcPart>(parts);
+		partsList = new JList<AbcPart>(parts.getListModel());
 		partsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				AbcPart abcPart = (AbcPart) partsList.getSelectedValue();
+				AbcPart abcPart = partsList.getSelectedValue();
 				sequencer.getFilter().setAbcPart(abcPart);
 				partPanel.setAbcPart(abcPart);
 			}
@@ -311,9 +305,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			public void actionPerformed(ActionEvent e) {
 				AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
 				newPart.addAbcListener(abcPartListener);
-				parts.addElement(newPart);
+				parts.add(newPart);
 				partAutoNumberer.onPartAdded(newPart);
-				Collections.sort(partsWrapper, partNumberComparator);
+				Collections.sort(parts, partNumberComparator);
 				partsList.clearSelection();
 				partsList.setSelectedValue(newPart, true);
 				updateAbcButtons();
@@ -324,7 +318,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		deletePartButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int idx = partsList.getSelectedIndex();
-				AbcPart oldPart = (AbcPart) parts.remove(idx);
+				AbcPart oldPart = parts.remove(idx);
 				if (idx > 0)
 					partsList.setSelectedIndex(idx - 1);
 				else if (parts.size() > 0)
@@ -492,7 +486,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcSequencerListener = new AbcSequencerListener();
 		abcSequencer.addChangeListener(abcSequencerListener);
 
-		parts.addListDataListener(new ListDataListener() {
+		parts.getListModel().addListDataListener(new ListDataListener() {
 			public void intervalRemoved(ListDataEvent e) {
 				updateAbcButtons();
 			}
@@ -511,10 +505,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	@Override
 	public void dispose() {
-		for (AbcPart part : partsWrapper) {
+		for (AbcPart part : parts) {
 			part.dispose();
 		}
-		partsWrapper.clear();
+		parts.clear();
 
 		sequencer.dispose();
 		abcSequencer.dispose();
@@ -687,7 +681,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcStopButton.setEnabled(abcSequencer.isLoaded()
 				&& (abcSequencer.isRunning() || abcSequencer.getPosition() != 0));
 
-		newPartButton.setEnabled(sequenceInfo != null && parts.getSize() < 15);
+		newPartButton.setEnabled(sequenceInfo != null && parts.size() < 15);
 		deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
 		exportButton.setEnabled(sequenceInfo != null && parts.size() > 0);
 	}
@@ -696,8 +690,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		public void abcPartChanged(AbcPartEvent e) {
 			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
 				int idx;
-				Object selected = partsList.getSelectedValue();
-				Collections.sort(partsWrapper, partNumberComparator);
+				AbcPart selected = partsList.getSelectedValue();
+				Collections.sort(parts, partNumberComparator);
 				if (selected != null) {
 					idx = parts.indexOf(selected);
 					if (idx >= 0)
@@ -732,18 +726,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		return (TimeSignature) timeSignatureField.getValue();
 	}
 
-	public int calcNextPartNumber() {
-		int size = parts.getSize();
-		outerLoop: for (int n = 1; n <= size; n++) {
-			for (int i = 0; i < size; i++) {
-				if (n == ((AbcPart) parts.getElementAt(i)).getPartNumber())
-					continue outerLoop;
-			}
-			return n;
-		}
-		return size + 1;
-	}
-
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>() {
 		public int compare(AbcPart p1, AbcPart p2) {
 			int base1 = partAutoNumberer.getFirstNumber(p1.getInstrument());
@@ -757,8 +739,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	@SuppressWarnings("unused")
 	private void close() {
-		for (int i = 0; i < parts.size(); i++) {
-			AbcPart part = (AbcPart) parts.get(i);
+		for (AbcPart part : parts) {
 			part.dispose();
 		}
 		parts.clear();
@@ -775,8 +756,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	public void openSong(File midiFile) {
 		midiFile = Util.resolveShortcut(midiFile);
 
-		for (int i = 0; i < parts.size(); i++) {
-			AbcPart part = (AbcPart) parts.get(i);
+		for (AbcPart part : parts) {
 			part.dispose();
 		}
 		parts.clear();
@@ -838,7 +818,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						}
 					}
 
-					parts.addElement(newPart);
+					parts.add(newPart);
 					newPart.addAbcListener(abcPartListener);
 					t++;
 				}
@@ -851,9 +831,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					newPartButton.doClick();
 				}
 				else {
-					Collections.sort(partsWrapper, partNumberComparator);
+					Collections.sort(parts, partNumberComparator);
 					partsList.clearSelection();
-					partsList.setSelectedValue(partsWrapper.get(0), true);
+					partsList.setSelectedValue(parts.get(0), true);
 					abcPlayButton.doClick();
 				}
 			}
@@ -916,37 +896,23 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		refreshPreviewPending = false;
 		try {
 			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature(), tripletCheckBox.isSelected());
-			Sequence song = new Sequence(Sequence.PPQ, tm.getMidiResolution());
 
 			long startMicros = Long.MAX_VALUE;
-			for (int i = 0; i < parts.getSize(); i++) {
-				AbcPart part = (AbcPart) parts.get(i);
-
+			for (AbcPart part : parts) {
 				long firstNoteStart = part.firstNoteStart();
 				if (firstNoteStart < startMicros)
 					startMicros = firstNoteStart;
 			}
 
-			// Track 0: Title and meta info
-			Track track = song.createTrack();
-			track.add(MidiFactory.createTrackNameEvent(sequenceInfo.getTitle()));
-			track.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
-
-			PanGenerator panner = new PanGenerator();
-			for (int i = 0; i < parts.getSize(); i++) {
-				AbcPart part = (AbcPart) parts.get(i);
-				int pan = (parts.getSize() > 1) ? panner.get(part.getInstrument(), part.getTitle())
-						: PanGenerator.CENTER;
-
-				part.exportToMidi(song, tm, startMicros, Long.MAX_VALUE, 0, pan);
-			}
+			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(parts, this, tm, getKeySignature(),
+					startMicros, Long.MAX_VALUE);
 
 			long position = abcSequencer.getPosition() + abcPreviewStartMicros - startMicros;
 			abcPreviewStartMicros = startMicros;
 
 			boolean running = abcSequencer.isRunning();
 			abcSequencer.reset(false);
-			abcSequencer.setSequence(song);
+			abcSequencer.setSequence(previewSequenceInfo.getSequence());
 
 			if (position < 0)
 				position = 0;
@@ -980,7 +946,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		File origSaveFile = saveFile;
 
 		if (saveFile == null) {
-			fileName = this.sequenceInfo.getFile().getName();
+			fileName = this.sequenceInfo.getFileName();
 			dot = fileName.lastIndexOf('.');
 			if (dot > 0)
 				fileName = fileName.substring(0, dot);
@@ -1024,9 +990,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			// Remove silent bars before the song starts
 			long startMicros = Long.MAX_VALUE;
 			long endMicros = Long.MIN_VALUE;
-			for (int i = 0; i < parts.size(); i++) {
-				AbcPart part = (AbcPart) parts.get(i);
-
+			for (AbcPart part : parts) {
 				long firstNoteStart = part.firstNoteStart();
 				if (firstNoteStart < startMicros) {
 					// Remove integral number of bars
@@ -1039,7 +1003,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 			}
 
-			if (parts.getSize() > 0) {
+			if (parts.size() > 0) {
 				PrintStream outWriter = new PrintStream(out);
 				AbcMetadataSource meta = this;
 				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
@@ -1052,8 +1016,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				outWriter.println();
 			}
 
-			for (int i = 0; i < parts.getSize(); i++) {
-				AbcPart part = (AbcPart) parts.get(i);
+			for (AbcPart part : parts) {
 				part.exportToAbc(tm, getKeySignature(), startMicros, endMicros, 0, out);
 			}
 		}
