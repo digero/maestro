@@ -11,6 +11,7 @@ import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -50,6 +51,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
@@ -77,6 +79,7 @@ import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.midi.VolumeTransceiver;
+import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.ParseException;
@@ -133,8 +136,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JFormattedTextField timeSignatureField;
 	private JCheckBox tripletCheckBox;
 	private JButton exportButton;
+	private JMenuItem exportMenuItem;
 
 	private JList<AbcPart> partsList;
+	private ListSelectionModel partsSelectionModel;
 	private JButton newPartButton;
 	private JButton deletePartButton;
 
@@ -266,7 +271,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 2 /* step */));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 1 /* step */));
+		tempoSpinner.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (sequenceInfo != null)
+					abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
+				else
+					abcSequencer.setTempoFactor(1.0f);
+			}
+		});
 
 		tripletCheckBox = new JCheckBox("Use triplets/swing rhythm");
 		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets or a swing rhythm.<br><br>"
@@ -288,8 +301,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		partsList = new JList<AbcPart>(parts.getListModel());
-		partsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		partsSelectionModel = partsList.getSelectionModel();
+		partsSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		partsSelectionModel.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = partsList.getSelectedValue();
 				sequencer.getFilter().setAbcPart(abcPart);
@@ -305,11 +319,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			public void actionPerformed(ActionEvent e) {
 				AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
 				newPart.addAbcListener(abcPartListener);
-				parts.add(newPart);
 				partAutoNumberer.onPartAdded(newPart);
-				Collections.sort(parts, partNumberComparator);
-				partsList.clearSelection();
-				partsList.setSelectedValue(newPart, true);
+
+				int idx = Collections.binarySearch(parts, newPart, partNumberComparator);
+				if (idx < 0)
+					idx = (-idx - 1);
+				parts.add(idx, newPart);
+
+				partsList.setSelectedIndex(idx);
+				partsList.ensureIndexIsVisible(idx);
+				partsList.repaint();
 				updateAbcButtons();
 			}
 		});
@@ -398,7 +417,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcPreviewControls.add(abcPositionBar, "1, 1, 4, 1");
 		abcPreviewControls.add(abcPlayButton, "2, 3");
 		abcPreviewControls.add(abcStopButton, "3, 3");
-		updateAbcButtons();
 
 		TableLayout settingsLayout = new TableLayout(new double[] {
 				/* Cols */PREFERRED, PREFERRED, FILL
@@ -501,6 +519,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		initMenu();
+		updateAbcButtons();
 	}
 
 	@Override
@@ -520,9 +539,69 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
-		JMenu toolsMenu = menuBar.add(new JMenu(" Tools "));
+		JMenu fileMenu = menuBar.add(new JMenu(" File "));
+		fileMenu.setMnemonic('F');
 
-		JMenuItem settingsItem = toolsMenu.add(new JMenuItem("Settings..."));
+		JMenuItem openItem = fileMenu.add(new JMenuItem("Open MIDI or ABC file..."));
+		openItem.setMnemonic('O');
+		openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+		openItem.addActionListener(new ActionListener() {
+			JFileChooser openFileChooser;
+
+			public void actionPerformed(ActionEvent e) {
+				if (openFileChooser == null) {
+					openFileChooser = new JFileChooser(prefs.get("openFileChooser.path", null));
+					openFileChooser.setMultiSelectionEnabled(false);
+					openFileChooser.setFileFilter(new ExtensionFileFilter("MIDI and ABC files", "mid", "midi", "abc",
+							"txt"));
+				}
+
+				int result = openFileChooser.showOpenDialog(ProjectFrame.this);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					openSong(openFileChooser.getSelectedFile());
+					prefs.put("openFileChooser.path", openFileChooser.getCurrentDirectory().getAbsolutePath());
+				}
+			}
+		});
+
+		exportMenuItem = fileMenu.add(new JMenuItem("Export ABC..."));
+		exportMenuItem.setMnemonic('x');
+		exportMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
+		exportMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportAbc();
+			}
+		});
+
+		fileMenu.addSeparator();
+
+		JMenuItem exitItem = fileMenu.add(new JMenuItem("Close"));
+		exitItem.setMnemonic('C');
+		exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.ALT_DOWN_MASK));
+		exitItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switch (ProjectFrame.this.getDefaultCloseOperation()) {
+				case EXIT_ON_CLOSE:
+					System.exit(0);
+					break;
+				case DISPOSE_ON_CLOSE:
+					setVisible(false);
+					dispose();
+					break;
+				case DO_NOTHING_ON_CLOSE:
+				case HIDE_ON_CLOSE:
+					setVisible(false);
+					break;
+				}
+			}
+		});
+
+		JMenu toolsMenu = menuBar.add(new JMenu(" Tools "));
+		toolsMenu.setMnemonic('T');
+
+		JMenuItem settingsItem = toolsMenu.add(new JMenuItem("Options..."));
+		settingsItem.setMnemonic('O');
+		settingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK));
 		settingsItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SettingsDialog dialog = new SettingsDialog(ProjectFrame.this, partAutoNumberer.getSettingsCopy());
@@ -538,7 +617,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
+		toolsMenu.addSeparator();
+
 		JMenuItem aboutItem = toolsMenu.add(new JMenuItem("About " + MaestroMain.APP_NAME + "..."));
+		aboutItem.setMnemonic('A');
+		aboutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
 		aboutItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				AboutDialog.show(ProjectFrame.this, MaestroMain.APP_NAME, MaestroMain.APP_VERSION, MaestroMain.APP_URL,
@@ -676,14 +759,23 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private void updateAbcButtons() {
-		abcPlayButton.setEnabled(abcSequencer.isLoaded() || parts.size() > 0);
+		boolean hasAbcNotes = false;
+		for (AbcPart part : parts) {
+			if (part.getEnabledTrackCount() > 0) {
+				hasAbcNotes = true;
+				break;
+			}
+		}
+
+		abcPlayButton.setEnabled(abcSequencer.isLoaded() || hasAbcNotes);
 		abcPlayButton.setIcon(abcSequencer.isRunning() ? abcPauseIcon : abcPlayIcon);
 		abcStopButton.setEnabled(abcSequencer.isLoaded()
 				&& (abcSequencer.isRunning() || abcSequencer.getPosition() != 0));
 
 		newPartButton.setEnabled(sequenceInfo != null && parts.size() < 15);
 		deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
-		exportButton.setEnabled(sequenceInfo != null && parts.size() > 0);
+		exportButton.setEnabled(sequenceInfo != null && hasAbcNotes);
+		exportMenuItem.setEnabled(exportButton.isEnabled());
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
@@ -698,12 +790,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						partsList.setSelectedIndex(idx);
 				}
 			}
+			else if (e.getProperty() == AbcPartProperty.TRACK_ENABLED) {
+				updateAbcButtons();
+			}
 
 			partsList.repaint();
 
 			if (e.isAbcPreviewRelated() && abcSequencer.isRunning()) {
 				refreshPreviewSequence(false);
 			}
+
 		}
 	};
 
@@ -789,9 +885,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			sequencer.setSequence(sequenceInfo.getSequence());
 			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
+			songTitleField.select(0, 0);
 			composerField.setText(sequenceInfo.getComposer());
+			composerField.select(0, 0);
 			transposeSpinner.setValue(0);
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
+			abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
 			tripletCheckBox.setSelected(false);
@@ -818,7 +917,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						}
 					}
 
-					parts.add(newPart);
+					int ins = Collections.binarySearch(parts, newPart, partNumberComparator);
+					if (ins < 0)
+						ins = -ins - 1;
+					parts.add(ins, newPart);
+
 					newPart.addAbcListener(abcPartListener);
 					t++;
 				}
@@ -831,9 +934,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					newPartButton.doClick();
 				}
 				else {
-					Collections.sort(parts, partNumberComparator);
-					partsList.clearSelection();
-					partsList.setSelectedValue(parts.get(0), true);
+					partsSelectionModel.setSelectionInterval(0, 0);
+
+					partsList.ensureIndexIsVisible(0);
+					partsList.repaint();
+
 					abcPlayButton.doClick();
 				}
 			}
@@ -895,7 +1000,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		refreshPreviewPending = false;
 		try {
-			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature(), tripletCheckBox.isSelected());
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
 
 			long startMicros = Long.MAX_VALUE;
 			for (AbcPart part : parts) {
@@ -907,7 +1013,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(parts, this, tm, getKeySignature(),
 					startMicros, Long.MAX_VALUE);
 
-			long position = abcSequencer.getPosition() + abcPreviewStartMicros - startMicros;
+			long position = sequencer.getPosition() - startMicros;
 			abcPreviewStartMicros = startMicros;
 
 			boolean running = abcSequencer.isRunning();
@@ -921,6 +1027,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				position = 0;
 				running = false;
 			}
+
+			if (running && sequencer.isRunning())
+				sequencer.stop();
 
 			abcSequencer.setPosition(position);
 			abcSequencer.setRunning(running);
@@ -985,7 +1094,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			return;
 		}
 		try {
-			TimingInfo tm = new TimingInfo(getTempo(), getTimeSignature(), tripletCheckBox.isSelected());
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
 
 			// Remove silent bars before the song starts
 			long startMicros = Long.MAX_VALUE;

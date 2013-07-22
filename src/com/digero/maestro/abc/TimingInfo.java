@@ -6,13 +6,14 @@ public class TimingInfo {
 	public static final int ONE_SECOND_MICROS = 1000000;
 	public static final int ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
 	public static final int SHORTEST_NOTE_MICROS = ONE_MINUTE_MICROS / 1000;
-	public static final int LONGEST_NOTE_MICROS = 8 * ONE_SECOND_MICROS;
+	public static final int LONGEST_NOTE_MICROS = 6 * ONE_SECOND_MICROS;
 	public static final int LONGEST_NOTE_MICROS_WORST_CASE = (2 * SHORTEST_NOTE_MICROS - 1)
 			* (LONGEST_NOTE_MICROS / (2 * SHORTEST_NOTE_MICROS - 1));
 	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
 	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
 
 	public final int tempo;
+	public final int exportTempo;
 	public final TimeSignature meter;
 
 	public final int defaultDivisor;
@@ -21,14 +22,16 @@ public class TimingInfo {
 	public final int maxNoteLength;
 	public final int barLength;
 
-	public TimingInfo(int tempo, TimeSignature meter, boolean useTripletTiming) throws AbcConversionException {
+	public TimingInfo(int sourceTempo, int exportTempo, TimeSignature meter, boolean useTripletTiming)
+			throws AbcConversionException {
+		this.tempo = sourceTempo;
+		this.exportTempo = exportTempo;
+		this.meter = meter;
+
 		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO) {
 			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between " + MIN_TEMPO
 					+ " and " + MAX_TEMPO + ".");
 		}
-
-		this.tempo = tempo;
-		this.meter = meter;
 
 		// From http://abcnotation.com/abc2mtex/abc.txt:
 		// The default note length can be calculated by computing the meter as
@@ -44,14 +47,17 @@ public class TimingInfo {
 			if (useTripletTiming)
 				minNoteDivisor *= 3;
 			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (minNoteDivisor / 4);
-			while (minNoteLength < SHORTEST_NOTE_MICROS) {
+			int minNoteLengthAtExportTempo = (ONE_MINUTE_MICROS / exportTempo) / (minNoteDivisor / 4);
+			while (minNoteLengthAtExportTempo < SHORTEST_NOTE_MICROS) {
+				minNoteLengthAtExportTempo *= 2;
 				minNoteLength *= 2;
 				minNoteDivisor /= 2;
 			}
 
 			assert minNoteDivisor > 0;
 
-			while (minNoteLength >= SHORTEST_NOTE_MICROS * 2) {
+			while (minNoteLengthAtExportTempo >= SHORTEST_NOTE_MICROS * 2) {
+				minNoteLengthAtExportTempo /= 2;
 				minNoteLength /= 2;
 				minNoteDivisor *= 2;
 			}
@@ -63,9 +69,9 @@ public class TimingInfo {
 
 			this.minNoteLength = minNoteLength;
 			this.minNoteDivisor = minNoteDivisor;
+			this.maxNoteLength = this.minNoteLength * (LONGEST_NOTE_MICROS / minNoteLengthAtExportTempo);
 		}
 
-		this.maxNoteLength = this.minNoteLength * (LONGEST_NOTE_MICROS / this.minNoteLength);
 		this.barLength = this.minNoteDivisor * this.minNoteLength * meter.numerator / meter.denominator;
 
 		assert barLength % this.minNoteLength == 0 : barLength + " % " + this.minNoteLength + " != 0";
