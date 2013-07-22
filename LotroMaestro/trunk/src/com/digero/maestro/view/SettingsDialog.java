@@ -41,20 +41,23 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		this.numSettings = numbererSettings;
 
-		mainPanel = new JPanel(new BorderLayout(4, 4));
+		int PAD = 4;
+
+		mainPanel = new JPanel(new BorderLayout(PAD, PAD));
 
 		TableLayout numberingLayout = new TableLayout(new double[] {
-				/* Cols */PREFERRED, PREFERRED
+				/* Cols */0.5, PREFERRED, 2 * PAD, 0.5, PREFERRED
 		}, new double[] {
 			/* Rows */PREFERRED
 		});
-		numberingLayout.setHGap(4);
-		numberingLayout.setVGap(4);
+		numberingLayout.setHGap(PAD);
+		numberingLayout.setVGap(PAD / 2);
 		numberingPanel = new JPanel(numberingLayout);
-		numberingPanel.setBorder(BorderFactory.createTitledBorder("Automatic Part Numbering"));
+		numberingPanel.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createTitledBorder("Automatic Part Numbering"),
+				BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD)));
 
-		JPanel incrementPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JLabel incrementLabel = new JLabel("Increment: ");
+		JPanel incrementPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		incrementComboBox = new JComboBox<Integer>(new Integer[] {
 				1, 10
 		});
@@ -90,19 +93,33 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 				numSettings.setIncrementByTen(newInc == 10);
 			}
 		});
+		JLabel incrementLabel = new JLabel("<html>Interval between parts of<br>the same instrument type: </html>");
+		incrementLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, PAD, 2 * PAD));
 		incrementPanel.add(incrementLabel);
 		incrementPanel.add(incrementComboBox);
 
-		numberingPanel.add(incrementPanel, "0, 0, 1, 0, f, f");
+		numberingPanel.add(incrementPanel, "0, 0, 4, 0, f, f");
 
-		for (LotroInstrument inst : LotroInstrument.values()) {
-			int i = numberingLayout.getNumRow();
-			numberingLayout.insertRow(i, PREFERRED);
-			numberingPanel.add(new JLabel(inst.toString() + " "), "0, " + i);
-			numberingPanel.add(new InstrumentSpinner(inst), "1, " + i);
+		LotroInstrument[] instruments = LotroInstrument.values();
+		for (int i = 0; i < instruments.length; i++) {
+			LotroInstrument inst = instruments[i];
+
+			int row = i + 1;
+			int col = 0;
+			if (i >= (instruments.length + 1) / 2) {
+				row -= (instruments.length + 1) / 2;
+				col = 3;
+			}
+			else {
+				numberingLayout.insertRow(row, PREFERRED);
+			}
+			numberingPanel.add(new InstrumentSpinner(inst), col + ", " + row);
+			numberingPanel.add(new JLabel(inst.toString() + " "), (col + 1) + ", " + row);
 		}
 
 		JButton okButton = new JButton("OK");
+		getRootPane().setDefaultButton(okButton);
+		okButton.setMnemonic('O');
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				success = true;
@@ -110,6 +127,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			}
 		});
 		JButton cancelButton = new JButton("Cancel");
+		cancelButton.setMnemonic('C');
 		cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				success = false;
@@ -121,16 +139,24 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		}, new double[] {
 			PREFERRED
 		}));
+		((TableLayout) buttonsPanel.getLayout()).setHGap(PAD);
 		buttonsPanel.add(okButton, "0, 0, f, f");
 		buttonsPanel.add(cancelButton, "1, 0, f, f");
-		JPanel buttonsContainerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JPanel buttonsContainerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, PAD / 2));
 		buttonsContainerPanel.add(buttonsPanel);
 
+		mainPanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
 		mainPanel.add(numberingPanel, BorderLayout.CENTER);
 		mainPanel.add(buttonsContainerPanel, BorderLayout.SOUTH);
 
 		setContentPane(mainPanel);
 		pack();
+
+		if (owner != null) {
+			int left = owner.getX() + (owner.getWidth() - this.getWidth()) / 2;
+			int top = owner.getY() + (owner.getHeight() - this.getHeight()) / 2;
+			this.setLocation(left, top);
+		}
 	}
 
 	private class InstrumentSpinner extends JSpinner implements ChangeListener {

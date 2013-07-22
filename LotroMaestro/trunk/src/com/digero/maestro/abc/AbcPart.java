@@ -43,6 +43,7 @@ public class AbcPart implements IDisposable {
 	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackEnabled;
+	private int enabledTrackCount;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
 	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcMetadataSource metadata) {
@@ -58,6 +59,7 @@ public class AbcPart implements IDisposable {
 		int t = getTrackCount();
 		this.trackTranspose = new int[t];
 		this.trackEnabled = new boolean[t];
+		enabledTrackCount = 0;
 		this.drumNoteMap = new DrumNoteMap[t];
 	}
 
@@ -187,7 +189,7 @@ public class AbcPart implements IDisposable {
 		}
 
 		out.println("M: " + tm.meter);
-		out.println("Q: " + tm.tempo);
+		out.println("Q: " + tm.exportTempo);
 		out.println("K: " + key);
 		out.println();
 
@@ -817,8 +819,13 @@ public class AbcPart implements IDisposable {
 	public void setTrackEnabled(int track, boolean enabled) {
 		if (trackEnabled[track] != enabled) {
 			trackEnabled[track] = enabled;
+			enabledTrackCount += enabled ? 1 : -1;
 			fireChangeEvent(AbcPartProperty.TRACK_ENABLED);
 		}
+	}
+	
+	public int getEnabledTrackCount() {
+		return enabledTrackCount;
 	}
 
 	public int getPartNumber() {
