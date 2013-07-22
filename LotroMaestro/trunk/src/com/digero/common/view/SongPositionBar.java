@@ -231,7 +231,7 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 	@Override
 	public void propertyChanged(SequencerEvent evt) {
 		if (evt.getProperty() == SequencerProperty.IS_LOADED)
-			setEnabled(evt.getSequencerWrapper().isLoaded());
+			setEnabled(evt.getSource().isLoaded());
 
 		repaint();
 	}

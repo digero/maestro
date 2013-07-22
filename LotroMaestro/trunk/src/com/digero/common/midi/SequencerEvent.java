@@ -11,8 +11,9 @@ public class SequencerEvent extends EventObject {
 		this.property = property;
 	}
 
-	public SequencerWrapper getSequencerWrapper() {
-		return (SequencerWrapper) getSource();
+	@Override
+	public SequencerWrapper getSource() {
+		return (SequencerWrapper) super.getSource();
 	}
 
 	public SequencerProperty getProperty() {
