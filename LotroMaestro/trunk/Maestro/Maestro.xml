@@ -3,7 +3,7 @@
 	<property name="output" value="output"/>
 	<property name="build" value="build"/>
 	<property name="basename" value="Maestro"/>
-	<property name="version" value="0.2.1"/>
+	<property name="version" value="1.0.0"/>
 	<target name="MaestroExe">
 		<mkdir dir="${build}"/>
 		<delete file="${build}/*.log"/>
