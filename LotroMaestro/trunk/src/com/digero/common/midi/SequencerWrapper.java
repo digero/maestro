@@ -168,26 +168,12 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 				ShortMessage msg = new ShortMessage();
 				msg.setMessage(ShortMessage.SYSTEM_RESET);
 				receiver.send(msg, -1);
-
-//				for (int i = 0; i < CHANNEL_COUNT; i++) {
-//					msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
-//					receiver.send(msg, -1);
-//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
-//					receiver.send(msg, -1);
-//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
-//							REGISTERED_PARAM_PITCH_BEND_RANGE);
-//					receiver.send(msg, -1);
-//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
-//					receiver.send(msg, -1);
-//				}
 			}
 			catch (InvalidMidiDataException e) {
 				e.printStackTrace();
 			}
 		}
 		else { // Not a full reset
-
-			// Reset the instruments
 			boolean isOpen = sequencer.isOpen();
 			try {
 				if (!isOpen)
@@ -199,11 +185,6 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 					receiver.send(msg, -1);
 					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
 					receiver.send(msg, -1);
-//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, REGISTERED_PARAMETER_NUMBER_COARSE,
-//							REGISTERED_PARAM_PITCH_BEND_RANGE);
-//					receiver.send(msg, -1);
-//					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
-//					receiver.send(msg, -1);
 				}
 				msg.setMessage(ShortMessage.SYSTEM_RESET);
 				receiver.send(msg, -1);
@@ -239,6 +220,9 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 
 	public void setPosition(long position) {
 		if (position == 0) {
+			// Sun's RealtimeSequencer isn't entirely reliable when calling 
+			// setMicrosecondPosition(0). Instead call setTickPosition(0),  
+			// which has the same effect and isn't so buggy.
 			setTickPosition(0);
 		}
 		else if (position != getPosition()) {
