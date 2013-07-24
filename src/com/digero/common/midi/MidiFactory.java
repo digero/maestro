@@ -96,4 +96,18 @@ public class MidiFactory implements IMidiConstants {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public static MidiEvent createChannelVolumeEvent(int volume, int channel, long ticks) {
+		try {
+			if (volume < 0 || volume > Byte.MAX_VALUE)
+				throw new IllegalArgumentException();
+
+			ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, CHANNEL_VOLUME_CONTROLLER_COARSE, volume);
+			return new MidiEvent(msg, ticks);
+		}
+		catch (InvalidMidiDataException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
