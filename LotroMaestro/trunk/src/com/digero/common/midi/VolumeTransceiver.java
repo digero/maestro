@@ -1,20 +1,37 @@
 package com.digero.common.midi;
 
+import java.util.Arrays;
+
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-public class VolumeTransceiver implements Transceiver {
+public class VolumeTransceiver implements Transceiver, IMidiConstants {
 	public static final int MAX_VOLUME = 127;
 
 	private Receiver receiver;
 	private int volume = MAX_VOLUME;
+	private int[] channelVolume = new int[CHANNEL_COUNT];
+
+	public VolumeTransceiver() {
+		Arrays.fill(channelVolume, MAX_VOLUME);
+	}
 
 	public void setVolume(int volume) {
 		if (volume < 0 || volume > MAX_VOLUME)
 			throw new IllegalArgumentException();
+
 		this.volume = volume;
+
+		if (receiver != null) {
+			for (int c = 0; c < CHANNEL_COUNT; c++) {
+				int actualVolume = channelVolume[c] * volume / MAX_VOLUME;
+				MidiEvent evt = MidiFactory.createChannelVolumeEvent(actualVolume, c, 0);
+				receiver.send(evt.getMessage(), 0);
+			}
+		}
 	}
 
 	public int getVolume() {
@@ -33,6 +50,7 @@ public class VolumeTransceiver implements Transceiver {
 	@Override
 	public void setReceiver(Receiver receiver) {
 		this.receiver = receiver;
+		setVolume(volume);
 	}
 
 	@Override
@@ -40,11 +58,12 @@ public class VolumeTransceiver implements Transceiver {
 		if (receiver != null) {
 			if (message instanceof ShortMessage) {
 				ShortMessage m = (ShortMessage) message;
-				int cmd = m.getCommand();
-				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF || cmd == ShortMessage.POLY_PRESSURE
-						|| cmd == ShortMessage.CHANNEL_PRESSURE) {
+				if (m.getCommand() == ShortMessage.CONTROL_CHANGE && m.getData1() == CHANNEL_VOLUME_CONTROLLER_COARSE) {
 					try {
-						m.setMessage(cmd, m.getChannel(), m.getData1(), m.getData2() * volume / MAX_VOLUME);
+						int c = m.getChannel();
+						channelVolume[c] = m.getData2();
+						int actualVolume = channelVolume[c] * volume / MAX_VOLUME;
+						m.setMessage(m.getCommand(), c, CHANNEL_VOLUME_CONTROLLER_COARSE, actualVolume);
 					}
 					catch (InvalidMidiDataException e) {
 						e.printStackTrace();
