@@ -133,6 +133,9 @@ public class SequenceInfo implements IMidiConstants {
 		Track track0 = sequence.createTrack();
 		track0.add(MidiFactory.createTrackNameEvent(this.title));
 		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
+		// The Java MIDI sequencer can sometimes miss a tempo event at tick 0
+		// Add another tempo event at tick 1 to work around the bug
+		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 1));
 
 		PanGenerator panner = new PanGenerator();
 		this.trackInfoList = new ArrayList<TrackInfo>(parts.size());

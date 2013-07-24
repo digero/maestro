@@ -252,11 +252,11 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 	}
 
 	public void setPosition(long position) {
-		if (position != getPosition()) {
-			if (position == 0)
-				sequencer.setTickPosition(0);
-			else
-				sequencer.setMicrosecondPosition(position);
+		if (position == 0) {
+			setTickPosition(0);
+		}
+		else if (position != getPosition()) {
+			sequencer.setMicrosecondPosition(position);
 			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
