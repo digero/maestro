@@ -97,27 +97,35 @@ public class AbcPart implements IDisposable {
 				dynamics = Dynamics.DEFAULT;
 			for (int j = 0; j < chord.size(); j++) {
 				NoteEvent ne = chord.get(j);
-				if (ne.note == Note.REST)
+				// Skip rests and notes that are the continuation of a tied note
+				if (ne.note == Note.REST || ne.tiesFrom != null)
 					continue;
 
+				// Add note off events for any notes that have been turned off by this point
 				Iterator<NoteEvent> onIter = notesOn.iterator();
 				while (onIter.hasNext()) {
 					NoteEvent on = onIter.next();
 
-					if (on.endMicros < ne.startMicros) {
-						// This note has already been turned off
+					// Shorten the note to end at the same time that the next one starts
+					long endMicros = on.endMicros;
+					if (on.note.id == ne.note.id && on.endMicros > ne.startMicros)
+						endMicros = ne.startMicros;
+
+					if (endMicros <= ne.startMicros) {
+						// This note has been turned off
 						onIter.remove();
-						track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
-					}
-					else if (on.note.id == ne.note.id) {
-						// Shorten the note that's currently on, to end at the same time that the next one starts
-						on.endMicros = ne.startMicros;
-						onIter.remove();
+						track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(endMicros)));
 					}
 				}
 
+				long endMicros = ne.getTieEnd().endMicros;
+				
+				// Lengthen Lute, Harp, Drums, etc. to play the entire sound sample
 				if (!instrument.isSustainable(ne.note.id))
-					ne.endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
+					endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
+
+				if (endMicros != ne.endMicros)
+					ne = new NoteEvent(ne.note, ne.velocity, ne.startMicros, endMicros);
 
 				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.abcVol,
 						tm.getMidiTicks(ne.startMicros)));
@@ -126,7 +134,7 @@ public class AbcPart implements IDisposable {
 		}
 
 		for (NoteEvent on : notesOn) {
-			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.getTieEnd().endMicros)));
+			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
 		}
 
 		return trackNumber;
@@ -137,16 +145,27 @@ public class AbcPart implements IDisposable {
 
 		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
 
+		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan);
+
 		List<NoteEvent> noteEvents = new ArrayList<NoteEvent>(chords.size());
 		for (Chord chord : chords) {
 			for (int i = 0; i < chord.size(); i++) {
 				NoteEvent ne = chord.get(i);
-				if (ne.note != Note.REST)
-					noteEvents.add(new NoteEvent(ne.note, ne.velocity, ne.startMicros, ne.endMicros));
+				// Skip rests and notes that are the continuation of a tied note
+				if (ne.note == Note.REST || ne.tiesFrom != null)
+					continue;
+
+				// Convert tied notes into a single note event
+				if (ne.tiesTo != null) {
+					ne.endMicros = ne.getTieEnd().endMicros;
+					ne.tiesTo = null;
+					// Not fixing up the ne.tiesTo.tiesFrom pointer since we that for the    
+					// (ne.tiesFrom != null) check above, and we otherwise don't care about ne.tiesTo.
+				}
+
+				noteEvents.add(ne);
 			}
 		}
-
-		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan);
 
 		return new TrackInfo(sequenceInfo, trackNumber, getTitle(), getInstrument(), tm.meter, key, noteEvents);
 	}
@@ -823,7 +842,7 @@ public class AbcPart implements IDisposable {
 			fireChangeEvent(AbcPartProperty.TRACK_ENABLED);
 		}
 	}
-	
+
 	public int getEnabledTrackCount() {
 		return enabledTrackCount;
 	}
