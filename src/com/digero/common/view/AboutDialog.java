@@ -32,7 +32,7 @@ public final class AboutDialog {
 				+ appName + "<br>" //
 				+ "Version " + appVersion + "<br>" //
 				+ "Created by Digero of Landroval<br>" //
-				+ "Copyright &copy; 2012 Ben Howell<br>" //
+				+ "Copyright &copy; 2013 Ben Howell<br>" //
 				+ "<a href='" + appUrl + "'>" + appUrl + "</a>" //
 				+ "</html>");
 		aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
