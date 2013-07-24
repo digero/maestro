@@ -179,6 +179,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			volumeTransceiver.setVolume(prefs.getInt("volumizer", NativeVolumeBar.MAX_VOLUME));
 
 			abcVolumeTransceiver = new VolumeTransceiver();
+			abcVolumeTransceiver.itGoesToEleven(true);
 			abcVolumeTransceiver.setVolume(volumeTransceiver.getVolume());
 		}
 
