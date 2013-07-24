@@ -30,7 +30,6 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 	private long dragPosition;
 	private boolean isDragging;
 	private TempoCache tempoCache = new TempoCache();
-	private boolean customSequencer = false;
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
 	private long lastUpdatePosition = -1;
@@ -42,8 +41,12 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 		sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
 		transmitter = sequencer.getTransmitter();
-		receiver = MidiSystem.getReceiver();
+		receiver = createReceiver();
 		transmitter.setReceiver(receiver);
+	}
+
+	protected Receiver createReceiver() throws MidiUnavailableException {
+		return MidiSystem.getReceiver();
 	}
 
 	@Override
@@ -71,21 +74,6 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 
 		if (sequencer != null)
 			sequencer.close();
-	}
-
-	public SequencerWrapper(Sequencer sequencer, Transmitter transmitter, Receiver receiver) {
-		customSequencer = true;
-		this.sequencer = sequencer;
-		this.transmitter = transmitter;
-		this.receiver = receiver;
-
-		if (sequencer.getSequence() != null) {
-			tempoCache.refresh(sequencer.getSequence());
-		}
-
-		if (sequencer.isRunning()) {
-			updateTimer.start();
-		}
 	}
 
 	public void addTransceiver(Transceiver transceiver) {
@@ -136,9 +124,7 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 		stop();
 		setPosition(0);
 
-		boolean oldReset = customSequencer || !fullReset;
-
-		if (!oldReset) {
+		if (fullReset) {
 			Sequence seqSave = sequencer.getSequence();
 			try {
 				sequencer.setSequence((Sequence) null);
@@ -156,7 +142,7 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 				sequencer = MidiSystem.getSequencer(false);
 				sequencer.open();
 				transmitter = sequencer.getTransmitter();
-				receiver = MidiSystem.getReceiver();
+				receiver = createReceiver();
 			}
 			catch (MidiUnavailableException e1) {
 				throw new RuntimeException(e1);
@@ -199,8 +185,8 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 				e.printStackTrace();
 			}
 		}
+		else { // Not a full reset
 
-		if (oldReset) {
 			// Reset the instruments
 			boolean isOpen = sequencer.isOpen();
 			try {
@@ -208,8 +194,6 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 					sequencer.open();
 
 				ShortMessage msg = new ShortMessage();
-				msg.setMessage(ShortMessage.SYSTEM_RESET);
-				receiver.send(msg, -1);
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
 					msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
 					receiver.send(msg, -1);
@@ -221,6 +205,8 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 //					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, DATA_ENTRY_COARSE, 12);
 //					receiver.send(msg, -1);
 				}
+				msg.setMessage(ShortMessage.SYSTEM_RESET);
+				receiver.send(msg, -1);
 			}
 			catch (MidiUnavailableException e) {
 				// Ignore
