@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,6 +72,7 @@ import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.icons.IconLoader;
+import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
@@ -86,8 +88,7 @@ import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
 import com.digero.common.view.NativeVolumeBar;
-import com.digero.common.view.PlayControlPanel;
-import com.digero.common.view.SongPositionBar;
+import com.digero.common.view.SongPositionLabel;
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcMetadataSource;
@@ -112,6 +113,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		FILL
 	};
 
+	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT;
+
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 
 	private File saveFile;
@@ -132,6 +135,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JTextField transcriberField;
 	private JSpinner transposeSpinner;
 	private JSpinner tempoSpinner;
+	private JButton resetTempoButton;
 	private JFormattedTextField keySignatureField;
 	private JFormattedTextField timeSignatureField;
 	private JCheckBox tripletCheckBox;
@@ -139,31 +143,36 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JMenuItem exportMenuItem;
 
 	private JList<AbcPart> partsList;
-	private ListSelectionModel partsSelectionModel;
 	private JButton newPartButton;
 	private JButton deletePartButton;
 
 	private PartPanel partPanel;
-	private PlayControlPanel playControlPanel;
 
-	private SongPositionBar abcPositionBar;
 	private JButton abcPlayButton;
-	private JButton abcStopButton;
+	private JButton playButton;
+	private JButton stopButton;
+	private NativeVolumeBar volumeBar;
+	private SongPositionLabel midiPositionLabel;
+	private SongPositionLabel abcPositionLabel;
+
+	private Icon playIcon;
+	private Icon pauseIcon;
 	private Icon abcPlayIcon;
 	private Icon abcPauseIcon;
 
 	private long abcPreviewStartMicros = 0;
+	private float abcPreviewTempoFactor = 1.0f;
 	private boolean echoingPosition = false;
 
 	private MainSequencerListener mainSequencerListener;
 	private AbcSequencerListener abcSequencerListener;
 
 	public ProjectFrame() {
-		super("LOTRO Maestro");
+		super(MaestroMain.APP_NAME);
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
-		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), parts);
+		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), Collections.unmodifiableList(parts));
 
 		usingNativeVolume = MaestroMain.isNativeVolumeSupported();
 		if (usingNativeVolume) {
@@ -212,8 +221,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			this.abcSequencer = new SequencerWrapper(abcSeq, transmitter, receiver);
 		}
 		catch (MidiUnavailableException e) {
-			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.",
-					"Failed to initialize MIDI sequencer", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.\n\n"
+					+ "Error details:\n" + e.getMessage(), "Failed to initialize MIDI sequencer",
+					JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 			return;
 		}
@@ -230,6 +240,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+		playIcon = new ImageIcon(IconLoader.class.getResource("play_blue.png"));
+		pauseIcon = new ImageIcon(IconLoader.class.getResource("pause_blue.png"));
+		abcPlayIcon = new ImageIcon(IconLoader.class.getResource("play_yellow.png"));
+		abcPauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
+		Icon stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
 
 		partPanel = new PartPanel(sequencer, partAutoNumberer);
 
@@ -271,13 +287,39 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(120 /* value */, 8 /* min */, 960 /* max */, 1 /* step */));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(IMidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */, 960 /* max */, 1 /* step */));
+		tempoSpinner.setToolTipText("Tempo in beats per minute");
 		tempoSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				if (sequenceInfo != null)
+				if (sequenceInfo != null) {
 					abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
-				else
+
+					if (abcSequencer.isRunning()) {
+						float delta = abcPreviewTempoFactor / abcSequencer.getTempoFactor();
+						if (Math.max(delta, 1 / delta) > 1.5f)
+							refreshPreviewSequence(false);
+					}
+				}
+				else {
 					abcSequencer.setTempoFactor(1.0f);
+				}
+			}
+		});
+
+		resetTempoButton = new JButton("Reset");
+		resetTempoButton.setMargin(new Insets(2, 8, 2, 8));
+		resetTempoButton.setToolTipText("Set the tempo back to the source file's tempo");
+		resetTempoButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (sequenceInfo == null) {
+					tempoSpinner.setValue(IMidiConstants.DEFAULT_TEMPO_BPM);
+				}
+				else {
+					float tempoFactor = abcSequencer.getTempoFactor();
+					tempoSpinner.setValue(sequenceInfo.getTempoBPM());
+					if (tempoFactor != 1.0f)
+						refreshPreviewSequence(false);
+				}
 			}
 		});
 
@@ -293,7 +335,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		exportButton = new JButton("Export ABC");
+		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+S)</center></html>");
+		Insets exportButtonMargin = exportButton.getMargin();
+		exportButtonMargin.bottom = exportButtonMargin.top = 10;
+		exportButton.setMargin(exportButtonMargin);
 		exportButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				exportAbc();
@@ -301,9 +346,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		partsList = new JList<AbcPart>(parts.getListModel());
-		partsSelectionModel = partsList.getSelectionModel();
-		partsSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		partsSelectionModel.addListSelectionListener(new ListSelectionListener() {
+		partsList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = partsList.getSelectedValue();
 				sequencer.getFilter().setAbcPart(abcPart);
@@ -317,35 +361,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		newPartButton = new JButton("New Part");
 		newPartButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
-				newPart.addAbcListener(abcPartListener);
-				partAutoNumberer.onPartAdded(newPart);
-
-				int idx = Collections.binarySearch(parts, newPart, partNumberComparator);
-				if (idx < 0)
-					idx = (-idx - 1);
-				parts.add(idx, newPart);
-
-				partsList.setSelectedIndex(idx);
-				partsList.ensureIndexIsVisible(idx);
-				partsList.repaint();
-				updateAbcButtons();
+				createNewPart();
 			}
 		});
 
 		deletePartButton = new JButton("Delete");
 		deletePartButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int idx = partsList.getSelectedIndex();
-				AbcPart oldPart = parts.remove(idx);
-				if (idx > 0)
-					partsList.setSelectedIndex(idx - 1);
-				else if (parts.size() > 0)
-					partsList.setSelectedIndex(0);
-				partAutoNumberer.onPartDeleted(oldPart);
-				oldPart.dispose();
-				updateAbcButtons();
-				refreshPreviewSequence(false);
+				deletePart(partsList.getSelectedIndex());
 			}
 		});
 
@@ -386,43 +409,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		partsListPanel.add(partsButtonPanel, BorderLayout.NORTH);
 		partsListPanel.add(partsListScrollPane, BorderLayout.CENTER);
 
-		abcPositionBar = new SongPositionBar(abcSequencer);
-		abcPlayIcon = new ImageIcon(IconLoader.class.getResource("play_yellow.png"));
-		abcPauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
-		Icon abcStopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
-		abcPlayButton = new JButton(abcPlayIcon);
-		abcPlayButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (abcSequencer.isRunning()) {
-					abcSequencer.stop();
-				}
-				else {
-					if (refreshPreviewSequence(true))
-						abcSequencer.start();
-				}
-			}
-		});
-		abcStopButton = new JButton(abcStopIcon);
-		abcStopButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				abcSequencer.reset(false);
-				sequencer.reset(false);
-			}
-		});
-		JPanel abcPreviewControls = new JPanel(new TableLayout(new double[] {
-				HGAP, 0.50, PREFERRED, PREFERRED, 0.50, HGAP
-		}, new double[] {
-				VGAP, PREFERRED, VGAP, PREFERRED, VGAP
-		}));
-		abcPreviewControls.add(abcPositionBar, "1, 1, 4, 1");
-		abcPreviewControls.add(abcPlayButton, "2, 3");
-		abcPreviewControls.add(abcStopButton, "3, 3");
-
 		TableLayout settingsLayout = new TableLayout(new double[] {
 				/* Cols */PREFERRED, PREFERRED, FILL
-		}, new double[] {
-				/* Rows */PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED
-		});
+		}, new double[] {});
 		settingsLayout.setVGap(VGAP);
 		settingsLayout.setHGap(HGAP);
 
@@ -431,14 +420,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		{
 			int row = 0;
+			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(new JLabel("Transpose:"), "0, " + row);
 			settingsPanel.add(transposeSpinner, "1, " + row);
 
 			row++;
+			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(new JLabel("Tempo:"), "0, " + row);
 			settingsPanel.add(tempoSpinner, "1, " + row);
+			settingsPanel.add(resetTempoButton, "2, " + row + ", L, F");
 
 			row++;
+			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(new JLabel("Meter:"), "0, " + row);
 			settingsPanel.add(timeSignatureField, "1, " + row + ", 2, " + row + ", L, F");
 
@@ -450,13 +443,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 
 			row++;
+			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(tripletCheckBox, "0, " + row + ", 2, " + row + ", L, C");
 
 			row++;
-			settingsPanel.add(exportButton, "0, " + row + ", 2, " + row + ", C, F");
-
-			row++;
-			settingsPanel.add(abcPreviewControls, "0, " + row + ", 2, " + row);
+			settingsLayout.insertRow(row, PREFERRED);
+			settingsPanel.add(exportButton, "0, " + row + ", 2, " + row + ", F, F");
 		}
 
 		if (!SHOW_TEMPO_SPINNER)
@@ -466,7 +458,86 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		if (!SHOW_KEY_FIELD)
 			keySignatureField.setEnabled(false);
 
-		playControlPanel = new PlayControlPanel(sequencer, new VolumeManager(), "play_blue", "pause_blue", "stop");
+		volumeBar = new NativeVolumeBar(new VolumeManager());
+		JPanel volumePanel = new JPanel(new TableLayout(new double[] {
+			PREFERRED
+		}, new double[] {
+				PREFERRED, PREFERRED
+		}));
+		volumePanel.add(new JLabel("Volume"), "0, 0, c, c");
+		volumePanel.add(volumeBar, "0, 1, f, c");
+
+		
+		Insets playButtonMargin = new Insets(4, 10, 4, 10);
+		
+		abcPlayButton = new JButton("ABC", abcPlayIcon);
+		abcPlayButton.setToolTipText("Play ABC Preview");
+		abcPlayButton.setMargin(playButtonMargin);
+		abcPlayButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (abcSequencer.isRunning()) {
+					abcSequencer.stop();
+				}
+				else {
+					if (refreshPreviewSequence(true)) {
+						midiPositionLabel.setVisible(false);
+						abcPositionLabel.setVisible(true);
+						abcSequencer.start();
+					}
+				}
+			}
+		});
+
+		playButton = new JButton("MIDI", playIcon);
+		playButton.setToolTipText("Play source MIDI file");
+		playButton.setMargin(playButtonMargin);
+		playButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (sequencer.isRunning()) {
+					sequencer.stop();
+				}
+				else {
+					midiPositionLabel.setVisible(true);
+					abcPositionLabel.setVisible(false);
+					sequencer.start();
+				}
+			}
+		});
+
+		stopButton = new JButton(stopIcon);
+		stopButton.setToolTipText("Stop");
+		stopButton.setMargin(playButtonMargin);
+		stopButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				abcSequencer.stop();
+				sequencer.stop();
+				abcSequencer.reset(false);
+				sequencer.reset(false);
+			}
+		});
+
+		JPanel playButtonPanel = new JPanel(new TableLayout(new double[] {
+				0.33, 0.33, 8, 0.34
+		}, new double[] {
+				PREFERRED
+		}));
+		playButtonPanel.add(abcPlayButton, "0, 0, f, f");
+		playButtonPanel.add(playButton, "1, 0, f, f");
+		playButtonPanel.add(stopButton, "3, 0, f, f");
+
+		midiPositionLabel = new SongPositionLabel(sequencer);
+		abcPositionLabel = new SongPositionLabel(abcSequencer, true);
+		abcPositionLabel.setVisible(!midiPositionLabel.isVisible());
+
+		JPanel playControlPanel = new JPanel(new TableLayout(new double[] {
+				4, 0.50, 4, PREFERRED, 4, 0.50, 4, PREFERRED, 4
+		}, new double[] {
+				4, PREFERRED, 4
+		}));
+		playControlPanel.add(playButtonPanel, "3, 1, c, c");
+		playControlPanel.add(volumePanel, "5, 1, c, c");
+		playControlPanel.add(midiPositionLabel, "7, 1");
+		playControlPanel.add(abcPositionLabel, "7, 1");
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
 		abcPartsAndSettings.add(songInfoPanel, BorderLayout.NORTH);
@@ -506,20 +577,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		parts.getListModel().addListDataListener(new ListDataListener() {
 			public void intervalRemoved(ListDataEvent e) {
-				updateAbcButtons();
+				updateButtons(false);
 			}
 
 			public void intervalAdded(ListDataEvent e) {
-				updateAbcButtons();
+				updateButtons(false);
 			}
 
 			public void contentsChanged(ListDataEvent e) {
-				updateAbcButtons();
+				updateButtons(false);
 			}
 		});
 
 		initMenu();
-		updateAbcButtons();
+		updateButtons(true);
 	}
 
 	@Override
@@ -631,8 +702,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	public void onVolumeChanged() {
-		if (playControlPanel != null)
-			playControlPanel.onVolumeChanged();
+		volumeBar.repaint();
 	}
 
 	private class VolumeManager implements NativeVolumeBar.Callback {
@@ -667,6 +737,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private class MainSequencerListener implements SequencerListener {
 		public void propertyChanged(SequencerEvent evt) {
+			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
 				if (sequencer.isRunning())
 					abcSequencer.stop();
@@ -695,7 +766,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private class AbcSequencerListener implements SequencerListener {
 		public void propertyChanged(SequencerEvent evt) {
-			updateAbcButtons();
+			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
 				if (abcSequencer.isRunning())
 					sequencer.stop();
@@ -758,24 +829,87 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 	}
 
-	private void updateAbcButtons() {
-		boolean hasAbcNotes = false;
-		for (AbcPart part : parts) {
-			if (part.getEnabledTrackCount() > 0) {
-				hasAbcNotes = true;
-				break;
-			}
+	void createNewPart() {
+		if (sequenceInfo != null && parts.size() < MAX_PARTS) {
+			AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+			newPart.addAbcListener(abcPartListener);
+			partAutoNumberer.onPartAdded(newPart);
+
+			int idx = Collections.binarySearch(parts, newPart, partNumberComparator);
+			if (idx < 0)
+				idx = (-idx - 1);
+			parts.add(idx, newPart);
+
+			partsList.setSelectedIndex(idx);
+			partsList.ensureIndexIsVisible(idx);
+			partsList.repaint();
+			updateButtons(true);
 		}
+	}
 
-		abcPlayButton.setEnabled(abcSequencer.isLoaded() || hasAbcNotes);
-		abcPlayButton.setIcon(abcSequencer.isRunning() ? abcPauseIcon : abcPlayIcon);
-		abcStopButton.setEnabled(abcSequencer.isLoaded()
-				&& (abcSequencer.isRunning() || abcSequencer.getPosition() != 0));
+	void deletePart(int idx) {
+		AbcPart oldPart = parts.remove(idx);
+		if (idx > 0)
+			partsList.setSelectedIndex(idx - 1);
+		else if (parts.size() > 0)
+			partsList.setSelectedIndex(0);
+		partAutoNumberer.onPartDeleted(oldPart);
+		oldPart.dispose();
+		updateButtons(true);
+		refreshPreviewSequence(false);
+	}
 
-		newPartButton.setEnabled(sequenceInfo != null && parts.size() < 15);
-		deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
-		exportButton.setEnabled(sequenceInfo != null && hasAbcNotes);
-		exportMenuItem.setEnabled(exportButton.isEnabled());
+	private boolean updateButtonsPending = false;
+	private Runnable updateButtonsTask = new Runnable() {
+		public void run() {
+			boolean hasAbcNotes = false;
+			for (AbcPart part : parts) {
+				if (part.getEnabledTrackCount() > 0) {
+					hasAbcNotes = true;
+					break;
+				}
+			}
+
+			boolean midiLoaded = sequencer.isLoaded();
+
+			playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
+			abcPlayButton.setIcon(abcSequencer.isRunning() ? abcPauseIcon : abcPlayIcon);
+
+			playButton.setEnabled(midiLoaded);
+			abcPlayButton.setEnabled(hasAbcNotes);
+			stopButton.setEnabled((midiLoaded && (sequencer.isRunning() || sequencer.getPosition() != 0))
+					|| (abcSequencer.isLoaded() && (abcSequencer.isRunning() || abcSequencer.getPosition() != 0)));
+
+			newPartButton.setEnabled(sequenceInfo != null && parts.size() < MAX_PARTS);
+			deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
+			exportButton.setEnabled(sequenceInfo != null && hasAbcNotes);
+			exportMenuItem.setEnabled(exportButton.isEnabled());
+
+			songTitleField.setEnabled(midiLoaded);
+			if (SHOW_TITLE_TAG_TEXTBOX)
+				titleTagField.setEnabled(midiLoaded);
+			composerField.setEnabled(midiLoaded);
+			transcriberField.setEnabled(midiLoaded);
+			transposeSpinner.setEnabled(midiLoaded);
+			tempoSpinner.setEnabled(midiLoaded);
+			resetTempoButton.setEnabled(midiLoaded && sequenceInfo != null && getTempo() != sequenceInfo.getTempoBPM());
+			resetTempoButton.setVisible(resetTempoButton.isEnabled());
+			keySignatureField.setEnabled(midiLoaded);
+			timeSignatureField.setEnabled(midiLoaded);
+			tripletCheckBox.setEnabled(midiLoaded);
+
+			updateButtonsPending = false;
+		}
+	};
+
+	private void updateButtons(boolean immediate) {
+		if (immediate) {
+			updateButtonsTask.run();
+		}
+		else if (!updateButtonsPending) {
+			updateButtonsPending = true;
+			SwingUtilities.invokeLater(updateButtonsTask);
+		}
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
@@ -791,7 +925,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 			}
 			else if (e.getProperty() == AbcPartProperty.TRACK_ENABLED) {
-				updateAbcButtons();
+				updateButtons(true);
 			}
 
 			partsList.repaint();
@@ -833,7 +967,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 	};
 
-	@SuppressWarnings("unused")
 	private void close() {
 		for (AbcPart part : parts) {
 			part.dispose();
@@ -842,25 +975,30 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		saveFile = null;
 		allowOverwriteSaveFile = false;
+
+		sequenceInfo = null;
 		sequencer.clearSequence();
 		abcSequencer.clearSequence();
-		sequencer.reset(false);
+		sequencer.reset(true);
 		abcSequencer.reset(false);
+		abcSequencer.setTempoFactor(1.0f);
 		abcPreviewStartMicros = 0;
+
+		songTitleField.setText("");
+		composerField.setText("");
+		transposeSpinner.setValue(0);
+		tempoSpinner.setValue(IMidiConstants.DEFAULT_TEMPO_BPM);
+		keySignatureField.setValue(KeySignature.C_MAJOR);
+		timeSignatureField.setValue(TimeSignature.FOUR_FOUR);
+		tripletCheckBox.setSelected(false);
+
+		updateButtons(false);
 	}
 
 	public void openSong(File midiFile) {
+		close();
+
 		midiFile = Util.resolveShortcut(midiFile);
-
-		for (AbcPart part : parts) {
-			part.dispose();
-		}
-		parts.clear();
-
-		saveFile = null;
-		sequencer.stop();
-		abcSequencer.reset(false);
-		abcPreviewStartMicros = 0;
 
 		try {
 			String fileName = midiFile.getName().toLowerCase();
@@ -880,8 +1018,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				sequenceInfo = SequenceInfo.fromMidi(midiFile);
 			}
 
-			sequencer.setSequence(null);
-			sequencer.reset(true);
 			sequencer.setSequence(sequenceInfo.getSequence());
 			sequencer.setTickPosition(sequenceInfo.calcFirstNoteTick());
 			songTitleField.setText(sequenceInfo.getTitle());
@@ -890,7 +1026,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			composerField.select(0, 0);
 			transposeSpinner.setValue(0);
 			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
-			abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
 			tripletCheckBox.setSelected(false);
@@ -903,7 +1038,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						continue;
 					}
 
-					AbcPart newPart = new AbcPart(ProjectFrame.this.sequenceInfo, getTranspose(), ProjectFrame.this);
+					AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
 
 					newPart.setTitle(abcInfo.getPartName(t));
 					newPart.setPartNumber(abcInfo.getPartNumber(t));
@@ -926,25 +1061,25 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					t++;
 				}
 
-				updateAbcButtons();
+				updateButtons(false);
 
 				tripletCheckBox.setSelected(abcInfo.hasTriplets());
 
 				if (parts.isEmpty()) {
-					newPartButton.doClick();
+					createNewPart();
 				}
 				else {
-					partsSelectionModel.setSelectionInterval(0, 0);
-
+					partsList.setSelectedIndex(0);
 					partsList.ensureIndexIsVisible(0);
 					partsList.repaint();
 
+					updateButtons(true);
 					abcPlayButton.doClick();
 				}
 			}
 			else {
-				updateAbcButtons();
-				newPartButton.doClick();
+				updateButtons(false);
+				createNewPart();
 				sequencer.start();
 			}
 		}
@@ -999,6 +1134,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 
 		refreshPreviewPending = false;
+
+		if (sequenceInfo == null) {
+			abcPreviewStartMicros = 0;
+			abcPreviewTempoFactor = 1.0f;
+			abcSequencer.clearSequence();
+			abcSequencer.reset(false);
+			return false;
+		}
+
 		try {
 			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
 					tripletCheckBox.isSelected());
@@ -1009,12 +1153,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				if (firstNoteStart < startMicros)
 					startMicros = firstNoteStart;
 			}
+			if (startMicros == Long.MAX_VALUE)
+				startMicros = 0;
 
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(parts, this, tm, getKeySignature(),
 					startMicros, Long.MAX_VALUE);
 
 			long position = sequencer.getPosition() - startMicros;
 			abcPreviewStartMicros = startMicros;
+			abcPreviewTempoFactor = abcSequencer.getTempoFactor();
 
 			boolean running = abcSequencer.isRunning();
 			abcSequencer.reset(false);
