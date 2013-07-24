@@ -48,15 +48,10 @@ import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
-import javax.sound.midi.Transmitter;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -89,11 +84,11 @@ import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
-import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
@@ -172,9 +167,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	}
 
 	private SequencerWrapper sequencer;
-	private Synthesizer synth;
-	private Transmitter transmitter;
-	private Receiver receiver;
 	private boolean useLotroInstruments = true;
 
 	private JPanel content;
@@ -215,12 +207,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
-				if (synth != null)
-					synth.close();
-				if (receiver != null)
-					receiver.close();
-				if (transmitter != null)
-					transmitter.close();
 				if (sequencer != null)
 					sequencer.close();
 			}
@@ -274,19 +260,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		});
 
 		try {
-			Sequencer seqTmp = MidiSystem.getSequencer(false);
-			transmitter = seqTmp.getTransmitter();
-			synth = null;
-
 			if (useLotroInstruments) {
-				try {
-					synth = SynthesizerFactory.getLotroSynthesizer();
-					if (synth == null)
-						throw new IOException("Could not get synthesizer");
-					else
-						receiver = synth.getReceiver();
-				}
-				catch (Exception e) {
+				sequencer = new LotroSequencerWrapper();
+
+				if (LotroSequencerWrapper.getLoadLotroSynthError() != null) {
 					Version requredJavaVersion = new Version(1, 6, 0, 30);
 					Version recommendedJavaVersion = new Version(1, 7, 0, 25);
 
@@ -313,34 +290,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 						errorMessage.add(update, BorderLayout.CENTER);
 					}
 
-					errorMessage.add(new JLabel("<html>Error details:<br>" + e.getMessage() + "</html>"),
-							BorderLayout.SOUTH);
+					errorMessage.add(
+							new JLabel("<html>Error details:<br>" + LotroSequencerWrapper.getLoadLotroSynthError()
+									+ "</html>"), BorderLayout.SOUTH);
 
 					JOptionPane.showMessageDialog(this, errorMessage, APP_NAME + " failed to load LOTRO instruments",
 							JOptionPane.ERROR_MESSAGE);
-
-					if (synth != null)
-						synth.close();
-					if (receiver != null)
-						receiver.close();
-					synth = null;
-					useLotroInstruments = false;
 				}
 			}
-
-			if (!useLotroInstruments) {
-				receiver = MidiSystem.getReceiver();
-			}
-			if (volumeTransceiver == null) {
-				transmitter.setReceiver(receiver);
-			}
 			else {
-				volumeTransceiver.setReceiver(receiver);
-				transmitter.setReceiver(volumeTransceiver);
+				sequencer = new SequencerWrapper();
 			}
 
-			sequencer = new SequencerWrapper(seqTmp, transmitter, receiver);
-			sequencer.open();
+			if (volumeTransceiver != null)
+				sequencer.addTransceiver(volumeTransceiver);
 		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
@@ -1612,7 +1575,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					checkBox.setBackground(getBackground());
 					checkBox.setSelected(!sequencer.getTrackMute(i));
 					checkBox.addActionListener(trackMuteListener);
-					
+
 					JToggleButton soloButton = new JToggleButton("S");
 					soloButton.setMargin(new Insets(3, 4, 3, 3));
 					soloButton.setToolTipText("Play only this part (Solo)");

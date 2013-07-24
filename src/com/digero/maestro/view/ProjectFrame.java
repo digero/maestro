@@ -27,12 +27,7 @@ import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequencer;
-import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Transmitter;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -74,11 +69,11 @@ import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
+import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
-import com.digero.common.midi.SynthesizerFactory;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
@@ -188,37 +183,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 
 		try {
-			this.sequencer = new NoteFilterSequencerWrapper();
+			sequencer = new NoteFilterSequencerWrapper();
 			if (volumeTransceiver != null)
-				this.sequencer.addTransceiver(volumeTransceiver);
+				sequencer.addTransceiver(volumeTransceiver);
 
-			Sequencer abcSeq = MidiSystem.getSequencer(false);
-			Synthesizer lotroSynth = null;
-			try {
-				lotroSynth = SynthesizerFactory.getLotroSynthesizer();
-			}
-			catch (InvalidMidiDataException e) {
-				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
-						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n" + e.getMessage(),
-						"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
-			}
-			catch (IOException e) {
-				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
-						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n" + e.getMessage(),
-						"Failed to initialize MIDI sequencer.", JOptionPane.ERROR_MESSAGE);
-			}
+			abcSequencer = new LotroSequencerWrapper();
+			if (abcVolumeTransceiver != null)
+				abcSequencer.addTransceiver(abcVolumeTransceiver);
 
-			Transmitter transmitter = abcSeq.getTransmitter();
-			Receiver receiver = (lotroSynth == null) ? MidiSystem.getReceiver() : lotroSynth.getReceiver();
-			if (abcVolumeTransceiver == null) {
-				transmitter.setReceiver(receiver);
+			if (LotroSequencerWrapper.getLoadLotroSynthError() != null) {
+				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
+						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n"
+						+ LotroSequencerWrapper.getLoadLotroSynthError(), "Failed to initialize MIDI sequencer.",
+						JOptionPane.ERROR_MESSAGE);
 			}
-			else {
-				transmitter.setReceiver(abcVolumeTransceiver);
-				abcVolumeTransceiver.setReceiver(receiver);
-			}
-			abcSeq.open();
-			this.abcSequencer = new SequencerWrapper(abcSeq, transmitter, receiver);
 		}
 		catch (MidiUnavailableException e) {
 			JOptionPane.showMessageDialog(null, "Failed to initialize MIDI sequencer.\nThe program will now exit.\n\n"
@@ -287,7 +265,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(IMidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */, 960 /* max */, 1 /* step */));
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(IMidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */,
+				960 /* max */, 1 /* step */));
 		tempoSpinner.setToolTipText("Tempo in beats per minute");
 		tempoSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -467,9 +446,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		volumePanel.add(new JLabel("Volume"), "0, 0, c, c");
 		volumePanel.add(volumeBar, "0, 1, f, c");
 
-		
 		Insets playButtonMargin = new Insets(4, 10, 4, 10);
-		
+
 		abcPlayButton = new JButton("ABC", abcPlayIcon);
 		abcPlayButton.setToolTipText("Play ABC Preview");
 		abcPlayButton.setMargin(playButtonMargin);
@@ -519,7 +497,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		JPanel playButtonPanel = new JPanel(new TableLayout(new double[] {
 				0.33, 0.33, 8, 0.34
 		}, new double[] {
-				PREFERRED
+			PREFERRED
 		}));
 		playButtonPanel.add(abcPlayButton, "0, 0, f, f");
 		playButtonPanel.add(playButton, "1, 0, f, f");
