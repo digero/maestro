@@ -76,6 +76,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 	private final TrackInfo trackInfo;
 	private final NoteFilterSequencerWrapper seq;
+	private final SequencerWrapper abcSequencer;
 	private final AbcPart abcPart;
 
 	private JCheckBox checkBox;
@@ -89,7 +90,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	private boolean showDrumPanels;
 	private boolean wasDrumPart;
 
-	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part) {
+	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, SequencerWrapper abcSequencer) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
@@ -97,6 +98,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		this.trackInfo = info;
 		this.seq = sequencer;
 		this.abcPart = part;
+		this.abcSequencer = abcSequencer;
 
 		TableLayout tableLayout = (TableLayout) getLayout();
 		tableLayout.setHGap(4);
@@ -168,10 +170,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 
 		seq.addChangeListener(seqListener = new SequencerListener() {
 			public void propertyChanged(SequencerEvent evt) {
-				if (evt.getProperty() == SequencerProperty.TRACK_ACTIVE)
+				if (evt.getProperty() == SequencerProperty.TRACK_ACTIVE) {
 					updateColors();
+				}
+				else if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
+					noteGraph.repaint();
+				}
 			}
 		});
+
+		if (abcSequencer != null)
+			abcSequencer.addChangeListener(seqListener);
 
 		addPropertyChangeListener("enabled", new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -393,6 +402,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	public void dispose() {
 		abcPart.removeAbcListener(abcListener);
 		seq.removeChangeListener(seqListener);
+		if (abcSequencer != null)
+			abcSequencer.removeChangeListener(seqListener);
 		noteGraph.dispose();
 	}
 
@@ -439,6 +450,17 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				int maxPlayable = abcPart.getInstrument().highestPlayable.id;
 				return (noteId >= minPlayable) && (noteId <= maxPlayable);
 			}
+		}
+
+		@Override
+		protected boolean isShowingNotesOn() {
+			if (sequencer.isRunning())
+				return sequencer.isTrackActive(trackInfo.getTrackNumber());
+
+			if (abcSequencer != null && abcSequencer.isRunning())
+				return abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+
+			return false;
 		}
 
 		@Override

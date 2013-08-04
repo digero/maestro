@@ -218,7 +218,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDisposable 
 	private long lastPaintedSongPos = -1;
 	private long songPos = -1;
 
-	private boolean isShowingNotesOn() {
+	protected boolean isShowingNotesOn() {
 		if (trackInfo == null)
 			return false;
 

@@ -235,7 +235,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcPauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
 		Icon stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
 
-		partPanel = new PartPanel(sequencer, partAutoNumberer);
+		partPanel = new PartPanel(sequencer, partAutoNumberer, abcSequencer);
 		partPanel.addSettingsActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				doSettingsDialog(SettingsDialog.NUMBERING_TAB);
@@ -486,7 +486,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
-				curSequencer.setRunning(!curSequencer.isRunning());
+
+				boolean running = !curSequencer.isRunning();
+				if (abcPreviewMode && running) {
+					if (!refreshPreviewSequence(true))
+						running = false;
+				}
+
+				curSequencer.setRunning(running);
 				updateButtons(false);
 			}
 		});

@@ -26,6 +26,7 @@ import javax.swing.event.DocumentListener;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
+import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDisposable;
 import com.digero.common.view.ColorTable;
@@ -44,6 +45,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	private AbcPart abcPart;
 	private PartAutoNumberer partAutoNumberer;
 	private NoteFilterSequencerWrapper sequencer;
+	private SequencerWrapper abcSequencer;
 
 	private JSpinner numberSpinner;
 	private SpinnerNumberModel numberSpinnerModel;
@@ -62,12 +64,14 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private boolean initialized = false;
 
-	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer) {
+	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer,
+			SequencerWrapper abcSequencer) {
 		super(new BorderLayout(HGAP, VGAP));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
 
 		this.sequencer = sequencer;
+		this.abcSequencer = abcSequencer;
 		this.partAutoNumberer = partAutoNumberer;
 
 		numberSpinnerModel = new SpinnerNumberModel(0, 0, 999, partAutoNumberer.getIncrement());
@@ -206,7 +210,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
 				int trackNumber = track.getTrackNumber();
 				if (track.hasEvents()) {
-					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart);
+					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart, abcSequencer);
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListVGroup.addComponent(trackPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 							GroupLayout.PREFERRED_SIZE);
