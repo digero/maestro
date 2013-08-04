@@ -79,9 +79,11 @@ import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
+import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
+import com.digero.common.view.LinkButton;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.maestro.MaestroMain;
@@ -90,8 +92,10 @@ import com.digero.maestro.abc.AbcMetadataSource;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.AbcPartMetadataSource;
 import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.PartAutoNumberer;
+import com.digero.maestro.abc.PartNameTemplate;
 import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.SequenceInfo;
@@ -121,11 +125,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private VolumeTransceiver abcVolumeTransceiver;
 	private ListModelWrapper<AbcPart> parts = new ListModelWrapper<AbcPart>(new DefaultListModel<AbcPart>());
 	private PartAutoNumberer partAutoNumberer;
+	private PartNameTemplate partNameTemplate;
 	private boolean usingNativeVolume;
 
 	private JPanel content;
 	private JTextField songTitleField;
-	private JTextField titleTagField;
 	private JTextField composerField;
 	private JTextField transcriberField;
 	private JSpinner transposeSpinner;
@@ -168,6 +172,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
 		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), Collections.unmodifiableList(parts));
+		partNameTemplate = new PartNameTemplate(prefs.node("partNameTemplate"), this);
 
 		usingNativeVolume = MaestroMain.isNativeVolumeSupported();
 		if (usingNativeVolume) {
@@ -227,6 +232,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		Icon stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
 
 		partPanel = new PartPanel(sequencer, partAutoNumberer);
+		partPanel.addSettingsActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				doSettingsDialog(SettingsDialog.NUMBERING_TAB);
+			}
+		});
 
 		TableLayout tableLayout = new TableLayout(LAYOUT_COLS, LAYOUT_ROWS);
 		tableLayout.setHGap(HGAP);
@@ -237,10 +247,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		songTitleField = new JTextField();
 		composerField = new JTextField();
-		if (SHOW_TITLE_TAG_TEXTBOX) {
-			titleTagField = new JTextField(prefs.get("titleTag", ""));
-			titleTagField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "titleTag"));
-		}
 		transcriberField = new JTextField(prefs.get("transcriber", ""));
 		transcriberField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "transcriber"));
 
@@ -315,6 +321,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
+		LinkButton partNameSettingsLink = new LinkButton("Part naming options...");
+		partNameSettingsLink.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				doSettingsDialog(SettingsDialog.NAME_TEMPLATE_TAB);
+			}
+		});
+
 		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+S)</center></html>");
 		Insets exportButtonMargin = exportButton.getMargin();
 		exportButtonMargin.bottom = exportButtonMargin.top = 10;
@@ -365,12 +378,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			songInfoPanel.add(new JLabel("T:"), "0, " + row);
 			songInfoPanel.add(songTitleField, "1, " + row);
 			row++;
-			if (SHOW_TITLE_TAG_TEXTBOX) {
-				songInfoLayout.insertRow(row, PREFERRED);
-				songInfoPanel.add(new JLabel("[]"), "0, " + row);
-				songInfoPanel.add(titleTagField, "1, " + row);
-				row++;
-			}
 			songInfoPanel.add(new JLabel("C:"), "0, " + row);
 			songInfoPanel.add(composerField, "1, " + row);
 			row++;
@@ -425,6 +432,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			row++;
 			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(tripletCheckBox, "0, " + row + ", 2, " + row + ", L, C");
+
+			row++;
+			settingsLayout.insertRow(row, PREFERRED);
+			settingsPanel.add(partNameSettingsLink, "0, " + row + ", 2, " + row + ", L, C");
 
 			row++;
 			settingsLayout.insertRow(row, PREFERRED);
@@ -654,16 +665,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		settingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK));
 		settingsItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				SettingsDialog dialog = new SettingsDialog(ProjectFrame.this, partAutoNumberer.getSettingsCopy());
-				dialog.setVisible(true);
-				if (dialog.isSuccess()) {
-					if (dialog.isNumbererSettingsChanged()) {
-						partAutoNumberer.setSettings(dialog.getNumbererSettings());
-						partAutoNumberer.renumberAllParts();
-					}
-					partPanel.settingsChanged();
-				}
-				dialog.dispose();
+				doSettingsDialog();
 			}
 		});
 
@@ -678,6 +680,29 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						"maestro_64.png");
 			}
 		});
+	}
+
+	private int currentSettingsDialogTab = 0;
+
+	private void doSettingsDialog() {
+		doSettingsDialog(currentSettingsDialogTab);
+	}
+
+	private void doSettingsDialog(int tab) {
+		SettingsDialog dialog = new SettingsDialog(ProjectFrame.this, partAutoNumberer.getSettingsCopy(),
+				partNameTemplate);
+		dialog.setActiveTab(tab);
+		dialog.setVisible(true);
+		if (dialog.isSuccess()) {
+			if (dialog.isNumbererSettingsChanged()) {
+				partAutoNumberer.setSettings(dialog.getNumbererSettings());
+				partAutoNumberer.renumberAllParts();
+			}
+			partNameTemplate.setSettings(dialog.getNameTemplateSettings());
+			partPanel.settingsChanged();
+		}
+		currentSettingsDialogTab = dialog.getActiveTab();
+		dialog.dispose();
 	}
 
 	public void onVolumeChanged() {
@@ -865,8 +890,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			exportMenuItem.setEnabled(exportButton.isEnabled());
 
 			songTitleField.setEnabled(midiLoaded);
-			if (SHOW_TITLE_TAG_TEXTBOX)
-				titleTagField.setEnabled(midiLoaded);
 			composerField.setEnabled(midiLoaded);
 			transcriberField.setEnabled(midiLoaded);
 			transposeSpinner.setEnabled(midiLoaded);
@@ -1223,28 +1246,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
 					tripletCheckBox.isSelected());
 
-			// Remove silent bars before the song starts
-			long startMicros = Long.MAX_VALUE;
-			long endMicros = Long.MIN_VALUE;
-			for (AbcPart part : parts) {
-				long firstNoteStart = part.firstNoteStart();
-				if (firstNoteStart < startMicros) {
-					// Remove integral number of bars
-					startMicros = tm.barLength * (firstNoteStart / tm.barLength);
-				}
-				long lastNoteEnd = part.lastNoteEnd();
-				if (lastNoteEnd > endMicros) {
-					// Lengthen to an integral number of bars
-					endMicros = tm.barLength * ((lastNoteEnd + tm.barLength - 1) / tm.barLength);
-				}
-			}
+			Pair<Long, Long> startEnd = getSongStartEndMicros(tm, true, false);
+			long startMicros = startEnd.first;
+			long endMicros = startEnd.second;
 
 			if (parts.size() > 0) {
 				PrintStream outWriter = new PrintStream(out);
 				AbcMetadataSource meta = this;
 				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
 				outWriter.println(AbcField.SONG_COMPOSER + meta.getComposer());
-				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(endMicros - startMicros));
+				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(meta.getSongLengthMicros()));
 				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
 				outWriter.println();
 				outWriter.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
@@ -1299,15 +1310,57 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	@Override
-	public String getTitleTag() {
-		if (SHOW_TITLE_TAG_TEXTBOX)
-			return titleTagField.getText();
-		else
-			return "";
+	public String getTranscriber() {
+		return transcriberField.getText();
+	}
+
+	private Pair<Long, Long> getSongStartEndMicros(TimingInfo tm, boolean lengthenToBar, boolean accountForSustain) {
+		// Remove silent bars before the song starts
+		long startMicros = Long.MAX_VALUE;
+		long endMicros = Long.MIN_VALUE;
+		for (AbcPart part : parts) {
+			long firstNoteStart = part.firstNoteStart();
+			if (firstNoteStart < startMicros) {
+				// Remove integral number of bars
+				startMicros = tm.barLength * (firstNoteStart / tm.barLength);
+			}
+			long lastNoteEnd = part.lastNoteEnd(accountForSustain);
+			if (lastNoteEnd > endMicros) {
+				// Lengthen to an integral number of bars
+				if (lengthenToBar)
+					endMicros = tm.barLength * ((lastNoteEnd + tm.barLength - 1) / tm.barLength);
+				else
+					endMicros = lastNoteEnd;
+			}
+		}
+
+		return new Pair<Long, Long>(startMicros, endMicros);
 	}
 
 	@Override
-	public String getTranscriber() {
-		return transcriberField.getText();
+	public long getSongLengthMicros() {
+		if (parts.size() == 0 || sequenceInfo == null)
+			return 0;
+
+		try {
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
+
+			Pair<Long, Long> startEnd = getSongStartEndMicros(tm, false, true);
+			return startEnd.second - startEnd.first;
+		}
+		catch (AbcConversionException e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public File getSaveFile() {
+		return saveFile;
+	}
+
+	@Override
+	public String getPartName(AbcPartMetadataSource abcPart) {
+		return partNameTemplate.formatName(abcPart);
 	}
 }

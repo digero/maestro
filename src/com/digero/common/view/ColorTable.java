@@ -8,6 +8,7 @@ public enum ColorTable {
 	INDICATOR(new Color(0x66FFFFFF, true)), //
 	INDICATOR_ACTIVE(new Color(0xAAFFFFFF, true)), //
 	OCTAVE_LINE(new Color(0x3C3C3C)), //
+	LINK(new Color(0x336699)), //
 
 	NOTE_ENABLED /*      */(Color.getHSBColor(0.62f, 0.85f, 1.00f)), //
 	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.80f, 0.80f)), //
@@ -48,6 +49,11 @@ public enum ColorTable {
 	PANEL_TEXT_OFF(new Color(0x777777)), //
 	PANEL_LINK(Color.getHSBColor(0.60f, 0.70f, 1.00f)), //
 
+	ABC_BORDER_SELECTED_ENABLED(PANEL_TEXT_ENABLED), //
+	ABC_BORDER_SELECTED_OFF(PANEL_TEXT_ENABLED), //
+	ABC_BORDER_UNSELECTED_ENABLED(GRAPH_BACKGROUND_ENABLED), //
+	ABC_BORDER_UNSELECTED_OFF(GRAPH_BACKGROUND_OFF), //
+	
 	CONTROLS_TEXT(Color.WHITE), //
 	CONTROLS_BACKGROUND(new Color(0x222222));
 

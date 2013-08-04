@@ -186,9 +186,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		JLabel intro = new JLabel("Drum Map: ");
 		intro.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
 
-		LinkButton saveButton = new LinkButton("<html><u>Export</u></html>");
+		LinkButton saveButton = new LinkButton("Export");
 		saveButton.setForeground(ColorTable.PANEL_LINK.get());
-		saveButton.setOpaque(false);
 		saveButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				saveDrumMapping();
@@ -198,9 +197,8 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		JLabel divider = new JLabel(" | ");
 		divider.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
 
-		LinkButton loadButton = new LinkButton("<html><u>Import</u></html>");
+		LinkButton loadButton = new LinkButton("Import");
 		loadButton.setForeground(ColorTable.PANEL_LINK.get());
-		loadButton.setOpaque(false);
 		loadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				loadDrumMapping();

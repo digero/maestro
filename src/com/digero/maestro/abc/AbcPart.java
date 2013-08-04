@@ -32,7 +32,7 @@ import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 
-public class AbcPart implements IDisposable {
+public class AbcPart implements AbcPartMetadataSource, IDisposable {
 	private SequenceInfo sequenceInfo;
 	private boolean enabled;
 	private int partNumber;
@@ -119,7 +119,7 @@ public class AbcPart implements IDisposable {
 				}
 
 				long endMicros = ne.getTieEnd().endMicros;
-				
+
 				// Lengthen Lute, Harp, Drums, etc. to play the entire sound sample
 				if (!instrument.isSustainable(ne.note.id))
 					endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
@@ -187,15 +187,10 @@ public class AbcPart implements IDisposable {
 		PrintStream out = new PrintStream(os);
 		out.println();
 		out.println("X: " + partNumber);
-		if (metadata != null) {
-			if (metadata.getSongTitle().length() > 0)
-				out.println("T: " + (metadata.getSongTitle() + " - " + title + " " + metadata.getTitleTag()).trim());
-			else
-				out.println("T: " + (title + " " + metadata.getTitleTag()).trim());
-		}
-		else {
+		if (metadata != null)
+			out.println("T: " + metadata.getPartName(this));
+		else
 			out.println("T: " + title.trim());
-		}
 
 		out.println(AbcField.PART_NAME + title.trim());
 
@@ -720,8 +715,12 @@ public class AbcPart implements IDisposable {
 		return start;
 	}
 
-	public long lastNoteEnd() {
+	public long lastNoteEnd(boolean accountForSustain) {
 		long end = Long.MIN_VALUE;
+
+		// The last note to start playing isn't necessarily the last note to end.
+		// Check the last several notes to find the one that ends last.
+		int notesToCheck = 1000;
 
 		for (int t = 0; t < getTrackCount(); t++) {
 			if (isTrackEnabled(t)) {
@@ -730,9 +729,17 @@ public class AbcPart implements IDisposable {
 				while (iter.hasPrevious()) {
 					NoteEvent ne = iter.previous();
 					if (mapNote(t, ne.note.id) != null) {
-						if (ne.endMicros > end)
-							end = ne.endMicros;
-						break;
+						long noteEnd;
+						if (!accountForSustain || instrument.isSustainable(ne.note.id))
+							noteEnd = ne.endMicros;
+						else
+							noteEnd = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
+
+						if (noteEnd > end)
+							end = noteEnd;
+
+						if (--notesToCheck <= 0)
+							break;
 					}
 				}
 			}
@@ -749,6 +756,7 @@ public class AbcPart implements IDisposable {
 		return sequenceInfo.getTrackCount();
 	}
 
+	@Override
 	public String getTitle() {
 		return title;
 	}
@@ -847,6 +855,7 @@ public class AbcPart implements IDisposable {
 		return enabledTrackCount;
 	}
 
+	@Override
 	public int getPartNumber() {
 		return partNumber;
 	}

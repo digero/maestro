@@ -325,4 +325,18 @@ public final class Util {
 		int beginIndex = source.length() - suffix.length();
 		return (beginIndex >= 0) && source.substring(beginIndex, source.length()).equalsIgnoreCase(suffix);
 	}
+
+	public static String fileNameWithoutExtension(File file) {
+		if (file.isDirectory())
+			return file.getName();
+
+		return fileNameWithoutExtension(file.getName());
+	}
+
+	public static String fileNameWithoutExtension(String fileName) {
+		int dot = fileName.lastIndexOf('.');
+		if (dot > 0)
+			fileName = fileName.substring(0, dot);
+		return fileName;
+	}
 }

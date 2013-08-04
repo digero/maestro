@@ -3,6 +3,7 @@ package com.digero.maestro.view;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
@@ -10,6 +11,7 @@ import java.text.ParseException;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -23,6 +25,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.icons.IconLoader;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDisposable;
 import com.digero.common.view.ColorTable;
@@ -44,6 +47,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private JSpinner numberSpinner;
 	private SpinnerNumberModel numberSpinnerModel;
+	private JButton numberSettingsButton;
 	private JTextField nameTextField;
 	private JComboBox<LotroInstrument> instrumentComboBox;
 
@@ -74,6 +78,11 @@ public class PartPanel extends JPanel implements ICompileConstants {
 					PartPanel.this.partAutoNumberer.setPartNumber(abcPart, (Integer) numberSpinner.getValue());
 			}
 		});
+
+		numberSettingsButton = new JButton(IconLoader.getImageIcon("gear_16.png"));
+		numberSettingsButton.setMargin(new Insets(0, 0, 0, 0));
+		numberSettingsButton.setToolTipText("Automatic part numbering options");
+		numberSettingsButton.setVisible(false);
 
 		nameTextField = new JTextField(32);
 		nameTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -113,6 +122,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		JPanel dataPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, HGAP, 0));
 		dataPanel2.add(new JLabel("X:"));
 		dataPanel2.add(numberSpinner);
+		dataPanel2.add(numberSettingsButton);
 		dataPanel2.add(new JLabel(" I:"));
 		dataPanel2.add(instrumentComboBox);
 		dataPanel2.add(new JLabel(" T:"));
@@ -135,6 +145,11 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 		setAbcPart(null);
 		initialized = true;
+	}
+
+	public void addSettingsActionListener(ActionListener listener) {
+		numberSettingsButton.addActionListener(listener);
+		numberSettingsButton.setVisible(true);
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {

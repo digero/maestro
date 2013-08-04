@@ -8,7 +8,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Icon;
 import javax.swing.JLabel;
 
 public class LinkButton extends JLabel {
@@ -19,31 +18,13 @@ public class LinkButton extends JLabel {
 	}
 
 	public LinkButton(String text) {
-		super(text);
-		init();
-	}
-
-	public LinkButton(Icon image) {
-		super(image);
-		init();
-	}
-
-	public LinkButton(String text, int horizontalAlignment) {
-		super(text, horizontalAlignment);
-		init();
-	}
-
-	public LinkButton(Icon image, int horizontalAlignment) {
-		super(image, horizontalAlignment);
-		init();
-	}
-
-	public LinkButton(String text, Icon icon, int horizontalAlignment) {
-		super(text, icon, horizontalAlignment);
+		super("<html><u>" + text + "</u></html>");
 		init();
 	}
 
 	private void init() {
+		setForeground(ColorTable.LINK.get());
+		setOpaque(false);
 		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -69,7 +50,7 @@ public class LinkButton extends JLabel {
 	protected void fireActionEvent() {
 		if (listeners != null && listeners.isEmpty())
 			listeners = null;
-		
+
 		if (listeners != null) {
 			ActionEvent e = new ActionEvent(this, 0, "click");
 			for (ActionListener l : listeners) {
