@@ -44,23 +44,7 @@ public final class AboutDialog {
 			}
 		});
 
-		JLabel javaMessage = new JLabel("<html>" //
-				+ "Java version " + System.getProperty("java.version")
-				+ "<br>" //
-				+ System.getProperty("java.vendor")
-				+ "<br>" //
-				+ "<a href='" + System.getProperty("java.vendor.url") + "'>"
-				+ System.getProperty("java.vendor.url")
-				+ "</a>" //
-				+ "</html>");
-		javaMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		javaMessage.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					Util.openURL(System.getProperty("java.vendor.url"));
-				}
-			}
-		});
+		JLabel javaMessage = new JLabel("Java version " + System.getProperty("java.version"));
 
 		JPanel aboutPanel = new JPanel(new BorderLayout(0, 8));
 		aboutPanel.add(aboutMessage, BorderLayout.CENTER);
