@@ -130,6 +130,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			int top = owner.getY() + (owner.getHeight() - this.getHeight()) / 2;
 			this.setLocation(left, top);
 		}
+
+		updateNameTemplateExample();
 	}
 
 	private void createNumberingPanel() {
@@ -227,7 +229,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 	}
 
 	private void createNameTemplatePanel() {
-		partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern());
+		partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern(), 40);
 		partNameTextField.getDocument().addDocumentListener(new DocumentListener() {
 			public void removeUpdate(DocumentEvent e) {
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
@@ -245,7 +247,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			}
 		});
 
-		nameTemplateExampleLabel = new JLabel();
+		nameTemplateExampleLabel = new JLabel(" ");
 
 		TableLayout layout = new TableLayout();
 		layout.insertColumn(0, PREFERRED);
@@ -264,7 +266,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		nameTemplatePanel.add(partNameTextField, "0, " + row + ", 1, " + row);
 
 		layout.insertRow(++row, PREFERRED);
-		nameTemplatePanel.add(nameTemplateExampleLabel, "0, " + row + ", 1, " + row);
+		nameTemplatePanel.add(nameTemplateExampleLabel, "0, " + row + ", 1, " + row + ", F, F");
 
 		layout.insertRow(++row, PREFERRED);
 
@@ -299,8 +301,6 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		}
 		nameTemplate.setMetadataSource(originalMetadataSource);
 		nameTemplate.setCurrentAbcPart(originalAbcPart);
-
-		updateNameTemplateExample();
 	}
 
 	private void updateNameTemplateExample() {
@@ -308,8 +308,10 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		MockMetadataSource mockMetadata = new MockMetadataSource(originalMetadataSource);
 		nameTemplate.setMetadataSource(mockMetadata);
 
-		nameTemplateExampleLabel.setText(nameTemplate.formatName(nameTemplateSettings.getPartNamePattern(),
-				mockMetadata));
+		String exampleText = nameTemplate.formatName(nameTemplateSettings.getPartNamePattern(), mockMetadata);
+		exampleText = Util.ellipsis(exampleText, nameTemplateExampleLabel.getWidth(),
+				nameTemplateExampleLabel.getFont());
+		nameTemplateExampleLabel.setText(exampleText);
 
 		nameTemplate.setMetadataSource(originalMetadataSource);
 	}
@@ -397,7 +399,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 					return saveFile;
 			}
 
-			return new File(Util.getLotroMusicPath(false), "examplesong.abc");
+			return new File(Util.getLotroMusicPath(false), "band/examplesong.abc");
 		}
 
 		@Override

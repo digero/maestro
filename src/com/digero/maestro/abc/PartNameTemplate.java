@@ -122,7 +122,7 @@ public class PartNameTemplate {
 		variables.put("$FilePath", new Variable("The path to the ABC file including the ABC file name, "
 				+ "if it is in a subdirectory of the LOTRO/Music directory.\n"
 				+ "If the file is saved directly in the LOTRO/Music directory, "
-				+ "this will be the same as $FileName.") {
+				+ "this will be the same as <b>$FileName</b>.") {
 			public String getValue() {
 				if (metadata.getSaveFile() == null)
 					return "";
