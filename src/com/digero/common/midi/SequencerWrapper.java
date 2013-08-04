@@ -410,19 +410,19 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 			}
 			finally {
 				isFiringEvent = false;
-			}
 
-			if (listenersAddedWhileFiring != null) {
-				for (SequencerListener l : listenersAddedWhileFiring)
-					listeners.add(l);
+				if (listenersAddedWhileFiring != null) {
+					for (SequencerListener l : listenersAddedWhileFiring)
+						listeners.add(l);
 
-				listenersAddedWhileFiring = null;
-			}
-			if (listenersRemovedWhileFiring != null) {
-				for (SequencerListener l : listenersRemovedWhileFiring)
-					listeners.remove(l);
+					listenersAddedWhileFiring = null;
+				}
+				if (listenersRemovedWhileFiring != null) {
+					for (SequencerListener l : listenersRemovedWhileFiring)
+						listeners.remove(l);
 
-				listenersRemovedWhileFiring = null;
+					listenersRemovedWhileFiring = null;
+				}
 			}
 		}
 	}
