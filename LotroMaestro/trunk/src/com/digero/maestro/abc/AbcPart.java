@@ -763,7 +763,10 @@ public class AbcPart implements AbcPartMetadataSource, IDisposable {
 
 	@Override
 	public String toString() {
-		return getPartNumber() + ". " + getTitle();
+		String val = getPartNumber() + ". " + getTitle();
+		if (getEnabledTrackCount() == 0)
+			val += "*";
+		return val;
 	}
 
 	public void setTitle(String name) {
