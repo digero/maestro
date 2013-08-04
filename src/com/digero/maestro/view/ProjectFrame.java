@@ -29,6 +29,7 @@ import javax.imageio.ImageIO;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiUnavailableException;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -44,6 +45,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -147,7 +149,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private PartPanel partPanel;
 
-	private JButton abcPlayButton;
+	private boolean abcPreviewMode = false;
+	private JRadioButton abcModeRadioButton;
+	private JRadioButton midiModeRadioButton;
 	private JButton playButton;
 	private JButton stopButton;
 	private NativeVolumeBar volumeBar;
@@ -329,9 +333,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+S)</center></html>");
-		Insets exportButtonMargin = exportButton.getMargin();
-		exportButtonMargin.bottom = exportButtonMargin.top = 10;
-		exportButton.setMargin(exportButtonMargin);
 		exportButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				exportAbc();
@@ -458,39 +459,35 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		volumePanel.add(new JLabel("Volume"), "0, 0, c, c");
 		volumePanel.add(volumeBar, "0, 1, f, c");
 
-		Insets playButtonMargin = new Insets(4, 10, 4, 10);
-
-		abcPlayButton = new JButton("ABC", abcPlayIcon);
-		abcPlayButton.setToolTipText("Play ABC Preview");
-		abcPlayButton.setMargin(playButtonMargin);
-		abcPlayButton.addActionListener(new ActionListener() {
+		ActionListener modeButtonListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (abcSequencer.isRunning()) {
-					abcSequencer.stop();
-				}
-				else {
-					if (refreshPreviewSequence(true)) {
-						midiPositionLabel.setVisible(false);
-						abcPositionLabel.setVisible(true);
-						abcSequencer.start();
-					}
-				}
+				updatePreviewMode(abcModeRadioButton.isSelected());
 			}
-		});
+		};
 
-		playButton = new JButton("MIDI", playIcon);
-		playButton.setToolTipText("Play source MIDI file");
+		midiModeRadioButton = new JRadioButton("Original");
+		midiModeRadioButton.addActionListener(modeButtonListener);
+		midiModeRadioButton.setMargin(new Insets(0, 0, 0, 0));
+
+		abcModeRadioButton = new JRadioButton("ABC Preview");
+		abcModeRadioButton.addActionListener(modeButtonListener);
+		abcModeRadioButton.setMargin(new Insets(0, 0, 0, 0));
+
+		ButtonGroup modeButtonGroup = new ButtonGroup();
+		modeButtonGroup.add(abcModeRadioButton);
+		modeButtonGroup.add(midiModeRadioButton);
+
+		midiModeRadioButton.setSelected(true);
+		abcPreviewMode = abcModeRadioButton.isSelected();
+
+		Insets playButtonMargin = new Insets(5, 15, 5, 15);
+		playButton = new JButton(playIcon);
 		playButton.setMargin(playButtonMargin);
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (sequencer.isRunning()) {
-					sequencer.stop();
-				}
-				else {
-					midiPositionLabel.setVisible(true);
-					abcPositionLabel.setVisible(false);
-					sequencer.start();
-				}
+				SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
+				curSequencer.setRunning(!curSequencer.isRunning());
+				updateButtons(false);
 			}
 		});
 
@@ -507,13 +504,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		JPanel playButtonPanel = new JPanel(new TableLayout(new double[] {
-				0.33, 0.33, 8, 0.34
+				0.5, 8, PREFERRED, 0, PREFERRED, 8, 0.5
 		}, new double[] {
-			PREFERRED
+				PREFERRED, PREFERRED
 		}));
-		playButtonPanel.add(abcPlayButton, "0, 0, f, f");
-		playButtonPanel.add(playButton, "1, 0, f, f");
-		playButtonPanel.add(stopButton, "3, 0, f, f");
+		playButtonPanel.add(playButton, "2, 0, 2, 1");
+		playButtonPanel.add(stopButton, "4, 0, 3, 1");
+		playButtonPanel.add(midiModeRadioButton, "6, 0");
+		playButtonPanel.add(abcModeRadioButton, "6, 1");
 
 		midiPositionLabel = new SongPositionLabel(sequencer);
 		abcPositionLabel = new SongPositionLabel(abcSequencer, true);
@@ -876,11 +874,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			boolean midiLoaded = sequencer.isLoaded();
 
-			playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
-			abcPlayButton.setIcon(abcSequencer.isRunning() ? abcPauseIcon : abcPlayIcon);
+			SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
+			Icon curPlayIcon = abcPreviewMode ? abcPlayIcon : playIcon;
+			Icon curPauseIcon = abcPreviewMode ? abcPauseIcon : pauseIcon;
+			playButton.setIcon(curSequencer.isRunning() ? curPauseIcon : curPlayIcon);
+
+			if (!hasAbcNotes) {
+				abcSequencer.setRunning(false);
+				updatePreviewMode(false);
+			}
 
 			playButton.setEnabled(midiLoaded);
-			abcPlayButton.setEnabled(hasAbcNotes);
+			abcModeRadioButton.setEnabled(hasAbcNotes);
 			stopButton.setEnabled((midiLoaded && (sequencer.isRunning() || sequencer.getPosition() != 0))
 					|| (abcSequencer.isLoaded() && (abcSequencer.isRunning() || abcSequencer.getPosition() != 0)));
 
@@ -1075,8 +1080,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					partsList.ensureIndexIsVisible(0);
 					partsList.repaint();
 
+					updatePreviewMode(true, true);
 					updateButtons(true);
-					abcPlayButton.doClick();
 				}
 			}
 			else {
@@ -1099,21 +1104,35 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 	}
 
-	// TODO save
-//	private void save() {
-//		SaveData data = new SaveData();
-//		data.setString("project.midiFile", sequenceInfo.getMidiFile().getPath());
-//		data.setInt("project.transpose", getTranspose());
-//		data.setInt("project.tempo", getTempo());
-//		data.setKeySignature("project.keySignature", getKeySignature());
-//		data.setTimeSignature("project.timeSignature", getTimeSignature());
-//		data.setInt("project.partCount", parts.getSize());
-//
-//		for (int i = 0; i < parts.getSize(); i++) {
-//			AbcPart part = (AbcPart) parts.getElementAt(i);
-//
-//		}
-//	}
+	private void updatePreviewMode(boolean abcPreviewModeNew) {
+		SequencerWrapper oldSequencer = abcPreviewMode ? abcSequencer : sequencer;
+		updatePreviewMode(abcPreviewModeNew, oldSequencer.isRunning());
+	}
+
+	private void updatePreviewMode(boolean abcPreviewModeNew, boolean running) {
+		if (abcPreviewModeNew != abcPreviewMode) {
+			if (running && abcPreviewModeNew) {
+				if (!refreshPreviewSequence(true)) {
+					running = false;
+
+					SequencerWrapper oldSequencer = abcPreviewMode ? abcSequencer : sequencer;
+					oldSequencer.stop();
+				}
+			}
+
+			midiPositionLabel.setVisible(!abcPreviewModeNew);
+			abcPositionLabel.setVisible(abcPreviewModeNew);
+			midiModeRadioButton.setSelected(!abcPreviewModeNew);
+			abcModeRadioButton.setSelected(abcPreviewModeNew);
+
+			SequencerWrapper newSequencer = abcPreviewModeNew ? abcSequencer : sequencer;
+			newSequencer.setRunning(running);
+
+			abcPreviewMode = abcPreviewModeNew;
+
+			updateButtons(false);
+		}
+	}
 
 	private boolean refreshPreviewPending = false;
 
