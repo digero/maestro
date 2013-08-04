@@ -1080,7 +1080,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 			}
 			else {
-				updateButtons(false);
+				updateButtons(true);
 				createNewPart();
 				sequencer.start();
 			}

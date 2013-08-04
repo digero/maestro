@@ -36,6 +36,9 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 	private boolean lastRunning = false;
 
 	private List<SequencerListener> listeners = null;
+	private List<SequencerListener> listenersAddedWhileFiring = null;
+	private List<SequencerListener> listenersRemovedWhileFiring = null;
+	private boolean isFiringEvent = false;
 
 	public SequencerWrapper() throws MidiUnavailableException {
 		sequencer = MidiSystem.getSequencer(false);
@@ -90,7 +93,7 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 
 	private class TimerActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			if (sequencer != null) {
+			if (sequencer != null && sequencer.isOpen()) {
 				long songPos = sequencer.getMicrosecondPosition();
 				if (songPos >= getLength()) {
 					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
@@ -369,22 +372,57 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 	}
 
 	public void addChangeListener(SequencerListener l) {
-		if (listeners == null)
-			listeners = new ArrayList<SequencerListener>();
+		if (isFiringEvent) {
+			if (listenersAddedWhileFiring == null)
+				listenersAddedWhileFiring = new ArrayList<SequencerListener>();
 
-		listeners.add(l);
+			listenersAddedWhileFiring.add(l);
+		}
+		else {
+			if (listeners == null)
+				listeners = new ArrayList<SequencerListener>();
+
+			listeners.add(l);
+		}
 	}
 
 	public void removeChangeListener(SequencerListener l) {
-		if (listeners != null)
-			listeners.remove(l);
+		if (isFiringEvent) {
+			if (listenersRemovedWhileFiring == null)
+				listenersRemovedWhileFiring = new ArrayList<SequencerListener>();
+
+			listenersRemovedWhileFiring.add(l);
+		}
+		else {
+			if (listeners != null)
+				listeners.remove(l);
+		}
 	}
 
 	protected void fireChangeEvent(SequencerProperty property) {
 		if (listeners != null) {
-			SequencerEvent e = new SequencerEvent(this, property);
-			for (SequencerListener l : listeners) {
-				l.propertyChanged(e);
+			isFiringEvent = true;
+			try {
+				SequencerEvent e = new SequencerEvent(this, property);
+				for (SequencerListener l : listeners) {
+					l.propertyChanged(e);
+				}
+			}
+			finally {
+				isFiringEvent = false;
+			}
+
+			if (listenersAddedWhileFiring != null) {
+				for (SequencerListener l : listenersAddedWhileFiring)
+					listeners.add(l);
+
+				listenersAddedWhileFiring = null;
+			}
+			if (listenersRemovedWhileFiring != null) {
+				for (SequencerListener l : listenersRemovedWhileFiring)
+					listeners.remove(l);
+
+				listenersRemovedWhileFiring = null;
 			}
 		}
 	}
