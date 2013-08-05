@@ -1,7 +1,11 @@
 Todo:
   - Separate LotroInstruments.sf2 from the installer. Make it a download.
   - ABC visualization.
-  
+ 
+ Version 1.3.1
+ NEW FEATURES
+   - .
+ 
  Version 1.3.0
  NEW FEATURES
   - Added support for the Pibgorn instrument. There are several notes that play 
