@@ -73,9 +73,9 @@ public class PartAutoNumberer {
 
 	private Settings settings;
 	private Preferences prefsNode;
-	private List<AbcPart> parts;
+	private List<? extends NumberedAbcPart> parts;
 
-	public PartAutoNumberer(Preferences prefsNode, List<AbcPart> parts) {
+	public PartAutoNumberer(Preferences prefsNode, List<? extends NumberedAbcPart> parts) {
 		this.prefsNode = prefsNode;
 		this.parts = parts;
 		settings = new Settings(prefsNode);
@@ -105,7 +105,7 @@ public class PartAutoNumberer {
 	public void renumberAllParts() {
 		Set<Integer> numbersInUse = new HashSet<Integer>(parts.size());
 
-		for (AbcPart part : parts) {
+		for (NumberedAbcPart part : parts) {
 			int partNumber = getFirstNumber(part.getInstrument());
 			while (numbersInUse.contains(partNumber)) {
 				partNumber += getIncrement();
@@ -115,13 +115,13 @@ public class PartAutoNumberer {
 		}
 	}
 
-	public void onPartAdded(AbcPart partAdded) {
+	public void onPartAdded(NumberedAbcPart partAdded) {
 		int newPartNumber = settings.getFirstNumber(partAdded.getInstrument());
 
 		boolean conflict;
 		do {
 			conflict = false;
-			for (AbcPart part : parts) {
+			for (NumberedAbcPart part : parts) {
 				if (part != partAdded && part.getPartNumber() == newPartNumber) {
 					newPartNumber += getIncrement();
 					conflict = true;
@@ -132,8 +132,8 @@ public class PartAutoNumberer {
 		partAdded.setPartNumber(newPartNumber);
 	}
 
-	public void onPartDeleted(AbcPart partDeleted) {
-		for (AbcPart part : parts) {
+	public void onPartDeleted(NumberedAbcPart partDeleted) {
+		for (NumberedAbcPart part : parts) {
 			int partNumber = part.getPartNumber();
 			int deletedNumber = partDeleted.getPartNumber();
 			int partFirstNumber = getFirstNumber(part.getInstrument());
@@ -145,8 +145,8 @@ public class PartAutoNumberer {
 		}
 	}
 
-	public void setPartNumber(AbcPart partToChange, int newPartNumber) {
-		for (AbcPart part : parts) {
+	public void setPartNumber(NumberedAbcPart partToChange, int newPartNumber) {
+		for (NumberedAbcPart part : parts) {
 			if (part != partToChange && part.getPartNumber() == newPartNumber) {
 				part.setPartNumber(partToChange.getPartNumber());
 				break;
@@ -155,7 +155,7 @@ public class PartAutoNumberer {
 		partToChange.setPartNumber(newPartNumber);
 	}
 
-	public void setInstrument(AbcPart partToChange, LotroInstrument newInstrument) {
+	public void setInstrument(NumberedAbcPart partToChange, LotroInstrument newInstrument) {
 		if (newInstrument != partToChange.getInstrument()) {
 			onPartDeleted(partToChange);
 			partToChange.setInstrument(newInstrument);
