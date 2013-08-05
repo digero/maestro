@@ -188,6 +188,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private JCheckBoxMenuItem lotroErrorsMenuItem;
 	private JCheckBoxMenuItem stereoMenuItem;
+	private JCheckBoxMenuItem showFullPartNameMenuItem;
 
 	private JFileChooser openFileDialog;
 	private JFileChooser saveFileDialog;
@@ -691,6 +692,16 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			public void actionPerformed(ActionEvent e) {
 				prefs.putBoolean("stereoMenuItem", stereoMenuItem.isSelected());
 				refreshSequence();
+			}
+		});
+
+		toolsMenu.add(showFullPartNameMenuItem = new JCheckBoxMenuItem("Show full part names"));
+		showFullPartNameMenuItem.setSelected(prefs.getBoolean("showFullPartNameMenuItem", false));
+		trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
+		showFullPartNameMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				prefs.putBoolean("showFullPartNameMenuItem", showFullPartNameMenuItem.isSelected());
+				trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
 			}
 		});
 
@@ -1499,6 +1510,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		private Object trackIndexKey = new Object();
 		LotroInstrument[] sortedInstruments = LotroInstrument.values();
 
+		private JCheckBox[] trackCheckBoxes = null;
+
+		private boolean showFullPartName = false;
+
 		public TrackListPanel() {
 			super(new TableLayout(new double[] {
 					0, FILL, PREFERRED, PREFERRED, 0
@@ -1531,6 +1546,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					((JComboBox) c).removeActionListener(instrumentChangeListener);
 				}
 			}
+			trackCheckBoxes = null;
 			removeAll();
 			for (int i = layout.getNumRow() - 2; i >= 1; i--) {
 				layout.deleteRow(i);
@@ -1545,6 +1561,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				return;
 
 			Track[] tracks = sequencer.getSequence().getTracks();
+			trackCheckBoxes = new JCheckBox[tracks.length];
+
 			for (int i = 0; i < tracks.length; i++) {
 				Track track = tracks[i];
 
@@ -1570,7 +1588,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				}
 
 				if (hasNotes) {
-					JCheckBox checkBox = new JCheckBox(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartName(i));
+					JCheckBox checkBox = new JCheckBox(getCheckBoxText(i));
+					trackCheckBoxes[i] = checkBox;
 					checkBox.setToolTipText(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartFullName(i));
 					checkBox.putClientProperty(trackIndexKey, i);
 					checkBox.setBackground(getBackground());
@@ -1602,6 +1621,24 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 			revalidate();
 			repaint();
+		}
+
+		public void setShowFullPartName(boolean showFullPartName) {
+			if (this.showFullPartName != showFullPartName) {
+				this.showFullPartName = showFullPartName;
+
+				if (trackCheckBoxes != null) {
+					for (int i = 0; i < trackCheckBoxes.length; i++) {
+						if (trackCheckBoxes[i] != null)
+							trackCheckBoxes[i].setText(getCheckBoxText(i));
+					}
+				}
+			}
+		}
+
+		private String getCheckBoxText(int i) {
+			return abcInfo.getPartNumber(i) + ". "
+					+ (showFullPartName ? abcInfo.getPartFullName(i) : abcInfo.getPartName(i));
 		}
 
 		private ActionListener trackMuteListener = new ActionListener() {
