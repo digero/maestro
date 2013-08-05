@@ -32,7 +32,7 @@ import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 
-public class AbcPart implements AbcPartMetadataSource, IDisposable {
+public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDisposable {
 	private SequenceInfo sequenceInfo;
 	private boolean enabled;
 	private int partNumber;
@@ -784,10 +784,12 @@ public class AbcPart implements AbcPartMetadataSource, IDisposable {
 		return LotroInstrument.values();
 	}
 
+	@Override
 	public LotroInstrument getInstrument() {
 		return instrument;
 	}
 
+	@Override
 	public void setInstrument(LotroInstrument instrument) {
 		if (instrument == null)
 			throw new NullPointerException();
@@ -863,6 +865,7 @@ public class AbcPart implements AbcPartMetadataSource, IDisposable {
 		return partNumber;
 	}
 
+	@Override
 	public void setPartNumber(int partNumber) {
 		if (this.partNumber != partNumber) {
 			this.partNumber = partNumber;
