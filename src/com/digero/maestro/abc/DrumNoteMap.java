@@ -19,11 +19,11 @@ import javax.swing.event.ChangeListener;
 
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.util.ParseException;
 import com.digero.maestro.MaestroMain;
 
-public class DrumNoteMap implements IDisposable {
+public class DrumNoteMap implements IDiscardable {
 	public static final String FILE_SUFFIX = "drummap";
 	protected static final byte DISABLED_NOTE_ID = (byte) LotroDrumInfo.DISABLED.note.id;
 	private static final String MAP_PREFS_KEY = "DrumNoteMap.map";
@@ -98,7 +98,7 @@ public class DrumNoteMap implements IDisposable {
 	}
 
 	@Override
-	public void dispose() {
+	public void discard() {
 		listeners = null;
 	}
 

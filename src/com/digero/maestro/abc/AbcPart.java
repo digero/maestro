@@ -25,14 +25,14 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 
-public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDisposable {
+public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable {
 	private SequenceInfo sequenceInfo;
 	private boolean enabled;
 	private int partNumber;
@@ -654,7 +654,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDisposa
 	}
 
 	@Override
-	public void dispose() {
+	public void discard() {
 		changeListeners.clear();
 		sequenceInfo = null;
 		for (int i = 0; i < drumNoteMap.length; i++) {

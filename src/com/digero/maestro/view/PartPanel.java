@@ -28,7 +28,7 @@ import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
@@ -265,8 +265,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	private void clearTrackListPanel() {
 		for (Component child : trackListPanel.getComponents()) {
-			if (child instanceof IDisposable) {
-				((IDisposable) child).dispose();
+			if (child instanceof IDiscardable) {
+				((IDiscardable) child).discard();
 			}
 		}
 		trackListPanel.removeAll();
