@@ -44,6 +44,7 @@ import com.digero.common.view.LinkButton;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.DrumNoteMap;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.NoteFilterSequencerWrapper;
@@ -130,8 +131,6 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			}
 		});
 
-		noteGraph.setOctaveLinesVisible(!trackInfo.isDrumTrack());
-
 		if (!trackInfo.isDrumTrack()) {
 			int currentTranspose = abcPart.getTrackTranspose(trackInfo.getTrackNumber());
 			transposeSpinner = new JSpinner(new TrackTransposeModel(currentTranspose, -48, 48, 12));
@@ -165,6 +164,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 					updateState();
 					noteGraph.repaint();
 				}
+
+				if (e.getProperty() == AbcPartProperty.INSTRUMENT || e.getProperty() == AbcPartProperty.TRACK_ENABLED)
+					updateColors();
 			}
 		});
 
@@ -272,6 +274,9 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			checkBox.setForeground(inputEnabled ? ColorTable.PANEL_TEXT_DISABLED.get() : ColorTable.PANEL_TEXT_OFF
 					.get());
 		}
+
+		noteGraph.setOctaveLinesVisible(!trackInfo.isDrumTrack()
+				&& !(abcPart.getInstrument().isPercussion && abcPart.isTrackEnabled(trackInfo.getTrackNumber())));
 	}
 
 	private void updateState(boolean initDrumPanels) {
