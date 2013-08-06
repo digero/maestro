@@ -36,7 +36,7 @@ import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.ICompileConstants;
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
@@ -51,7 +51,7 @@ import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
-public class TrackPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
+public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConstants, ICompileConstants {
 	private static final String DRUM_NOTE_MAP_DIR_PREF_KEY = "DrumNoteMap.directory";
 
 	//              0              1               2
@@ -296,7 +296,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 			for (int i = getComponentCount() - 1; i >= 0; --i) {
 				Component child = getComponent(i);
 				if (child instanceof DrumPanel) {
-					((DrumPanel) child).dispose();
+					((DrumPanel) child).discard();
 					remove(i);
 				}
 			}
@@ -404,11 +404,11 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		return true;
 	}
 
-	public void dispose() {
+	public void discard() {
 		for (int i = getComponentCount() - 1; i >= 0; --i) {
 			Component child = getComponent(i);
-			if (child instanceof IDisposable) {
-				((IDisposable) child).dispose();
+			if (child instanceof IDiscardable) {
+				((IDiscardable) child).discard();
 			}
 		}
 
@@ -416,7 +416,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 		seq.removeChangeListener(seqListener);
 		if (abcSequencer != null)
 			abcSequencer.removeChangeListener(seqListener);
-		noteGraph.dispose();
+		noteGraph.discard();
 	}
 
 	private class TrackTransposeModel extends SpinnerNumberModel {

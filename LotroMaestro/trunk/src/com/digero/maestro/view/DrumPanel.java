@@ -23,7 +23,7 @@ import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.abc.AbcPart;
@@ -35,7 +35,7 @@ import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
-public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstants, ICompileConstants {
+public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConstants, ICompileConstants {
 	//              0              1               2
 	//   +--------------------+----------+--------------------+
 	//   | TRACK NAME         | Drum     |  +--------------+  |
@@ -142,8 +142,9 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		updateState();
 	}
 
-	public void dispose() {
-		noteGraph.dispose();
+	@Override
+	public void discard() {
+		noteGraph.discard();
 		abcPart.removeAbcListener(abcPartListener);
 		seq.removeChangeListener(sequencerListener);
 		if (abcSequencer != null)

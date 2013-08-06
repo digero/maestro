@@ -15,11 +15,11 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
-import com.digero.common.util.IDisposable;
+import com.digero.common.util.IDiscardable;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
-public class SequencerWrapper implements IMidiConstants, IDisposable {
+public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
 
@@ -53,7 +53,7 @@ public class SequencerWrapper implements IMidiConstants, IDisposable {
 	}
 
 	@Override
-	public void dispose() {
+	public void discard() {
 		if (sequencer != null) {
 			stop();
 		}

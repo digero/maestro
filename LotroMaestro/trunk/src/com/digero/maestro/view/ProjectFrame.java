@@ -593,12 +593,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	@Override
 	public void dispose() {
 		for (AbcPart part : parts) {
-			part.dispose();
+			part.discard();
 		}
 		parts.clear();
 
-		sequencer.dispose();
-		abcSequencer.dispose();
+		sequencer.discard();
+		abcSequencer.discard();
 
 		super.dispose();
 	}
@@ -865,7 +865,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		else if (parts.size() > 0)
 			partsList.setSelectedIndex(0);
 		partAutoNumberer.onPartDeleted(oldPart);
-		oldPart.dispose();
+		oldPart.discard();
 		updateButtons(true);
 		refreshPreviewSequence(false);
 	}
@@ -987,7 +987,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private void close() {
 		for (AbcPart part : parts) {
-			part.dispose();
+			part.discard();
 		}
 		parts.clear();
 
