@@ -238,7 +238,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 		else {
 			volumeTransceiver = new VolumeTransceiver();
-			volumeTransceiver.itGoesToEleven(true);
 			volumeTransceiver.setVolume(prefs.getInt("volumizer", VolumeTransceiver.MAX_VOLUME));
 		}
 		volumeBar = new NativeVolumeBar(new NativeVolumeBar.Callback() {
