@@ -87,6 +87,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDisposa
 
 		track.add(MidiFactory.createTrackNameEvent(title));
 		track.add(MidiFactory.createProgramChangeEvent(instrument.midiProgramId, channel, 0));
+		track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
 		track.add(MidiFactory.createPanEvent(pan, channel));
 
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
