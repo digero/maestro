@@ -129,7 +129,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		dataPanel2.add(numberSettingsButton);
 		dataPanel2.add(new JLabel(" I:"));
 		dataPanel2.add(instrumentComboBox);
-		dataPanel2.add(new JLabel(" T:"));
+		dataPanel2.add(new JLabel(" Part name:"));
 		dataPanel.add(dataPanel2, BorderLayout.WEST);
 		dataPanel.add(nameTextField, BorderLayout.CENTER);
 
