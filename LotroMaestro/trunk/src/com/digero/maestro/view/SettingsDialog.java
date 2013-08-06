@@ -309,9 +309,12 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		nameTemplate.setMetadataSource(mockMetadata);
 
 		String exampleText = nameTemplate.formatName(nameTemplateSettings.getPartNamePattern(), mockMetadata);
-		exampleText = Util.ellipsis(exampleText, nameTemplateExampleLabel.getWidth(),
+		String exampleTextEllipsis = Util.ellipsis(exampleText, nameTemplateExampleLabel.getWidth(),
 				nameTemplateExampleLabel.getFont());
-		nameTemplateExampleLabel.setText(exampleText);
+
+		nameTemplateExampleLabel.setText(exampleTextEllipsis);
+		if (!exampleText.equals(exampleTextEllipsis))
+			nameTemplateExampleLabel.setToolTipText(exampleText);
 
 		nameTemplate.setMetadataSource(originalMetadataSource);
 	}
@@ -350,12 +353,17 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		@Override
 		public String getTitle() {
-			return "Lute";
+			return "Theorbo";
+		}
+		
+		@Override
+		public LotroInstrument getInstrument() {
+			return LotroInstrument.THEORBO;
 		}
 
 		@Override
 		public int getPartNumber() {
-			return 1;
+			return 3;
 		}
 
 		@Override

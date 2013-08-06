@@ -11,6 +11,7 @@ import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.digero.common.abc.LotroInstrument;
 import com.digero.common.util.Pair;
 import com.digero.common.util.Util;
 
@@ -117,6 +118,14 @@ public class PartNameTemplate {
 					return "0";
 
 				return "" + currentAbcPart.getPartNumber();
+			}
+		});
+		variables.put("$PartInstrument", new Variable("The instrument for the individual ABC part") {
+			public String getValue() {
+				if (currentAbcPart == null)
+					return LotroInstrument.LUTE.toString();
+
+				return currentAbcPart.getInstrument().toString();
 			}
 		});
 		variables.put("$FilePath", new Variable("The path to the ABC file including the ABC file name, "
