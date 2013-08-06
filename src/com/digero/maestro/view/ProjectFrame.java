@@ -188,7 +188,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			volumeTransceiver.setVolume(prefs.getInt("volumizer", NativeVolumeBar.MAX_VOLUME));
 
 			abcVolumeTransceiver = new VolumeTransceiver();
-			abcVolumeTransceiver.itGoesToEleven(true);
 			abcVolumeTransceiver.setVolume(volumeTransceiver.getVolume());
 		}
 
@@ -250,8 +249,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		setContentPane(content);
 
 		songTitleField = new JTextField();
+		songTitleField.setToolTipText("Song Title");
 		composerField = new JTextField();
+		composerField.setToolTipText("Song Composer");
 		transcriberField = new JTextField(prefs.get("transcriber", ""));
+		transcriberField.setToolTipText("Song Transcriber (your name)");
 		transcriberField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "transcriber"));
 
 		keySignatureField = new MyFormattedTextField(KeySignature.C_MAJOR, 5);
@@ -480,9 +482,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		midiModeRadioButton.setSelected(true);
 		abcPreviewMode = abcModeRadioButton.isSelected();
 
-		Insets playButtonMargin = new Insets(5, 15, 5, 15);
 		playButton = new JButton(playIcon);
-		playButton.setMargin(playButtonMargin);
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
@@ -500,7 +500,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		stopButton = new JButton(stopIcon);
 		stopButton.setToolTipText("Stop");
-		stopButton.setMargin(playButtonMargin);
 		stopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				abcSequencer.stop();
@@ -510,15 +509,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		});
 
+		JPanel modeButtonPanel = new JPanel(new BorderLayout());
+		modeButtonPanel.add(midiModeRadioButton, BorderLayout.LINE_START);
+		modeButtonPanel.add(abcModeRadioButton, BorderLayout.LINE_END);
+
 		JPanel playButtonPanel = new JPanel(new TableLayout(new double[] {
-				0.5, 8, PREFERRED, 0, PREFERRED, 8, 0.5
+				0.5, 0.5
 		}, new double[] {
-				PREFERRED, PREFERRED
+			PREFERRED
 		}));
-		playButtonPanel.add(playButton, "2, 0, 2, 1");
-		playButtonPanel.add(stopButton, "4, 0, 3, 1");
-		playButtonPanel.add(midiModeRadioButton, "6, 0");
-		playButtonPanel.add(abcModeRadioButton, "6, 1");
+		playButtonPanel.add(playButton, "0, 0");
+		playButtonPanel.add(stopButton, "1, 0");
 
 		midiPositionLabel = new SongPositionLabel(sequencer);
 		abcPositionLabel = new SongPositionLabel(abcSequencer, true);
@@ -527,10 +528,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		JPanel playControlPanel = new JPanel(new TableLayout(new double[] {
 				4, 0.50, 4, PREFERRED, 4, 0.50, 4, PREFERRED, 4
 		}, new double[] {
-				4, PREFERRED, 4
+				0, PREFERRED,
 		}));
-		playControlPanel.add(playButtonPanel, "3, 1, c, c");
-		playControlPanel.add(volumePanel, "5, 1, c, c");
+		playControlPanel.add(playButtonPanel, "3, 1, C, C");
+		playControlPanel.add(modeButtonPanel, "1, 1, C, F");
+		playControlPanel.add(volumePanel, "5, 1, C, C");
 		playControlPanel.add(midiPositionLabel, "7, 1");
 		playControlPanel.add(abcPositionLabel, "7, 1");
 
@@ -887,11 +889,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			playButton.setIcon(curSequencer.isRunning() ? curPauseIcon : curPlayIcon);
 
 			if (!hasAbcNotes) {
+				midiModeRadioButton.setSelected(true);
 				abcSequencer.setRunning(false);
 				updatePreviewMode(false);
 			}
 
 			playButton.setEnabled(midiLoaded);
+			midiModeRadioButton.setEnabled(midiLoaded || hasAbcNotes);
 			abcModeRadioButton.setEnabled(hasAbcNotes);
 			stopButton.setEnabled((midiLoaded && (sequencer.isRunning() || sequencer.getPosition() != 0))
 					|| (abcSequencer.isLoaded() && (abcSequencer.isRunning() || abcSequencer.getPosition() != 0)));
@@ -1116,9 +1120,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		updatePreviewMode(abcPreviewModeNew, oldSequencer.isRunning());
 	}
 
-	private void updatePreviewMode(boolean abcPreviewModeNew, boolean running) {
-		if (abcPreviewModeNew != abcPreviewMode) {
-			if (running && abcPreviewModeNew) {
+	private void updatePreviewMode(boolean newAbcPreviewMode, boolean running) {
+		boolean runningNow = abcPreviewMode ? abcSequencer.isRunning() : sequencer.isRunning();
+
+		if (newAbcPreviewMode != abcPreviewMode || runningNow != running) {
+			if (running && newAbcPreviewMode) {
 				if (!refreshPreviewSequence(true)) {
 					running = false;
 
@@ -1127,15 +1133,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				}
 			}
 
-			midiPositionLabel.setVisible(!abcPreviewModeNew);
-			abcPositionLabel.setVisible(abcPreviewModeNew);
-			midiModeRadioButton.setSelected(!abcPreviewModeNew);
-			abcModeRadioButton.setSelected(abcPreviewModeNew);
+			midiPositionLabel.setVisible(!newAbcPreviewMode);
+			abcPositionLabel.setVisible(newAbcPreviewMode);
+			midiModeRadioButton.setSelected(!newAbcPreviewMode);
+			abcModeRadioButton.setSelected(newAbcPreviewMode);
 
-			SequencerWrapper newSequencer = abcPreviewModeNew ? abcSequencer : sequencer;
+			SequencerWrapper newSequencer = newAbcPreviewMode ? abcSequencer : sequencer;
 			newSequencer.setRunning(running);
 
-			abcPreviewMode = abcPreviewModeNew;
+			abcPreviewMode = newAbcPreviewMode;
 
 			updateButtons(false);
 		}
