@@ -314,7 +314,7 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 				add(drumSavePanel, TITLE_COLUMN + ", 1, l, c");
 				int row = LAYOUT_ROWS.length;
 				for (int noteId : trackInfo.getNotesInUse()) {
-					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId);
+					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId, abcSequencer);
 					if (row <= layout.getNumRow())
 						layout.insertRow(row, PREFERRED);
 					add(panel, "0, " + row + ", 2, " + row);
@@ -405,6 +405,13 @@ public class TrackPanel extends JPanel implements IDisposable, TableLayoutConsta
 	}
 
 	public void dispose() {
+		for (int i = getComponentCount() - 1; i >= 0; --i) {
+			Component child = getComponent(i);
+			if (child instanceof IDisposable) {
+				((IDisposable) child).dispose();
+			}
+		}
+
 		abcPart.removeAbcListener(abcListener);
 		seq.removeChangeListener(seqListener);
 		if (abcSequencer != null)
