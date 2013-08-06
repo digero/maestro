@@ -54,6 +54,7 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 
 	private TrackInfo trackInfo;
 	private NoteFilterSequencerWrapper seq;
+	private SequencerWrapper abcSequencer;
 	private AbcPart abcPart;
 	private int drumId;
 
@@ -61,11 +62,13 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 	private JComboBox<LotroDrumInfo> drumComboBox;
 	private DrumNoteGraph noteGraph;
 
-	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId) {
+	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId,
+			SequencerWrapper abcSequencer) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		this.trackInfo = info;
 		this.seq = sequencer;
+		this.abcSequencer = abcSequencer;
 		this.abcPart = part;
 		this.drumId = drumNoteId;
 
@@ -107,6 +110,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		});
 
 		seq.addChangeListener(sequencerListener);
+		if (abcSequencer != null)
+			abcSequencer.addChangeListener(sequencerListener);
 		abcPart.addAbcListener(abcPartListener);
 
 		noteGraph = new DrumNoteGraph(seq, trackInfo);
@@ -141,6 +146,8 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		noteGraph.dispose();
 		abcPart.removeAbcListener(abcPartListener);
 		seq.removeChangeListener(sequencerListener);
+		if (abcSequencer != null)
+			abcSequencer.removeChangeListener(sequencerListener);
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
@@ -210,6 +217,17 @@ public class DrumPanel extends JPanel implements IDisposable, TableLayoutConstan
 		@Override
 		protected boolean isNotePlayable(int noteId) {
 			return abcPart.isDrumPlayable(trackInfo.getTrackNumber(), drumId);
+		}
+
+		@Override
+		protected boolean isShowingNotesOn() {
+			if (sequencer.isRunning())
+				return sequencer.isTrackActive(trackInfo.getTrackNumber());
+
+			if (abcSequencer != null && abcSequencer.isRunning())
+				return abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+
+			return false;
 		}
 
 		@Override
