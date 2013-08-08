@@ -85,7 +85,7 @@ import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
-import com.digero.common.view.LinkButton;
+import com.digero.common.view.ColorTable;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.maestro.MaestroMain;
@@ -240,6 +240,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				doSettingsDialog(SettingsDialog.NUMBERING_TAB);
 			}
 		});
+		partPanel.showInfoMessage("<html><center>Drag and drop a MIDI or ABC file<br>"
+				+ "to open it, or use File > Open.</center></html>");
 
 		TableLayout tableLayout = new TableLayout(LAYOUT_COLS, LAYOUT_ROWS);
 		tableLayout.setHGap(HGAP);
@@ -324,13 +326,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			public void actionPerformed(ActionEvent e) {
 				if (abcSequencer.isRunning())
 					refreshPreviewSequence(false);
-			}
-		});
-
-		LinkButton partNameSettingsLink = new LinkButton("Part naming options...");
-		partNameSettingsLink.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doSettingsDialog(SettingsDialog.NAME_TEMPLATE_TAB);
 			}
 		});
 
@@ -438,10 +433,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			row++;
 			settingsLayout.insertRow(row, PREFERRED);
-			settingsPanel.add(partNameSettingsLink, "0, " + row + ", 2, " + row + ", L, C");
-
-			row++;
-			settingsLayout.insertRow(row, PREFERRED);
 			settingsPanel.add(exportButton, "0, " + row + ", 2, " + row + ", F, F");
 		}
 
@@ -510,8 +501,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		JPanel modeButtonPanel = new JPanel(new BorderLayout());
-		modeButtonPanel.add(midiModeRadioButton, BorderLayout.LINE_START);
-		modeButtonPanel.add(abcModeRadioButton, BorderLayout.LINE_END);
+		modeButtonPanel.add(midiModeRadioButton, BorderLayout.NORTH);
+		modeButtonPanel.add(abcModeRadioButton, BorderLayout.SOUTH);
 
 		JPanel playButtonPanel = new JPanel(new TableLayout(new double[] {
 				0.5, 0.5
@@ -633,7 +624,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		exportMenuItem = fileMenu.add(new JMenuItem("Export ABC..."));
-		exportMenuItem.setMnemonic('x');
+		exportMenuItem.setMnemonic('E');
 		exportMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
 		exportMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -643,8 +634,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		fileMenu.addSeparator();
 
-		JMenuItem exitItem = fileMenu.add(new JMenuItem("Close"));
-		exitItem.setMnemonic('C');
+		JMenuItem exitItem = fileMenu.add(new JMenuItem("Exit"));
+		exitItem.setMnemonic('x');
 		exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.ALT_DOWN_MASK));
 		exitItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -864,9 +855,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			partsList.setSelectedIndex(idx - 1);
 		else if (parts.size() > 0)
 			partsList.setSelectedIndex(0);
+
 		partAutoNumberer.onPartDeleted(oldPart);
 		oldPart.discard();
 		updateButtons(true);
+
+		if (parts.size() == 0) {
+			sequencer.stop();
+
+			partPanel.showInfoMessage("<html><center>This ABC song has no parts.<br>" + //
+					"Click the " + newPartButton.getText() + " button to add a new part.</center></html>");
+		}
+
 		refreshPreviewSequence(false);
 	}
 
@@ -1102,17 +1102,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			}
 		}
 		catch (InvalidMidiDataException e) {
-			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
-					"Error opening MIDI file", JOptionPane.ERROR_MESSAGE);
+			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
 		}
 		catch (IOException e) {
-			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
-					"Error opening file", JOptionPane.ERROR_MESSAGE);
+			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
 		}
 		catch (ParseException e) {
-			JOptionPane.showMessageDialog(this, "Failed to open " + midiFile.getName() + ":\n" + e.getMessage(),
-					"Error opening ABC file", JOptionPane.ERROR_MESSAGE);
+			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
 		}
+	}
+
+	private static String formatOpenFileErrorMessage(String fileName, String errorDetails) {
+		return "<html><h3><font color=\"" + ColorTable.PANEL_TEXT_ERROR.getHtml() + "\">Could not open "
+				+ Util.htmlEscape(fileName) + "</font></h3>" + // 
+				Util.htmlEscape(errorDetails).replace("\n", "<br>") + "<h3>&nbsp;</h3></html>";
 	}
 
 	private void updatePreviewMode(boolean abcPreviewModeNew) {
