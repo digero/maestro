@@ -1,5 +1,8 @@
 package com.digero.maestro.view;
 
+import info.clearthought.layout.TableLayout;
+import info.clearthought.layout.TableLayoutConstants;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -19,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -39,7 +43,7 @@ import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
-public class PartPanel extends JPanel implements ICompileConstants {
+public class PartPanel extends JPanel implements ICompileConstants, TableLayoutConstants {
 	private static final int HGAP = 4, VGAP = 4;
 
 	private AbcPart abcPart;
@@ -52,6 +56,7 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	private JButton numberSettingsButton;
 	private JTextField nameTextField;
 	private JComboBox<LotroInstrument> instrumentComboBox;
+	private JLabel messageLabel;
 
 	private JScrollPane trackScrollPane;
 
@@ -66,7 +71,15 @@ public class PartPanel extends JPanel implements ICompileConstants {
 
 	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer,
 			SequencerWrapper abcSequencer) {
-		super(new BorderLayout(HGAP, VGAP));
+		super(new TableLayout(new double[] {
+			FILL,
+		}, new double[] {
+				PREFERRED, FILL
+		}));
+
+		TableLayout layout = (TableLayout) getLayout();
+		layout.setHGap(HGAP);
+		layout.setVGap(VGAP);
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
 
@@ -144,8 +157,15 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		trackScrollPane = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-		add(dataPanel, BorderLayout.NORTH);
-		add(trackScrollPane, BorderLayout.CENTER);
+		messageLabel = new JLabel();
+		messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		messageLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 20));
+		messageLabel.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
+		messageLabel.setVisible(false);
+
+		add(dataPanel, "0, 0");
+		add(messageLabel, "0, 1, C, C");
+		add(trackScrollPane, "0, 1");
 
 		setAbcPart(null);
 		initialized = true;
@@ -169,6 +189,8 @@ public class PartPanel extends JPanel implements ICompileConstants {
 	}
 
 	public void setAbcPart(AbcPart abcPart) {
+		messageLabel.setVisible(false);
+
 		if (this.abcPart == abcPart && initialized)
 			return;
 
@@ -235,6 +257,13 @@ public class PartPanel extends JPanel implements ICompileConstants {
 		updateTracksVisible();
 		validate();
 		repaint();
+	}
+
+	public void showInfoMessage(String message) {
+		setAbcPart(null);
+
+		messageLabel.setText(message);
+		messageLabel.setVisible(true);
 	}
 
 	private void updateTracksVisible() {
