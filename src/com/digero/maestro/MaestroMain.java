@@ -3,6 +3,7 @@ package com.digero.maestro;
 import java.io.File;
 
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.digero.common.util.Version;
@@ -15,7 +16,7 @@ public class MaestroMain {
 
 	private static ProjectFrame mainWindow = null;
 
-	public static void main(String[] args) throws Exception {
+	public static void main(final String[] args) throws Exception {
 		System.setProperty("sun.sound.useNewAudioEngine", "true");
 
 		try {
@@ -25,8 +26,12 @@ public class MaestroMain {
 
 		mainWindow = new ProjectFrame();
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainWindow.setVisible(true);
-		openSongFromCommandLine(args);
+		SwingUtilities.invokeAndWait(new Runnable() {
+			public void run() {
+				mainWindow.setVisible(true);
+				openSongFromCommandLine(args);
+			}
+		});
 		try {
 			ready();
 		}
@@ -39,8 +44,12 @@ public class MaestroMain {
 	public static native void ready();
 
 	/** A new activation from WinRun4J (a.k.a. a file was opened) */
-	public static void activate(String[] args) {
-		openSongFromCommandLine(args);
+	public static void activate(final String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				openSongFromCommandLine(args);
+			}
+		});
 	}
 
 	public static void execute(String cmdLine) {
