@@ -10,22 +10,17 @@ public enum ColorTable {
 	OCTAVE_LINE(new Color(0x3C3C3C)), //
 	LINK(new Color(0x336699)), //
 
-	NOTE_ENABLED /*      */(Color.getHSBColor(0.62f, 0.85f, 1.00f)), //
-	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.80f, 0.80f)), //
+	NOTE_ENABLED /*      */(Color.getHSBColor(0.12f, 0.77f, 0.90f)), // Color.getHSBColor(0.62f, 0.85f, 1.00f)
+	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.72f, 0.95f)), // Color.getHSBColor(0.60f, 0.80f, 0.80f)
 	NOTE_OFF /*          */(Color.getHSBColor(0.62f, 0.00f, 0.50f)), //
 
 	NOTE_BAD_ENABLED /*  */(Color.getHSBColor(0.05f, 1.00f, 1.00f)), //
 	NOTE_BAD_DISABLED /* */(Color.getHSBColor(0.95f, 0.65f, 0.75f)), //
 	NOTE_BAD_OFF /*      */(Color.getHSBColor(0.00f, 0.00f, 0.70f)), //
 
-	NOTE_ABC_ENABLED /*  */(Color.getHSBColor(0.12f, 0.85f, 1.00f)), //
+	NOTE_ABC_ENABLED /*  */(Color.getHSBColor(0.12f, 0.80f, 0.90f)), //
 	NOTE_ABC_DISABLED /* */(Color.getHSBColor(0.12f, 0.60f, 0.75f)), //
 	NOTE_ABC_OFF /*      */(Color.getHSBColor(0.12f, 0.00f, 0.50f)), //
-
-//	NOTE_ABC_ENABLED(new Color(0x99FFBB00, true)), //
-//	NOTE_ABC_ENABLED(NOTE_ENABLED), //
-//	NOTE_ABC_DISABLED(NOTE_DISABLED), //
-//	NOTE_ABC_OFF(NOTE_OFF), //
 
 	NOTE_DRUM_ENABLED(NOTE_ENABLED), //
 	NOTE_DRUM_DISABLED(NOTE_DISABLED), //
@@ -44,16 +39,17 @@ public enum ColorTable {
 
 	PANEL_BORDER(new Color(0xEEEEEE)), //
 
-	PANEL_TEXT_ENABLED(Color.getHSBColor(0.28f, 0.70f, 1.00f)), //
-	PANEL_TEXT_DISABLED(Color.WHITE), //
+	PANEL_TEXT_ENABLED(Color.getHSBColor(0.12f, 0.85f, 1.00f)), //
+	PANEL_TEXT_DISABLED(new Color(0xEEEEEE)), //
 	PANEL_TEXT_OFF(new Color(0x777777)), //
+	PANEL_TEXT_ERROR(Color.getHSBColor(0.015f, 0.90f, 1.00f)), //
 	PANEL_LINK(Color.getHSBColor(0.60f, 0.70f, 1.00f)), //
 
 	ABC_BORDER_SELECTED_ENABLED(PANEL_TEXT_ENABLED), //
 	ABC_BORDER_SELECTED_OFF(PANEL_TEXT_ENABLED), //
 	ABC_BORDER_UNSELECTED_ENABLED(GRAPH_BACKGROUND_ENABLED), //
 	ABC_BORDER_UNSELECTED_OFF(GRAPH_BACKGROUND_OFF), //
-	
+
 	CONTROLS_TEXT(Color.WHITE), //
 	CONTROLS_BACKGROUND(new Color(0x222222));
 
@@ -73,5 +69,9 @@ public enum ColorTable {
 
 	public Color get() {
 		return this.value;
+	}
+
+	public String getHtml() {
+		return String.format("#%02X%02X%02X", value.getRed(), value.getGreen(), value.getBlue());
 	}
 }
