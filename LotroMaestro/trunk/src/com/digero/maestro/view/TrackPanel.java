@@ -90,8 +90,9 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 	private boolean showDrumPanels;
 	private boolean wasDrumPart;
+	private boolean isAbcPreviewMode = false;
 
-	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, SequencerWrapper abcSequencer) {
+	public TrackPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, SequencerWrapper abcSequencer_) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorTable.PANEL_BORDER.get()));
@@ -99,7 +100,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		this.trackInfo = info;
 		this.seq = sequencer;
 		this.abcPart = part;
-		this.abcSequencer = abcSequencer;
+		this.abcSequencer = abcSequencer_;
 
 		TableLayout tableLayout = (TableLayout) getLayout();
 		tableLayout.setHGap(4);
@@ -120,14 +121,45 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		noteGraph = new TrackNoteGraph(seq, trackInfo);
 		noteGraph.addMouseListener(new MouseAdapter() {
+			private int soloAbcTrack = -1;
+			private int soloMidiTrack = -1;
+
 			public void mousePressed(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON3)
-					seq.setTrackSolo(trackInfo.getTrackNumber(), true);
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					int trackNumber = trackInfo.getTrackNumber();
+					if (isAbcPreviewMode()) {
+						if (abcPart.isTrackEnabled(trackNumber)) {
+							soloAbcTrack = abcPart.getPreviewSequenceTrackNumber();
+						}
+						else {
+							for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
+								if (part.isTrackEnabled(trackNumber)) {
+									soloAbcTrack = part.getPreviewSequenceTrackNumber();
+									break;
+								}
+							}
+						}
+
+						if (soloAbcTrack >= 0)
+							abcSequencer.setTrackSolo(soloAbcTrack, true);
+					}
+					else {
+						soloMidiTrack = trackNumber;
+						seq.setTrackSolo(soloMidiTrack, true);
+					}
+				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON3)
-					seq.setTrackSolo(trackInfo.getTrackNumber(), false);
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					if (abcSequencer != null && soloAbcTrack >= 0)
+						abcSequencer.setTrackSolo(soloAbcTrack, false);
+					soloAbcTrack = -1;
+
+					if (soloMidiTrack >= 0)
+						seq.setTrackSolo(soloMidiTrack, false);
+					soloMidiTrack = -1;
+				}
 			}
 		});
 
@@ -229,6 +261,22 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		return trackInfo;
 	}
 
+	public void setAbcPreviewMode(boolean isAbcPreviewMode) {
+		if (this.isAbcPreviewMode != isAbcPreviewMode) {
+			this.isAbcPreviewMode = isAbcPreviewMode;
+			updateColors();
+			for (Component child : getComponents()) {
+				if (child instanceof DrumPanel) {
+					((DrumPanel) child).setAbcPreviewMode(isAbcPreviewMode);
+				}
+			}
+		}
+	}
+
+	private boolean isAbcPreviewMode() {
+		return abcSequencer != null && isAbcPreviewMode;
+	}
+
 	private void updateState() {
 		updateState(false);
 	}
@@ -249,18 +297,44 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		int trackNumber = trackInfo.getTrackNumber();
 		boolean trackEnabled = abcPart.isTrackEnabled(trackNumber);
 
-		if (!seq.isTrackActive(trackNumber)) {
+		boolean trackActive;
+		boolean trackSolo;
+		if (isAbcPreviewMode()) {
+			trackActive = false;
+			trackSolo = false;
+			for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
+				if (part.isTrackEnabled(trackNumber)) {
+					if (abcSequencer.isTrackActive(part.getPreviewSequenceTrackNumber()))
+						trackActive = true;
+					if (abcSequencer.getTrackSolo(part.getPreviewSequenceTrackNumber()))
+						trackSolo = true;
+				}
+			}
+		}
+		else {
+			trackActive = seq.isTrackActive(trackNumber);
+			trackSolo = seq.getTrackSolo(trackNumber);
+		}
+
+		noteGraph.setShowingAbcNotesOn(trackActive);
+
+		if (!trackActive) {
 			noteGraph.setNoteColor(ColorTable.NOTE_OFF);
 			noteGraph.setBadNoteColor(ColorTable.NOTE_BAD_OFF);
 			setBackground(ColorTable.GRAPH_BACKGROUND_OFF.get());
 		}
-		else if (trackEnabled || seq.getTrackSolo(trackNumber)) {
+		else if (trackEnabled) {
 			noteGraph.setNoteColor(ColorTable.NOTE_ENABLED);
 			noteGraph.setBadNoteColor(ColorTable.NOTE_BAD_ENABLED);
 			setBackground(ColorTable.GRAPH_BACKGROUND_ENABLED.get());
 		}
+		else if (trackSolo) {
+			noteGraph.setNoteColor(ColorTable.NOTE_DISABLED);
+			noteGraph.setBadNoteColor(ColorTable.NOTE_BAD_DISABLED);
+			setBackground(ColorTable.GRAPH_BACKGROUND_ENABLED.get());
+		}
 		else {
-			boolean pseudoOff = (abcPart.isDrumPart() != trackInfo.isDrumTrack());
+			boolean pseudoOff = !isAbcPreviewMode() && (abcPart.isDrumPart() != trackInfo.isDrumTrack());
 			noteGraph.setNoteColor(pseudoOff ? ColorTable.NOTE_OFF : ColorTable.NOTE_DISABLED);
 			noteGraph.setBadNoteColor(pseudoOff ? ColorTable.NOTE_BAD_OFF : ColorTable.NOTE_BAD_DISABLED);
 			setBackground(ColorTable.GRAPH_BACKGROUND_DISABLED.get());
@@ -437,8 +511,17 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	}
 
 	private class TrackNoteGraph extends NoteGraph {
+		private boolean showingAbcNotesOn = true;
+
 		public TrackNoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo) {
 			super(sequencer, trackInfo, Note.C2.id - 12, Note.C5.id + 12);
+		}
+
+		public void setShowingAbcNotesOn(boolean showingAbcNotesOn) {
+			if (this.showingAbcNotesOn != showingAbcNotesOn) {
+				this.showingAbcNotesOn = showingAbcNotesOn;
+				repaint();
+			}
 		}
 
 		@Override
@@ -466,11 +549,13 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		@Override
 		protected boolean isShowingNotesOn() {
+			int trackNumber = trackInfo.getTrackNumber();
+
 			if (sequencer.isRunning())
-				return sequencer.isTrackActive(trackInfo.getTrackNumber());
+				return sequencer.isTrackActive(trackNumber);
 
 			if (abcSequencer != null && abcSequencer.isRunning())
-				return abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+				return showingAbcNotesOn;
 
 			return false;
 		}

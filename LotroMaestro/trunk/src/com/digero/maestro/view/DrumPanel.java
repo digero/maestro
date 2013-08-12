@@ -57,18 +57,19 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	private SequencerWrapper abcSequencer;
 	private AbcPart abcPart;
 	private int drumId;
+	private boolean isAbcPreviewMode;
 
 	private JCheckBox checkBox;
 	private JComboBox<LotroDrumInfo> drumComboBox;
 	private DrumNoteGraph noteGraph;
 
 	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId,
-			SequencerWrapper abcSequencer) {
+			SequencerWrapper abcSequencer_) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		this.trackInfo = info;
 		this.seq = sequencer;
-		this.abcSequencer = abcSequencer;
+		this.abcSequencer = abcSequencer_;
 		this.abcPart = part;
 		this.drumId = drumNoteId;
 
@@ -116,15 +117,46 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 
 		noteGraph = new DrumNoteGraph(seq, trackInfo);
 		noteGraph.addMouseListener(new MouseAdapter() {
+			private int soloAbcTrack = -1;
+			private int soloAbcDrumId = -1;
+			private int soloTrack = -1;
+			private int soloDrumId = -1;
+
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setNoteSolo(trackInfo.getTrackNumber(), drumId, true);
+					int trackNumber = trackInfo.getTrackNumber();
+					if (isAbcPreviewMode() && abcSequencer instanceof NoteFilterSequencerWrapper) {
+						if (abcPart.isTrackEnabled(trackNumber)) {
+							soloAbcTrack = abcPart.getPreviewSequenceTrackNumber();
+							Note soloDrumNote = abcPart.mapNote(trackNumber, drumId);
+							soloAbcDrumId = (soloDrumNote == null) ? -1 : soloDrumNote.id;
+						}
+
+						if (soloAbcTrack >= 0 && soloAbcDrumId >= 0) {
+							((NoteFilterSequencerWrapper) abcSequencer).setNoteSolo(soloAbcTrack, soloAbcDrumId, true);
+						}
+					}
+					else {
+						soloTrack = trackNumber;
+						soloDrumId = drumId;
+						seq.setNoteSolo(trackNumber, drumId, true);
+					}
 				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
-					seq.setNoteSolo(trackInfo.getTrackNumber(), drumId, false);
+					if (soloAbcTrack >= 0 && soloAbcDrumId >= 0 && abcSequencer instanceof NoteFilterSequencerWrapper) {
+						((NoteFilterSequencerWrapper) abcSequencer).setNoteSolo(soloAbcTrack, soloAbcDrumId, false);
+					}
+					soloAbcTrack = -1;
+					soloAbcDrumId = -1;
+
+					if (soloTrack >= 0 && soloDrumId >= 0) {
+						seq.setNoteSolo(soloTrack, soloDrumId, false);
+					}
+					soloTrack = -1;
+					soloDrumId = -1;
 				}
 			}
 		});
@@ -173,11 +205,31 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		int trackNumber = trackInfo.getTrackNumber();
 		boolean trackEnabled = abcPart.isTrackEnabled(trackNumber);
 
+		boolean noteActive;
+		if (isAbcPreviewMode()) {
+			noteActive = false;
+			for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
+				if (part.isTrackEnabled(trackNumber)) {
+					if (abcSequencer.isTrackActive(part.getPreviewSequenceTrackNumber())) {
+						Note drumNote = part.mapNote(trackNumber, drumId);
+						if (drumNote != null && abcSequencer.isNoteActive(drumNote.id)) {
+							noteActive = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+		else {
+			noteActive = seq.isTrackActive(trackNumber) && seq.isNoteActive(drumId);
+		}
+
+		noteGraph.setShowingAbcNotesOn(noteActive);
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
 		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.DRUMS);
 
-		if (!seq.isTrackActive(trackNumber) || !seq.isNoteActive(drumId)) {
+		if (!noteActive) {
 			noteGraph.setNoteColor(ColorTable.NOTE_DRUM_OFF);
 			noteGraph.setBadNoteColor(ColorTable.NOTE_DRUM_OFF);
 
@@ -198,7 +250,17 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			setBackground(ColorTable.GRAPH_BACKGROUND_OFF.get());
 			checkBox.setForeground(ColorTable.PANEL_TEXT_OFF.get());
 		}
+	}
 
+	public void setAbcPreviewMode(boolean isAbcPreviewMode) {
+		if (this.isAbcPreviewMode != isAbcPreviewMode) {
+			this.isAbcPreviewMode = isAbcPreviewMode;
+			updateState();
+		}
+	}
+
+	private boolean isAbcPreviewMode() {
+		return abcSequencer != null && isAbcPreviewMode;
 	}
 
 	private LotroDrumInfo getSelectedDrum() {
@@ -206,8 +268,17 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	}
 
 	private class DrumNoteGraph extends NoteGraph {
+		private boolean showingAbcNotesOn = true;
+
 		public DrumNoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo) {
 			super(sequencer, trackInfo, -1, 1, 2, 5);
+		}
+
+		public void setShowingAbcNotesOn(boolean showingAbcNotesOn) {
+			if (this.showingAbcNotesOn != showingAbcNotesOn) {
+				this.showingAbcNotesOn = showingAbcNotesOn;
+				repaint();
+			}
 		}
 
 		@Override
@@ -226,7 +297,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 				return sequencer.isTrackActive(trackInfo.getTrackNumber());
 
 			if (abcSequencer != null && abcSequencer.isRunning())
-				return abcPart.isTrackEnabled(trackInfo.getTrackNumber());
+				return showingAbcNotesOn;
 
 			return false;
 		}

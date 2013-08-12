@@ -39,16 +39,19 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	private boolean dynamicVolume;
 	private String title;
 	private LotroInstrument instrument;
+	private AbcProject ownerProject;
 	private AbcMetadataSource metadata;
 	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackEnabled;
 	private int enabledTrackCount;
+	private int previewSequenceTrackNumber = -1;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
-	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcMetadataSource metadata) {
+	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcProject ownerProject, AbcMetadataSource metadata) {
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
+		this.ownerProject = ownerProject;
 		this.metadata = metadata;
 		this.instrument = LotroInstrument.LUTE;
 		this.partNumber = 1;
@@ -78,7 +81,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan) {
-		int trackNumber = out.getTracks().length;
+		int trackNumber = previewSequenceTrackNumber = out.getTracks().length;
 		int channel = trackNumber;
 		if (channel >= MidiConstants.DRUM_CHANNEL)
 			channel++;
@@ -673,7 +676,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	 * Maps from a MIDI note to an ABC note. If no mapping is available, returns
 	 * <code>null</code>.
 	 */
-	protected Note mapNote(int track, int noteId) {
+	public Note mapNote(int track, int noteId) {
 		if (isDrumPart()) {
 			if (!isTrackEnabled(track) || !isDrumEnabled(track, noteId))
 				return null;
@@ -747,6 +750,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 
 		return end;
+	}
+
+	public AbcProject getOwnerProject() {
+		return ownerProject;
 	}
 
 	public SequenceInfo getSequenceInfo() {
@@ -859,6 +866,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 	public int getEnabledTrackCount() {
 		return enabledTrackCount;
+	}
+	
+	public int getPreviewSequenceTrackNumber() {
+		return previewSequenceTrackNumber;
 	}
 
 	@Override

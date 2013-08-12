@@ -50,6 +50,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 	private PartAutoNumberer partAutoNumberer;
 	private NoteFilterSequencerWrapper sequencer;
 	private SequencerWrapper abcSequencer;
+	private boolean isAbcPreviewMode = false;
 
 	private JSpinner numberSpinner;
 	private SpinnerNumberModel numberSpinnerModel;
@@ -233,6 +234,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 				int trackNumber = track.getTrackNumber();
 				if (track.hasEvents()) {
 					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart, abcSequencer);
+					trackPanel.setAbcPreviewMode(isAbcPreviewMode);
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
 					trackListVGroup.addComponent(trackPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 							GroupLayout.PREFERRED_SIZE);
@@ -257,6 +259,24 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		updateTracksVisible();
 		validate();
 		repaint();
+	}
+
+	public void setAbcPreviewMode(boolean isAbcPreviewMode) {
+		if (this.isAbcPreviewMode != isAbcPreviewMode) {
+			this.isAbcPreviewMode = isAbcPreviewMode;
+			for (Component child : trackListPanel.getComponents()) {
+				if (child instanceof TrackPanel) {
+					((TrackPanel) child).setAbcPreviewMode(isAbcPreviewMode);
+				}
+				else if (child instanceof DrumPanel) {
+					((DrumPanel) child).setAbcPreviewMode(isAbcPreviewMode);
+				}
+			}
+		}
+	}
+
+	public boolean isAbcPreviewMode() {
+		return isAbcPreviewMode;
 	}
 
 	public void showInfoMessage(String message) {

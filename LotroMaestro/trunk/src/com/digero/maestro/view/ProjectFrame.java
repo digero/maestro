@@ -96,6 +96,7 @@ import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.AbcPartMetadataSource;
 import com.digero.maestro.abc.AbcPartProperty;
+import com.digero.maestro.abc.AbcProject;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
 import com.digero.maestro.abc.TimingInfo;
@@ -105,7 +106,8 @@ import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.ListModelWrapper;
 
 @SuppressWarnings("serial")
-public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource, ICompileConstants {
+public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMetadataSource, AbcProject,
+		ICompileConstants {
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] {
 			180, FILL
@@ -114,7 +116,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		FILL
 	};
 
-	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT;
+	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT - 2; // Track 0 is reserved for metadata, and Track 9 is reserved for drums
 
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 
@@ -123,7 +125,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private SequenceInfo sequenceInfo;
 	private NoteFilterSequencerWrapper sequencer;
 	private VolumeTransceiver volumeTransceiver;
-	private SequencerWrapper abcSequencer;
+	private NoteFilterSequencerWrapper abcSequencer;
 	private VolumeTransceiver abcVolumeTransceiver;
 	private ListModelWrapper<AbcPart> parts = new ListModelWrapper<AbcPart>(new DefaultListModel<AbcPart>());
 	private PartAutoNumberer partAutoNumberer;
@@ -342,6 +344,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = partsList.getSelectedValue();
 				sequencer.getFilter().setAbcPart(abcPart);
+				abcSequencer.getFilter().setAbcPart(abcPart);
 				partPanel.setAbcPart(abcPart);
 			}
 		});
@@ -832,8 +835,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	void createNewPart() {
-		if (sequenceInfo != null && parts.size() < MAX_PARTS) {
-			AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+		if (sequenceInfo != null) {
+			AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this, this);
 			newPart.addAbcListener(abcPartListener);
 			partAutoNumberer.onPartAdded(newPart);
 
@@ -867,7 +870,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					"Click the " + newPartButton.getText() + " button to add a new part.</center></html>");
 		}
 
-		refreshPreviewSequence(false);
+		if (abcSequencer.isRunning())
+			refreshPreviewSequence(false);
 	}
 
 	private boolean updateButtonsPending = false;
@@ -900,7 +904,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			stopButton.setEnabled((midiLoaded && (sequencer.isRunning() || sequencer.getPosition() != 0))
 					|| (abcSequencer.isLoaded() && (abcSequencer.isRunning() || abcSequencer.getPosition() != 0)));
 
-			newPartButton.setEnabled(sequenceInfo != null && parts.size() < MAX_PARTS);
+			newPartButton.setEnabled(sequenceInfo != null);
 			deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
 			exportButton.setEnabled(sequenceInfo != null && hasAbcNotes);
 			exportMenuItem.setEnabled(exportButton.isEnabled());
@@ -1056,7 +1060,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						continue;
 					}
 
-					AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+					AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this, this);
 
 					newPart.setTitle(abcInfo.getPartName(t));
 					newPart.setPartNumber(abcInfo.getPartNumber(t));
@@ -1146,6 +1150,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			abcPreviewMode = newAbcPreviewMode;
 
+			partPanel.setAbcPreviewMode(abcPreviewMode);
 			updateButtons(false);
 		}
 	}
@@ -1181,6 +1186,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 
 		try {
+			if (parts.size() > MAX_PARTS) {
+				throw new AbcConversionException("Songs with more than " + MAX_PARTS + " parts cannot be previewed.\n"
+						+ "This song currently has " + parts.size() + " parts.");
+			}
+
 			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
 					tripletCheckBox.isSelected());
 
@@ -1219,11 +1229,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			abcSequencer.setRunning(running);
 		}
 		catch (InvalidMidiDataException e) {
+			abcSequencer.stop();
 			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error previewing ABC",
 					JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
 		catch (AbcConversionException e) {
+			abcSequencer.stop();
 			JOptionPane.showMessageDialog(ProjectFrame.this, e.getMessage(), "Error previewing ABC",
 					JOptionPane.WARNING_MESSAGE);
 			return false;
@@ -1397,5 +1409,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	@Override
 	public String getPartName(AbcPartMetadataSource abcPart) {
 		return partNameTemplate.formatName(abcPart);
+	}
+
+	@Override
+	public List<AbcPart> getAllParts() {
+		return Collections.unmodifiableList(parts);
 	}
 }
