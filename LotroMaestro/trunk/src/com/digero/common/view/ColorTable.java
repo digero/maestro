@@ -10,15 +10,15 @@ public enum ColorTable {
 	OCTAVE_LINE(new Color(0x3C3C3C)), //
 	LINK(new Color(0x336699)), //
 
-	NOTE_ENABLED /*      */(Color.getHSBColor(0.12f, 0.77f, 0.90f)), // Color.getHSBColor(0.62f, 0.85f, 1.00f)
-	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.72f, 0.95f)), // Color.getHSBColor(0.60f, 0.80f, 0.80f)
+	NOTE_ENABLED /*      */(Color.getHSBColor(0.61f, 0.75f, 1.00f)), //
+	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.72f, 0.95f)), //
 	NOTE_OFF /*          */(Color.getHSBColor(0.62f, 0.00f, 0.50f)), //
 
 	NOTE_BAD_ENABLED /*  */(Color.getHSBColor(0.05f, 1.00f, 1.00f)), //
 	NOTE_BAD_DISABLED /* */(Color.getHSBColor(0.95f, 0.65f, 0.75f)), //
 	NOTE_BAD_OFF /*      */(Color.getHSBColor(0.00f, 0.00f, 0.70f)), //
 
-	NOTE_ABC_ENABLED /*  */(Color.getHSBColor(0.12f, 0.80f, 0.90f)), //
+	NOTE_ABC_ENABLED /*  */(Color.getHSBColor(0.12f, 0.77f, 0.90f)), //
 	NOTE_ABC_DISABLED /* */(Color.getHSBColor(0.12f, 0.60f, 0.75f)), //
 	NOTE_ABC_OFF /*      */(Color.getHSBColor(0.12f, 0.00f, 0.50f)), //
 
