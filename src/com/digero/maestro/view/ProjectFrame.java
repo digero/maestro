@@ -316,10 +316,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					if (tempoFactor != 1.0f)
 						refreshPreviewSequence(false);
 				}
+				tempoSpinner.requestFocus();
 			}
 		});
 
-		tripletCheckBox = new JCheckBox("Use triplets/swing rhythm");
+		tripletCheckBox = new JCheckBox("Triplets/swing rhythm");
 		tripletCheckBox.setToolTipText("<html>Tweak the timing to allow for triplets or a swing rhythm.<br><br>"
 				+ "This can cause short/fast notes to incorrectly be detected as triplets.<br>"
 				+ "Leave it unchecked unless the song has triplets or a swing rhythm.</html>");
