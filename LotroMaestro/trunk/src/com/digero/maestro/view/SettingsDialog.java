@@ -4,13 +4,13 @@ import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import javax.swing.AbstractAction;
@@ -51,14 +51,10 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 	private JTabbedPane tabPanel;
 
 	private PartAutoNumberer.Settings numSettings;
-	private JPanel numberingPanel;
-	private JComboBox<Integer> incrementComboBox;
 
 	private PartNameTemplate.Settings nameTemplateSettings;
 	private PartNameTemplate nameTemplate;
-	private JPanel nameTemplatePanel;
 	private JLabel nameTemplateExampleLabel;
-	private JTextField partNameTextField;
 
 	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings, PartNameTemplate nameTemplate) {
 		super(owner, "Options", true);
@@ -68,9 +64,6 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		this.nameTemplate = nameTemplate;
 		this.nameTemplateSettings = nameTemplate.getSettingsCopy();
-
-		createNumberingPanel();
-		createNameTemplatePanel();
 
 		JButton okButton = new JButton("OK");
 		getRootPane().setDefaultButton(okButton);
@@ -112,10 +105,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		buttonsContainerPanel.add(buttonsPanel);
 
 		tabPanel = new JTabbedPane();
-		JPanel numberingPanelContainer = new JPanel(new BorderLayout());
-		numberingPanelContainer.add(numberingPanel, BorderLayout.WEST);
-		tabPanel.addTab("ABC Part Numbering", numberingPanelContainer); // NUMBERING_TAB
-		tabPanel.addTab("ABC Part Naming", nameTemplatePanel); // NAME_TEMPLATE_TAB
+		tabPanel.addTab("ABC Part Numbering", createNumberingPanel()); // NUMBERING_TAB
+		tabPanel.addTab("ABC Part Naming", createNameTemplatePanel()); // NAME_TEMPLATE_TAB
 
 		JPanel mainPanel = new JPanel(new BorderLayout(PAD, PAD));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
@@ -131,22 +122,47 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			this.setLocation(left, top);
 		}
 
+		// This must be done after layout is done: the call to pack() does layout
 		updateNameTemplateExample();
 	}
 
-	private void createNumberingPanel() {
-		TableLayout numberingLayout = new TableLayout(new double[] {
-				/* Cols */0.5, PREFERRED, 2 * PAD, 0.5, PREFERRED
-		}, new double[] {
-			/* Rows */PREFERRED
-		});
-		numberingLayout.setHGap(PAD);
-		numberingLayout.setVGap(PAD / 2);
-		numberingPanel = new JPanel(numberingLayout);
-		numberingPanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
+	private JPanel createNumberingPanel() {
+		JLabel instrumentsTitle = new JLabel("<html><b><u>First part number</u></b></html>");
 
-		JPanel incrementPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		incrementComboBox = new JComboBox<Integer>(new Integer[] {
+		TableLayout instrumentsLayout = new TableLayout(new double[] {
+				50, PREFERRED, 2 * PAD, 50, PREFERRED
+		}, new double[] {});
+		instrumentsLayout.setHGap(PAD);
+		instrumentsLayout.setVGap(3);
+		JPanel instrumentsPanel = new JPanel(instrumentsLayout);
+		instrumentsPanel.setBorder(BorderFactory.createEmptyBorder(0, PAD, 0, 0));
+
+		final List<InstrumentSpinner> instrumentSpinners = new ArrayList<InstrumentSpinner>();
+		LotroInstrument[] instruments = LotroInstrument.values();
+		for (int i = 0; i < instruments.length; i++) {
+			LotroInstrument inst = instruments[i];
+
+			int row = i;
+			int col = 0;
+			if (i >= (instruments.length + 1) / 2) {
+				row -= (instruments.length + 1) / 2;
+				col = 3;
+			}
+			else {
+				instrumentsLayout.insertRow(row, PREFERRED);
+			}
+			InstrumentSpinner spinner = new InstrumentSpinner(inst);
+			instrumentSpinners.add(spinner);
+			instrumentsPanel.add(spinner, col + ", " + row);
+			instrumentsPanel.add(new JLabel(inst.toString() + " "), (col + 1) + ", " + row);
+		}
+
+		JLabel incrementTitle = new JLabel("<html><b><u>Increment</u></b></html>");
+		JLabel incrementDescr = new JLabel("<html>Interval between multiple parts of the same instrument.<br>"
+				+ "<b>1</b>: number Lute parts as 10, 11, 12, etc.<br>"
+				+ "<b>10</b>: number Lute parts as 1, 11, 21, etc.</html>");
+
+		final JComboBox<Integer> incrementComboBox = new JComboBox<Integer>(new Integer[] {
 				1, 10
 		});
 		incrementComboBox.setSelectedItem(numSettings.getIncrement());
@@ -159,59 +175,59 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 					return;
 
 				numbererSettingsChanged = true;
-				for (Component c : numberingPanel.getComponents()) {
-					if (c instanceof InstrumentSpinner) {
-						InstrumentSpinner spinner = (InstrumentSpinner) c;
-						int firstNumber = numSettings.getFirstNumber(spinner.instrument);
-						firstNumber = (firstNumber * oldInc) / newInc;
-						numSettings.setFirstNumber(spinner.instrument, firstNumber);
-						spinner.setValue(firstNumber);
+				for (InstrumentSpinner spinner : instrumentSpinners) {
+					int firstNumber = numSettings.getFirstNumber(spinner.instrument);
+					firstNumber = (firstNumber * oldInc) / newInc;
+					numSettings.setFirstNumber(spinner.instrument, firstNumber);
+					spinner.setValue(firstNumber);
 
-						if (newInc == 1) {
-							spinner.getModel().setMaximum(999);
-//							spinner.getModel().setStepSize(10);
-						}
-						else {
-							spinner.getModel().setMaximum(10);
-//							spinner.getModel().setStepSize(1);
-						}
+					if (newInc == 1) {
+						spinner.getModel().setMaximum(999);
+					}
+					else {
+						spinner.getModel().setMaximum(10);
 					}
 				}
 
 				numSettings.setIncrementByTen(newInc == 10);
 			}
 		});
-		JLabel incrementLabel = new JLabel("<html>Interval between parts of<br>the same instrument type: </html>");
-		incrementLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, PAD, 2 * PAD));
-		incrementPanel.add(incrementLabel);
-		incrementPanel.add(incrementComboBox);
 
-		numberingPanel.add(incrementPanel, "0, 0, 4, 0, f, f");
+		TableLayout incrementPanelLayout = new TableLayout(new double[] {
+				PREFERRED, FILL
+		}, new double[] {
+			PREFERRED
+		});
+		incrementPanelLayout.setHGap(10);
+		JPanel incrementPanel = new JPanel(incrementPanelLayout);
+		incrementPanel.setBorder(BorderFactory.createEmptyBorder(0, PAD, 0, 0));
+		incrementPanel.add(incrementComboBox, "0, 0, C, T");
+		incrementPanel.add(incrementDescr, "1, 0");
 
-		LotroInstrument[] instruments = LotroInstrument.values();
-		for (int i = 0; i < instruments.length; i++) {
-			LotroInstrument inst = instruments[i];
+		TableLayout numberingLayout = new TableLayout(new double[] {
+			FILL
+		}, new double[] {
+				PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED
+		});
 
-			int row = i + 1;
-			int col = 0;
-			if (i >= (instruments.length + 1) / 2) {
-				row -= (instruments.length + 1) / 2;
-				col = 3;
-			}
-			else {
-				numberingLayout.insertRow(row, PREFERRED);
-			}
-			numberingPanel.add(new InstrumentSpinner(inst), col + ", " + row);
-			numberingPanel.add(new JLabel(inst.toString() + " "), (col + 1) + ", " + row);
-		}
+		numberingLayout.setVGap(PAD);
+		JPanel numberingPanel = new JPanel(numberingLayout);
+		numberingPanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
+
+		numberingPanel.add(instrumentsTitle, "0, 0");
+		numberingPanel.add(instrumentsPanel, "0, 1, L, F");
+		numberingPanel.add(incrementTitle, "0, 3");
+		numberingPanel.add(incrementPanel, "0, 4, F, F");
+		return numberingPanel;
 	}
 
 	private class InstrumentSpinner extends JSpinner implements ChangeListener {
 		private LotroInstrument instrument;
 
 		public InstrumentSpinner(LotroInstrument instrument) {
-			super(new SpinnerNumberModel(numSettings.getFirstNumber(instrument), 1, numSettings.isIncrementByTen() ? 10
-					: 999, numSettings.isIncrementByTen() ? 1 : 10));
+			super(new SpinnerNumberModel(numSettings.getFirstNumber(instrument), 0, numSettings.isIncrementByTen() ? 10
+					: 999, 1));
+
 			this.instrument = instrument;
 			addChangeListener(this);
 		}
@@ -228,8 +244,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		}
 	}
 
-	private void createNameTemplatePanel() {
-		partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern(), 40);
+	private JPanel createNameTemplatePanel() {
+		final JTextField partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern(), 40);
 		partNameTextField.getDocument().addDocumentListener(new DocumentListener() {
 			public void removeUpdate(DocumentEvent e) {
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
@@ -248,32 +264,34 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		});
 
 		nameTemplateExampleLabel = new JLabel(" ");
+		JPanel examplePanel = new JPanel(new BorderLayout());
+		examplePanel.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 0));
+		examplePanel.add(nameTemplateExampleLabel, BorderLayout.CENTER);
 
 		TableLayout layout = new TableLayout();
 		layout.insertColumn(0, PREFERRED);
 		layout.insertColumn(1, FILL);
-		layout.setVGap(PAD);
-		layout.setHGap(PAD * 2);
+		layout.setVGap(3);
+		layout.setHGap(10);
 
-		nameTemplatePanel = new JPanel(layout);
+		JPanel nameTemplatePanel = new JPanel(layout);
 		nameTemplatePanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
 
 		int row = 0;
 		layout.insertRow(row, PREFERRED);
-		nameTemplatePanel.add(new JLabel("Pattern for ABC Part Name:"), "0, " + row + ", 1, " + row);
+		JLabel patternLabel = new JLabel("<html><b><u>Pattern for ABC Part Name</b></u></html>");
+		nameTemplatePanel.add(patternLabel, "0, " + row + ", 1, " + row);
 
 		layout.insertRow(++row, PREFERRED);
 		nameTemplatePanel.add(partNameTextField, "0, " + row + ", 1, " + row);
 
 		layout.insertRow(++row, PREFERRED);
-		nameTemplatePanel.add(nameTemplateExampleLabel, "0, " + row + ", 1, " + row + ", F, F");
+		nameTemplatePanel.add(examplePanel, "0, " + row + ", 1, " + row + ", F, F");
 
 		layout.insertRow(++row, PREFERRED);
 
-		JLabel nameLabel = new JLabel("<html><u>Variable Name</u></html>");
-		nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
-		JLabel exampleLabel = new JLabel("<html><u>Example</u></html>");
-		exampleLabel.setFont(nameLabel.getFont());
+		JLabel nameLabel = new JLabel("<html><u><b>Variable Name</b></u></html>");
+		JLabel exampleLabel = new JLabel("<html><u><b>Example</b></u></html>");
 
 		layout.insertRow(++row, PREFERRED);
 		nameTemplatePanel.add(nameLabel, "0, " + row);
@@ -287,10 +305,9 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		nameTemplate.setCurrentAbcPart(mockMetadata);
 		for (Entry<String, PartNameTemplate.Variable> entry : nameTemplate.getVariables().entrySet()) {
 			String tooltipText = "<html><b>" + entry.getKey() + "</b><br>"
-					+ entry.getValue().getDescription().replace("\n", "<br>");
+					+ entry.getValue().getDescription().replace("\n", "<br>") + "</html>";
 
 			JLabel keyLabel = new JLabel(entry.getKey());
-			keyLabel.setFont(nameLabel.getFont());
 			keyLabel.setToolTipText(tooltipText);
 			JLabel descriptionLabel = new JLabel(entry.getValue().getValue());
 			descriptionLabel.setToolTipText(tooltipText);
@@ -301,6 +318,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		}
 		nameTemplate.setMetadataSource(originalMetadataSource);
 		nameTemplate.setCurrentAbcPart(originalAbcPart);
+
+		return nameTemplatePanel;
 	}
 
 	private void updateNameTemplateExample() {
@@ -353,17 +372,17 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		@Override
 		public String getTitle() {
-			return "Theorbo";
+			return "First Flute";
 		}
-		
+
 		@Override
 		public LotroInstrument getInstrument() {
-			return LotroInstrument.THEORBO;
+			return LotroInstrument.FLUTE;
 		}
 
 		@Override
 		public int getPartNumber() {
-			return 3;
+			return 4;
 		}
 
 		@Override
