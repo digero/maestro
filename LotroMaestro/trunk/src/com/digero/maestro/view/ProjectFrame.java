@@ -1013,6 +1013,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		keySignatureField.setValue(KeySignature.C_MAJOR);
 		timeSignatureField.setValue(TimeSignature.FOUR_FOUR);
 		tripletCheckBox.setSelected(false);
+		setTitle(MaestroMain.APP_NAME);
 
 		updateButtons(false);
 	}
@@ -1104,6 +1105,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				createNewPart();
 				sequencer.start();
 			}
+			
+			setTitle(MaestroMain.APP_NAME + " - " + midiFile.getName());
 		}
 		catch (InvalidMidiDataException e) {
 			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
