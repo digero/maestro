@@ -11,7 +11,7 @@ public enum ColorTable {
 	LINK(new Color(0x336699)), //
 
 	NOTE_ENABLED /*      */(Color.getHSBColor(0.61f, 0.75f, 1.00f)), //
-	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.72f, 0.95f)), //
+	NOTE_DISABLED /*     */(Color.getHSBColor(0.60f, 0.67f, 0.95f)), //
 	NOTE_OFF /*          */(Color.getHSBColor(0.62f, 0.00f, 0.50f)), //
 
 	NOTE_BAD_ENABLED /*  */(Color.getHSBColor(0.05f, 1.00f, 1.00f)), //
