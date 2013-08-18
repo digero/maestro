@@ -30,6 +30,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.digero.common.midi.Note;
+import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -47,7 +48,6 @@ import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.DrumNoteMap;
 import com.digero.maestro.midi.NoteEvent;
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
