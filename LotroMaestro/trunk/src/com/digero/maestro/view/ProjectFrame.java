@@ -72,6 +72,7 @@ import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.LotroSequencerWrapper;
+import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -100,7 +101,6 @@ import com.digero.maestro.abc.AbcProject;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
 import com.digero.maestro.abc.TimingInfo;
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.ListModelWrapper;
@@ -344,8 +344,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = partsList.getSelectedValue();
-				sequencer.getFilter().setAbcPart(abcPart);
-				abcSequencer.getFilter().setAbcPart(abcPart);
+				sequencer.getFilter().onAbcPartChanged(abcPart != null);
+				abcSequencer.getFilter().onAbcPartChanged(abcPart != null);
 				partPanel.setAbcPart(abcPart);
 			}
 		});
@@ -1106,7 +1106,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				createNewPart();
 				sequencer.start();
 			}
-			
+
 			setTitle(MaestroMain.APP_NAME + " - " + midiFile.getName());
 		}
 		catch (InvalidMidiDataException e) {

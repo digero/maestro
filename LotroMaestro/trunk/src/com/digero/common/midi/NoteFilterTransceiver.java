@@ -1,4 +1,4 @@
-package com.digero.maestro.midi;
+package com.digero.common.midi;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,26 +9,18 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import com.digero.common.midi.IMidiConstants;
-import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.Transceiver;
 import com.digero.common.util.ICompileConstants;
-import com.digero.maestro.abc.AbcPart;
 
 public class NoteFilterTransceiver implements Transceiver, IMidiConstants, ICompileConstants {
 	private Receiver receiver = null;
-	private AbcPart abcPart = null;
+	private boolean hasAbcPart = false;
 	private Set<Integer>[] notesOn;
 	private Set<Integer> solos = new HashSet<Integer>();
 
 	@SuppressWarnings("unchecked")
-	public void setAbcPart(AbcPart activePart) {
-		this.abcPart = activePart;
+	public void onAbcPartChanged(boolean hasAbcPart) {
+		this.hasAbcPart = hasAbcPart;
 		notesOn = new Set[CHANNEL_COUNT];
-	}
-
-	public AbcPart getAbcPart() {
-		return abcPart;
 	}
 
 	public void setNoteSolo(int drumId, boolean solo) {
@@ -106,7 +98,7 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 		if (receiver == null)
 			return;
 
-		if (abcPart != null && message instanceof ShortMessage) {
+		if (hasAbcPart && message instanceof ShortMessage) {
 			ShortMessage m = (ShortMessage) message;
 			int c = m.getChannel();
 			int cmd = m.getCommand();

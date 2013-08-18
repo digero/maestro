@@ -8,8 +8,6 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Synthesizer;
 
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
-
 public class LotroSequencerWrapper extends NoteFilterSequencerWrapper {
 	private static Synthesizer lotroSynth;
 	private static String loadLotroSynthError;

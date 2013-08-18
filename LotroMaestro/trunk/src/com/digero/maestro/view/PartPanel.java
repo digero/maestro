@@ -30,6 +30,7 @@ import javax.swing.event.DocumentListener;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.icons.IconLoader;
+import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
@@ -39,7 +40,6 @@ import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.PartAutoNumberer;
-import com.digero.maestro.midi.NoteFilterSequencerWrapper;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
