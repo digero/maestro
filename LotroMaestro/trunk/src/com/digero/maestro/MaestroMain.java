@@ -1,6 +1,8 @@
 package com.digero.maestro;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -12,11 +14,20 @@ import com.digero.maestro.view.ProjectFrame;
 public class MaestroMain {
 	public static final String APP_NAME = "LOTRO Maestro";
 	public static final String APP_URL = "http://lotro.acasylum.com/maestro/";
-	public static final Version APP_VERSION = new Version(1, 0, 0);
+	public static Version APP_VERSION = new Version(0, 0, 0);
 
 	private static ProjectFrame mainWindow = null;
 
 	public static void main(final String[] args) throws Exception {
+		try {
+			Properties props = new Properties();
+			props.load(MaestroMain.class.getResourceAsStream("version.txt"));
+			String versionString = props.getProperty("version.Maestro");
+			if (versionString != null)
+				APP_VERSION = Version.parseVersion(versionString);
+		}
+		catch (IOException ex) {}
+
 		System.setProperty("sun.sound.useNewAudioEngine", "true");
 
 		try {
