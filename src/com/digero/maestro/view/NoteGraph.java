@@ -295,9 +295,16 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			case DRAG_POSITION:
 			case IS_DRAGGING:
 			case TEMPO:
+			case POSITION:
 				break;
+
+			// These properties don't change often; just repaint the whole thing
+			case IS_LOADED:
+			case IS_RUNNING:
+			case LENGTH:
+			case SEQUENCE:
+			case TRACK_ACTIVE:
 			default:
-				// Other properties don't change often; just repaint the whole thing
 				repaint();
 				break;
 			}

@@ -208,6 +208,12 @@ public class AbcToMidi {
 			case SONG_TRANSCRIBER:
 				songTranscriber = value.trim();
 				break;
+			case ABC_CREATOR:
+			case ABC_VERSION:
+			case PART_NAME:
+			case SONG_DURATION:
+				// Ignore
+				break;
 			}
 		}
 
@@ -396,11 +402,9 @@ public class AbcToMidi {
 
 						abcInfo.setExtendedMetadata(field, value);
 
-						switch (field) {
-						case PART_NAME:
+						if (field == AbcField.PART_NAME) {
 							info.setTitle(value, true);
 							abcInfo.setPartName(trackNumber, value, true);
-							break;
 						}
 					}
 				}
