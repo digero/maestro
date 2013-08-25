@@ -1,13 +1,13 @@
 <?php
 	define('_ABCPLAYER_', true);
 	require('_header.php');
-	
-	$cur_ver = "1.3.1";
-	
-	$msi_path = "bin/AbcPlayer_$cur_ver.msi";
+
+	$cur_ver = "1.3.0";
+
+	$msi_path = "installer/AbcPlayer_$cur_ver.msi";
 	$msi_size = round(@filesize($msi_path) / (1024 * 1024), 1) . "MB";
-	
-	$zip_path = "bin/AbcPlayer_$cur_ver.zip";
+
+	$zip_path = "installer/AbcPlayer_$cur_ver.zip";
 	$zip_size = round(@filesize($zip_path) / (1024 * 1024), 1) . "MB";
 ?>
 
@@ -15,7 +15,7 @@
 <p>
 Use ABC Player to listen to .abc files as they would sound in 
 <a href="http://www.lotro.com/">The Lord of the Rings Online</a>'s 
-<a href="http://lorebook.lotro.com/wiki/Mechanics:Player_Music_System">player music system</a>.  
+<a href="http://lotro-wiki.com/index.php/Music">player music system</a>.  
 ABC Player is especially useful for previewing songs with multiple parts, to see how the parts 
 sound with each other without having to get your band together in game.
 </p>
@@ -66,7 +66,7 @@ use a program like <a href="http://lame.sourceforge.net/">LAME</a> to convert th
 
 <h2>Preview</h2>
 <p>
-<img src="abcplayer_1.3.0.png" alt="Screenshot of ABC Player"/>
+<img src="images/abcplayer_1.3.0.png" alt="Screenshot of ABC Player"/>
 </p>
 <p>
 This is what the song pictured above sounds like when played in ABC Player:
