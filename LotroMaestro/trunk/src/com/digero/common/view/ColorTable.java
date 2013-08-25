@@ -42,7 +42,7 @@ public enum ColorTable {
 	PANEL_TEXT_ENABLED(Color.getHSBColor(0.12f, 0.85f, 1.00f)), //
 	PANEL_TEXT_DISABLED(new Color(0xEEEEEE)), //
 	PANEL_TEXT_OFF(new Color(0x777777)), //
-	PANEL_TEXT_ERROR(Color.getHSBColor(0.015f, 0.90f, 1.00f)), //
+	PANEL_TEXT_ERROR(Color.getHSBColor(0.01f, 0.98f, 1.00f)), //
 	PANEL_LINK(Color.getHSBColor(0.60f, 0.70f, 1.00f)), //
 
 	ABC_BORDER_SELECTED_ENABLED(PANEL_TEXT_ENABLED), //

@@ -177,6 +177,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
+		String welcomeMessage = formatInfoMessage("Hello maestro", "Drag and drop a MIDI or ABC file\n"
+				+ "to open it, or use File > Open.");
+
 		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), Collections.unmodifiableList(parts));
 		partNameTemplate = new PartNameTemplate(prefs.node("partNameTemplate"), this);
 
@@ -203,10 +206,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				abcSequencer.addTransceiver(abcVolumeTransceiver);
 
 			if (LotroSequencerWrapper.getLoadLotroSynthError() != null) {
-				JOptionPane.showMessageDialog(null, "Failed to load LotRO Instrument sounds.\n"
-						+ "ABC Preview will not use LotRO instruments.\n\n" + "Error details:\n"
-						+ LotroSequencerWrapper.getLoadLotroSynthError(), "Failed to initialize MIDI sequencer.",
-						JOptionPane.ERROR_MESSAGE);
+				welcomeMessage = formatErrorMessage("Could not load LOTRO instrument sounds",
+						"ABC Preview will use standard MIDI instruments instead\n"
+								+ "(drums do not sound good in this mode).\n\n" + "Error details:\n"
+								+ LotroSequencerWrapper.getLoadLotroSynthError());
 			}
 		}
 		catch (MidiUnavailableException e) {
@@ -242,8 +245,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				doSettingsDialog(SettingsDialog.NUMBERING_TAB);
 			}
 		});
-		partPanel.showInfoMessage("<html><center>Drag and drop a MIDI or ABC file<br>"
-				+ "to open it, or use File > Open.</center></html>");
 
 		TableLayout tableLayout = new TableLayout(LAYOUT_COLS, LAYOUT_ROWS);
 		tableLayout.setHGap(HGAP);
@@ -582,6 +583,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		});
 
 		initMenu();
+		partPanel.showInfoMessage(welcomeMessage);
 		updateButtons(true);
 	}
 
@@ -867,8 +869,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		if (parts.size() == 0) {
 			sequencer.stop();
 
-			partPanel.showInfoMessage("<html><center>This ABC song has no parts.<br>" + //
-					"Click the " + newPartButton.getText() + " button to add a new part.</center></html>");
+			partPanel.showInfoMessage(formatInfoMessage("Add a part", "This ABC song has no parts.\n" + //
+					"Click the " + newPartButton.getText() + " button to add a new part."));
 		}
 
 		if (abcSequencer.isRunning())
@@ -1110,20 +1112,24 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			setTitle(MaestroMain.APP_NAME + " - " + midiFile.getName());
 		}
 		catch (InvalidMidiDataException e) {
-			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
+			partPanel.showInfoMessage(formatErrorMessage("Could not open " + midiFile.getName(), e.getMessage()));
 		}
 		catch (IOException e) {
-			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
+			partPanel.showInfoMessage(formatErrorMessage("Could not open " + midiFile.getName(), e.getMessage()));
 		}
 		catch (ParseException e) {
-			partPanel.showInfoMessage(formatOpenFileErrorMessage(midiFile.getName(), e.getMessage()));
+			partPanel.showInfoMessage(formatErrorMessage("Could not open " + midiFile.getName(), e.getMessage()));
 		}
 	}
 
-	private static String formatOpenFileErrorMessage(String fileName, String errorDetails) {
-		return "<html><h3><font color=\"" + ColorTable.PANEL_TEXT_ERROR.getHtml() + "\">Could not open "
-				+ Util.htmlEscape(fileName) + "</font></h3>" + // 
-				Util.htmlEscape(errorDetails).replace("\n", "<br>") + "<h3>&nbsp;</h3></html>";
+	private static String formatInfoMessage(String title, String message) {
+		return "<html><h3>" + Util.htmlEscape(title) + "</h3>" + Util.htmlEscape(message).replace("\n", "<br>")
+				+ "<h3>&nbsp;</h3></html>";
+	}
+
+	private static String formatErrorMessage(String title, String message) {
+		return "<html><h3><font color=\"" + ColorTable.PANEL_TEXT_ERROR.getHtml() + "\">" + Util.htmlEscape(title)
+				+ "</font></h3>" + Util.htmlEscape(message).replace("\n", "<br>") + "<h3>&nbsp;</h3></html>";
 	}
 
 	private void updatePreviewMode(boolean abcPreviewModeNew) {
