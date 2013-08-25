@@ -42,6 +42,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 
@@ -108,11 +109,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
-	private static final Version APP_VERSION = new Version(1, 3, 1);
+	private static Version APP_VERSION = new Version(1, 3, 1);
 
 	private static AbcPlayer mainWindow = null;
 
 	public static void main(String[] args) {
+		try {
+			Properties props = new Properties();
+			props.load(AbcPlayer.class.getResourceAsStream("version.txt"));
+			String versionString = props.getProperty("version.AbcPlayer");
+			if (versionString != null)
+				APP_VERSION = Version.parseVersion(versionString);
+		}
+		catch (IOException ex) {}
+
 		System.setProperty("sun.sound.useNewAudioEngine", "true");
 
 		try {
