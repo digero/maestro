@@ -265,7 +265,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				sequencer = new LotroSequencerWrapper();
 
 				if (LotroSequencerWrapper.getLoadLotroSynthError() != null) {
-					Version requredJavaVersion = new Version(1, 6, 0, 30);
+					Version requredJavaVersion = new Version(1, 7, 0, 0);
 					Version recommendedJavaVersion = new Version(1, 7, 0, 25);
 
 					JPanel errorMessage = new JPanel(new BorderLayout(0, 12));
