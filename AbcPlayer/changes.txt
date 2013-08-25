@@ -6,8 +6,8 @@ Todo:
  NEW FEATURES
    - Added an option to show the full name of each part in the track list, without 
      trimming off the song name from the start.
-   - The volume bar now goes to eleven! Actually, the volume bar still goes to ten, 
-     but the maximum volume is now one louder.
+   - The volume now goes to eleven! The maximum volume is a bit louder than it 
+     used to be.
  
  Version 1.3.0
  NEW FEATURES
@@ -101,12 +101,8 @@ Version 1.0.0
 
 
 == VERSION LOCATIONS ==
-AbcPlayer.java
-	private static final Version APP_VERSION = new Version(1, 1, 0);
-	
-AbcPlayer.xml
-	<property name="version" value="1.1.0"/>
-	
+src/com/digero/abcplayer/version.txt
+
 AbcPlayerInstaller.vdproj
 	"ProductVersion" = "8:1.1.0"
 	"ProductCode" = "8:{29E777C0-042C-418F-9B68-4DE5EA2CE6EA}"
