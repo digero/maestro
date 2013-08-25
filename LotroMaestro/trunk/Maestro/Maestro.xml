@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="MaestroExe" name="Maestro executable">
+<project default="Executables" name="Maestro and ABC Player Executables">
 	<property name="src" value="../src" />
 	<property name="bin" value="../bin" />
 
 	<property name="output" value="output" />
 	<property name="build" value="build" />
+	<property name="tools" location="tools" />
 	<property name="basename.AbcPlayer" value="AbcPlayer" />
 	<property name="basename.Maestro" value="Maestro" />
 	<property name="basename.Common" value="MaestroCommon" />
@@ -35,9 +36,9 @@
 			</manifest>
 		</jar>
 		<copy file="${basename.Maestro}.ico" tofile="${build}/${basename.Maestro}.ico" />
-		<copy file="WinRun4J.exe" tofile="${build}/${basename.Maestro}.exe" overwrite="true" />
+		<copy file="${tools}/WinRun4J.exe" tofile="${build}/${basename.Maestro}.exe" overwrite="true" />
 		<echo>Running rcedit.exe</echo>
-		<exec executable="${basedir}/rcedit.exe" failonerror="true">
+		<exec executable="${tools}/rcedit.exe" failonerror="true">
 			<arg value="/W" />
 			<arg value="${build}/${basename.Maestro}.exe" />
 			<arg value="Maestro.rcedit.ini" />
@@ -52,38 +53,37 @@
 			</manifest>
 		</jar>
 		<copy file="${basename.AbcPlayer}.ico" tofile="${build}/${basename.AbcPlayer}.ico" />
-		<copy file="WinRun4J.exe" tofile="${build}/${basename.AbcPlayer}.exe" overwrite="true" />
+		<copy file="${tools}/WinRun4J.exe" tofile="${build}/${basename.AbcPlayer}.exe" overwrite="true" />
 		<echo>Running rcedit.exe</echo>
-		<exec executable="${basedir}/rcedit.exe" failonerror="true">
+		<exec executable="${tools}/rcedit.exe" failonerror="true">
 			<arg value="/W" />
 			<arg value="${build}/${basename.AbcPlayer}.exe" />
 			<arg value="AbcPlayer.rcedit.ini" />
 		</exec>
 	</target>
 
-	<target name="MaestroInstaller" depends="MaestroExe,AbcPlayerExe">
-		<echo>Building MSI</echo>
-		<exec executable="${basedir}/tools/wix/candle.exe" failonerror="true">
+	<target name="Executables" depends="MaestroExe,AbcPlayerExe" />
+
+	<target name="MaestroInstaller" depends="Executables">
+		<property name="msipath" location="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
+		<echo>Building MSI: ${msipath}</echo>
+		<exec executable="${tools}/wix/candle.exe" failonerror="true">
 			<arg value="-nologo" />
 			<arg value="-dMaestroVersion=${version.Maestro}" />
 			<arg value="-dAbcPlayerVersion=${version.AbcPlayer}" />
-			<arg value="-o" />
-			<arg value="${build}/MaestroInstaller.wixobj" />
+			<arg value="-o" /> <arg value="${build}/MaestroInstaller.wixobj" />
 			<arg value="MaestroInstaller.wix" />
 		</exec>
-		<exec executable="${basedir}/tools/wix/light.exe" failonerror="true">
+		<exec executable="${tools}/wix/light.exe" failonerror="true">
 			<arg value="-nologo" />
-			<arg value="-pdbout" />
-			<arg value="${build}/${basename.Maestro}_v${version.Maestro}.wixpdb" />
-			<arg value="-ext" />
-			<arg value="WixUIExtension" />
-			<arg value="-o" />
-			<arg value="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
+			<arg value="-ext" /> <arg value="WixUIExtension" />
+			<arg value="-pdbout" /> <arg value="${build}/${basename.Maestro}_v${version.Maestro}.wixpdb" />
+			<arg value="-o" /> <arg value="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
 			<arg value="${build}/MaestroInstaller.wixobj" />
 		</exec>
 	</target>
 
-	<target name="MaestroZip" depends="MaestroExe,AbcPlayerExe">
+	<target name="MaestroZip" depends="Executables">
 		<mkdir dir="${output}" />
 		<zip destfile="${output}/${basename.Maestro}_v${version.Maestro}.zip" basedir="${build}"
 			includes="${basename.Maestro}.exe,${basename.AbcPlayer}.exe,LotroInstruments.sf2,${basename.Maestro}.jar,${basename.AbcPlayer}.jar,${basename.Common}.jar,TableLayout.jar,gervill.jar,${basename.Maestro}.ico,${basename.AbcPlayer}.ico" />
