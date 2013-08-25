@@ -171,6 +171,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private MainSequencerListener mainSequencerListener;
 	private AbcSequencerListener abcSequencerListener;
+	private boolean failedToLoadLotroInstruments = false;
 
 	public ProjectFrame() {
 		super(MaestroMain.APP_NAME);
@@ -210,6 +211,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						"ABC Preview will use standard MIDI instruments instead\n"
 								+ "(drums do not sound good in this mode).\n\n" + "Error details:\n"
 								+ LotroSequencerWrapper.getLoadLotroSynthError());
+				failedToLoadLotroInstruments = true;
 			}
 		}
 		catch (MidiUnavailableException e) {
@@ -1214,7 +1216,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				startMicros = 0;
 
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(parts, this, tm, getKeySignature(),
-					startMicros, Long.MAX_VALUE);
+					startMicros, Long.MAX_VALUE, !failedToLoadLotroInstruments);
 
 			long position = sequencer.getPosition() - startMicros;
 			abcPreviewStartMicros = startMicros;

@@ -24,7 +24,6 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
-import com.digero.common.midi.PanGenerator;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.maestro.midi.Chord;
@@ -66,21 +65,17 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		this.drumNoteMap = new DrumNoteMap[t];
 	}
 
-	public void exportToMidi(Sequence out, TimingInfo tm) throws AbcConversionException {
-		exportToMidi(out, tm, 0, Integer.MAX_VALUE, 0, PanGenerator.CENTER);
-	}
-
 	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity,
-			int pan) throws AbcConversionException {
+			int pan, boolean useLotroInstruments) throws AbcConversionException {
 		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
 
 		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
-		exportToMidi(out, tm, chords, pan);
+		exportToMidi(out, tm, chords, pan, useLotroInstruments);
 	}
 
-	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan) {
+	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan, boolean useLotroInstruments) {
 		int trackNumber = previewSequenceTrackNumber = out.getTracks().length;
 		int channel = trackNumber;
 		if (channel >= MidiConstants.DRUM_CHANNEL)
@@ -90,10 +85,15 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 		track.add(MidiFactory.createTrackNameEvent(title));
 		track.add(MidiFactory.createProgramChangeEvent(instrument.midiProgramId, channel, 0));
-		track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
+		if (useLotroInstruments)
+			track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
 		track.add(MidiFactory.createPanEvent(pan, channel));
 
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
+
+		int noteDelta = 0;
+		if (!useLotroInstruments)
+			noteDelta = instrument.octaveDelta * 12;
 
 		for (Chord chord : chords) {
 			Dynamics dynamics = chord.calcDynamics();
@@ -118,7 +118,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					if (endMicros <= ne.startMicros) {
 						// This note has been turned off
 						onIter.remove();
-						track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(endMicros)));
+						track.add(MidiFactory.createNoteOffEvent(on.note.id + noteDelta, channel,
+								tm.getMidiTicks(endMicros)));
 					}
 				}
 
@@ -131,25 +132,27 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				if (endMicros != ne.endMicros)
 					ne = new NoteEvent(ne.note, ne.velocity, ne.startMicros, endMicros);
 
-				track.add(MidiFactory.createNoteOnEventEx(ne.note.id, channel, dynamics.abcVol,
+				int velocity = useLotroInstruments ? dynamics.abcVol : dynamics.midiVol;
+				track.add(MidiFactory.createNoteOnEventEx(ne.note.id + noteDelta, channel, velocity,
 						tm.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
 		}
 
 		for (NoteEvent on : notesOn) {
-			track.add(MidiFactory.createNoteOffEvent(on.note.id, channel, tm.getMidiTicks(on.endMicros)));
+			track.add(MidiFactory.createNoteOffEvent(on.note.id + noteDelta, channel, tm.getMidiTicks(on.endMicros)));
 		}
 
 		return trackNumber;
 	}
 
 	public TrackInfo exportToPreview(SequenceInfo sequenceInfo, TimingInfo tm, KeySignature key, int deltaVelocity,
-			long songStartMicros, long songEndMicros, int pan) throws AbcConversionException {
+			long songStartMicros, long songEndMicros, int pan, boolean useLotroInstruments)
+			throws AbcConversionException {
 
 		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
 
-		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan);
+		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan, useLotroInstruments);
 
 		List<NoteEvent> noteEvents = new ArrayList<NoteEvent>(chords.size());
 		for (Chord chord : chords) {
@@ -867,7 +870,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	public int getEnabledTrackCount() {
 		return enabledTrackCount;
 	}
-	
+
 	public int getPreviewSequenceTrackNumber() {
 		return previewSequenceTrackNumber;
 	}
