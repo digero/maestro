@@ -178,8 +178,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
 
-		String welcomeMessage = formatInfoMessage("Hello maestro", "Drag and drop a MIDI or ABC file\n"
-				+ "to open it, or use File > Open.");
+		String welcomeMessage = formatInfoMessage("Hello Maestro", "Drag and drop a MIDI or ABC file to open it.\n"
+				+ "Or use File > Open.");
 
 		partAutoNumberer = new PartAutoNumberer(prefs.node("partAutoNumberer"), Collections.unmodifiableList(parts));
 		partNameTemplate = new PartNameTemplate(prefs.node("partNameTemplate"), this);
