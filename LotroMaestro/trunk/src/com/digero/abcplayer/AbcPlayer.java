@@ -109,7 +109,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
-	private static Version APP_VERSION = new Version(1, 3, 1);
+	private static Version APP_VERSION = new Version(0, 0, 0);
 
 	private static AbcPlayer mainWindow = null;
 

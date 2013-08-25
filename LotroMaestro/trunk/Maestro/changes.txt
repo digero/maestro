@@ -5,14 +5,5 @@ Version 1.0.0
 
 
 == VERSION LOCATIONS ==
-MaestroMain.java
-	public static final Version APP_VERSION = new Version(0, 2, 1);
-	
-Maestro.xml
-	<property name="version" value="0.2.1"/>
-	
-MaestroInstaller.vdproj
-	"ProductVersion" = "8:0.2.1"
-	"ProductCode" = "8:{29E777C0-042C-418F-9B68-4DE5EA2CE6EA}"
-	"OutputFilename" = "8:output\\installer\\Maestro_0.2.1.msi"
-
+src/com/digero/maestro/version.txt
+src/com/digero/abcplayer/version.txt
