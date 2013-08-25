@@ -125,10 +125,6 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\Open\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="Maestro" Value="SOFTWARE\[Manufacturer]\Maestro\Capabilities" />
 
-						<!-- Support Start/Run "Maestro.exe" -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Value="[#Maestro.exe]" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Name="Path" Value="[APPLICATIONFOLDER]" Type="string" />
-
 						<!-- Add to "Open With" menu -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Name=".abc" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Name=".mid" Value="" Type="string" />
@@ -166,10 +162,6 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\MIMEAssociations" Type="string" Name="text/plain" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\shell\Open\command" Type="string" Value='"[#AbcPlayer.exe]" "%1"' />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="AbcPlayer" Value="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" />
-
-						<!-- Support Start/Run "AbcPlayer.exe" -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe" Value="[#AbcPlayer.exe]" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe" Name="Path" Value="[APPLICATIONFOLDER]" Type="string" />
 
 						<!-- Add to "Open With" menu -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\SupportedTypes" Name=".abc" Value="" Type="string" />
