@@ -1285,6 +1285,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		allowOverwriteSaveFile = true;
 
 		FileOutputStream out;
+		PrintStream outWriter = null;
 		try {
 			out = new FileOutputStream(saveFile);
 		}
@@ -1302,7 +1303,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			long endMicros = startEnd.second;
 
 			if (parts.size() > 0) {
-				PrintStream outWriter = new PrintStream(out);
+				outWriter = new PrintStream(out);
 				AbcMetadataSource meta = this;
 				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
 				outWriter.println(AbcField.SONG_COMPOSER + meta.getComposer());
@@ -1324,6 +1325,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		finally {
 			try {
 				out.close();
+				if (outWriter != null)
+					outWriter.close();
 			}
 			catch (IOException e) {
 				JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

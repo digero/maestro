@@ -121,7 +121,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 				}
 			}
 		}
-	};
+	}
 
 	public void reset(boolean fullReset) {
 		stop();

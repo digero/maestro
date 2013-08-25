@@ -65,6 +65,7 @@ public class PanGenerator {
 		case THEORBO:
 			return CENTER + sign * -25;
 		case COWBELL:
+		case MOOR_COWBELL:
 			return CENTER + sign * -15;
 		case DRUMS:
 			return CENTER + sign * 15;
