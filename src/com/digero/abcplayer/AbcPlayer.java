@@ -297,6 +297,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 					JOptionPane.showMessageDialog(this, errorMessage, APP_NAME + " failed to load LOTRO instruments",
 							JOptionPane.ERROR_MESSAGE);
+
+					useLotroInstruments = false;
 				}
 			}
 			else {
