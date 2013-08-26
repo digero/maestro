@@ -28,31 +28,44 @@
 		<jar destfile="${build}/${basename.Common}.jar" basedir="${bin}" excludes="com/digero/abcplayer/**,com/digero/maestro/**" />
 	</target>
 
-	<target name="MaestroExe" depends="CommonJar">
+	<target name="MaestroJar" depends="CommonJar">
 		<jar destfile="${build}/${basename.Maestro}.jar" basedir="${bin}" includes="com/digero/maestro/**">
 			<manifest>
 				<attribute name="Main-Class" value="com.digero.maestro.MaestroMain" />
 				<attribute name="Class-Path" value=". TableLayout.jar gervill.jar ${basename.Common}.jar" />
 			</manifest>
 		</jar>
-		<copy file="${basename.Maestro}.ico" tofile="${build}/${basename.Maestro}.ico" />
-		<copy file="${tools}/WinRun4J.exe" tofile="${build}/${basename.Maestro}.exe" overwrite="true" />
-		<echo>Running rcedit.exe</echo>
-		<exec executable="${tools}/rcedit.exe" failonerror="true">
-			<arg value="/W" />
-			<arg value="${build}/${basename.Maestro}.exe" />
-			<arg value="Maestro.rcedit.ini" />
-		</exec>
 	</target>
 
-	<target name="AbcPlayerExe" depends="CommonJar">
+	<target name="AbcPlayerJar" depends="CommonJar">
 		<jar destfile="${build}/${basename.AbcPlayer}.jar" basedir="${bin}" includes="com/digero/abcplayer/**">
 			<manifest>
 				<attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer" />
 				<attribute name="Class-Path" value=". TableLayout.jar gervill.jar ${basename.Common}.jar" />
 			</manifest>
 		</jar>
-		<copy file="${basename.AbcPlayer}.ico" tofile="${build}/${basename.AbcPlayer}.ico" />
+	</target>
+
+	<target name="Exe.CheckUpToDate">
+		<uptodate property="MaestroExe.uptodate" targetfile="${build}/${basename.Maestro}.exe">
+			<srcfiles dir="${basedir}" includes="${tools}/WinRun4J.exe,${tools}/rcedit.exe,${basename.Maestro}.rcedit.ini,${basename.Maestro}.ini,${basename.Maestro}.ico" />
+		</uptodate>
+		<uptodate property="AbcPlayerExe.uptodate" targetfile="${build}/${basename.AbcPlayer}.exe">
+			<srcfiles dir="${basedir}" includes="${tools}/WinRun4J.exe,${tools}/rcedit.exe,${basename.AbcPlayer}.rcedit.ini,${basename.AbcPlayer}.ini,${basename.AbcPlayer}.ico" />
+		</uptodate>
+	</target>
+
+	<target name="MaestroExe" depends="MaestroJar,Exe.CheckUpToDate" unless="MaestroExe.uptodate">
+		<copy file="${tools}/WinRun4J.exe" tofile="${build}/${basename.Maestro}.exe" overwrite="true" />
+		<echo>Running rcedit.exe</echo>
+		<exec executable="${tools}/rcedit.exe" failonerror="true">
+			<arg value="/W" />
+			<arg value="${build}/${basename.Maestro}.exe" />
+			<arg value="${basename.Maestro}.rcedit.ini" />
+		</exec>
+	</target>
+
+	<target name="AbcPlayerExe" depends="AbcPlayerJar,Exe.CheckUpToDate" unless="AbcPlayerExe.uptodate">
 		<copy file="${tools}/WinRun4J.exe" tofile="${build}/${basename.AbcPlayer}.exe" overwrite="true" />
 		<echo>Running rcedit.exe</echo>
 		<exec executable="${tools}/rcedit.exe" failonerror="true">
@@ -61,10 +74,10 @@
 			<arg value="AbcPlayer.rcedit.ini" />
 		</exec>
 	</target>
+	
+	<extension-point name="Executables" depends="MaestroExe,AbcPlayerExe" />
 
-	<target name="Executables" depends="MaestroExe,AbcPlayerExe" />
-
-	<target name="MaestroInstaller" depends="Executables">
+	<target name="Installer" depends="Executables">
 		<property name="msipath" location="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
 		<echo>Building MSI: ${msipath}</echo>
 		<exec executable="${tools}/wix/candle.exe" failonerror="true">
@@ -83,11 +96,12 @@
 		</exec>
 	</target>
 
-	<target name="MaestroZip" depends="Executables">
+	<target name="ZipFile" depends="Executables">
 		<mkdir dir="${output}" />
 		<zip destfile="${output}/${basename.Maestro}_v${version.Maestro}.zip" basedir="${build}"
 			includes="${basename.Maestro}.exe,${basename.AbcPlayer}.exe,LotroInstruments.sf2,${basename.Maestro}.jar,${basename.AbcPlayer}.jar,${basename.Common}.jar,TableLayout.jar,gervill.jar,${basename.Maestro}.ico,${basename.AbcPlayer}.ico" />
 	</target>
 
-	<target name="MaestroDistrib" depends="MaestroInstaller,MaestroZip" />
+	<extension-point name="Distribute" depends="Installer,ZipFile" />
+	<extension-point name="AntTest" description="Run any targets that are labeled as extensionOf='AntTest'" />
 </project>
