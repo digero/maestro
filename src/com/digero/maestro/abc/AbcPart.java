@@ -126,7 +126,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				long endMicros = ne.getTieEnd().endMicros;
 
 				// Lengthen Lute, Harp, Drums, etc. to play the entire sound sample
-				if (!instrument.isSustainable(ne.note.id))
+				if (useLotroInstruments && !instrument.isSustainable(ne.note.id))
 					endMicros = ne.startMicros + TimingInfo.ONE_SECOND_MICROS;
 
 				if (endMicros != ne.endMicros)
