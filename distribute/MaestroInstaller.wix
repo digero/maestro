@@ -3,11 +3,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://schemas.microsoft.com/wix/2006/wi tools/wix/doc/wix.xsd">
 
-	<?define MaestroAppName=LOTRO Maestro?>
-	<?define MaestroDescription=LOTRO Maestro MIDI to ABC converter?>
+	<?define MaestroAppName=Maestro?>
+	<?define MaestroDescription=Maestro MIDI to ABC converter?>
 	<?define AbcPlayerAppName=ABC Player?>
 	<?define AbcPlayerDescription=ABC Player for the Lord of the Rings Online?>
-	<?define ApplicationFolderName=LOTRO Maestro?>
+	<?define ApplicationFolderName=Maestro?>
 
 	<Product Id="*"
 		UpgradeCode="{CCA9F6BF-F1FB-4D8E-8892-3AFE3CE6F4B7}"
@@ -39,7 +39,7 @@
 		<Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 		<WixVariable Id="WixUISupportPerUser" Value="0" />
 
-		<!-- Uninstall old versions of LOTRO Maestro -->
+		<!-- Uninstall old versions of Maestro -->
 		<Upgrade Id="{CCA9F6BF-F1FB-4D8E-8892-3AFE3CE6F4B7}">
 			<UpgradeVersion Property="NEWERFOUND"
 				OnlyDetect="yes"
@@ -232,7 +232,7 @@
 				Level="1"
 				AllowAdvertise="no"
 				Title="$(var.MaestroAppName)"
-				Description="LOTRO Maestro is a MIDI to ABC converter. Arrange multipart ABC files from MIDI source files.">
+				Description="$(var.MaestroAppName) is a MIDI to ABC converter for The Lord of the Rings Online. Arrange multipart ABC files from MIDI source files.">
 			<ComponentRef Id="Maestro.exe" />
 			<ComponentRef Id="Maestro.jar" />
 			<ComponentRef Id="MaestroStartMenuFolder" />
@@ -242,7 +242,7 @@
 				Level="1"
 				AllowAdvertise="no"
 				Title="$(var.AbcPlayerAppName)"
-				Description="Standalone ABC Player. Preview ABC files as they would sound in the Lord of the Rings Online.">
+				Description="$(var.AbcPlayerAppName) lets you preview ABC files as they would sound in The Lord of the Rings Online.">
 			<ComponentRef Id="AbcPlayer.exe" />
 			<ComponentRef Id="AbcPlayer.jar" />
 			<ComponentRef Id="MaestroStartMenuFolder" />
