@@ -101,6 +101,7 @@
 							/>
 						</File>
 						<File Id="Maestro.ico" Source="Maestro.ico" />
+						<File Id="midifile.ico" Source="midifile.ico" />
 
 						<!-- Define ProgIds for file types -->
 						<ProgId Id="AbcPlayer.AssocFile.ABC" Description="ABC Song">
@@ -108,7 +109,7 @@
 								<Verb Id="edit" Command="&amp;Edit with $(var.MaestroAppName)" TargetFile="Maestro.exe" Argument='"%1"' />
 							</Extension>
 						</ProgId>
-						<ProgId Id="Maestro.AssocFile.MID" Description="MIDI Sequence" Icon="Maestro.ico" IconIndex="0">
+						<ProgId Id="Maestro.AssocFile.MID" Description="MIDI Sequence" Icon="midifile.ico" IconIndex="0">
 							<Extension Id="mid" ContentType="audio/mid" />
 							<Extension Id="midi" ContentType="audio/mid" />
 						</ProgId>
@@ -117,7 +118,7 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationName" Value="$(var.MaestroAppName)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.MaestroDescription)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationIcon" Value="[#Maestro.exe],0" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\DefaultIcon" Type="string" Value="[#Maestro.exe],0" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\DefaultIcon" Type="string" Value="[#midifile.ico],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".abc" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".mid" Value="Maestro.AssocFile.MID" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".midi" Value="Maestro.AssocFile.MID" />
@@ -153,9 +154,10 @@
 							/>
 						</File>
 						<File Id="AbcPlayer.ico" Source="AbcPlayer.ico" />
+						<File Id="abcfile.ico" Source="abcfile.ico" />
 
 						<!-- Define ProgID for ABC file type -->
-						<ProgId Id="AbcPlayer.AssocFile.ABC" Description="ABC Song" Icon="AbcPlayer.ico" IconIndex="0">
+						<ProgId Id="AbcPlayer.AssocFile.ABC" Description="ABC Song" Icon="abcfile.ico" IconIndex="0">
 							<Extension Id="abc" ContentType="text/plain">
 								<Verb Id="open" Command="&amp;Play with $(var.AbcPlayerAppName)" TargetFile="AbcPlayer.exe" Argument='"%1"' />
 							</Extension>
@@ -165,7 +167,7 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationName" Value="$(var.AbcPlayerAppName)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.AbcPlayerDescription)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationIcon" Value="[#AbcPlayer.exe],0" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\DefaultIcon" Type="string" Value="[#AbcPlayer.exe],0" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\DefaultIcon" Type="string" Value="[#abcfile.ico],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\FileAssociations" Type="string" Name=".abc" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\MIMEAssociations" Type="string" Name="text/plain" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\shell\Open\command" Type="string" Value='"[#AbcPlayer.exe]" "%1"' />

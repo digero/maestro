@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="Executables" name="Maestro and ABC Player Executables">
+<project default="Executables" name="Build and Distribute Maestro and ABC Player">
 	<property name="src" value="../src" />
 	<property name="bin" value="../bin" />
-
 	<property name="output" value="output" />
 	<property name="build" value="build" />
 	<property name="tools" location="tools" />
 	<property name="basename.AbcPlayer" value="AbcPlayer" />
 	<property name="basename.Maestro" value="Maestro" />
 	<property name="basename.Common" value="MaestroCommon" />
-	<property file="${src}/com/digero/abcplayer/version.txt" />
-	<property file="${src}/com/digero/maestro/version.txt" />
+	<property file="${src}/com/digero/abcplayer/version.txt" /> <!-- For version.AbcPlayer -->
+	<property file="${src}/com/digero/maestro/version.txt" /> <!-- For version.Maestro -->
 
 	<target name="Clean">
 		<delete dir="${build}" />
@@ -75,11 +74,11 @@
 		</exec>
 	</target>
 	
-	<extension-point name="Executables" depends="MaestroExe,AbcPlayerExe" />
+	<target name="Executables" depends="MaestroExe,AbcPlayerExe" />
 
 	<target name="Installer" depends="Executables">
 		<property name="msipath" location="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
-		<echo>Building MSI: ${msipath}</echo>
+		<echo>Building msi: ${msipath}</echo>
 		<exec executable="${tools}/wix/candle.exe" failonerror="true">
 			<arg value="-nologo" />
 			<arg value="-dMaestroVersion=${version.Maestro}" />
@@ -98,10 +97,22 @@
 
 	<target name="ZipFile" depends="Executables">
 		<mkdir dir="${output}" />
-		<zip destfile="${output}/${basename.Maestro}_v${version.Maestro}.zip" basedir="${build}"
-			includes="${basename.Maestro}.exe,${basename.AbcPlayer}.exe,LotroInstruments.sf2,${basename.Maestro}.jar,${basename.AbcPlayer}.jar,${basename.Common}.jar,TableLayout.jar,gervill.jar,${basename.Maestro}.ico,${basename.AbcPlayer}.ico" />
+		<zip destfile="${output}/${basename.Maestro}_v${version.Maestro}.zip" basedir="${build}">
+			<include name="${basename.Maestro}.exe" />
+			<include name="${basename.Maestro}.jar" />
+			<include name="${basename.AbcPlayer}.exe" />
+			<include name="${basename.AbcPlayer}.jar" />
+			<include name="${basename.Common}.jar" />
+			<include name="TableLayout.jar" />
+			<include name="gervill.jar" />
+			<include name="LotroInstruments.sf2" />
+			<include name="${basedir}/${basename.Maestro}.ico" />
+			<include name="${basedir}/${basename.AbcPlayer}.ico" />
+			<include name="${basedir}/abcfile.ico" />
+			<include name="${basedir}/midifile.ico" />
+		</zip>
 	</target>
 
-	<extension-point name="Distribute" depends="Installer,ZipFile" />
+	<target name="Distribute" depends="Installer,ZipFile" />
 	<extension-point name="AntTest" description="Run any targets that are labeled as extensionOf='AntTest'" />
 </project>
