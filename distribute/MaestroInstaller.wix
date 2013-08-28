@@ -79,9 +79,9 @@
 		</InstallExecuteSequence>
 
 		<!-- Icons -->
-		<Icon Id="Maestro.ico" SourceFile="Maestro.ico" />
-		<Icon Id="AbcPlayer.ico" SourceFile="AbcPlayer.ico" />
-		<Property Id="ARPPRODUCTICON" Value="Maestro.ico" /> <!-- Add/Remove Programs icon -->
+		<Icon Id="maestro.ico" SourceFile="maestro.ico" />
+		<Icon Id="abcplayer.ico" SourceFile="abcplayer.ico" />
+		<Property Id="ARPPRODUCTICON" Value="maestro.ico" /> <!-- Add/Remove Programs icon -->
 
 		<!-- File System -->
 		<Directory Id="TARGETDIR" Name="SourceDir">
@@ -95,12 +95,12 @@
 								Description="$(var.MaestroDescription)"
 								WorkingDirectory="APPLICATIONFOLDER"
 								Directory="MaestroStartMenuFolder"
-								Icon="Maestro.ico"
+								Icon="maestro.ico"
 								IconIndex="0"
 								Advertise="yes"
 							/>
 						</File>
-						<File Id="Maestro.ico" Source="Maestro.ico" />
+						<File Id="maestro.ico" Source="maestro.ico" />
 						<File Id="midifile.ico" Source="midifile.ico" />
 
 						<!-- Define ProgIds for file types -->
@@ -148,12 +148,12 @@
 								Description="$(var.AbcPlayerDescription)"
 								WorkingDirectory="APPLICATIONFOLDER"
 								Directory="MaestroStartMenuFolder"
-								Icon="AbcPlayer.ico"
+								Icon="abcplayer.ico"
 								IconIndex="0"
 								Advertise="yes"
 							/>
 						</File>
-						<File Id="AbcPlayer.ico" Source="AbcPlayer.ico" />
+						<File Id="abcplayer.ico" Source="abcplayer.ico" />
 						<File Id="abcfile.ico" Source="abcfile.ico" />
 
 						<!-- Define ProgID for ABC file type -->

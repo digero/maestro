@@ -21,6 +21,10 @@
 		<copy file="../TableLayout.jar" todir="${build}" />
 		<copy file="../gervill.jar" todir="${build}" />
 		<copy file="../LotroInstruments.sf2" todir="${build}" />
+		<copy file="${basename.Maestro}.ico" todir="${build}" />
+		<copy file="${basename.AbcPlayer}.ico" todir="${build}" />
+		<copy file="abcfile.ico" todir="${build}" />
+		<copy file="midifile.ico" todir="${build}" />
 	</target>
 
 	<target name="CommonJar" depends="PreBuild">
@@ -77,6 +81,7 @@
 	<target name="Executables" depends="MaestroExe,AbcPlayerExe" />
 
 	<target name="Installer" depends="Executables">
+		<mkdir dir="${output}" />
 		<property name="msipath" location="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
 		<echo>Building msi: ${msipath}</echo>
 		<exec executable="${tools}/wix/candle.exe" failonerror="true">
@@ -106,10 +111,10 @@
 			<include name="TableLayout.jar" />
 			<include name="gervill.jar" />
 			<include name="LotroInstruments.sf2" />
-			<include name="${basedir}/${basename.Maestro}.ico" />
-			<include name="${basedir}/${basename.AbcPlayer}.ico" />
-			<include name="${basedir}/abcfile.ico" />
-			<include name="${basedir}/midifile.ico" />
+			<include name="${basename.Maestro}.ico" />
+			<include name="${basename.AbcPlayer}.ico" />
+			<include name="midifile.ico" />
+			<include name="abcfile.ico" />
 		</zip>
 	</target>
 
