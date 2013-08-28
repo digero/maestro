@@ -316,6 +316,16 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			trackSolo = seq.getTrackSolo(trackNumber);
 		}
 
+		// Gray out the main drum panel if one of its child drum notes is solo
+		if (trackActive && trackSolo && showDrumPanels) {
+			SequencerWrapper activeSeq = isAbcPreviewMode() ? abcSequencer : seq;
+			if (activeSeq instanceof NoteFilterSequencerWrapper) {
+				if (((NoteFilterSequencerWrapper) activeSeq).getFilter().isAnyNoteSolo()) {
+					trackActive = false;
+				}
+			}
+		}
+
 		noteGraph.setShowingAbcNotesOn(trackActive);
 
 		if (!trackActive) {
@@ -541,9 +551,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 				return true;
 			}
 			else {
-				int minPlayable = abcPart.getInstrument().lowestPlayable.id;
-				int maxPlayable = abcPart.getInstrument().highestPlayable.id;
-				return (noteId >= minPlayable) && (noteId <= maxPlayable);
+				return abcPart.getInstrument().isPlayable(noteId) && !abcPart.getInstrument().isBadNote(noteId);
 			}
 		}
 

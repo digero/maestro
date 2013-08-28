@@ -41,6 +41,10 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 		return (!solos.isEmpty()) ? solos.contains(noteId) : true;
 	}
 
+	public boolean isAnyNoteSolo() {
+		return !solos.isEmpty();
+	}
+
 	@Override
 	public void close() {
 		// Nothing to do

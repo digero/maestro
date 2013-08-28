@@ -62,6 +62,15 @@ public enum LotroInstrument {
 		return noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
 	}
 
+	public boolean isBadNote(int noteId) {
+		if (this == PIBGORN) {
+			return noteId == Note.C2.id || noteId == Note.Cs2.id || noteId == Note.As2.id || noteId == Note.Gs4.id
+					|| noteId == Note.As4.id;
+		}
+
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		if (this == MOOR_COWBELL)
