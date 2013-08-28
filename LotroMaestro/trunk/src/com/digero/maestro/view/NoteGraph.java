@@ -499,7 +499,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		}
 
 		private boolean isDragCanceled(MouseEvent e) {
-			if (getEvents().isEmpty())
+			if (trackInfo == null)
 				return true;
 
 			// Allow drag to continue anywhere within the scroll pane
@@ -512,7 +512,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		}
 
 		public void mousePressed(MouseEvent e) {
-			if (e.getButton() == MouseEvent.BUTTON1 && !getEvents().isEmpty()) {
+			if (e.getButton() == MouseEvent.BUTTON1 && trackInfo != null) {
 				sequencer.setDragging(true);
 				sequencer.setDragPosition(positionFromEvent(e));
 			}
