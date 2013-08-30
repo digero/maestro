@@ -27,7 +27,7 @@ import com.digero.maestro.MaestroMain;
 public class DrumNoteMap implements IDiscardable {
 	public static final String FILE_SUFFIX = "drummap.txt";
 	protected static final byte DISABLED_NOTE_ID = (byte) LotroDrumInfo.DISABLED.note.id;
-	private static final String MAP_PREFS_KEY = "DrumNoteMap.map3";
+	private static final String MAP_PREFS_KEY = "DrumNoteMap.map";
 
 	private byte[] map = null;
 	private List<ChangeListener> listeners = null;
