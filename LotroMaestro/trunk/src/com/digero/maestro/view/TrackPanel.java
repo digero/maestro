@@ -420,7 +420,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			dir = Util.getLotroMusicPath(false /* create */);
 
 		JFileChooser fileChooser = new JFileChooser(dir);
-		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map", DrumNoteMap.FILE_SUFFIX));
+		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map (*." + DrumNoteMap.FILE_SUFFIX + ")", DrumNoteMap.FILE_SUFFIX));
 
 		File saveFile;
 		do {
@@ -429,7 +429,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 			saveFile = fileChooser.getSelectedFile();
 
-			if (!Util.stringEndsWithIgnoreCase(saveFile.getName(), "." + DrumNoteMap.FILE_SUFFIX)) {
+			if (saveFile.getName().indexOf('.') < 0) {
 				saveFile = new File(saveFile.getParentFile(), saveFile.getName() + "." + DrumNoteMap.FILE_SUFFIX);
 			}
 
@@ -463,7 +463,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			dir = Util.getLotroMusicPath(false /* create */);
 
 		JFileChooser fileChooser = new JFileChooser(dir);
-		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map", DrumNoteMap.FILE_SUFFIX));
+		fileChooser.setFileFilter(new ExtensionFileFilter("Drum Map (*." + DrumNoteMap.FILE_SUFFIX + ")", DrumNoteMap.FILE_SUFFIX, "txt"));
 
 		if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
 			return false;
