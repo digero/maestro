@@ -4,6 +4,7 @@ import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.Font;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -36,20 +37,21 @@ import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
 public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConstants, ICompileConstants {
-	//              0              1               2
-	//   +--------------------+----------+--------------------+
-	//   | TRACK NAME         | Drum     |  +--------------+  |
-	// 0 |                    | +------+ |  | (note graph) |  |
-	//   | Instrument(s)      | +-----v+ |  +--------------+  |
-	//   +--------------------+----------+--------------------+
+	//     0            1              2               3
+	//   +---+--------------------+----------+--------------------+
+	//   |   | TRACK NAME         | Drum     |  +--------------+  |
+	// 0 |   |                    | +------+ |  | (note graph) |  |
+	//   |   | Instrument(s)      | +-----v+ |  +--------------+  |
+	//   +---+--------------------+----------+--------------------+
 	private static final int HGAP = 4;
+	private static final int GUTTER_WIDTH = TrackPanel.GUTTER_WIDTH;
 	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH - 70;
 	private static final int COMBO_WIDTH = TrackPanel.CONTROL_WIDTH + 70;
 	private static final double[] LAYOUT_COLS = new double[] {
-			TITLE_WIDTH, COMBO_WIDTH, FILL
+			GUTTER_WIDTH, TITLE_WIDTH, COMBO_WIDTH, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-			0, PREFERRED, 0
+			PREFERRED
 	};
 
 	private TrackInfo trackInfo;
@@ -59,6 +61,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	private int drumId;
 	private boolean isAbcPreviewMode;
 
+	private JPanel gutter;
 	private JCheckBox checkBox;
 	private JComboBox<LotroDrumInfo> drumComboBox;
 	private DrumNoteGraph noteGraph;
@@ -75,6 +78,9 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 
 		TableLayout tableLayout = (TableLayout) getLayout();
 		tableLayout.setHGap(HGAP);
+
+		gutter = new JPanel((LayoutManager) null);
+		gutter.setOpaque(false);
 
 		checkBox = new JCheckBox();
 		checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
@@ -167,9 +173,10 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			}
 		});
 
-		add(checkBox, "0, 1");
-		add(drumComboBox, "1, 1, f, c");
-		add(noteGraph, "2, 1");
+		add(gutter, "0, 0");
+		add(checkBox, "1, 0");
+		add(drumComboBox, "2, 0, f, c");
+		add(noteGraph, "3, 0");
 
 		updateState();
 	}
@@ -202,27 +209,40 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	};
 
 	private void updateState() {
+		boolean abcPreviewMode = isAbcPreviewMode();
 		int trackNumber = trackInfo.getTrackNumber();
 		boolean trackEnabled = abcPart.isTrackEnabled(trackNumber);
+		boolean noteEnabled = abcPart.isDrumEnabled(trackNumber, drumId);
+		boolean noteEnabledOtherPart = false;
 
 		boolean noteActive;
-		if (isAbcPreviewMode()) {
+		if (abcPreviewMode) {
 			noteActive = false;
-			for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
-				if (part.isTrackEnabled(trackNumber)) {
-					if (abcSequencer.isTrackActive(part.getPreviewSequenceTrackNumber())) {
-						Note drumNote = part.mapNote(trackNumber, drumId);
-						if (drumNote != null && abcSequencer.isNoteActive(drumNote.id)) {
-							noteActive = true;
-							break;
-						}
-					}
-				}
-			}
 		}
 		else {
 			noteActive = seq.isTrackActive(trackNumber) && seq.isNoteActive(drumId);
 		}
+
+		for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
+			if (part.isTrackEnabled(trackNumber)) {
+				if (part != this.abcPart && part.isDrumEnabled(trackNumber, drumId))
+					noteEnabledOtherPart = true;
+
+				if (abcPreviewMode) {
+					Note drumNote = part.mapNote(trackNumber, drumId);
+					if (drumNote != null && abcSequencer.isTrackActive(part.getPreviewSequenceTrackNumber())
+							&& abcSequencer.isNoteActive(drumNote.id)) {
+						noteActive = true;
+					}
+				}
+			}
+		}
+
+		gutter.setOpaque(noteEnabled || noteEnabledOtherPart);
+		if (noteEnabled)
+			gutter.setBackground(ColorTable.PANEL_HIGHLIGHT.get());
+		else if (noteEnabledOtherPart)
+			gutter.setBackground(ColorTable.PANEL_HIGHLIGHT_OTHER_PART.get());
 
 		noteGraph.setShowingAbcNotesOn(noteActive);
 		checkBox.setEnabled(trackEnabled);
