@@ -21,8 +21,6 @@
 		<copy file="../TableLayout.jar" todir="${build}" />
 		<copy file="../gervill.jar" todir="${build}" />
 		<copy file="../LotroInstruments.sf2" todir="${build}" />
-		<copy file="${basename.Maestro}.ico" todir="${build}" />
-		<copy file="${basename.AbcPlayer}.ico" todir="${build}" />
 		<copy file="abcfile.ico" todir="${build}" />
 		<copy file="midifile.ico" todir="${build}" />
 	</target>
@@ -111,8 +109,6 @@
 			<include name="TableLayout.jar" />
 			<include name="gervill.jar" />
 			<include name="LotroInstruments.sf2" />
-			<include name="${basename.Maestro}.ico" />
-			<include name="${basename.AbcPlayer}.ico" />
 			<include name="midifile.ico" />
 			<include name="abcfile.ico" />
 		</zip>
