@@ -5,8 +5,10 @@
 
 	<?define MaestroAppName=Maestro?>
 	<?define MaestroDescription=Maestro MIDI to ABC converter?>
+	<?define MaestroDescriptionLong=Maestro is a MIDI to ABC converter for The Lord of the Rings Online. Use it to arrange multi-part ABC files to play in the game with your friends, or create solo pieces to play yourself.?>
 	<?define AbcPlayerAppName=ABC Player?>
 	<?define AbcPlayerDescription=ABC Player for the Lord of the Rings Online?>
+	<?define AbcPlayerDescriptionLong=Use ABC Player to listen to .abc files as they would sound in The Lord of the Rings Online's player music system.?>
 	<?define ApplicationFolderName=Maestro?>
 
 	<Product Id="*"
@@ -25,12 +27,18 @@
 
 		<Media Id="1" Cabinet="Maestro.cab" EmbedCab="yes" />
 
+		<!-- Expose defines as properties for the MaestroInstallerStrings.wxl -->
+		<Property Id="MaestroAppName">$(var.MaestroAppName)</Property>
+		<Property Id="MaestroVersion">$(var.MaestroVersion)</Property>
+		<Property Id="AbcPlayerAppName">$(var.AbcPlayerAppName)</Property>
+		<Property Id="AbcPlayerVersion">$(var.AbcPlayerVersion)</Property>
+
 		<!-- Installer UI -->
 		<UI>
-			<UIRef Id="WixUI_InstallDir" />
+			<UIRef Id="WixUI_FeatureTree" />
 			<!-- Skip license dialog -->
-			<Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
-			<Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+			<Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="2">NOT Installed</Publish>
+			<Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3">NOT Installed</Publish>
 		</UI>
 		<WixVariable Id="WixUIBannerBmp" Value="MaestroInstaller-banner.bmp" />
 		<WixVariable Id="WixUIDialogBmp" Value="MaestroInstaller-dialog.bmp" />
@@ -46,7 +54,7 @@
 				Minimum="$(var.MaestroVersion)" IncludeMinimum="no"
 			/>
 			<UpgradeVersion Property="SELFFOUND"
-				OnlyDetect="yes"
+				OnlyDetect="no"
 				Minimum="$(var.MaestroVersion)" IncludeMinimum="yes"
 				Maximum="$(var.MaestroVersion)" IncludeMaximum="yes"
 			/>
@@ -71,10 +79,10 @@
 
 		<!-- Warn user if a newer version is installed. -->
 		<CustomAction Id="NoDowngrade" Error="A newer version of [ProductName] is already installed." />
-		<CustomAction Id="AlreadyInstalled" Error="[ProductName] v$(var.MaestroVersion) is already installed." />
+		<!-- <CustomAction Id="AlreadyInstalled" Error="[ProductName] v$(var.MaestroVersion) is already installed." /> -->
 		<InstallExecuteSequence>
 			<Custom Action="NoDowngrade" After="FindRelatedProducts">NEWERFOUND</Custom>
-			<Custom Action="AlreadyInstalled" After="FindRelatedProducts">SELFFOUND</Custom>
+			<!-- <Custom Action="AlreadyInstalled" After="FindRelatedProducts">SELFFOUND</Custom> -->
 			<RemoveExistingProducts Before="InstallInitialize" />
 		</InstallExecuteSequence>
 
@@ -109,36 +117,40 @@
 								<Verb Id="edit" Command="&amp;Edit with $(var.MaestroAppName)" TargetFile="Maestro.exe" Argument='"%1"' />
 							</Extension>
 						</ProgId>
-						<ProgId Id="Maestro.AssocFile.MID" Description="MIDI Sequence" Icon="midifile.ico" IconIndex="0">
-							<Extension Id="mid" ContentType="audio/mid" />
+						<ProgId Id="Maestro.AssocFile.MIDI" Description="MIDI Sequence" Icon="midifile.ico" IconIndex="0">
+							<Extension Id="mid" ContentType="audio/mid">
+								<Verb Id="edit" Command="&amp;Edit with $(var.MaestroAppName)" TargetFile="Maestro.exe" Argument='"%1"' />
+							</Extension>
 							<Extension Id="midi" ContentType="audio/mid" />
 						</ProgId>
 
 						<!-- Support Set Program Access and Defaults -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationName" Value="$(var.MaestroAppName)" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.MaestroDescription)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.MaestroDescriptionLong)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationIcon" Value="[#Maestro.exe],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\DefaultIcon" Type="string" Value="[#midifile.ico],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".abc" Value="AbcPlayer.AssocFile.ABC" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".mid" Value="Maestro.AssocFile.MID" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".midi" Value="Maestro.AssocFile.MID" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".mid" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".midi" Value="Maestro.AssocFile.MIDI" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="text/plain" Value="AbcPlayer.AssocFile.ABC" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/mid" Value="Maestro.AssocFile.MID" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/midi" Value="Maestro.AssocFile.MID" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\Open\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\Edit\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="Maestro.exe" Value="SOFTWARE\[Manufacturer]\Maestro\Capabilities" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/mid" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/midi" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="midi/mid" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\edit" Type="string" Value="&amp;Edit with $(var.MaestroAppName)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\edit\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="Digero.Maestro.exe" Value="SOFTWARE\[Manufacturer]\Maestro\Capabilities" />
 
 						<!-- Support Start/Run "Maestro.exe" -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Value="[#Maestro.exe]" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Name="Path" Value="[APPLICATIONFOLDER]" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Type="string" Value="[#Maestro.exe]" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Maestro.exe" Type="string" Name="Path" Value="[APPLICATIONFOLDER]" />
 
 						<!-- Add to "Open With" menu -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe" Name="FriendlyAppName" Value="$(var.MaestroAppName)" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Name=".abc" Value="" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Name=".mid" Value="" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Name=".midi" Value="" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\shell\Open\command" Value='"[#Maestro.exe]" "%1"' Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe" Type="string" Name="FriendlyAppName" Value="$(var.MaestroAppName)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".abc" Value="" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".mid" Value="" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".midi" Value="" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\shell\edit" Type="string" Value="&amp;Edit with $(var.MaestroAppName)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\shell\edit\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
 					</Component>
 
 					<Component Id="AbcPlayer.exe" Guid="{AAC0B783-7F7D-477C-953E-606D998DD403}">
@@ -159,28 +171,30 @@
 						<!-- Define ProgID for ABC file type -->
 						<ProgId Id="AbcPlayer.AssocFile.ABC" Description="ABC Song" Icon="abcfile.ico" IconIndex="0">
 							<Extension Id="abc" ContentType="text/plain">
-								<Verb Id="open" Command="&amp;Play with $(var.AbcPlayerAppName)" TargetFile="AbcPlayer.exe" Argument='"%1"' />
+								<Verb Id="open" TargetFile="AbcPlayer.exe" Argument='"%1"' />
 							</Extension>
 						</ProgId>
 
 						<!-- Support Set Program Access and Defaults -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationName" Value="$(var.AbcPlayerAppName)" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.AbcPlayerDescription)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationDescription" Value="$(var.AbcPlayerDescriptionLong)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" Type="string" Name="ApplicationIcon" Value="[#AbcPlayer.exe],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\DefaultIcon" Type="string" Value="[#abcfile.ico],0" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\FileAssociations" Type="string" Name=".abc" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\MIMEAssociations" Type="string" Name="text/plain" Value="AbcPlayer.AssocFile.ABC" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\shell\Open\command" Type="string" Value='"[#AbcPlayer.exe]" "%1"' />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="AbcPlayer.exe" Value="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\shell" Type="string" Value="open" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities\shell\open\command" Type="string" Value='"[#AbcPlayer.exe]" "%1"' />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="Digero.AbcPlayer.exe" Value="SOFTWARE\[Manufacturer]\AbcPlayer\Capabilities" />
 
 						<!-- Support Start/Run "AbcPlayer.exe" -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe" Value="[#AbcPlayer.exe]" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe" Name="Path" Value="[APPLICATIONFOLDER]" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe" Type="string" Value="[#AbcPlayer.exe]" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\AbcPlayer.exe"  Type="string" Name="Path" Value="[APPLICATIONFOLDER]"/>
 
 						<!-- Add to "Open With" menu -->
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe" Name="FriendlyAppName" Value="$(var.AbcPlayerAppName)" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\SupportedTypes" Name=".abc" Value="" Type="string" />
-						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\shell\Open\command" Value='"[#AbcPlayer.exe]" "%1"' Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe" Type="string" Name="FriendlyAppName" Value="$(var.AbcPlayerAppName)" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\SupportedTypes" Type="string" Name=".abc" Value="" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\shell" Type="string" Value="open" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\AbcPlayer.exe\shell\open\command" Type="string" Value='"[#AbcPlayer.exe]" "%1"' />
 					</Component>
 
 					<Component Id="Maestro.jar" Guid="{5A924B19-8646-497C-9745-9C42267D5C91}">
@@ -218,10 +232,11 @@
 		<!-- Features -->
 		<Feature Id="Common"
 				Level="1"
+				ConfigurableDirectory="APPLICATIONFOLDER"
 				Absent="disallow"
 				AllowAdvertise="no"
 				Title="Common files"
-				Description="Files required by both $(var.MaestroAppName) and $(var.AbcPlayerAppName)">
+				Description="Files required by both $(var.MaestroAppName) and $(var.AbcPlayerAppName).">
 			<ComponentRef Id="MaestroCommon.jar" />
 			<ComponentRef Id="gervill.jar" />
 			<ComponentRef Id="TableLayout.jar" />
@@ -230,9 +245,10 @@
 
 		<Feature Id="Maestro"
 				Level="1"
+				ConfigurableDirectory="APPLICATIONFOLDER"
 				AllowAdvertise="no"
 				Title="$(var.MaestroAppName)"
-				Description="$(var.MaestroAppName) is a MIDI to ABC converter for The Lord of the Rings Online. Arrange multipart ABC files from MIDI source files.">
+				Description="$(var.MaestroAppName) is a MIDI to ABC converter. Arrange multipart ABC files from MIDI source files.">
 			<ComponentRef Id="Maestro.exe" />
 			<ComponentRef Id="Maestro.jar" />
 			<ComponentRef Id="MaestroStartMenuFolder" />
@@ -240,6 +256,7 @@
 
 		<Feature Id="AbcPlayer"
 				Level="1"
+				ConfigurableDirectory="APPLICATIONFOLDER"
 				AllowAdvertise="no"
 				Title="$(var.AbcPlayerAppName)"
 				Description="$(var.AbcPlayerAppName) lets you preview ABC files as they would sound in The Lord of the Rings Online.">
