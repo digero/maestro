@@ -39,9 +39,10 @@ public enum ColorTable {
 
 	PANEL_BORDER(new Color(0xEEEEEE)), //
 
-	PANEL_HIGHLIGHT(Color.getHSBColor(0.61f, 0.85f, 1.00f)), //
-	PANEL_HIGHLIGHT_OTHER_PART(Color.getHSBColor(0.60f, 0.20f, 0.85f)), //
-	PANEL_TEXT_ENABLED(Color.getHSBColor(0.60f, 0.40f, 1.00f)), //
+	PANEL_HIGHLIGHT(new Color(0xFFD83C)), //(Color.getHSBColor(0.60f, 0.50f, 1.00f)), //
+	PANEL_HIGHLIGHT_OTHER_PART(new Color(0xDDDDDD)), //
+	
+	PANEL_TEXT_ENABLED(new Color(0xFFD83C)), //(Color.getHSBColor(0.60f, 0.40f, 1.00f)), //
 	PANEL_TEXT_DISABLED(new Color(0xEEEEEE)), //
 	PANEL_TEXT_OFF(new Color(0x777777)), //
 	PANEL_TEXT_ERROR(Color.getHSBColor(0.01f, 0.98f, 1.00f)), //
