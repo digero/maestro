@@ -91,7 +91,9 @@
 		</exec>
 		<exec executable="${tools}/wix/light.exe" failonerror="true">
 			<arg value="-nologo" />
+			<arg value="-sw1076" /> <!-- Installer removes version numbers equal to itself -->
 			<arg value="-ext" /> <arg value="WixUIExtension" />
+			<arg value="-loc" /> <arg value="MaestroInstallerStrings.wxl" />
 			<arg value="-pdbout" /> <arg value="${build}/${basename.Maestro}_v${version.Maestro}.wixpdb" />
 			<arg value="-o" /> <arg value="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
 			<arg value="${build}/MaestroInstaller.wixobj" />
