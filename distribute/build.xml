@@ -19,7 +19,6 @@
 		<mkdir dir="${build}" />
 		<delete file="${build}/*.log" />
 		<copy file="../TableLayout.jar" todir="${build}" />
-		<copy file="../gervill.jar" todir="${build}" />
 		<copy file="../LotroInstruments.sf2" todir="${build}" />
 		<copy file="abcfile.ico" todir="${build}" />
 		<copy file="midifile.ico" todir="${build}" />
@@ -33,7 +32,7 @@
 		<jar destfile="${build}/${basename.Maestro}.jar" basedir="${bin}" includes="com/digero/maestro/**">
 			<manifest>
 				<attribute name="Main-Class" value="com.digero.maestro.MaestroMain" />
-				<attribute name="Class-Path" value=". TableLayout.jar gervill.jar ${basename.Common}.jar" />
+				<attribute name="Class-Path" value=". TableLayout.jar ${basename.Common}.jar" />
 			</manifest>
 		</jar>
 	</target>
@@ -42,7 +41,7 @@
 		<jar destfile="${build}/${basename.AbcPlayer}.jar" basedir="${bin}" includes="com/digero/abcplayer/**">
 			<manifest>
 				<attribute name="Main-Class" value="com.digero.abcplayer.AbcPlayer" />
-				<attribute name="Class-Path" value=". TableLayout.jar gervill.jar ${basename.Common}.jar" />
+				<attribute name="Class-Path" value=". TableLayout.jar ${basename.Common}.jar" />
 			</manifest>
 		</jar>
 	</target>
@@ -94,7 +93,7 @@
 			<arg value="-sw1076" /> <!-- Installer removes version numbers equal to itself -->
 			<arg value="-ext" /> <arg value="WixUIExtension" />
 			<arg value="-loc" /> <arg value="MaestroInstallerStrings.wxl" />
-			<arg value="-pdbout" /> <arg value="${build}/${basename.Maestro}_v${version.Maestro}.wixpdb" />
+			<arg value="-pdbout" /> <arg value="${build}/MaestroInstaller.wixobj" />
 			<arg value="-o" /> <arg value="${output}/${basename.Maestro}_v${version.Maestro}.msi" />
 			<arg value="${build}/MaestroInstaller.wixobj" />
 		</exec>
@@ -109,7 +108,6 @@
 			<include name="${basename.AbcPlayer}.jar" />
 			<include name="${basename.Common}.jar" />
 			<include name="TableLayout.jar" />
-			<include name="gervill.jar" />
 			<include name="LotroInstruments.sf2" />
 			<include name="midifile.ico" />
 			<include name="abcfile.ico" />
