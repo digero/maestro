@@ -206,9 +206,6 @@
 					<Component Id="MaestroCommon.jar" Guid="{CC33EE41-A664-4964-9776-7FE863BA00B0}">
 						<File Id="MaestroCommon.jar" Source="build/MaestroCommon.jar" KeyPath="yes" />
 					</Component>
-					<Component Id="gervill.jar" Guid="{23823125-9413-4C78-B96C-6D8DC7C654A2}">
-						<File Id="gervill.jar" Source="build/gervill.jar" KeyPath="yes" />
-					</Component>
 					<Component Id="TableLayout.jar" Guid="{D3BAA0F6-9643-4F73-AC58-61F9B5BF84C4}">
 						<File Id="TableLayout.jar" Source="build/TableLayout.jar" KeyPath="yes" />
 					</Component>
@@ -238,7 +235,6 @@
 				Title="Common files"
 				Description="Files required by both $(var.MaestroAppName) and $(var.AbcPlayerAppName).">
 			<ComponentRef Id="MaestroCommon.jar" />
-			<ComponentRef Id="gervill.jar" />
 			<ComponentRef Id="TableLayout.jar" />
 			<ComponentRef Id="LotroInstruments.sf2" />
 		</Feature>

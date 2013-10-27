@@ -1,7 +1,10 @@
 
+Version 1.0.1
+  * Remove unnecessary gervill.jar from installer
+
 
 Version 1.0.0
-	- Initial release
+  * Initial release
 
 
 == VERSION LOCATIONS ==
