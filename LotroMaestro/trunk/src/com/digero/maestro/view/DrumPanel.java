@@ -51,7 +51,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			GUTTER_WIDTH, TITLE_WIDTH, COMBO_WIDTH, FILL
 	};
 	private static final double[] LAYOUT_ROWS = new double[] {
-			PREFERRED
+		PREFERRED
 	};
 
 	private TrackInfo trackInfo;
@@ -222,6 +222,8 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		else {
 			noteActive = seq.isTrackActive(trackNumber) && seq.isNoteActive(drumId);
 		}
+
+		noteGraph.setDeltaVelocity(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 
 		for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
 			if (part.isTrackEnabled(trackNumber)) {

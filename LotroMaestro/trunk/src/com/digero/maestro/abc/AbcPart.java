@@ -33,9 +33,8 @@ import com.digero.maestro.midi.TrackInfo;
 
 public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable {
 	private SequenceInfo sequenceInfo;
-	private boolean enabled;
-	private int partNumber;
-	private boolean dynamicVolume;
+	private boolean enabled = true;
+	private int partNumber = 1;
 	private String title;
 	private LotroInstrument instrument;
 	private AbcProject ownerProject;
@@ -43,7 +42,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackEnabled;
-	private int enabledTrackCount;
+	private int[] trackVolumeAdjust;
+	private int enabledTrackCount = 0;
 	private int previewSequenceTrackNumber = -1;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
@@ -53,25 +53,22 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		this.ownerProject = ownerProject;
 		this.metadata = metadata;
 		this.instrument = LotroInstrument.LUTE;
-		this.partNumber = 1;
 		this.title = this.instrument.toString();
-		this.enabled = true;
-		this.dynamicVolume = true;
 
 		int t = getTrackCount();
 		this.trackTranspose = new int[t];
 		this.trackEnabled = new boolean[t];
-		enabledTrackCount = 0;
+		this.trackVolumeAdjust = new int[t];
 		this.drumNoteMap = new DrumNoteMap[t];
 	}
 
-	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int deltaVelocity,
-			int pan, boolean useLotroInstruments) throws AbcConversionException {
+	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int pan,
+			boolean useLotroInstruments) throws AbcConversionException {
 		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
 
-		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
+		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros);
 		exportToMidi(out, tm, chords, pan, useLotroInstruments);
 	}
 
@@ -132,9 +129,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				if (endMicros != ne.endMicros)
 					ne = new NoteEvent(ne.note, ne.velocity, ne.startMicros, endMicros);
 
-				int velocity = useLotroInstruments ? dynamics.abcVol : dynamics.midiVol;
-				track.add(MidiFactory.createNoteOnEventEx(ne.note.id + noteDelta, channel, velocity,
-						tm.getMidiTicks(ne.startMicros)));
+				track.add(MidiFactory.createNoteOnEventEx(ne.note.id + noteDelta, channel,
+						dynamics.getVol(useLotroInstruments), tm.getMidiTicks(ne.startMicros)));
 				notesOn.add(ne);
 			}
 		}
@@ -146,11 +142,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return trackNumber;
 	}
 
-	public TrackInfo exportToPreview(SequenceInfo sequenceInfo, TimingInfo tm, KeySignature key, int deltaVelocity,
-			long songStartMicros, long songEndMicros, int pan, boolean useLotroInstruments)
-			throws AbcConversionException {
+	public TrackInfo exportToPreview(SequenceInfo sequenceInfo, TimingInfo tm, KeySignature key, long songStartMicros,
+			long songEndMicros, int pan, boolean useLotroInstruments) throws AbcConversionException {
 
-		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros, deltaVelocity);
+		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros);
 
 		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan, useLotroInstruments);
 
@@ -177,16 +172,16 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return new TrackInfo(sequenceInfo, trackNumber, getTitle(), getInstrument(), tm.meter, key, noteEvents);
 	}
 
-	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity) throws AbcConversionException {
+	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros)
+			throws AbcConversionException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		exportToAbc(tm, key, songStartMicros, songEndMicros, deltaVelocity, os);
+		exportToAbc(tm, key, songStartMicros, songEndMicros, os);
 		return os.toString();
 	}
 
-	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros,
-			int deltaVelocity, OutputStream os) throws AbcConversionException {
-		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros, deltaVelocity);
+	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros, OutputStream os)
+			throws AbcConversionException {
+		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros);
 
 		if (key.sharpsFlats != 0)
 			throw new AbcConversionException("Only C major and A minor are currently supported");
@@ -383,7 +378,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	 * chords.
 	 */
 	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, final long songStartMicros,
-			final long songEndMicros, int deltaVelocity) throws AbcConversionException {
+			final long songEndMicros) throws AbcConversionException {
 
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
@@ -400,9 +395,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 						assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 						long start = Math.max(ne.startMicros, songStartMicros) - songStartMicros;
 						long end = Math.min(ne.endMicros, songEndMicros) - songStartMicros;
-						int velocity = ne.velocity;
-						if (dynamicVolume)
-							velocity = Math.min(Math.max(velocity + deltaVelocity, 0), Dynamics.MAXIMUM.midiVol);
+						int velocity = ne.velocity + trackVolumeAdjust[t];
 						events.add(new NoteEvent(mappedNote, velocity, start, end));
 					}
 				}
@@ -847,7 +840,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	public void setTrackTranspose(int track, int transpose) {
 		if (trackTranspose[track] != transpose) {
 			trackTranspose[track] = transpose;
-			fireChangeEvent(AbcPartProperty.TRACK_TRANSPOSE, isTrackEnabled(track) /* previewRelated */);
+			fireChangeEvent(AbcPartProperty.TRACK_TRANSPOSE, isTrackEnabled(track) /* previewRelated */, track);
 		}
 	}
 
@@ -863,7 +856,18 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		if (trackEnabled[track] != enabled) {
 			trackEnabled[track] = enabled;
 			enabledTrackCount += enabled ? 1 : -1;
-			fireChangeEvent(AbcPartProperty.TRACK_ENABLED);
+			fireChangeEvent(AbcPartProperty.TRACK_ENABLED, track);
+		}
+	}
+
+	public int getTrackVolumeAdjust(int track) {
+		return trackVolumeAdjust[track];
+	}
+
+	public void setTrackVolumeAdjust(int track, int volumeAdjust) {
+		if (trackVolumeAdjust[track] != volumeAdjust) {
+			trackVolumeAdjust[track] = volumeAdjust;
+			fireChangeEvent(AbcPartProperty.VOLUME_ADJUST, track);
 		}
 	}
 
@@ -888,17 +892,6 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	}
 
-	public boolean isDynamicVolume() {
-		return dynamicVolume;
-	}
-
-	public void setDynamicVolume(boolean dynamicVolume) {
-		if (this.dynamicVolume != dynamicVolume) {
-			this.dynamicVolume = dynamicVolume;
-			fireChangeEvent(AbcPartProperty.DYNAMIC_VOLUME);
-		}
-	}
-
 	public void addAbcListener(AbcPartListener l) {
 		changeListeners.add(l);
 	}
@@ -908,12 +901,20 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	protected void fireChangeEvent(AbcPartProperty property) {
-		fireChangeEvent(property, property.isAbcPreviewRelated());
+		fireChangeEvent(property, property.isAbcPreviewRelated(), AbcPartEvent.NO_TRACK_NUMBER);
 	}
 
 	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated) {
+		fireChangeEvent(property, abcPreviewRelated, AbcPartEvent.NO_TRACK_NUMBER);
+	}
+
+	protected void fireChangeEvent(AbcPartProperty property, int trackNumber) {
+		fireChangeEvent(property, property.isAbcPreviewRelated(), trackNumber);
+	}
+
+	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated, int trackNumber) {
 		if (changeListeners.size() > 0) {
-			AbcPartEvent e = new AbcPartEvent(this, property, abcPreviewRelated);
+			AbcPartEvent e = new AbcPartEvent(this, property, abcPreviewRelated, trackNumber);
 			// Listener list might be modified in the callback
 			List<AbcPartListener> listenerListCopy = new ArrayList<AbcPartListener>(changeListeners);
 			for (AbcPartListener l : listenerListCopy) {

@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -26,7 +25,6 @@ public class VolumeBar extends JPanel {
 	public static final int WIDTH = PTR_WIDTH * 5;
 
 	private VolumeTransceiver volumizer;
-	private Rectangle ptrRect = new Rectangle(0, 0, PTR_WIDTH, PTR_HEIGHT);
 	private boolean useInvertedColors;
 
 	public VolumeBar(VolumeTransceiver volumizer) {
@@ -39,7 +37,6 @@ public class VolumeBar extends JPanel {
 		Dimension sz = new Dimension(WIDTH, PTR_HEIGHT);
 		setMinimumSize(sz);
 		setPreferredSize(sz);
-		updatePointerRect();
 	}
 
 	@Override
@@ -82,10 +79,6 @@ public class VolumeBar extends JPanel {
 		g2.fillOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 		g2.setColor(Color.BLACK);
 		g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
-	}
-
-	private void updatePointerRect() {
-		ptrRect.x = (int) (getWidth() * volumizer.getVolume() / VolumeTransceiver.MAX_VOLUME - PTR_WIDTH / 2);
 	}
 
 	public void setUseInvertedColors(boolean useInvertedColors) {

@@ -3,6 +3,8 @@ package com.digero.maestro.view;
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -70,7 +72,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 	static final int GUTTER_WIDTH = 8;
 	static final int TITLE_WIDTH = 164;
-	static final int CONTROL_WIDTH = 48;
+	static final int CONTROL_WIDTH = 56;
 	private static final double[] LAYOUT_COLS = new double[] {
 			GUTTER_WIDTH, TITLE_WIDTH, CONTROL_WIDTH, FILL
 	};
@@ -86,6 +88,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	private JPanel gutter;
 	private JCheckBox checkBox;
 	private JSpinner transposeSpinner;
+	private TrackVolumeBar trackVolumeBar;
 	private JPanel drumSavePanel;
 	private TrackNoteGraph noteGraph;
 
@@ -190,10 +193,18 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			});
 		}
 
+		trackVolumeBar = new TrackVolumeBar(abcPart, trackInfo);
+		trackVolumeBar.setToolTipText("Adjust this track's volume");
+
+		JPanel controlPanel = new JPanel(new BorderLayout(0, 8));
+		controlPanel.setOpaque(false);
+		if (transposeSpinner != null)
+			controlPanel.add(transposeSpinner, BorderLayout.CENTER);
+		controlPanel.add(trackVolumeBar, BorderLayout.SOUTH);
+
 		add(gutter, GUTTER_COLUMN + ", 0, " + GUTTER_COLUMN + ", 1, f, f");
 		add(checkBox, TITLE_COLUMN + ", 0");
-		if (transposeSpinner != null)
-			add(transposeSpinner, CONTROL_COLUMN + ", 0, f, c");
+		add(controlPanel, CONTROL_COLUMN + ", 0, f, c");
 		add(noteGraph, NOTE_COLUMN + ", 0, " + NOTE_COLUMN + ", 1");
 
 		updateTitleText();
@@ -297,6 +308,13 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
 	}
 
+	@Override
+	public void setBackground(Color bg) {
+		super.setBackground(bg);
+		if (trackVolumeBar != null)
+			trackVolumeBar.setBackground(bg);
+	}
+
 	private void updateColors() {
 		boolean abcPreviewMode = isAbcPreviewMode();
 		int trackNumber = trackInfo.getTrackNumber();
@@ -392,6 +410,11 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		checkBox.setSelected(trackEnabled);
+		
+		trackVolumeBar.setEnabled(trackEnabled);
+		trackVolumeBar.setVisible(trackEnabled || (abcPart.isDrumPart() == trackInfo.isDrumTrack()));
+
+		noteGraph.setDeltaVelocity(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 
 		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
 		if (initDrumPanels || showDrumPanels != showDrumPanelsNew || wasDrumPart != abcPart.isDrumPart()) {

@@ -142,7 +142,7 @@ public class SequenceInfo implements IMidiConstants {
 		this.endMicros = 0;
 		for (AbcPart part : parts) {
 			int pan = !parts.isEmpty() ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
-			TrackInfo trackInfo = part.exportToPreview(this, tm, key, 0, songStartMicros, songEndMicros, pan, useLotroInstruments);
+			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan, useLotroInstruments);
 
 			if (trackInfo.hasEvents()) {
 				this.endMicros = Math.max(this.endMicros,
