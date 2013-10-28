@@ -57,6 +57,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private Color[] noteColorByDynamics = new Color[Dynamics.values().length];
 	private Color[] badNoteColorByDynamics = new Color[Dynamics.values().length];
+	private int deltaVelocity = 0;
 
 	private JPanel indicatorLine;
 
@@ -148,6 +149,17 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			this.noteOnColor = noteOnColor;
 			repaint();
 		}
+	}
+
+	public void setDeltaVelocity(int volumeAdjust) {
+		if (this.deltaVelocity != volumeAdjust) {
+			this.deltaVelocity = volumeAdjust;
+			repaint();
+		}
+	}
+
+	public int getDeltaVelocity() {
+		return deltaVelocity;
 	}
 
 	public void setTrackInfo(TrackInfo trackInfo) {
@@ -331,16 +343,26 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private static float[] hsb;
 
+	private static final int SAT = 1, BRT = 2;
+
 	private static Color makeDynamicColor(Color base, Dynamics dyn, float weight) {
 		hsb = Color.RGBtoHSB(base.getRed(), base.getGreen(), base.getBlue(), hsb);
-		hsb[2] *= (1 - weight) + weight * dyn.midiVol / 128.0f;
+		// Adjust the brightness based on the volume dynamics
+		hsb[BRT] *= (1 - weight) + weight * dyn.midiVol / 128.0f;
+		
+		// If the brightness is nearing max, also reduce the saturation to enahance the effect
+		if (hsb[BRT] > 0.9f) {
+			hsb[SAT] = Math.max(0.0f, hsb[SAT] - (hsb[BRT] - 0.9f));
+			hsb[BRT] = Math.min(1.0f, hsb[BRT]);
+		}
+		
 		return new Color(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]));
 	}
 
 	private Color getNoteColor(NoteEvent ne) {
-		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity);
+		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVelocity);
 		if (noteColorByDynamics[dyn.ordinal()] == null) {
-			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.20f);
+			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.25f);
 		}
 		return noteColorByDynamics[dyn.ordinal()];
 	}

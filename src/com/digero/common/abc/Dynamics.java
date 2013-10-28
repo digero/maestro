@@ -1,17 +1,20 @@
 package com.digero.common.abc;
 
+import com.digero.common.midi.MidiConstants;
+import com.digero.common.util.Util;
+
 public enum Dynamics {
-	// In LotRO, +pppp+ seems to be 50% volume
-	pppp(8, 64), //
-	ppp(16, 71), //
-	pp(32, 78), //
-	p(48, 85), //
-	mp(64, 92), //
-	mf(80, 100), //
-	f(96, 106), //
-	ff(112, 113), //
+	// In LotRO, +ppp+ seems to be 50% volume
+	pppp(4, 56), //
+	ppp(16, 64), //
+	pp(32, 72), //
+	p(48, 80), //
+	mp(64, 88), //
+	mf(80, 96), //
+	f(96, 104), //
+	ff(112, 112), //
 	fff(127, 120), //
-	ffff(127, 127);
+	ffff(144, 127);
 
 	public static final Dynamics DEFAULT = mf;
 	public static final Dynamics MAXIMUM = ffff;
@@ -33,7 +36,7 @@ public enum Dynamics {
 	public final int abcVol;
 
 	public int getVol(boolean abc) {
-		return abc ? abcVol : midiVol;
+		return Util.clamp(abc ? abcVol : midiVol, 0, MidiConstants.MAX_VOLUME);
 	}
 
 	private Dynamics(int midiVol, int abcVol) {

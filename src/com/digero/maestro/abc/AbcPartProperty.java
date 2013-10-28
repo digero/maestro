@@ -10,9 +10,9 @@ public enum AbcPartProperty {
 	TRACK_TRANSPOSE, //
 	DRUM_ENABLED, //
 	DRUM_MAPPING, //
-	DYNAMIC_VOLUME; //
+	VOLUME_ADJUST; //
 
-	private boolean renderRelated;
+	private final boolean renderRelated;
 
 	private AbcPartProperty() {
 		this.renderRelated = true;

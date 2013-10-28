@@ -38,6 +38,8 @@ public class TrackInfo implements IMidiConstants {
 	private List<NoteEvent> noteEvents;
 	private SortedSet<Integer> notesInUse;
 	private boolean isDrumTrack;
+	private final int minVelocity;
+	private final int maxVelocity;
 
 	@SuppressWarnings("unchecked")
 	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
@@ -52,6 +54,9 @@ public class TrackInfo implements IMidiConstants {
 		notesInUse = new TreeSet<Integer>();
 		List<NoteEvent>[] notesOn = new List[16];
 		int notesNotTurnedOff = 0;
+
+		int minVelocity = Integer.MAX_VALUE;
+		int maxVelocity = Integer.MIN_VALUE;
 
 		int[] pitchBend = new int[16];
 		for (int j = 0, sz = track.size(); j < sz; j++) {
@@ -81,7 +86,6 @@ public class TrackInfo implements IMidiConstants {
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0) {
 						Note note = Note.fromId(noteId);
 						if (note == null) {
-//							throw new InvalidMidiDataException("Encountered unrecognized note ID: " + noteId);
 							continue; // Note was probably bent out of range. Not great, but not a reason to fail.
 						}
 
@@ -97,6 +101,11 @@ public class TrackInfo implements IMidiConstants {
 								break;
 							}
 						}
+
+						if (velocity > maxVelocity)
+							maxVelocity = velocity;
+						if (velocity < minVelocity)
+							minVelocity = velocity;
 
 						if (!isDrumTrack) {
 							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
@@ -187,6 +196,14 @@ public class TrackInfo implements IMidiConstants {
 			}
 		}
 
+		if (minVelocity == Integer.MAX_VALUE)
+			minVelocity = 0;
+		if (maxVelocity == Integer.MIN_VALUE)
+			maxVelocity = MidiConstants.MAX_VOLUME;
+
+		this.minVelocity = minVelocity;
+		this.maxVelocity = maxVelocity;
+
 		noteEvents = Collections.unmodifiableList(noteEvents);
 		notesInUse = Collections.unmodifiableSortedSet(notesInUse);
 		instruments = Collections.unmodifiableSet(instruments);
@@ -203,9 +220,25 @@ public class TrackInfo implements IMidiConstants {
 		this.instruments.add(instrument.midiProgramId);
 		this.noteEvents = noteEvents;
 		this.notesInUse = new TreeSet<Integer>();
+
+		int minVelocity = Integer.MAX_VALUE;
+		int maxVelocity = Integer.MIN_VALUE;
 		for (NoteEvent ne : noteEvents) {
 			this.notesInUse.add(ne.note.id);
+
+			if (ne.velocity > maxVelocity)
+				maxVelocity = ne.velocity;
+			if (ne.velocity < minVelocity)
+				minVelocity = ne.velocity;
 		}
+		if (minVelocity == Integer.MAX_VALUE)
+			minVelocity = 0;
+		if (maxVelocity == Integer.MIN_VALUE)
+			maxVelocity = MidiConstants.MAX_VOLUME;
+
+		this.minVelocity = minVelocity;
+		this.maxVelocity = maxVelocity;
+
 		this.isDrumTrack = false;
 
 		this.noteEvents = Collections.unmodifiableList(this.noteEvents);
@@ -303,6 +336,14 @@ public class TrackInfo implements IMidiConstants {
 
 	public Set<Integer> getInstruments() {
 		return instruments;
+	}
+
+	public int getMinVelocity() {
+		return minVelocity;
+	}
+
+	public int getMaxVelocity() {
+		return maxVelocity;
 	}
 
 //	public int[] addNoteVelocities(int[] velocities) {

@@ -1,0 +1,212 @@
+package com.digero.maestro.view;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.RoundRectangle2D;
+
+import javax.swing.JPanel;
+
+import com.digero.common.abc.Dynamics;
+import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Util;
+import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.AbcPartEvent;
+import com.digero.maestro.abc.AbcPartListener;
+import com.digero.maestro.abc.AbcPartProperty;
+import com.digero.maestro.midi.TrackInfo;
+
+public class TrackVolumeBar extends JPanel implements IDiscardable {
+	private static final int PTR_WIDTH = 6;
+	private static final int PTR_HEIGHT = 12;
+	private static final int BAR_HEIGHT = 6;
+	private static final int SIDE_PAD = PTR_WIDTH / 2;
+	private static final int ROUND = 0;
+
+	private static final int DRAG_GUTTER_X = 64;
+	private static final int DRAG_GUTTER_Y = 32;
+
+	public static final int WIDTH = PTR_WIDTH * 5;
+
+	private AbcPart abcPart;
+	private TrackInfo trackInfo;
+	private AbcPartListener abcListener;
+
+	private static final int VALUE_GUTTER = 16;
+	private static final int DEFAULT_VALUE = 0;
+	private final int MIN_VALUE;
+	private final int MAX_VALUE;
+	private int value;
+
+	// Visual properties
+	private boolean mouseWithin = false;
+	private boolean mouseDown = false;
+
+	public TrackVolumeBar(AbcPart abcPart, TrackInfo trackInfo) {
+		this.abcPart = abcPart;
+		this.trackInfo = trackInfo;
+		this.abcListener = new MyAbcPartListener();
+
+		abcPart.addAbcListener(abcListener);
+		value = abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber());
+
+		MIN_VALUE = Dynamics.MINIMUM.midiVol - trackInfo.getMaxVelocity();
+		MAX_VALUE = Dynamics.MAXIMUM.midiVol - trackInfo.getMinVelocity();
+
+		MouseHandler mouseHandler = new MouseHandler();
+		addMouseListener(mouseHandler);
+		addMouseMotionListener(mouseHandler);
+
+		Dimension sz = new Dimension(WIDTH, PTR_HEIGHT);
+		setMinimumSize(sz);
+		setPreferredSize(sz);
+	}
+
+	@Override
+	public void discard() {
+		abcPart.removeAbcListener(abcListener);
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		int vMin = MIN_VALUE;
+		int vMax = MAX_VALUE;
+		int vCtr = DEFAULT_VALUE;
+
+		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (value - vMin) / (vMax - vMin));
+		int ctrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (vCtr - vMin) / (vMax - vMin));
+
+		int fillStart = 0;
+		int fillWidth = ptrPos + PTR_WIDTH * (2 * ptrPos - getWidth()) / (2 * getWidth());
+
+		final int x = 0;
+		final int y = (PTR_HEIGHT - BAR_HEIGHT) / 2;
+		int right = getWidth();
+
+		Color fillA = isEnabled() ? Color.WHITE : Color.LIGHT_GRAY;
+		Color fillB = isEnabled() ? Color.LIGHT_GRAY : Color.GRAY;
+		Color bkgdA = Color.DARK_GRAY;
+		Color bkgdB = Color.GRAY;
+
+		g2.setClip(new RoundRectangle2D.Float(x, y, right - x, BAR_HEIGHT, ROUND, ROUND));
+
+		// Background
+		g2.setPaint(new GradientPaint(0, y, bkgdA, 0, y + BAR_HEIGHT, bkgdB));
+		g2.fillRect(x, y, right - x - 1, BAR_HEIGHT);
+
+		// Fill
+		g2.setPaint(new GradientPaint(0, y, fillA, 0, y + BAR_HEIGHT, fillB));
+		g2.fillRect(fillStart, y, fillWidth, BAR_HEIGHT);
+
+		g2.setClip(null);
+
+		// Center indicator
+		g2.setColor(Color.BLACK);
+		g2.fillRect(ctrPos, y, 1, BAR_HEIGHT);
+
+		// Border
+		g2.setColor(Color.BLACK);
+		g2.drawRoundRect(x, y, right - x - 1, BAR_HEIGHT, ROUND, ROUND);
+
+		// Pointer
+		if (mouseDown || mouseWithin) {
+			int left = ptrPos - PTR_WIDTH / 2;
+
+			final Color PTR_COLOR_1 = Color.WHITE;
+			final Color PTR_COLOR_2 = Color.LIGHT_GRAY;
+
+			g2.setPaint(new GradientPaint(left, 0, PTR_COLOR_1, left + PTR_WIDTH, 0, PTR_COLOR_2));
+			g2.fillRoundRect(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1, ROUND, ROUND);
+			g2.setColor(Color.BLACK);
+			g2.drawRoundRect(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1, ROUND, ROUND);
+		}
+	}
+
+	private class MyAbcPartListener implements AbcPartListener {
+		@Override
+		public void abcPartChanged(AbcPartEvent e) {
+			if (e.getProperty() == AbcPartProperty.VOLUME_ADJUST && e.matchesTrack(trackInfo.getTrackNumber())) {
+				int newDelta = abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber());
+				if (newDelta != value) {
+					value = newDelta;
+					repaint();
+				}
+			}
+		}
+	}
+
+	private class MouseHandler implements MouseListener, MouseMotionListener {
+		private int deltaAtDragStart = value;
+
+		private void handleDrag(MouseEvent e) {
+			int x = e.getX();
+			int y = e.getY();
+			if ((y < -DRAG_GUTTER_Y || y > getHeight() + DRAG_GUTTER_Y)
+					|| (x < -DRAG_GUTTER_X || x > getWidth() + DRAG_GUTTER_X)) {
+				// Cancel the drag
+				value = deltaAtDragStart;
+			}
+			else {
+				float xMin = SIDE_PAD;
+				float xMax = getWidth() - 2 * SIDE_PAD;
+
+				float v = (MAX_VALUE - MIN_VALUE) * (x - xMin) / xMax + MIN_VALUE;
+
+				value = Util.clamp((int) Math.round(v), MIN_VALUE, MAX_VALUE);
+				if (Math.abs(value - DEFAULT_VALUE) < VALUE_GUTTER)
+					value = DEFAULT_VALUE;
+			}
+
+			repaint();
+		}
+
+		public void mousePressed(MouseEvent e) {
+			if (isEnabled()) {
+				mouseDown = true;
+				deltaAtDragStart = value;
+				handleDrag(e);
+				requestFocus();
+			}
+		}
+
+		public void mouseDragged(MouseEvent e) {
+			if (isEnabled())
+				handleDrag(e);
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			mouseDown = false;
+			abcPart.setTrackVolumeAdjust(trackInfo.getTrackNumber(), value);
+			repaint();
+		}
+
+		public void mouseClicked(MouseEvent e) {
+		}
+
+		public void mouseMoved(MouseEvent e) {
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			if (isEnabled()) {
+				mouseWithin = true;
+				repaint();
+			}
+		}
+
+		public void mouseExited(MouseEvent e) {
+			mouseWithin = false;
+			repaint();
+		}
+	}
+}
