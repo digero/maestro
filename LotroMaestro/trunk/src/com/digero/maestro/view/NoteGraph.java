@@ -358,13 +358,21 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		
 		return new Color(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]));
 	}
+	
+	private Color getNoteColorEx(NoteEvent ne, Color baseColor, Color[] cachedColorByDynamics) {
+		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVelocity);
+		if (cachedColorByDynamics[dyn.ordinal()] == null) {
+			cachedColorByDynamics[dyn.ordinal()] = makeDynamicColor(baseColor, dyn, 0.25f);
+		}
+		return cachedColorByDynamics[dyn.ordinal()];
+	}
 
 	private Color getNoteColor(NoteEvent ne) {
-		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVelocity);
-		if (noteColorByDynamics[dyn.ordinal()] == null) {
-			noteColorByDynamics[dyn.ordinal()] = makeDynamicColor(noteColor.get(), dyn, 0.25f);
-		}
-		return noteColorByDynamics[dyn.ordinal()];
+		return getNoteColorEx(ne, noteColor.get(), noteColorByDynamics);
+	}
+	
+	private Color getBadNoteColor(NoteEvent ne) {
+		return getNoteColorEx(ne, badNoteColor.get(), badNoteColorByDynamics);
 	}
 
 	@Override
@@ -466,9 +474,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		}
 
 		if (notesBad != null) {
-			g2.setColor(badNoteColor.get());
 			for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1)) {
 				NoteEvent ne = noteEvents.get(i);
+				g2.setColor(getBadNoteColor(ne));
 				int noteId = transposeNote(ne.note.id);
 				fillNote(g2, ne, noteId, minLength, height);
 			}
