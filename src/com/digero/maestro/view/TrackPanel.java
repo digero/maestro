@@ -32,6 +32,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
@@ -410,7 +411,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		checkBox.setSelected(trackEnabled);
-		
+
 		trackVolumeBar.setEnabled(trackEnabled);
 		trackVolumeBar.setVisible(trackEnabled || (abcPart.isDrumPart() == trackInfo.isDrumTrack()));
 
@@ -593,15 +594,16 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		@Override
 		protected boolean isNotePlayable(int noteId) {
-			if (abcPart.isDrumPart()) {
+			if (noteId < MidiConstants.LOWEST_NOTE_ID || noteId > MidiConstants.HIGHEST_NOTE_ID)
+				return false;
+
+			if (abcPart.isDrumPart())
 				return abcPart.isDrumPlayable(trackInfo.getTrackNumber(), noteId);
-			}
-			else if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackInfo.getTrackNumber())) {
+
+			if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackInfo.getTrackNumber()))
 				return true;
-			}
-			else {
-				return abcPart.getInstrument().isPlayable(noteId) && !abcPart.getInstrument().isBadNote(noteId);
-			}
+
+			return abcPart.getInstrument().isPlayable(noteId) && !abcPart.getInstrument().isBadNote(noteId);
 		}
 
 		@Override
