@@ -73,7 +73,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 	static final int GUTTER_WIDTH = 8;
 	static final int TITLE_WIDTH = 164;
-	static final int CONTROL_WIDTH = 56;
+	static final int CONTROL_WIDTH = 64;
 	private static final double[] LAYOUT_COLS = new double[] {
 			GUTTER_WIDTH, TITLE_WIDTH, CONTROL_WIDTH, FILL
 	};
@@ -194,8 +194,18 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			});
 		}
 
-		trackVolumeBar = new TrackVolumeBar(abcPart, trackInfo);
+		trackVolumeBar = new TrackVolumeBar(trackInfo.getMinVelocity(), trackInfo.getMaxVelocity());
 		trackVolumeBar.setToolTipText("Adjust this track's volume");
+		trackVolumeBar.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Only update the actual ABC part when the user stops dragging the trackVolumeBar
+				if (!trackVolumeBar.isDragging())
+					abcPart.setTrackVolumeAdjust(trackInfo.getTrackNumber(), trackVolumeBar.getDeltaVolume());
+
+				updateState();
+			}
+		});
 
 		JPanel controlPanel = new JPanel(new BorderLayout(0, 8));
 		controlPanel.setOpaque(false);
@@ -415,7 +425,16 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		trackVolumeBar.setEnabled(trackEnabled);
 		trackVolumeBar.setVisible(trackEnabled || (abcPart.isDrumPart() == trackInfo.isDrumTrack()));
 
-		noteGraph.setDeltaVelocity(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
+		noteGraph.setShowingNoteVelocity(trackVolumeBar.isDragging());
+
+		if (trackVolumeBar.isDragging()) {
+			noteGraph.setDeltaVolume(trackVolumeBar.getDeltaVolume());
+		}
+		else {
+			noteGraph.setDeltaVolume(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
+		}
+
+		noteGraph.setDeltaVolume(trackVolumeBar.getDeltaVolume());
 
 		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
 		if (initDrumPanels || showDrumPanels != showDrumPanelsNew || wasDrumPart != abcPart.isDrumPart()) {
@@ -446,7 +465,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 				add(drumSavePanel, TITLE_COLUMN + ", 1, l, c");
 				int row = LAYOUT_ROWS.length;
 				for (int noteId : trackInfo.getNotesInUse()) {
-					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId, abcSequencer);
+					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId, abcSequencer, trackVolumeBar);
 					if (row <= layout.getNumRow())
 						layout.insertRow(row, PREFERRED);
 					add(panel, "0, " + row + ", " + NOTE_COLUMN + ", " + row);

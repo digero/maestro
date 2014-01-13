@@ -6,39 +6,39 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JPanel;
 
 import com.digero.common.abc.Dynamics;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
-import com.digero.maestro.abc.AbcPart;
-import com.digero.maestro.abc.AbcPartEvent;
-import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.abc.AbcPartProperty;
-import com.digero.maestro.midi.TrackInfo;
 
 public class TrackVolumeBar extends JPanel implements IDiscardable {
 	private static final int PTR_WIDTH = 6;
-	private static final int PTR_HEIGHT = 12;
-	private static final int BAR_HEIGHT = 6;
+	private static final int PTR_HEIGHT = 16;
+	private static final int BAR_HEIGHT = 10;
 	private static final int SIDE_PAD = PTR_WIDTH / 2;
 	private static final int ROUND = 0;
 
-	private static final int DRAG_GUTTER_X = 64;
-	private static final int DRAG_GUTTER_Y = 32;
+	private static final int DRAG_MARGIN_X = 512;
+	private static final int DRAG_MARGIN_Y = 32;
 
 	public static final int WIDTH = PTR_WIDTH * 5;
 
-	private AbcPart abcPart;
-	private TrackInfo trackInfo;
-	private AbcPartListener abcListener;
+	private List<ActionListener> actionListeners;
 
 	private static final int VALUE_GUTTER = 16;
+	private static final int STEP_SIZE = 16;
 	private static final int DEFAULT_VALUE = 0;
 	private final int MIN_VALUE;
 	private final int MAX_VALUE;
@@ -48,20 +48,14 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 	private boolean mouseWithin = false;
 	private boolean mouseDown = false;
 
-	public TrackVolumeBar(AbcPart abcPart, TrackInfo trackInfo) {
-		this.abcPart = abcPart;
-		this.trackInfo = trackInfo;
-		this.abcListener = new MyAbcPartListener();
+	public TrackVolumeBar(int trackMinVelocity, int trackMaxVelocity) {
+		MIN_VALUE = Dynamics.MINIMUM.midiVol - trackMaxVelocity;
+		MAX_VALUE = Dynamics.MAXIMUM.midiVol - trackMinVelocity;
 
-		abcPart.addAbcListener(abcListener);
-		value = abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber());
-
-		MIN_VALUE = Dynamics.MINIMUM.midiVol - trackInfo.getMaxVelocity();
-		MAX_VALUE = Dynamics.MAXIMUM.midiVol - trackInfo.getMinVelocity();
-
-		MouseHandler mouseHandler = new MouseHandler();
-		addMouseListener(mouseHandler);
-		addMouseMotionListener(mouseHandler);
+		InputHandler inputHandler = new InputHandler();
+		addMouseListener(inputHandler);
+		addMouseMotionListener(inputHandler);
+		addKeyListener(inputHandler);
 
 		Dimension sz = new Dimension(WIDTH, PTR_HEIGHT);
 		setMinimumSize(sz);
@@ -70,7 +64,46 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 
 	@Override
 	public void discard() {
-		abcPart.removeAbcListener(abcListener);
+		if (actionListeners != null) {
+			actionListeners.clear();
+			actionListeners = null;
+		}
+	}
+
+	public int getDeltaVolume() {
+		return value;
+	}
+
+	public void setDeltaVolume(int deltaVolume) {
+		if (deltaVolume != value) {
+			value = Util.clamp(deltaVolume, MIN_VALUE, MAX_VALUE);
+			fireActionEvent();
+		}
+	}
+
+	public boolean isDragging() {
+		return mouseDown;
+	}
+
+	public void addActionListener(ActionListener trackVolumeListener) {
+		if (actionListeners == null)
+			actionListeners = new ArrayList<ActionListener>();
+
+		if (!actionListeners.contains(trackVolumeListener))
+			actionListeners.add(trackVolumeListener);
+	}
+
+	public void removeActionListener(ActionListener trackVolumeListener) {
+		if (actionListeners != null)
+			actionListeners.remove(trackVolumeListener);
+	}
+
+	protected void fireActionEvent() {
+		if (actionListeners != null) {
+			ActionEvent e = new ActionEvent(this, 0, null);
+			for (ActionListener l : actionListeners)
+				l.actionPerformed(e);
+		}
 	}
 
 	@Override
@@ -133,27 +166,14 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 	}
 
-	private class MyAbcPartListener implements AbcPartListener {
-		@Override
-		public void abcPartChanged(AbcPartEvent e) {
-			if (e.getProperty() == AbcPartProperty.VOLUME_ADJUST && e.matchesTrack(trackInfo.getTrackNumber())) {
-				int newDelta = abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber());
-				if (newDelta != value) {
-					value = newDelta;
-					repaint();
-				}
-			}
-		}
-	}
-
-	private class MouseHandler implements MouseListener, MouseMotionListener {
+	private class InputHandler implements MouseListener, MouseMotionListener, KeyListener {
 		private int deltaAtDragStart = value;
 
 		private void handleDrag(MouseEvent e) {
 			int x = e.getX();
 			int y = e.getY();
-			if ((y < -DRAG_GUTTER_Y || y > getHeight() + DRAG_GUTTER_Y)
-					|| (x < -DRAG_GUTTER_X || x > getWidth() + DRAG_GUTTER_X)) {
+			if ((y < -DRAG_MARGIN_Y || y > getHeight() + DRAG_MARGIN_Y)
+					|| (x < -DRAG_MARGIN_X || x > getWidth() + DRAG_MARGIN_X)) {
 				// Cancel the drag
 				value = deltaAtDragStart;
 			}
@@ -163,12 +183,25 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 
 				float v = (MAX_VALUE - MIN_VALUE) * (x - xMin) / xMax + MIN_VALUE;
 
-				value = Util.clamp((int) Math.round(v), MIN_VALUE, MAX_VALUE);
-				if (Math.abs(value - DEFAULT_VALUE) < VALUE_GUTTER)
+				value = Util.clamp((int) Math.round(v / STEP_SIZE) * STEP_SIZE, MIN_VALUE, MAX_VALUE);
+
+				if (value != MIN_VALUE && value != MAX_VALUE && Math.abs(value - DEFAULT_VALUE) < VALUE_GUTTER)
 					value = DEFAULT_VALUE;
 			}
 
+			fireActionEvent();
 			repaint();
+		}
+
+		private void endDrag(boolean success) {
+			if (mouseDown) {
+				mouseDown = false;
+				if (!success)
+					value = deltaAtDragStart;
+
+				fireActionEvent();
+				repaint();
+			}
 		}
 
 		public void mousePressed(MouseEvent e) {
@@ -181,14 +214,13 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 
 		public void mouseDragged(MouseEvent e) {
-			if (isEnabled())
+			if (isEnabled() && mouseDown)
 				handleDrag(e);
 		}
 
 		public void mouseReleased(MouseEvent e) {
-			mouseDown = false;
-			abcPart.setTrackVolumeAdjust(trackInfo.getTrackNumber(), value);
-			repaint();
+			if (isEnabled())
+				endDrag(true);
 		}
 
 		public void mouseClicked(MouseEvent e) {
@@ -205,8 +237,24 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 
 		public void mouseExited(MouseEvent e) {
-			mouseWithin = false;
-			repaint();
+			if (mouseWithin) {
+				mouseWithin = false;
+				repaint();
+			}
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+				endDrag(false);
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+		}
+
+		@Override
+		public void keyTyped(KeyEvent e) {
 		}
 	}
 }

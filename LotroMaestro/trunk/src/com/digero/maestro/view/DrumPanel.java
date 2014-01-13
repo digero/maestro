@@ -65,9 +65,11 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	private JCheckBox checkBox;
 	private JComboBox<LotroDrumInfo> drumComboBox;
 	private DrumNoteGraph noteGraph;
+	private TrackVolumeBar trackVolumeBar;
+	private ActionListener trackVolumeBarListener;
 
 	public DrumPanel(TrackInfo info, NoteFilterSequencerWrapper sequencer, AbcPart part, int drumNoteId,
-			SequencerWrapper abcSequencer_) {
+			SequencerWrapper abcSequencer_, TrackVolumeBar trackVolumeBar_) {
 		super(new TableLayout(LAYOUT_COLS, LAYOUT_ROWS));
 
 		this.trackInfo = info;
@@ -75,6 +77,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		this.abcSequencer = abcSequencer_;
 		this.abcPart = part;
 		this.drumId = drumNoteId;
+		this.trackVolumeBar = trackVolumeBar_;
 
 		TableLayout tableLayout = (TableLayout) getLayout();
 		tableLayout.setHGap(HGAP);
@@ -167,6 +170,15 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			}
 		});
 
+		if (trackVolumeBar != null) {
+			trackVolumeBar.addActionListener(trackVolumeBarListener = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					updateState();
+				}
+			});
+		}
+
 		addPropertyChangeListener("enabled", new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				updateState();
@@ -188,6 +200,8 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		seq.removeChangeListener(sequencerListener);
 		if (abcSequencer != null)
 			abcSequencer.removeChangeListener(sequencerListener);
+		if (trackVolumeBar != null)
+			trackVolumeBar.removeActionListener(trackVolumeBarListener);
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
@@ -223,7 +237,13 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			noteActive = seq.isTrackActive(trackNumber) && seq.isNoteActive(drumId);
 		}
 
-		noteGraph.setDeltaVelocity(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
+		boolean isDraggingVolumeBar = (trackVolumeBar != null) && trackVolumeBar.isDragging();
+		noteGraph.setShowingNoteVelocity(isDraggingVolumeBar);
+
+		if (isDraggingVolumeBar)
+			noteGraph.setDeltaVolume(trackVolumeBar.getDeltaVolume());
+		else
+			noteGraph.setDeltaVolume(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 
 		for (AbcPart part : abcPart.getOwnerProject().getAllParts()) {
 			if (part.isTrackEnabled(trackNumber)) {

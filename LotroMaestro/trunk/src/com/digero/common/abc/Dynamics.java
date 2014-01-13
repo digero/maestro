@@ -23,11 +23,16 @@ public enum Dynamics {
 	public static final Dynamics fromMidiVelocity(int velocity) {
 		Dynamics[] values = values();
 		Dynamics best = values[0];
+		int deltaBest = Math.abs(velocity - values[0].midiVol);
 		for (int i = 1; i < values.length; i++) {
-			if (Math.abs(velocity - values[i].midiVol) < Math.abs(velocity - best.midiVol))
+			int delta = Math.abs(velocity - values[i].midiVol);
+			if (delta < deltaBest) {
 				best = values[i];
-			else
+				deltaBest = delta;
+			}
+			else {
 				break;
+			}
 		}
 		return best;
 	}
