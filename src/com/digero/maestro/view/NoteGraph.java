@@ -27,6 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import com.digero.common.abc.Dynamics;
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -47,6 +48,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	protected final double NOTE_HEIGHT_PX;
 	private final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
 	private final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
+	private final double NOTE_VELOCITY_MIN_WIDTH_PX = 1;
+	private final double NOTE_VELOCITY_MIN_HEIGHT_PX = 2;
 
 	private ColorTable noteColor = ColorTable.NOTE_ENABLED;
 	private ColorTable badNoteColor = ColorTable.NOTE_BAD_ENABLED;
@@ -57,7 +60,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private Color[] noteColorByDynamics = new Color[Dynamics.values().length];
 	private Color[] badNoteColorByDynamics = new Color[Dynamics.values().length];
-	private int deltaVelocity = 0;
+	private boolean showingNoteVelocity = false;
+	private int deltaVolume = 0;
 
 	private JPanel indicatorLine;
 
@@ -151,21 +155,32 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		}
 	}
 
-	public void setDeltaVelocity(int volumeAdjust) {
-		if (this.deltaVelocity != volumeAdjust) {
-			this.deltaVelocity = volumeAdjust;
+	public void setDeltaVolume(int deltaVolume) {
+		if (this.deltaVolume != deltaVolume) {
+			this.deltaVolume = deltaVolume;
 			repaint();
 		}
 	}
 
-	public int getDeltaVelocity() {
-		return deltaVelocity;
+	public int getDeltaVolume() {
+		return deltaVolume;
 	}
 
 	public void setTrackInfo(TrackInfo trackInfo) {
 		this.trackInfo = trackInfo;
 		invalidateTransform();
 		repaint();
+	}
+
+	public void setShowingNoteVelocity(boolean showingNoteVelocity) {
+		if (this.showingNoteVelocity != showingNoteVelocity) {
+			this.showingNoteVelocity = showingNoteVelocity;
+			repaint();
+		}
+	}
+
+	public boolean isShowingNoteVelocity() {
+		return showingNoteVelocity;
 	}
 
 	protected List<NoteEvent> getEvents() {
@@ -332,9 +347,45 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double extraWidth,
 			double extraHeight) {
+		if (showingNoteVelocity) {
+			fillNoteVelocity(g2, ne);
+			return;
+		}
+
 		double width = Math.max(minWidth, ne.getLength());
 		double y = Util.clamp(noteId, MIN_RENDERED, MAX_RENDERED);
 		rectTmp.setRect(ne.startMicros - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2 * extraHeight);
+		g2.fill(rectTmp);
+	}
+
+	private void fillNoteVelocity(Graphics2D g2, NoteEvent ne) {
+		AffineTransform xform = getTransform();
+		double minWidth = NOTE_VELOCITY_MIN_WIDTH_PX / xform.getScaleX();
+		double minHeight = Math.abs(NOTE_VELOCITY_MIN_HEIGHT_PX / xform.getScaleY());
+
+		double width = Math.max(minWidth, ne.getLength());
+		int velocity = ne.velocity + deltaVolume;
+
+		if (velocity < Dynamics.MINIMUM.midiVol) {
+			velocity = Dynamics.MINIMUM.midiVol;
+			if (!noteOnColor.get().equals(g2.getColor()))
+				g2.setColor(badNoteColor.get());
+		}
+		else if (velocity > Dynamics.MAXIMUM.midiVol) {
+			velocity = Dynamics.MAXIMUM.midiVol;
+			if (!noteOnColor.get().equals(g2.getColor()))
+				g2.setColor(badNoteColor.get());
+		}
+		else {
+			velocity = Dynamics.fromMidiVelocity(velocity).midiVol;
+			if (!noteOnColor.get().equals(g2.getColor()))
+				g2.setColor(noteColor.get());
+		}
+
+		double height = ((double) velocity / MidiConstants.MAX_VOLUME) * (MAX_RENDERED - MIN_RENDERED - 2 * minHeight)
+				+ minHeight;
+
+		rectTmp.setRect(ne.startMicros, MIN_RENDERED, width, height);
 		g2.fill(rectTmp);
 	}
 
@@ -349,18 +400,18 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		hsb = Color.RGBtoHSB(base.getRed(), base.getGreen(), base.getBlue(), hsb);
 		// Adjust the brightness based on the volume dynamics
 		hsb[BRT] *= (1 - weight) + weight * dyn.midiVol / 128.0f;
-		
+
 		// If the brightness is nearing max, also reduce the saturation to enahance the effect
 		if (hsb[BRT] > 0.9f) {
 			hsb[SAT] = Math.max(0.0f, hsb[SAT] - (hsb[BRT] - 0.9f));
 			hsb[BRT] = Math.min(1.0f, hsb[BRT]);
 		}
-		
+
 		return new Color(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]));
 	}
-	
+
 	private Color getNoteColorEx(NoteEvent ne, Color baseColor, Color[] cachedColorByDynamics) {
-		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVelocity);
+		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVolume);
 		if (cachedColorByDynamics[dyn.ordinal()] == null) {
 			cachedColorByDynamics[dyn.ordinal()] = makeDynamicColor(baseColor, dyn, 0.25f);
 		}
@@ -370,7 +421,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	private Color getNoteColor(NoteEvent ne) {
 		return getNoteColorEx(ne, noteColor.get(), noteColorByDynamics);
 	}
-	
+
 	private Color getBadNoteColor(NoteEvent ne) {
 		return getNoteColorEx(ne, badNoteColor.get(), badNoteColorByDynamics);
 	}
@@ -408,7 +459,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 		g2.transform(xform);
 
-		if (octaveLinesVisible) {
+		if (octaveLinesVisible && !showingNoteVelocity) {
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
 			int minBarOctave = MIN_RENDERED / 12 + 1;
@@ -421,7 +472,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			}
 		}
 
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		// When showing the note velocities, snap to pixel boundaries
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, showingNoteVelocity ? RenderingHints.VALUE_ANTIALIAS_OFF
+				: RenderingHints.VALUE_ANTIALIAS_ON);
 
 		boolean showNotesOn = isShowingNotesOn() && songPos >= 0;
 		long minSongPos = songPos;
