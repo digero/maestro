@@ -205,7 +205,7 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 
 		public void mousePressed(MouseEvent e) {
-			if (isEnabled()) {
+			if (isEnabled() && e.getButton() == MouseEvent.BUTTON1) {
 				mouseDown = true;
 				deltaAtDragStart = value;
 				handleDrag(e);
@@ -214,12 +214,12 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 
 		public void mouseDragged(MouseEvent e) {
-			if (isEnabled() && mouseDown)
+			if (isEnabled() && mouseDown && (e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0)
 				handleDrag(e);
 		}
 
 		public void mouseReleased(MouseEvent e) {
-			if (isEnabled())
+			if (isEnabled() && e.getButton() == MouseEvent.BUTTON1)
 				endDrag(true);
 		}
 

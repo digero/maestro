@@ -103,13 +103,13 @@ public class Chord implements AbcConstants {
 	}
 
 	public Dynamics calcDynamics() {
-		int velocity = -1;
+		int velocity = Integer.MIN_VALUE;
 		for (NoteEvent ne : notes) {
 			if (ne.note != Note.REST && ne.tiesFrom == null && ne.velocity > velocity)
 				velocity = ne.velocity;
 		}
 
-		if (velocity == -1)
+		if (velocity == Integer.MIN_VALUE)
 			return null;
 
 		return Dynamics.fromMidiVelocity(velocity);

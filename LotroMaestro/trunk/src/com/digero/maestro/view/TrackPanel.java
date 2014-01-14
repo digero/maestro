@@ -207,7 +207,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			}
 		});
 
-		JPanel controlPanel = new JPanel(new BorderLayout(0, 8));
+		JPanel controlPanel = new JPanel(new BorderLayout(0, 4));
 		controlPanel.setOpaque(false);
 		if (transposeSpinner != null)
 			controlPanel.add(transposeSpinner, BorderLayout.CENTER);
@@ -422,7 +422,6 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		checkBox.setSelected(trackEnabled);
 
-		trackVolumeBar.setEnabled(trackEnabled);
 		trackVolumeBar.setVisible(trackEnabled || (abcPart.isDrumPart() == trackInfo.isDrumTrack()));
 
 		noteGraph.setShowingNoteVelocity(trackVolumeBar.isDragging());
