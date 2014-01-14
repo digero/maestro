@@ -27,7 +27,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import com.digero.common.abc.Dynamics;
-import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
@@ -48,8 +47,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	protected final double NOTE_HEIGHT_PX;
 	private final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
 	private final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
-	private final double NOTE_VELOCITY_MIN_WIDTH_PX = 1;
-	private final double NOTE_VELOCITY_MIN_HEIGHT_PX = 2;
+	private final double NOTE_VELOCITY_MIN_WIDTH_PX = 2;
+	private final double NOTE_VELOCITY_MIN_HEIGHT_PX = 6;
 
 	private ColorTable noteColor = ColorTable.NOTE_ENABLED;
 	private ColorTable badNoteColor = ColorTable.NOTE_BAD_ENABLED;
@@ -347,43 +346,23 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double extraWidth,
 			double extraHeight) {
-		if (showingNoteVelocity) {
-			fillNoteVelocity(g2, ne);
-			return;
-		}
-
 		double width = Math.max(minWidth, ne.getLength());
 		double y = Util.clamp(noteId, MIN_RENDERED, MAX_RENDERED);
 		rectTmp.setRect(ne.startMicros - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2 * extraHeight);
 		g2.fill(rectTmp);
 	}
 
-	private void fillNoteVelocity(Graphics2D g2, NoteEvent ne) {
+	private void fillNoteVelocity(Graphics2D g2, NoteEvent ne, Dynamics dynamics) {
+		int velocity = dynamics.midiVol;
+
 		AffineTransform xform = getTransform();
+
 		double minWidth = NOTE_VELOCITY_MIN_WIDTH_PX / xform.getScaleX();
-		double minHeight = Math.abs(NOTE_VELOCITY_MIN_HEIGHT_PX / xform.getScaleY());
-
 		double width = Math.max(minWidth, ne.getLength());
-		int velocity = ne.velocity + deltaVolume;
 
-		if (velocity < Dynamics.MINIMUM.midiVol) {
-			velocity = Dynamics.MINIMUM.midiVol;
-			if (!noteOnColor.get().equals(g2.getColor()))
-				g2.setColor(badNoteColor.get());
-		}
-		else if (velocity > Dynamics.MAXIMUM.midiVol) {
-			velocity = Dynamics.MAXIMUM.midiVol;
-			if (!noteOnColor.get().equals(g2.getColor()))
-				g2.setColor(badNoteColor.get());
-		}
-		else {
-			velocity = Dynamics.fromMidiVelocity(velocity).midiVol;
-			if (!noteOnColor.get().equals(g2.getColor()))
-				g2.setColor(noteColor.get());
-		}
-
-		double height = ((double) velocity / MidiConstants.MAX_VOLUME) * (MAX_RENDERED - MIN_RENDERED - 2 * minHeight)
-				+ minHeight;
+		double minHeight = Math.abs(NOTE_VELOCITY_MIN_HEIGHT_PX / xform.getScaleY());
+		double height = ((double) (velocity - Dynamics.MINIMUM.midiVol) / Dynamics.MAXIMUM.midiVol)
+				* (MAX_RENDERED - MIN_RENDERED - minHeight) + minHeight;
 
 		rectTmp.setRect(ne.startMicros, MIN_RENDERED, width, height);
 		g2.fill(rectTmp);
@@ -459,7 +438,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 		g2.transform(xform);
 
-		if (octaveLinesVisible && !showingNoteVelocity) {
+		if (octaveLinesVisible) {
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
 			int minBarOctave = MIN_RENDERED / 12 + 1;
@@ -472,9 +451,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			}
 		}
 
-		// When showing the note velocities, snap to pixel boundaries
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, showingNoteVelocity ? RenderingHints.VALUE_ANTIALIAS_OFF
-				: RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 		boolean showNotesOn = isShowingNotesOn() && songPos >= 0;
 		long minSongPos = songPos;
@@ -496,65 +473,131 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		if (notesBad != null)
 			notesBad.clear();
 
-		// Paint the playable notes and keep track of the currently sounding and unplayable notes
-		g2.setColor(noteColor.get());
-		for (int i = 0; i < noteEvents.size(); i++) {
-			NoteEvent ne = noteEvents.get(i);
+		if (!isShowingNoteVelocity()) {
+			// Normal rendering
 
-			// Don't bother drawing the note if it's clipped
-			if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
-				continue;
+			// Paint the playable notes and keep track of the currently sounding and unplayable notes
+			g2.setColor(noteColor.get());
+			for (int i = 0; i < noteEvents.size(); i++) {
+				NoteEvent ne = noteEvents.get(i);
 
-			if (isNoteVisible(ne)) {
-				int noteId = transposeNote(ne.note.id);
+				// Don't bother drawing the note if it's clipped
+				if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
+					continue;
 
-				if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
-						&& sequencer.isNoteActive(ne.note.id)) {
-					if (notesOn == null)
-						notesOn = new BitSet(noteEvents.size());
-					notesOn.set(i);
+				if (isNoteVisible(ne)) {
+					int noteId = transposeNote(ne.note.id);
+
+					if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
+							&& sequencer.isNoteActive(ne.note.id)) {
+						if (notesOn == null)
+							notesOn = new BitSet(noteEvents.size());
+						notesOn.set(i);
+					}
+					else if (!isNotePlayable(noteId)) {
+						if (notesBad == null)
+							notesBad = new BitSet(noteEvents.size());
+						notesBad.set(i);
+					}
+					else {
+						g2.setColor(getNoteColor(ne));
+						fillNote(g2, ne, noteId, minLength, height);
+					}
 				}
-				else if (!isNotePlayable(noteId)) {
-					if (notesBad == null)
-						notesBad = new BitSet(noteEvents.size());
-					notesBad.set(i);
-				}
-				else {
-					g2.setColor(getNoteColor(ne));
+			}
+
+			if (notesBad != null) {
+				for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1)) {
+					NoteEvent ne = noteEvents.get(i);
+					g2.setColor(getBadNoteColor(ne));
+					int noteId = transposeNote(ne.note.id);
 					fillNote(g2, ne, noteId, minLength, height);
 				}
 			}
-		}
 
-		if (notesBad != null) {
-			for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1)) {
-				NoteEvent ne = noteEvents.get(i);
-				g2.setColor(getBadNoteColor(ne));
-				int noteId = transposeNote(ne.note.id);
-				fillNote(g2, ne, noteId, minLength, height);
+			if (notesOn != null) {
+				double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
+				double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
+				double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
+
+				g2.setColor(noteOnBorder.get());
+				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
+					NoteEvent ne = noteEvents.get(i);
+					int noteId = transposeNote(ne.note.id);
+
+					fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY
+							+ noteOnOutlineWidthY);
+				}
+
+				g2.setColor(noteOnColor.get());
+				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
+					NoteEvent ne = noteEvents.get(i);
+					int noteId = transposeNote(ne.note.id);
+
+					fillNote(g2, noteEvents.get(i), noteId, minLength, height, 0, noteOnExtraHeightY);
+				}
 			}
 		}
+		else {
+			// Render the volume of each note instead of its note value
+			Dynamics[] dynamicsValues = Dynamics.values();
 
-		if (notesOn != null) {
-			double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
-			double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
-			double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
+			// Render from highest dynamics to lowest.
+			// Out of range notes are rendered with (d == dynamicsValues.length) and (d == -1)
+			for (int d = dynamicsValues.length; d >= -1; --d) {
+				for (int i = 0; i < noteEvents.size(); i++) {
+					NoteEvent ne = noteEvents.get(i);
 
-			g2.setColor(noteOnBorder.get());
-			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
-				NoteEvent ne = noteEvents.get(i);
-				int noteId = transposeNote(ne.note.id);
+					if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
+						continue;
 
-				fillNote(g2, noteEvents.get(i), noteId, minLength, height, noteOnOutlineWidthX, noteOnExtraHeightY
-						+ noteOnOutlineWidthY);
-			}
+					int velocity = ne.velocity + deltaVolume;
 
-			g2.setColor(noteOnColor.get());
-			for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
-				NoteEvent ne = noteEvents.get(i);
-				int noteId = transposeNote(ne.note.id);
+					Dynamics dynamicsRenderedInThisPass = null;
+					if (d == dynamicsValues.length)
+						dynamicsRenderedInThisPass = Dynamics.MAXIMUM;
+					else if (d == -1)
+						dynamicsRenderedInThisPass = Dynamics.MINIMUM;
+					else
+						dynamicsRenderedInThisPass = dynamicsValues[d];
 
-				fillNote(g2, noteEvents.get(i), noteId, minLength, height, 0, noteOnExtraHeightY);
+					boolean isOutOfRange = (velocity < Dynamics.MINIMUM.midiVol)
+							|| (velocity > Dynamics.MAXIMUM.midiVol);
+
+					// Note that we're rendering the "above max" dynamics in the *second* pass 
+					// (the first is d == dynamicsValues.length). This lets us render those bad 
+					// notes on top and makes them more visible.
+					if (d == dynamicsValues.length - 1) {
+						// Only rendering notes where (velocity > Dynamics.MAXIMUM.midiVol) in this pass
+						if (!(velocity > Dynamics.MAXIMUM.midiVol))
+							continue;
+					}
+					else if (d == -1) {
+						// Only rendering notes where (velocity < Dynamics.MINIMUM.midiVol) in this pass
+						if (!(velocity < Dynamics.MINIMUM.midiVol))
+							continue;
+					}
+					else if (isOutOfRange || Dynamics.fromMidiVelocity(velocity) != dynamicsRenderedInThisPass) {
+						// Only rendering notes that have the particular velocity in this pass
+						continue;
+					}
+
+					if (isNoteVisible(ne)) {
+						if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
+								&& sequencer.isNoteActive(ne.note.id)) {
+							g2.setColor(noteOnColor.get());
+							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
+						}
+						else if (isOutOfRange) {
+							g2.setColor(badNoteColor.get());
+							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
+						}
+						else {
+							g2.setColor(getNoteColor(ne));
+							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
+						}
+					}
+				}
 			}
 		}
 
