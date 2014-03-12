@@ -2,6 +2,7 @@ package com.digero.maestro.view;
 
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
+import info.clearthought.layout.TableLayoutConstraints;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -72,7 +73,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	static final int NOTE_COLUMN = 3;
 
 	static final int GUTTER_WIDTH = 8;
-	static final int TITLE_WIDTH = 164;
+	static final int TITLE_WIDTH = 150;
 	static final int CONTROL_WIDTH = 64;
 	private static final double[] LAYOUT_COLS = new double[] {
 			GUTTER_WIDTH, TITLE_WIDTH, CONTROL_WIDTH, FILL
@@ -88,6 +89,8 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 	private JPanel gutter;
 	private JCheckBox checkBox;
+	private TableLayoutConstraints checkBoxLayout_ControlsHidden;
+	private TableLayoutConstraints checkBoxLayout_ControlsVisible;
 	private JSpinner transposeSpinner;
 	private TrackVolumeBar trackVolumeBar;
 	private JPanel drumSavePanel;
@@ -213,8 +216,11 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			controlPanel.add(transposeSpinner, BorderLayout.CENTER);
 		controlPanel.add(trackVolumeBar, BorderLayout.SOUTH);
 
+		checkBoxLayout_ControlsHidden = new TableLayoutConstraints(TITLE_COLUMN, 0, CONTROL_COLUMN, 0);
+		checkBoxLayout_ControlsVisible = new TableLayoutConstraints(TITLE_COLUMN, 0);
+
 		add(gutter, GUTTER_COLUMN + ", 0, " + GUTTER_COLUMN + ", 1, f, f");
-		add(checkBox, TITLE_COLUMN + ", 0");
+		add(checkBox, checkBoxLayout_ControlsHidden);
 		add(controlPanel, CONTROL_COLUMN + ", 0, f, c");
 		add(noteGraph, NOTE_COLUMN + ", 0, " + NOTE_COLUMN + ", 1");
 
@@ -314,8 +320,12 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		String instr = trackInfo.getInstrumentNames();
 		checkBox.setToolTipText("<html><b>" + title + "</b><br>" + instr + "</html>");
 
-		title = Util.ellipsis(title, TITLE_WIDTH - ELLIPSIS_OFFSET, checkBox.getFont().deriveFont(Font.BOLD));
-		instr = Util.ellipsis(instr, TITLE_WIDTH - ELLIPSIS_OFFSET, checkBox.getFont());
+		int titleWidth = TITLE_WIDTH;
+		if (!trackVolumeBar.isVisible())
+			titleWidth += CONTROL_WIDTH;
+
+		title = Util.ellipsis(title, titleWidth - ELLIPSIS_OFFSET, checkBox.getFont().deriveFont(Font.BOLD));
+		instr = Util.ellipsis(instr, titleWidth - ELLIPSIS_OFFSET, checkBox.getFont());
 		checkBox.setText("<html><b>" + title + "</b><br>" + instr + "</html>");
 	}
 
@@ -422,7 +432,19 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		boolean trackEnabled = abcPart.isTrackEnabled(trackInfo.getTrackNumber());
 		checkBox.setSelected(trackEnabled);
 
-		trackVolumeBar.setVisible(trackEnabled || (abcPart.isDrumPart() == trackInfo.isDrumTrack()));
+		// Update the visibility of controls
+		trackVolumeBar.setVisible(trackEnabled);
+		if (transposeSpinner != null)
+			transposeSpinner.setVisible(trackEnabled && !abcPart.isDrumPart());
+
+		TableLayout layout = (TableLayout) getLayout();
+		TableLayoutConstraints newCheckBoxLayout = trackEnabled ? checkBoxLayout_ControlsVisible
+				: checkBoxLayout_ControlsHidden;
+
+		if (layout.getConstraints(checkBox) != newCheckBoxLayout) {
+			layout.setConstraints(checkBox, newCheckBoxLayout);
+			updateTitleText();
+		}
 
 		noteGraph.setShowingNoteVelocity(trackVolumeBar.isDragging());
 
@@ -432,8 +454,6 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		else {
 			noteGraph.setDeltaVolume(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 		}
-
-		noteGraph.setDeltaVolume(trackVolumeBar.getDeltaVolume());
 
 		boolean showDrumPanelsNew = abcPart.isDrumPart() && trackEnabled;
 		if (initDrumPanels || showDrumPanels != showDrumPanelsNew || wasDrumPart != abcPart.isDrumPart()) {
@@ -453,15 +473,11 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			if (drumSavePanel != null)
 				remove(drumSavePanel);
 
-			if (transposeSpinner != null)
-				transposeSpinner.setVisible(!abcPart.isDrumPart());
-
-			TableLayout layout = (TableLayout) getLayout();
 			if (showDrumPanels) {
 				if (drumSavePanel == null)
 					initDrumSavePanel();
 
-				add(drumSavePanel, TITLE_COLUMN + ", 1, l, c");
+				add(drumSavePanel, TITLE_COLUMN + ", 1," + CONTROL_COLUMN + ", 1, l, c");
 				int row = LAYOUT_ROWS.length;
 				for (int noteId : trackInfo.getNotesInUse()) {
 					DrumPanel panel = new DrumPanel(trackInfo, seq, abcPart, noteId, abcSequencer, trackVolumeBar);

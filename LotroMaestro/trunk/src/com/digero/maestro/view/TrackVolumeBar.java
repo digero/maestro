@@ -119,6 +119,7 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 
 		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (value - vMin) / (vMax - vMin));
 		int ctrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (vCtr - vMin) / (vMax - vMin));
+		ctrPos = ctrPos + PTR_WIDTH * (2 * ctrPos - getWidth()) / (2 * getWidth());
 
 		int fillStart = 0;
 		int fillWidth = ptrPos + PTR_WIDTH * (2 * ptrPos - getWidth()) / (2 * getWidth());
