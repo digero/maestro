@@ -199,6 +199,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		trackVolumeBar = new TrackVolumeBar(trackInfo.getMinVelocity(), trackInfo.getMaxVelocity());
 		trackVolumeBar.setToolTipText("Adjust this track's volume");
+		trackVolumeBar.setDeltaVolume(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 		trackVolumeBar.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
