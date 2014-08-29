@@ -153,9 +153,9 @@ public class TempoBar extends JPanel implements SequencerListener
 			else if (tempo > 0.9f && tempo < 1.1f)
 				tempo = 1.0f;
 			else if (tempo <= 1.0f)
-				tempo = (float) Math.round(tempo / 0.10f) * 0.10f;
+				tempo = Math.round(tempo / 0.10f) * 0.10f;
 			else
-				tempo = (float) Math.round(tempo / 0.10f) * 0.10f;
+				tempo = Math.round(tempo / 0.10f) * 0.10f;
 
 			return tempo;
 		}

@@ -252,12 +252,10 @@ public final class Util
 
 		// Handle the case where the window was last saved on
 		// a screen that is no longer connected
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] gs = ge.getScreenDevices();
 		Rectangle onScreen = null;
-		for (int i = 0; i < gs.length; i++)
+		for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices())
 		{
-			Rectangle monitorBounds = gs[i].getDefaultConfiguration().getBounds();
+			Rectangle monitorBounds = device.getDefaultConfiguration().getBounds();
 			if (monitorBounds.intersects(x, y, width, height))
 			{
 				onScreen = monitorBounds;

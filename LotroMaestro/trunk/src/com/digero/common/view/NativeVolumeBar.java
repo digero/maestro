@@ -56,7 +56,7 @@ public class NativeVolumeBar extends JPanel
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * callback.getVolume() / MAX_VOLUME);
+		int ptrPos = SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * callback.getVolume() / MAX_VOLUME;
 
 		final int x = 0;
 		final int y = (PTR_HEIGHT - BAR_HEIGHT) / 2;
@@ -104,14 +104,14 @@ public class NativeVolumeBar extends JPanel
 	{
 		private int getPosition(int x)
 		{
-			int pos = (int) ((x + 1 - SIDE_PAD) * MAX_VOLUME / (getWidth() - 2 * SIDE_PAD));
+			int pos = (x + 1 - SIDE_PAD) * MAX_VOLUME / (getWidth() - 2 * SIDE_PAD);
 			if (pos < 0)
 			{
 				pos = 0;
 			}
 			if (pos > MAX_VOLUME)
 			{
-				pos = (int) MAX_VOLUME;
+				pos = MAX_VOLUME;
 			}
 			return pos;
 		}
