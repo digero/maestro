@@ -91,6 +91,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		numberSpinnerModel = new SpinnerNumberModel(0, 0, 999, partAutoNumberer.getIncrement());
 		numberSpinner = new JSpinner(numberSpinnerModel);
 		numberSpinner.addChangeListener(new ChangeListener() {
+			@Override
 			public void stateChanged(ChangeEvent e) {
 				if (abcPart != null)
 					PartPanel.this.partAutoNumberer.setPartNumber(abcPart, (Integer) numberSpinner.getValue());
@@ -104,16 +105,19 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 		nameTextField = new JTextField(32);
 		nameTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
 			public void removeUpdate(DocumentEvent e) {
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
 			}
 
+			@Override
 			public void insertUpdate(DocumentEvent e) {
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
 			}
 
+			@Override
 			public void changedUpdate(DocumentEvent e) {
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
@@ -123,6 +127,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		instrumentComboBox = new JComboBox<LotroInstrument>();
 		instrumentComboBox.setMaximumRowCount(12);
 		instrumentComboBox.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (abcPart != null) {
 					LotroInstrument newInstrument = (LotroInstrument) instrumentComboBox.getSelectedItem();
@@ -178,6 +183,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
+		@Override
 		public void abcPartChanged(AbcPartEvent e) {
 			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
 				numberSpinner.setValue(abcPart.getPartNumber());

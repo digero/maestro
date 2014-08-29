@@ -217,6 +217,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		super(APP_NAME);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
 			public void run() {
 				if (sequencer != null)
 					sequencer.close();
@@ -235,6 +236,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				FileFilterDropListener l = (FileFilterDropListener) e.getSource();
 				boolean append = (l.getDropEvent().getDropAction() == DnDConstants.ACTION_COPY);
@@ -292,6 +294,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 								+ JAVA_URL + "</a>.</html>");
 						update.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 						update.addMouseListener(new MouseAdapter() {
+							@Override
 							public void mouseClicked(MouseEvent e) {
 								if (e.getButton() == MouseEvent.BUTTON1) {
 									Util.openURL(JAVA_URL);
@@ -367,6 +370,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		playButton = new JButton(playIcon);
 		playButton.setEnabled(false);
 		playButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				playPause();
 			}
@@ -375,6 +379,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		stopButton = new JButton(stopIcon);
 		stopButton.setEnabled(false);
 		stopButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				stop();
 			}
@@ -404,6 +409,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		controlPanel.add(barCountLabel, "9, 3, 11, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener() {
+			@Override
 			public void propertyChanged(SequencerEvent evt) {
 				SequencerProperty p = evt.getProperty();
 				if (!p.isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
@@ -539,6 +545,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		open.setMnemonic(KeyEvent.VK_O);
 		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
 		open.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				openSongDialog();
 			}
@@ -549,6 +556,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		openAppend.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK
 				| InputEvent.SHIFT_DOWN_MASK));
 		openAppend.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				appendSongDialog();
 			}
@@ -558,6 +566,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		pasteMenuItem.setMnemonic(KeyEvent.VK_P);
 		pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
 		pasteMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				ArrayList<File> files = new ArrayList<File>();
 				if (getFileListFromClipboard(files)) {
@@ -582,6 +591,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		pasteAppendMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK
 				| InputEvent.SHIFT_DOWN_MASK));
 		pasteAppendMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				ArrayList<File> files = new ArrayList<File>();
 				if (getFileListFromClipboard(files)) {
@@ -608,6 +618,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		saveMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK
 				| InputEvent.SHIFT_DOWN_MASK));
 		saveMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!sequencer.isLoaded()) {
 					Toolkit.getDefaultToolkit().beep();
@@ -621,6 +632,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		exportMp3MenuItem.setMnemonic(KeyEvent.VK_M);
 		exportMp3MenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
 		exportMp3MenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!sequencer.isLoaded() || isExporting) {
 					Toolkit.getDefaultToolkit().beep();
@@ -635,6 +647,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		exportWavMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK
 				| InputEvent.SHIFT_DOWN_MASK));
 		exportWavMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!sequencer.isLoaded() || isExporting) {
 					Toolkit.getDefaultToolkit().beep();
@@ -650,6 +663,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		exit.setMnemonic(KeyEvent.VK_X);
 		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_DOWN_MASK));
 		exit.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.exit(0);
 			}
@@ -690,6 +704,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		toolsMenu.add(lotroErrorsMenuItem = new JCheckBoxMenuItem("Ignore LOTRO-specific errors"));
 		lotroErrorsMenuItem.setSelected(prefs.getBoolean("ignoreLotroErrors", false));
 		lotroErrorsMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				prefs.putBoolean("ignoreLotroErrors", lotroErrorsMenuItem.isSelected());
 			}
@@ -700,6 +715,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				+ "panning them towards the left or right speaker.</html>");
 		stereoMenuItem.setSelected(prefs.getBoolean("stereoMenuItem", true));
 		stereoMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				prefs.putBoolean("stereoMenuItem", stereoMenuItem.isSelected());
 				refreshSequence();
@@ -710,6 +726,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		showFullPartNameMenuItem.setSelected(prefs.getBoolean("showFullPartNameMenuItem", false));
 		trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
 		showFullPartNameMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				prefs.putBoolean("showFullPartNameMenuItem", showFullPartNameMenuItem.isSelected());
 				trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
@@ -721,6 +738,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		JMenuItem about = toolsMenu.add(new JMenuItem("About " + APP_NAME + "..."));
 		about.setMnemonic(KeyEvent.VK_A);
 		about.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				AboutDialog.show(AbcPlayer.this, APP_NAME_LONG, APP_VERSION, APP_URL, "abcplayer_64.png");
 			}
@@ -916,6 +934,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			this.abcFiles = abcFiles;
 		}
 
+		@Override
 		public void run() {
 			if (append)
 				appendSong(abcFiles);
@@ -1249,6 +1268,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			this.waitFrame = waitFrame;
 		}
 
+		@Override
 		public void run() {
 			isExporting = true;
 			Exception error = null;
@@ -1280,6 +1300,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			this.waitFrame = waitFrame;
 		}
 
+		@Override
 		public void run() {
 			if (error != null) {
 				JOptionPane.showMessageDialog(AbcPlayer.this, error.getMessage(), "Error saving WAV file",
@@ -1362,6 +1383,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		JLabel hyperlink = new JLabel("<html><a href='" + LAME_URL + "'>" + LAME_URL + "</a></html>");
 		hyperlink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		hyperlink.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
 					Util.openURL(LAME_URL);
@@ -1374,10 +1396,12 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			if (i > 0) {
 				JFileChooser fc = new JFileChooser();
 				fc.setFileFilter(new FileFilter() {
+					@Override
 					public boolean accept(File f) {
 						return f.isDirectory() || f.getName().toLowerCase().equals("lame.exe");
 					}
 
+					@Override
 					public String getDescription() {
 						return "lame.exe";
 					}
@@ -1436,6 +1460,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				abcInfo.getComposer());
 		mp3Dialog.setIconImages(AbcPlayer.this.getIconImages());
 		mp3Dialog.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				ExportMp3Dialog dialog = (ExportMp3Dialog) e.getSource();
 				JDialog waitFrame = new WaitDialog(AbcPlayer.this, dialog.getSaveFile());
@@ -1457,6 +1482,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			this.waitFrame = waitFrame;
 		}
 
+		@Override
 		public void run() {
 			isExporting = true;
 			Exception error = null;
@@ -1501,6 +1527,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			this.waitFrame = waitFrame;
 		}
 
+		@Override
 		public void run() {
 			if (error != null) {
 				JOptionPane.showMessageDialog(AbcPlayer.this, error.getMessage(), "Error saving MP3 file",

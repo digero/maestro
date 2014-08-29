@@ -77,10 +77,12 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 		}
 
 		ALL_DRUMS = Collections.unmodifiableList(new ArrayList<LotroDrumInfo>(new AbstractCollection<LotroDrumInfo>() {
+			@Override
 			public Iterator<LotroDrumInfo> iterator() {
 				return new DrumInfoIterator();
 			}
 
+			@Override
 			public int size() {
 				return byId.size();
 			}
@@ -142,6 +144,7 @@ public class LotroDrumInfo implements Comparable<LotroDrumInfo> {
 			outerIter = byCategory.values().iterator();
 		}
 
+		@Override
 		public boolean hasNext() {
 			return outerIter.hasNext() || (innerIter != null && innerIter.hasNext());
 		}

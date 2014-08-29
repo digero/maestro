@@ -61,8 +61,8 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	public static SequenceInfo fromAbcParts(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm,
-			KeySignature key, long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException,
-			AbcConversionException {
+			KeySignature key, long songStartMicros, long songEndMicros, boolean useLotroInstruments)
+			throws InvalidMidiDataException, AbcConversionException {
 		return new SequenceInfo(parts, metadata, tm, key, songStartMicros, songEndMicros, useLotroInstruments);
 	}
 
@@ -120,7 +120,8 @@ public class SequenceInfo implements IMidiConstants {
 	}
 
 	private SequenceInfo(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm, KeySignature key,
-			long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException, AbcConversionException {
+			long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException,
+			AbcConversionException {
 
 		this.fileName = metadata.getSongTitle() + ".abc";
 		this.tempoBPM = tm.tempo;
@@ -142,7 +143,8 @@ public class SequenceInfo implements IMidiConstants {
 		this.endMicros = 0;
 		for (AbcPart part : parts) {
 			int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
-			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan, useLotroInstruments);
+			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan,
+					useLotroInstruments);
 
 			if (trackInfo.hasEvents()) {
 				this.endMicros = Math.max(this.endMicros,

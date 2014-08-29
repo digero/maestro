@@ -38,6 +38,7 @@ public class MaestroMain {
 		mainWindow = new ProjectFrame();
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		SwingUtilities.invokeAndWait(new Runnable() {
+			@Override
 			public void run() {
 				mainWindow.setVisible(true);
 				openSongFromCommandLine(args);
@@ -57,6 +58,7 @@ public class MaestroMain {
 	/** A new activation from WinRun4J (a.k.a. a file was opened) */
 	public static void activate(final String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				openSongFromCommandLine(args);
 			}
@@ -85,6 +87,7 @@ public class MaestroMain {
 	}
 
 	/** @deprecated Use isNativeVolumeSupported() instead. */
+	@Deprecated
 	public static native boolean isVolumeSupported();
 
 	public static boolean isNativeVolumeSupported() {

@@ -176,9 +176,11 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			}
 		}
 
+		@Override
 		public void mouseClicked(MouseEvent e) {
 		}
 
+		@Override
 		public void mousePressed(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
@@ -188,6 +190,7 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			requestFocus();
 		}
 
+		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
@@ -198,6 +201,7 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			setMouseHovering(e);
 		}
 
+		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
@@ -211,15 +215,18 @@ public class SongPositionBar extends JPanel implements SequencerListener {
 			setMouseHovering(e);
 		}
 
+		@Override
 		public void mouseMoved(MouseEvent e) {
 			if (!SongPositionBar.this.isEnabled())
 				return;
 			setMouseHovering(e);
 		}
 
+		@Override
 		public void mouseEntered(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseExited(MouseEvent e) {
 			if (mouseHovering) {
 				mouseHovering = false;

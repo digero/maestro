@@ -124,6 +124,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		checkBox.setSelected(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
 
 		checkBox.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				int track = trackInfo.getTrackNumber();
 				boolean enabled = checkBox.isSelected();
@@ -138,6 +139,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			private int soloAbcTrack = -1;
 			private int soloMidiTrack = -1;
 
+			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					int trackNumber = trackInfo.getTrackNumber();
@@ -164,6 +166,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 				}
 			}
 
+			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					if (abcSequencer != null && soloAbcTrack >= 0)
@@ -183,6 +186,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			transposeSpinner.setToolTipText("Transpose this track by octaves (12 semitones)");
 
 			transposeSpinner.addChangeListener(new ChangeListener() {
+				@Override
 				public void stateChanged(ChangeEvent e) {
 					int track = trackInfo.getTrackNumber();
 					int value = (Integer) transposeSpinner.getValue();
@@ -228,6 +232,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		updateTitleText();
 
 		abcPart.addAbcListener(abcListener = new AbcPartListener() {
+			@Override
 			public void abcPartChanged(AbcPartEvent e) {
 				if (e.isNoteGraphRelated()) {
 					updateState();
@@ -240,6 +245,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		});
 
 		seq.addChangeListener(seqListener = new SequencerListener() {
+			@Override
 			public void propertyChanged(SequencerEvent evt) {
 				if (evt.getProperty() == SequencerProperty.TRACK_ACTIVE) {
 					updateColors();
@@ -254,6 +260,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			abcSequencer.addChangeListener(seqListener);
 
 		addPropertyChangeListener("enabled", new PropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				updateState();
 			}
@@ -269,6 +276,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		LinkButton saveButton = new LinkButton("Export");
 		saveButton.setForeground(ColorTable.PANEL_LINK.get());
 		saveButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveDrumMapping();
 			}
@@ -280,6 +288,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		LinkButton loadButton = new LinkButton("Import");
 		loadButton.setForeground(ColorTable.PANEL_LINK.get());
 		loadButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				loadDrumMapping();
 			}
@@ -573,6 +582,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		return true;
 	}
 
+	@Override
 	public void discard() {
 		for (int i = getComponentCount() - 1; i >= 0; --i) {
 			Component child = getComponent(i);

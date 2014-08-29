@@ -37,6 +37,7 @@ public final class AboutDialog {
 				+ "</html>");
 		aboutMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		aboutMessage.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
 					Util.openURL(appUrl);

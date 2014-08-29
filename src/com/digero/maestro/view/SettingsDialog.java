@@ -69,6 +69,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		getRootPane().setDefaultButton(okButton);
 		okButton.setMnemonic('O');
 		okButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				success = true;
 				SettingsDialog.this.setVisible(false);
@@ -77,6 +78,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setMnemonic('C');
 		cancelButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				success = false;
 				SettingsDialog.this.setVisible(false);
@@ -87,6 +89,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 				CLOSE_WINDOW_ACTION);
 		getRootPane().getActionMap().put(CLOSE_WINDOW_ACTION, new AbstractAction() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				success = false;
 				SettingsDialog.this.setVisible(false);
@@ -247,16 +250,19 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 	private JPanel createNameTemplatePanel() {
 		final JTextField partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern(), 40);
 		partNameTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
 			public void removeUpdate(DocumentEvent e) {
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();
 			}
 
+			@Override
 			public void insertUpdate(DocumentEvent e) {
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();
 			}
 
+			@Override
 			public void changedUpdate(DocumentEvent e) {
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();

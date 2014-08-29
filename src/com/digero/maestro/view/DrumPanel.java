@@ -88,6 +88,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		checkBox = new JCheckBox();
 		checkBox.setSelected(abcPart.isDrumEnabled(trackInfo.getTrackNumber(), drumId));
 		checkBox.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				abcPart.setDrumEnabled(trackInfo.getTrackNumber(), drumId, checkBox.isSelected());
 			}
@@ -113,6 +114,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		drumComboBox.setSelectedItem(getSelectedDrum());
 		drumComboBox.setMaximumRowCount(20);
 		drumComboBox.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				LotroDrumInfo selected = (LotroDrumInfo) drumComboBox.getSelectedItem();
 				abcPart.getDrumMap(trackInfo.getTrackNumber()).set(drumId, selected.note.id);
@@ -131,6 +133,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			private int soloTrack = -1;
 			private int soloDrumId = -1;
 
+			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					int trackNumber = trackInfo.getTrackNumber();
@@ -153,6 +156,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 				}
 			}
 
+			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					if (soloAbcTrack >= 0 && soloAbcDrumId >= 0 && abcSequencer instanceof NoteFilterSequencerWrapper) {
@@ -180,6 +184,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		}
 
 		addPropertyChangeListener("enabled", new PropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				updateState();
 			}
@@ -205,6 +210,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
+		@Override
 		public void abcPartChanged(AbcPartEvent e) {
 			if (e.isNoteGraphRelated()) {
 				checkBox.setEnabled(abcPart.isTrackEnabled(trackInfo.getTrackNumber()));
@@ -216,6 +222,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	};
 
 	private SequencerListener sequencerListener = new SequencerListener() {
+		@Override
 		public void propertyChanged(SequencerEvent evt) {
 			if (evt.getProperty() == SequencerProperty.TRACK_ACTIVE)
 				updateState();

@@ -171,7 +171,7 @@ public class PartAutoNumberer {
 				int diff = getFirstNumber(a) - getFirstNumber(b);
 				if (diff != 0)
 					return diff;
-				
+
 				return a.toString().compareTo(b.toString());
 			}
 		});

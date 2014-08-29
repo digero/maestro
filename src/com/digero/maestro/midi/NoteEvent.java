@@ -64,19 +64,19 @@ public class NoteEvent implements Comparable<NoteEvent> {
 		assert tiesTo.endMicros > this.endMicros;
 		return tiesTo.getTieEnd();
 	}
-	
+
 	/**
-	 * Splits the NoteEvent into two events with a tie between them. 
+	 * Splits the NoteEvent into two events with a tie between them.
 	 * 
 	 * @param splitPointMicros The time index to split the NoteEvent.
 	 * @return The new NoteEvent that was created starting at splitPointMicros.
 	 */
 	public NoteEvent splitWithTie(long splitPointMicros) {
 		assert splitPointMicros > startMicros && splitPointMicros < endMicros;
-		
+
 		NoteEvent next = new NoteEvent(note, velocity, splitPointMicros, endMicros);
 		this.endMicros = splitPointMicros;
-		
+
 		if (note != Note.REST) {
 			if (this.tiesTo != null) {
 				next.tiesTo = this.tiesTo;
@@ -85,7 +85,7 @@ public class NoteEvent implements Comparable<NoteEvent> {
 			next.tiesFrom = this;
 			this.tiesTo = next;
 		}
-		
+
 		return next;
 	}
 

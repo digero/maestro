@@ -31,6 +31,7 @@ public class Colorizer extends JPanel {
 		picker = new JComboBox<ColorTable>(ColorTable.values());
 
 		picker.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				updateSpinners();
 			}
@@ -41,6 +42,7 @@ public class Colorizer extends JPanel {
 		brt = new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05);
 
 		ChangeListener cl = new ChangeListener() {
+			@Override
 			public void stateChanged(ChangeEvent e) {
 				if (!updating) {
 					float h = hue.getNumber().floatValue();

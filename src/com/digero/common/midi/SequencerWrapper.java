@@ -92,6 +92,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	}
 
 	private class TimerActionListener implements ActionListener {
+		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (sequencer != null && sequencer.isOpen()) {
 				long songPos = sequencer.getMicrosecondPosition();

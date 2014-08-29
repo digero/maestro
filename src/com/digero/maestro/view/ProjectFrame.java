@@ -243,6 +243,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		partPanel = new PartPanel(sequencer, partAutoNumberer, abcSequencer);
 		partPanel.addSettingsActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				doSettingsDialog(SettingsDialog.NUMBERING_TAB);
 			}
@@ -277,6 +278,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		transposeSpinner.setToolTipText("<html>Transpose the entire song by semitones.<br>"
 				+ "12 semitones = 1 octave</html>");
 		transposeSpinner.addChangeListener(new ChangeListener() {
+			@Override
 			public void stateChanged(ChangeEvent e) {
 				int transpose = getTranspose();
 				for (AbcPart part : parts) {
@@ -289,6 +291,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				960 /* max */, 1 /* step */));
 		tempoSpinner.setToolTipText("Tempo in beats per minute");
 		tempoSpinner.addChangeListener(new ChangeListener() {
+			@Override
 			public void stateChanged(ChangeEvent e) {
 				if (sequenceInfo != null) {
 					abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
@@ -309,6 +312,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		resetTempoButton.setMargin(new Insets(2, 8, 2, 8));
 		resetTempoButton.setToolTipText("Set the tempo back to the source file's tempo");
 		resetTempoButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (sequenceInfo == null) {
 					tempoSpinner.setValue(IMidiConstants.DEFAULT_TEMPO_BPM);
@@ -337,6 +341,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+S)</center></html>");
 		exportButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				exportAbc();
 			}
@@ -345,6 +350,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		partsList = new JList<AbcPart>(parts.getListModel());
 		partsList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		partsList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				AbcPart abcPart = partsList.getSelectedValue();
 				sequencer.getFilter().onAbcPartChanged(abcPart != null);
@@ -358,6 +364,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		newPartButton = new JButton("New Part");
 		newPartButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				createNewPart();
 			}
@@ -365,6 +372,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		deletePartButton = new JButton("Delete");
 		deletePartButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				deletePart(partsList.getSelectedIndex());
 			}
@@ -460,6 +468,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		volumePanel.add(volumeBar, "0, 1, f, c");
 
 		ActionListener modeButtonListener = new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				updatePreviewMode(abcModeRadioButton.isSelected());
 			}
@@ -482,6 +491,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		playButton = new JButton(playIcon);
 		playButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
 
@@ -499,6 +509,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		stopButton = new JButton(stopIcon);
 		stopButton.setToolTipText("Stop");
 		stopButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				abcSequencer.stop();
 				sequencer.stop();
@@ -553,9 +564,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi", "abc", "txt");
 		dropListener.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				final File file = dropListener.getDroppedFile();
 				SwingUtilities.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						openSong(file);
 					}
@@ -571,14 +584,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		abcSequencer.addChangeListener(abcSequencerListener);
 
 		parts.getListModel().addListDataListener(new ListDataListener() {
+			@Override
 			public void intervalRemoved(ListDataEvent e) {
 				updateButtons(false);
 			}
 
+			@Override
 			public void intervalAdded(ListDataEvent e) {
 				updateButtons(false);
 			}
 
+			@Override
 			public void contentsChanged(ListDataEvent e) {
 				updateButtons(false);
 			}
@@ -615,6 +631,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		openItem.addActionListener(new ActionListener() {
 			JFileChooser openFileChooser;
 
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (openFileChooser == null) {
 					openFileChooser = new JFileChooser(prefs.get("openFileChooser.path", null));
@@ -635,6 +652,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		exportMenuItem.setMnemonic('E');
 		exportMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
 		exportMenuItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				exportAbc();
 			}
@@ -646,6 +664,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		exitItem.setMnemonic('x');
 		exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.ALT_DOWN_MASK));
 		exitItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				switch (ProjectFrame.this.getDefaultCloseOperation()) {
 				case EXIT_ON_CLOSE:
@@ -670,6 +689,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		settingsItem.setMnemonic('O');
 		settingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK));
 		settingsItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				doSettingsDialog();
 			}
@@ -681,6 +701,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		aboutItem.setMnemonic('A');
 		aboutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
 		aboutItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				AboutDialog.show(ProjectFrame.this, MaestroMain.APP_NAME, MaestroMain.APP_VERSION, MaestroMain.APP_URL,
 						"maestro_64.png");
@@ -746,6 +767,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private class MainSequencerListener implements SequencerListener {
+		@Override
 		public void propertyChanged(SequencerEvent evt) {
 			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
@@ -775,6 +797,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private class AbcSequencerListener implements SequencerListener {
+		@Override
 		public void propertyChanged(SequencerEvent evt) {
 			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING) {
@@ -881,6 +904,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private boolean updateButtonsPending = false;
 	private Runnable updateButtonsTask = new Runnable() {
+		@Override
 		public void run() {
 			boolean hasAbcNotes = false;
 			for (AbcPart part : parts) {
@@ -940,6 +964,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private AbcPartListener abcPartListener = new AbcPartListener() {
+		@Override
 		public void abcPartChanged(AbcPartEvent e) {
 			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
 				int idx;
@@ -984,6 +1009,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>() {
+		@Override
 		public int compare(AbcPart p1, AbcPart p2) {
 			int base1 = partAutoNumberer.getFirstNumber(p1.getInstrument());
 			int base2 = partAutoNumberer.getFirstNumber(p2.getInstrument());
@@ -1170,6 +1196,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private boolean refreshPreviewPending = false;
 
 	private class RefreshPreviewTask implements Runnable {
+		@Override
 		public void run() {
 			if (refreshPreviewPending) {
 				if (!refreshPreviewSequence(true))

@@ -2,7 +2,6 @@ package com.digero.common.midi;
 
 import javax.sound.midi.MidiUnavailableException;
 
-
 public class NoteFilterSequencerWrapper extends SequencerWrapper {
 	private NoteFilterTransceiver filter;
 

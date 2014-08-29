@@ -53,6 +53,7 @@ public class FileFilterDropListener implements DropTargetListener {
 		return draggingFiles;
 	}
 
+	@Override
 	public void dragEnter(DropTargetDragEvent dtde) {
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
 		if (draggingFiles != null) {
@@ -63,12 +64,15 @@ public class FileFilterDropListener implements DropTargetListener {
 		}
 	}
 
+	@Override
 	public void dragExit(DropTargetEvent dte) {
 	}
 
+	@Override
 	public void dragOver(DropTargetDragEvent dtde) {
 	}
 
+	@Override
 	public void drop(DropTargetDropEvent dtde) {
 		if (draggingFiles != null) {
 			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
@@ -80,6 +84,7 @@ public class FileFilterDropListener implements DropTargetListener {
 		}
 	}
 
+	@Override
 	public void dropActionChanged(DropTargetDragEvent dtde) {
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
 		if (draggingFiles != null) {

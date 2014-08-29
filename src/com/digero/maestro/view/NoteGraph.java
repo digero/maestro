@@ -96,6 +96,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		setPreferredSize(new Dimension(200, 16));
 
 		addComponentListener(new ComponentAdapter() {
+			@Override
 			public void componentResized(ComponentEvent e) {
 				invalidateTransform();
 				repositionIndicator();
@@ -637,6 +638,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			return (pt.x < -32 || pt.x > dragArea.getWidth() + 32) || (pt.y < -32 || pt.y > dragArea.getHeight() + 32);
 		}
 
+		@Override
 		public void mousePressed(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON1 && trackInfo != null) {
 				sequencer.setDragging(true);
@@ -644,6 +646,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			}
 		}
 
+		@Override
 		public void mouseDragged(MouseEvent e) {
 			if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
 				if (!isDragCanceled(e)) {
@@ -656,6 +659,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			}
 		}
 
+		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON1) {
 				sequencer.setDragging(false);
