@@ -1,6 +1,7 @@
 package com.digero.common.abc;
 
-public class QuantizationInfo {
+public class QuantizationInfo
+{
 	// TODO
 //	private 
 }

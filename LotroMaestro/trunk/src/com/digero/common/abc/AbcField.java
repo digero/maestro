@@ -3,7 +3,8 @@ package com.digero.common.abc;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum AbcField {
+public enum AbcField
+{
 	SONG_TITLE, //
 	SONG_COMPOSER, //
 	SONG_DURATION, //
@@ -15,11 +16,13 @@ public enum AbcField {
 	PART_NAME, //
 	;
 
-	private static class MetaData {
+	private static class MetaData
+	{
 		private static Map<String, Integer> longestByPrefix = new HashMap<String, Integer>();
 	}
 
-	private AbcField() {
+	private AbcField()
+	{
 		String name = getFormattedName();
 		String prefix = getPrefix(name);
 		Integer maxLength = MetaData.longestByPrefix.get(prefix);
@@ -27,7 +30,8 @@ public enum AbcField {
 			MetaData.longestByPrefix.put(prefix, name.length());
 	}
 
-	public static AbcField fromString(String string) {
+	public static AbcField fromString(String string)
+	{
 		if (string.startsWith("%%"))
 			string = string.substring(2);
 
@@ -37,19 +41,21 @@ public enum AbcField {
 			string = string.substring(0, space);
 
 		string = string.toLowerCase();
-		for (AbcField f : values()) {
+		for (AbcField f : values())
+		{
 			if (f.getFormattedName().equals(string))
 				return f;
 		}
 		return null;
 	}
 
-	public String getFormattedName() {
+	public String getFormattedName()
+	{
 		return name().toLowerCase().replace('_', '-');
 	}
 
-	@Override
-	public String toString() {
+	@Override public String toString()
+	{
 		String name = getFormattedName();
 		Integer maxLength = MetaData.longestByPrefix.get(getPrefix(name));
 		int paddedLength = 1 + ((maxLength == null) ? name.length() : maxLength);
@@ -57,14 +63,16 @@ public enum AbcField {
 		StringBuilder output = new StringBuilder(2 + paddedLength);
 		output.append("%%");
 		output.append(name);
-		for (int i = name.length(); i < paddedLength; i++) {
+		for (int i = name.length(); i < paddedLength; i++)
+		{
 			output.append(' ');
 		}
 
 		return output.toString();
 	}
 
-	private static String getPrefix(String s) {
+	private static String getPrefix(String s)
+	{
 		int dash = s.indexOf('-');
 		if (dash > 0)
 			s = s.substring(0, dash);

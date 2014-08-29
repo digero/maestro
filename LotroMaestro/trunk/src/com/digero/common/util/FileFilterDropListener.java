@@ -14,114 +14,135 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileFilterDropListener implements DropTargetListener {
+public class FileFilterDropListener implements DropTargetListener
+{
 	private FileFilter filter;
 	private boolean acceptMultiple;
 	private List<File> draggingFiles = null;
 	private List<ActionListener> listeners = null;
 	private DropTargetDropEvent dropEvent = null;
 
-	public FileFilterDropListener(boolean acceptMultiple, String... fileTypes) {
+	public FileFilterDropListener(boolean acceptMultiple, String... fileTypes)
+	{
 		this(acceptMultiple, new ExtensionFileFilter("", fileTypes));
 	}
 
-	public FileFilterDropListener(boolean acceptMultiple, FileFilter filter) {
+	public FileFilterDropListener(boolean acceptMultiple, FileFilter filter)
+	{
 		this.acceptMultiple = acceptMultiple;
 		this.filter = filter;
 	}
 
-	public void addActionListener(ActionListener l) {
+	public void addActionListener(ActionListener l)
+	{
 		if (listeners == null)
 			listeners = new ArrayList<ActionListener>(1);
 
 		listeners.add(l);
 	}
 
-	public void removeActionListener(ActionListener l) {
+	public void removeActionListener(ActionListener l)
+	{
 		if (listeners != null)
 			listeners.remove(l);
 	}
 
-	public File getDroppedFile() {
+	public File getDroppedFile()
+	{
 		if (draggingFiles == null || draggingFiles.isEmpty())
 			return null;
 
 		return draggingFiles.get(0);
 	}
 
-	public List<File> getDroppedFiles() {
+	public List<File> getDroppedFiles()
+	{
 		return draggingFiles;
 	}
 
-	@Override
-	public void dragEnter(DropTargetDragEvent dtde) {
+	@Override public void dragEnter(DropTargetDragEvent dtde)
+	{
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
-		if (draggingFiles != null) {
+		if (draggingFiles != null)
+		{
 			dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
 		}
-		else {
+		else
+		{
 			dtde.rejectDrag();
 		}
 	}
 
-	@Override
-	public void dragExit(DropTargetEvent dte) {
+	@Override public void dragExit(DropTargetEvent dte)
+	{
 	}
 
-	@Override
-	public void dragOver(DropTargetDragEvent dtde) {
+	@Override public void dragOver(DropTargetDragEvent dtde)
+	{
 	}
 
-	@Override
-	public void drop(DropTargetDropEvent dtde) {
-		if (draggingFiles != null) {
+	@Override public void drop(DropTargetDropEvent dtde)
+	{
+		if (draggingFiles != null)
+		{
 			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
 			fireActionPerformed(dtde);
 			draggingFiles = null;
 		}
-		else {
+		else
+		{
 			dtde.rejectDrop();
 		}
 	}
 
-	@Override
-	public void dropActionChanged(DropTargetDragEvent dtde) {
+	@Override public void dropActionChanged(DropTargetDragEvent dtde)
+	{
 		draggingFiles = getMatchingFiles(dtde.getTransferable());
-		if (draggingFiles != null) {
+		if (draggingFiles != null)
+		{
 			dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
 		}
-		else {
+		else
+		{
 			dtde.rejectDrag();
 		}
 	}
 
-	public DropTargetDropEvent getDropEvent() {
+	public DropTargetDropEvent getDropEvent()
+	{
 		return dropEvent;
 	}
 
-	private void fireActionPerformed(DropTargetDropEvent dtde) {
+	private void fireActionPerformed(DropTargetDropEvent dtde)
+	{
 		this.dropEvent = dtde;
-		for (ActionListener l : listeners) {
+		for (ActionListener l : listeners)
+		{
 			l.actionPerformed(new ActionEvent(this, 0, null));
 		}
 		this.dropEvent = null;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<File> getMatchingFiles(Transferable t) {
-		if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+	@SuppressWarnings("unchecked")//
+	private List<File> getMatchingFiles(Transferable t)
+	{
+		if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+		{
 			List<File> files;
-			try {
+			try
+			{
 				files = (List<File>) t.getTransferData(DataFlavor.javaFileListFlavor);
 			}
-			catch (Exception e) {
+			catch (Exception e)
+			{
 				return null;
 			}
 
 			if (files.isEmpty() || !acceptMultiple && files.size() > 1)
 				return null;
 
-			for (File file : files) {
+			for (File file : files)
+			{
 				file = Util.resolveShortcut(file);
 
 				if (file.isDirectory() || !filter.accept(file))
@@ -130,7 +151,8 @@ public class FileFilterDropListener implements DropTargetListener {
 
 			return files;
 		}
-		else {
+		else
+		{
 			return null;
 		}
 	}

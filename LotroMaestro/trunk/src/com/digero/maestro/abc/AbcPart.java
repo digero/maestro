@@ -31,7 +31,8 @@ import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 
-public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable {
+public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable
+{
 	private SequenceInfo sequenceInfo;
 	private boolean enabled = true;
 	private int partNumber = 1;
@@ -47,7 +48,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	private int previewSequenceTrackNumber = -1;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
 
-	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcProject ownerProject, AbcMetadataSource metadata) {
+	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcProject ownerProject, AbcMetadataSource metadata)
+	{
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
 		this.ownerProject = ownerProject;
@@ -63,8 +65,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	public void exportToMidi(Sequence out, TimingInfo tm, long songStartMicros, long songEndMicros, int pan,
-			boolean useLotroInstruments) throws AbcConversionException {
-		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution()) {
+			boolean useLotroInstruments) throws AbcConversionException
+	{
+		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != tm.getMidiResolution())
+		{
 			throw new AbcConversionException("Sequence has incorrect timing data");
 		}
 
@@ -72,7 +76,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		exportToMidi(out, tm, chords, pan, useLotroInstruments);
 	}
 
-	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan, boolean useLotroInstruments) {
+	public int exportToMidi(Sequence out, TimingInfo tm, List<Chord> chords, int pan, boolean useLotroInstruments)
+	{
 		int trackNumber = previewSequenceTrackNumber = out.getTracks().length;
 		int channel = trackNumber;
 		if (channel >= MidiConstants.DRUM_CHANNEL)
@@ -92,11 +97,13 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		if (!useLotroInstruments)
 			noteDelta = instrument.octaveDelta * 12;
 
-		for (Chord chord : chords) {
+		for (Chord chord : chords)
+		{
 			Dynamics dynamics = chord.calcDynamics();
 			if (dynamics == null)
 				dynamics = Dynamics.DEFAULT;
-			for (int j = 0; j < chord.size(); j++) {
+			for (int j = 0; j < chord.size(); j++)
+			{
 				NoteEvent ne = chord.get(j);
 				// Skip rests and notes that are the continuation of a tied note
 				if (ne.note == Note.REST || ne.tiesFrom != null)
@@ -104,7 +111,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 				// Add note off events for any notes that have been turned off by this point
 				Iterator<NoteEvent> onIter = notesOn.iterator();
-				while (onIter.hasNext()) {
+				while (onIter.hasNext())
+				{
 					NoteEvent on = onIter.next();
 
 					// Shorten the note to end at the same time that the next one starts
@@ -112,7 +120,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					if (on.note.id == ne.note.id && on.endMicros > ne.startMicros)
 						endMicros = ne.startMicros;
 
-					if (endMicros <= ne.startMicros) {
+					if (endMicros <= ne.startMicros)
+					{
 						// This note has been turned off
 						onIter.remove();
 						track.add(MidiFactory.createNoteOffEvent(on.note.id + noteDelta, channel,
@@ -135,7 +144,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 			}
 		}
 
-		for (NoteEvent on : notesOn) {
+		for (NoteEvent on : notesOn)
+		{
 			track.add(MidiFactory.createNoteOffEvent(on.note.id + noteDelta, channel, tm.getMidiTicks(on.endMicros)));
 		}
 
@@ -143,22 +153,26 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	public TrackInfo exportToPreview(SequenceInfo sequenceInfo, TimingInfo tm, KeySignature key, long songStartMicros,
-			long songEndMicros, int pan, boolean useLotroInstruments) throws AbcConversionException {
+			long songEndMicros, int pan, boolean useLotroInstruments) throws AbcConversionException
+	{
 
 		List<Chord> chords = combineAndQuantize(tm, false, songStartMicros, songEndMicros);
 
 		int trackNumber = exportToMidi(sequenceInfo.getSequence(), tm, chords, pan, useLotroInstruments);
 
 		List<NoteEvent> noteEvents = new ArrayList<NoteEvent>(chords.size());
-		for (Chord chord : chords) {
-			for (int i = 0; i < chord.size(); i++) {
+		for (Chord chord : chords)
+		{
+			for (int i = 0; i < chord.size(); i++)
+			{
 				NoteEvent ne = chord.get(i);
 				// Skip rests and notes that are the continuation of a tied note
 				if (ne.note == Note.REST || ne.tiesFrom != null)
 					continue;
 
 				// Convert tied notes into a single note event
-				if (ne.tiesTo != null) {
+				if (ne.tiesTo != null)
+				{
 					ne.endMicros = ne.getTieEnd().endMicros;
 					ne.tiesTo = null;
 					// Not fixing up the ne.tiesTo.tiesFrom pointer since we that for the    
@@ -173,14 +187,16 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	public String exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros)
-			throws AbcConversionException {
+			throws AbcConversionException
+	{
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		exportToAbc(tm, key, songStartMicros, songEndMicros, os);
 		return os.toString();
 	}
 
 	public void exportToAbc(TimingInfo tm, KeySignature key, long songStartMicros, long songEndMicros, OutputStream os)
-			throws AbcConversionException {
+			throws AbcConversionException
+	{
 		List<Chord> chords = combineAndQuantize(tm, true, songStartMicros, songEndMicros);
 
 		if (key.sharpsFlats != 0)
@@ -196,7 +212,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 		out.println(AbcField.PART_NAME + title.trim());
 
-		if (metadata != null) {
+		if (metadata != null)
+		{
 			if (metadata.getComposer().length() > 0)
 				out.println("C: " + metadata.getComposer());
 
@@ -223,14 +240,17 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		Dynamics curDyn = null;
 		Dynamics initDyn = null;
 
-		for (Chord c : chords) {
+		for (Chord c : chords)
+		{
 			initDyn = c.calcDynamics();
 			if (initDyn != null)
 				break;
 		}
 
-		for (Chord c : chords) {
-			if (c.size() == 0) {
+		for (Chord c : chords)
+		{
+			if (c.size() == 0)
+			{
 				System.err.println("Chord has no notes!");
 				continue;
 			}
@@ -238,10 +258,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 			c.sort();
 
 			// Is this the start of a new bar?
-			if (barNumber != (c.getStartMicros() / tm.barLength)) {
+			if (barNumber != (c.getStartMicros() / tm.barLength))
+			{
 				barNumber = c.getStartMicros() / tm.barLength;
 
-				if (barNumber % 10 == 0) {
+				if (barNumber % 10 == 0)
+				{
 					out.println();
 					out.print("% Bar " + barNumber);
 					if (barNumber > 1)
@@ -249,7 +271,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					out.println();
 					lineLength = 0;
 				}
-				else if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH) {
+				else if (lineLength > 0 && (lineLength + bar.length()) > LINE_LENGTH)
+				{
 					out.println();
 					lineLength = 0;
 				}
@@ -261,9 +284,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				bar.setLength(length);
 
 				// Insert line breaks inside very long bars
-				for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH) {
-					for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
-						if (bar.charAt(i) == ' ') {
+				for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH)
+				{
+					for (int j = 0; j < BAR_LENGTH - 1; j++, i--)
+					{
+						if (bar.charAt(i) == ' ')
+						{
 							bar.replace(i, i + 1, "\r\n\t");
 							i += "\r\n\t".length() - 1;
 							break;
@@ -282,38 +308,46 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 			Dynamics newDyn = (initDyn != null) ? initDyn : c.calcDynamics();
 			initDyn = null;
-			if (newDyn != null && newDyn != curDyn) {
+			if (newDyn != null && newDyn != curDyn)
+			{
 				bar.append('+').append(newDyn).append("+ ");
 				curDyn = newDyn;
 			}
 
-			if (c.size() > 1) {
+			if (c.size() > 1)
+			{
 				bar.append('[');
 			}
 
 			int notesWritten = 0;
-			for (int j = 0; j < c.size(); j++) {
+			for (int j = 0; j < c.size(); j++)
+			{
 				NoteEvent evt = c.get(j);
-				if (evt.getLength() == 0) {
+				if (evt.getLength() == 0)
+				{
 					System.err.println("Zero-length note");
 					continue;
 				}
 
 				String noteAbc = evt.note.abc;
-				if (evt.note != Note.REST) {
-					if (evt.note.isSharp()) {
+				if (evt.note != Note.REST)
+				{
+					if (evt.note.isSharp())
+					{
 						if (sharps[evt.note.naturalId])
 							noteAbc = Note.fromId(evt.note.naturalId).abc;
 						else
 							sharps[evt.note.naturalId] = true;
 					}
-					else if (evt.note.isFlat()) {
+					else if (evt.note.isFlat())
+					{
 						if (flats[evt.note.naturalId])
 							noteAbc = Note.fromId(evt.note.naturalId).abc;
 						else
 							flats[evt.note.naturalId] = true;
 					}
-					else if (sharps[evt.note.id] || flats[evt.note.id]) {
+					else if (sharps[evt.note.id] || flats[evt.note.id])
+					{
 						sharps[evt.note.id] = false;
 						flats[evt.note.id] = false;
 						bar.append('=');
@@ -327,10 +361,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				int gcd = Util.gcd(numerator, denominator);
 				numerator /= gcd;
 				denominator /= gcd;
-				if (numerator != 1) {
+				if (numerator != 1)
+				{
 					bar.append(numerator);
 				}
-				if (denominator != 1) {
+				if (denominator != 1)
+				{
 					bar.append('/');
 					if (numerator != 1 || denominator != 2)
 						bar.append(denominator);
@@ -342,12 +378,15 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				notesWritten++;
 			}
 
-			if (c.size() > 1) {
-				if (notesWritten == 0) {
+			if (c.size() > 1)
+			{
+				if (notesWritten == 0)
+				{
 					// Remove the [
 					bar.delete(bar.length() - 1, bar.length());
 				}
-				else {
+				else
+				{
 					bar.append(']');
 				}
 			}
@@ -356,9 +395,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 
 		// Insert line breaks
-		for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH) {
-			for (int j = 0; j < BAR_LENGTH - 1; j++, i--) {
-				if (bar.charAt(i) == ' ') {
+		for (int i = BAR_LENGTH; i < bar.length(); i += BAR_LENGTH)
+		{
+			for (int j = 0; j < BAR_LENGTH - 1; j++, i--)
+			{
+				if (bar.charAt(i) == ' ')
+				{
 					bar.replace(i, i + 1, "\r\n");
 					i++;
 					break;
@@ -378,19 +420,24 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	 * chords.
 	 */
 	private List<Chord> combineAndQuantize(TimingInfo tm, boolean addTies, final long songStartMicros,
-			final long songEndMicros) throws AbcConversionException {
+			final long songEndMicros) throws AbcConversionException
+	{
 
 		// Combine the events from the enabled tracks
 		List<NoteEvent> events = new ArrayList<NoteEvent>();
-		for (int t = 0; t < getTrackCount(); t++) {
-			if (isTrackEnabled(t)) {
-				for (NoteEvent ne : getTrackEvents(t)) {
+		for (int t = 0; t < getTrackCount(); t++)
+		{
+			if (isTrackEnabled(t))
+			{
+				for (NoteEvent ne : getTrackEvents(t))
+				{
 					// Skip notes that are outside of the play range.
 					if (ne.endMicros <= songStartMicros || ne.startMicros >= songEndMicros)
 						continue;
 
 					Note mappedNote = mapNote(t, ne.note.id);
-					if (mappedNote != null) {
+					if (mappedNote != null)
+					{
 						assert mappedNote.id >= instrument.lowestPlayable.id : mappedNote;
 						assert mappedNote.id <= instrument.highestPlayable.id : mappedNote;
 						long start = Math.max(ne.startMicros, songStartMicros) - songStartMicros;
@@ -408,26 +455,32 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		Collections.sort(events);
 
 		// Add initial rest if necessary
-		if (events.get(0).startMicros > 0) {
+		if (events.get(0).startMicros > 0)
+		{
 			events.add(0, new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, 0, events.get(0).startMicros));
 		}
 
 		// Add a rest at the end if necessary
-		if (songEndMicros < Long.MAX_VALUE) {
+		if (songEndMicros < Long.MAX_VALUE)
+		{
 			NoteEvent lastEvent = events.get(events.size() - 1);
 			long songLengthMicros = songEndMicros - songStartMicros;
-			if (lastEvent.endMicros < songLengthMicros) {
-				if (lastEvent.note == Note.REST) {
+			if (lastEvent.endMicros < songLengthMicros)
+			{
+				if (lastEvent.note == Note.REST)
+				{
 					lastEvent.endMicros = songLengthMicros;
 				}
-				else {
+				else
+				{
 					events.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, lastEvent.endMicros, songLengthMicros));
 				}
 			}
 		}
 
 		// Quantize the events
-		for (NoteEvent ne : events) {
+		for (NoteEvent ne : events)
+		{
 			ne.startMicros = ((ne.startMicros + tm.minNoteLength / 2) / tm.minNoteLength) * tm.minNoteLength;
 			ne.endMicros = ((ne.endMicros + tm.minNoteLength / 2) / tm.minNoteLength) * tm.minNoteLength;
 
@@ -439,17 +492,22 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		// Remove duplicate notes
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();
 		Iterator<NoteEvent> neIter = events.iterator();
-		dupLoop: while (neIter.hasNext()) {
+		dupLoop: while (neIter.hasNext())
+		{
 			NoteEvent ne = neIter.next();
 			Iterator<NoteEvent> onIter = notesOn.iterator();
-			while (onIter.hasNext()) {
+			while (onIter.hasNext())
+			{
 				NoteEvent on = onIter.next();
-				if (on.endMicros < ne.startMicros) {
+				if (on.endMicros < ne.startMicros)
+				{
 					// This note has already been turned off
 					onIter.remove();
 				}
-				else if (on.note.id == ne.note.id) {
-					if (on.startMicros == ne.startMicros) {
+				else if (on.note.id == ne.note.id)
+				{
+					if (on.startMicros == ne.startMicros)
+					{
 						// If they start at the same time, remove the second event.
 						// Lengthen the first one if it's shorter than the second one.
 						if (on.endMicros < ne.endMicros)
@@ -459,7 +517,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 						neIter.remove();
 						continue dupLoop;
 					}
-					else {
+					else
+					{
 						// Otherwise, if they don't start at the same time:
 						// 1. Lengthen the second note if necessary, so it doesn't end before 
 						//    the first note would have ended.
@@ -484,30 +543,37 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		// Combine notes that play at the same time into chords
 		Chord curChord = new Chord(events.get(0));
 		chords.add(curChord);
-		for (int i = 1; i < events.size(); i++) {
+		for (int i = 1; i < events.size(); i++)
+		{
 			NoteEvent ne = events.get(i);
-			if (curChord.getStartMicros() == ne.startMicros) {
+			if (curChord.getStartMicros() == ne.startMicros)
+			{
 				// This note starts at the same time as the rest of the notes in the chord
-				if (!curChord.add(ne)) {
+				if (!curChord.add(ne))
+				{
 					// Couldn't add the note (too many notes in the chord)
 					removeNote(events, i);
 					i--;
 				}
 			}
-			else {
+			else
+			{
 				// Create a new chord
 				Chord nextChord = new Chord(ne);
 
-				if (addTies) {
+				if (addTies)
+				{
 					// The curChord has all the notes it will get. But before continuing, 
 					// normalize the chord so that all notes end at the same time and end 
 					// before the next chord starts.
 					boolean reprocessCurrentNote = false;
 					long targetEndMicros = Math.min(nextChord.getStartMicros(), curChord.getEndMicros());
 
-					for (int j = 0; j < curChord.size(); j++) {
+					for (int j = 0; j < curChord.size(); j++)
+					{
 						NoteEvent jne = curChord.get(j);
-						if (jne.endMicros > targetEndMicros) {
+						if (jne.endMicros > targetEndMicros)
+						{
 							// This note extends past the end of the chord; break it into two tied notes
 							NoteEvent next = jne.splitWithTie(targetEndMicros);
 
@@ -527,12 +593,14 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					if (targetEndMicros < curChord.getEndMicros())
 						curChord.recalcEndMicros();
 
-					if (reprocessCurrentNote) {
+					if (reprocessCurrentNote)
+					{
 						i--;
 						continue;
 					}
 				}
-				else {
+				else
+				{
 					// If we're note allowed to add ties, use the old method of shortening the 
 					// chord by inserting a short rest. 
 
@@ -540,15 +608,18 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					// the current chord is finished, so we may need to add a rest inside the chord to
 					// shorten it, or a rest after the chord to add a pause.
 
-					if (curChord.getEndMicros() > nextChord.getStartMicros()) {
+					if (curChord.getEndMicros() > nextChord.getStartMicros())
+					{
 						// Make sure there's room to add the rest
-						while (curChord.size() >= Chord.MAX_CHORD_NOTES) {
+						while (curChord.size() >= Chord.MAX_CHORD_NOTES)
+						{
 							removeNote(events, curChord.remove(curChord.size() - 1));
 						}
 					}
 
 					// Check the chord length again, since removing a note might have changed its length
-					if (curChord.getEndMicros() > nextChord.getStartMicros()) {
+					if (curChord.getEndMicros() > nextChord.getStartMicros())
+					{
 						// If the chord is too long, add a short rest in the chord to shorten it
 						curChord.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getStartMicros(),
 								nextChord.getStartMicros()));
@@ -556,7 +627,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				}
 
 				// Insert a rest between the chords if needed
-				if (curChord.getEndMicros() < nextChord.getStartMicros()) {
+				if (curChord.getEndMicros() < nextChord.getStartMicros())
+				{
 					tmpEvents.clear();
 					tmpEvents.add(new NoteEvent(Note.REST, Dynamics.DEFAULT.midiVol, curChord.getEndMicros(), nextChord
 							.getStartMicros()));
@@ -574,25 +646,29 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return chords;
 	}
 
-	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean addTies) {
-		for (int i = 0; i < events.size(); i++) {
+	private void breakLongNotes(List<NoteEvent> events, TimingInfo tm, boolean addTies)
+	{
+		for (int i = 0; i < events.size(); i++)
+		{
 			NoteEvent ne = events.get(i);
 
 			// Make a hard break for notes that are longer than LotRO can play
+			// Bagpipe notes up to B, can sustain indefinitey; don't break them
 			long maxNoteEnd = ne.startMicros + tm.maxNoteLength;
-			if (ne.endMicros > maxNoteEnd
-			//      Bagpipe notes up to B, can sustain indefinitey; don't break them
-					&& !(getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= Note.B2.id)) {
+			if (ne.endMicros > maxNoteEnd && !(getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= Note.B2.id))
+			{
 
 				// Align with a bar boundary if it extends across 1 or more full bars.
-				if (tm.getBarEnd(ne.startMicros) < tm.getBarStart(maxNoteEnd)) {
+				if (tm.getBarEnd(ne.startMicros) < tm.getBarStart(maxNoteEnd))
+				{
 					maxNoteEnd = tm.getBarStart(maxNoteEnd);
 					assert ne.endMicros > maxNoteEnd;
 				}
 
 				// If the note is a rest or sustainable, add another one after 
 				// this ends to keep it going...
-				if (ne.note == Note.REST || instrument.isSustainable(ne.note.id)) {
+				if (ne.note == Note.REST || instrument.isSustainable(ne.note.id))
+				{
 					NoteEvent next = new NoteEvent(ne.note, ne.velocity, maxNoteEnd, ne.endMicros);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
@@ -607,7 +683,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 					 * note to be a short blast. LOTRO won't complain about a
 					 * note being too long if it's part of a tie.
 					 */
-					if (next.getLength() < tm.barLength && ne.note != Note.REST) {
+					if (next.getLength() < tm.barLength && ne.note != Note.REST)
+					{
 						next.tiesFrom = ne;
 						ne.tiesTo = next;
 					}
@@ -616,10 +693,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				ne.endMicros = maxNoteEnd;
 			}
 
-			if (addTies) {
+			if (addTies)
+			{
 				// Make a soft break (tie) for notes that cross bar boundaries
 				long barEnd = tm.getBarEnd(ne.startMicros);
-				if (ne.endMicros > barEnd) {
+				if (ne.endMicros > barEnd)
+				{
 					NoteEvent next = ne.splitWithTie(barEnd);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
@@ -632,39 +711,46 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	/** Removes a note and breaks any ties the note has. */
-	private void removeNote(List<NoteEvent> events, int i) {
+	private void removeNote(List<NoteEvent> events, int i)
+	{
 		NoteEvent ne = events.remove(i);
 
 		// If the note is tied from another (previous) note, break the incoming tie
-		if (ne.tiesFrom != null) {
+		if (ne.tiesFrom != null)
+		{
 			ne.tiesFrom.tiesTo = null;
 			ne.tiesFrom = null;
 		}
 
 		// Remove the remainder of the notes that this is tied to (if any)
-		for (NoteEvent neTie = ne.tiesTo; neTie != null; neTie = neTie.tiesTo) {
+		for (NoteEvent neTie = ne.tiesTo; neTie != null; neTie = neTie.tiesTo)
+		{
 			events.remove(neTie);
 		}
 	}
 
 	/** Removes a note and breaks any ties the note has. */
-	private void removeNote(List<NoteEvent> events, NoteEvent ne) {
+	private void removeNote(List<NoteEvent> events, NoteEvent ne)
+	{
 		removeNote(events, events.indexOf(ne));
 	}
 
-	@Override
-	public void discard() {
+	@Override public void discard()
+	{
 		changeListeners.clear();
 		sequenceInfo = null;
-		for (int i = 0; i < drumNoteMap.length; i++) {
-			if (drumNoteMap[i] != null) {
+		for (int i = 0; i < drumNoteMap.length; i++)
+		{
+			if (drumNoteMap[i] != null)
+			{
 				drumNoteMap[i].removeChangeListener(drumMapChangeListener);
 				drumNoteMap[i] = null;
 			}
 		}
 	}
 
-	protected List<NoteEvent> getTrackEvents(int track) {
+	protected List<NoteEvent> getTrackEvents(int track)
+	{
 		return sequenceInfo.getTrackInfo(track).getEvents();
 	}
 
@@ -672,8 +758,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	 * Maps from a MIDI note to an ABC note. If no mapping is available, returns
 	 * <code>null</code>.
 	 */
-	public Note mapNote(int track, int noteId) {
-		if (isDrumPart()) {
+	public Note mapNote(int track, int noteId)
+	{
+		if (isDrumPart())
+		{
 			if (!isTrackEnabled(track) || !isDrumEnabled(track, noteId))
 				return null;
 
@@ -687,7 +775,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 			return (dstNote == LotroDrumInfo.DISABLED.note.id) ? null : Note.fromId(dstNote);
 		}
-		else {
+		else
+		{
 			noteId += getTranspose(track);
 			while (noteId < instrument.lowestPlayable.id)
 				noteId += 12;
@@ -697,13 +786,18 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	}
 
-	public long firstNoteStart() {
+	public long firstNoteStart()
+	{
 		long start = Long.MAX_VALUE;
 
-		for (int t = 0; t < getTrackCount(); t++) {
-			if (isTrackEnabled(t)) {
-				for (NoteEvent ne : getTrackEvents(t)) {
-					if (mapNote(t, ne.note.id) != null) {
+		for (int t = 0; t < getTrackCount(); t++)
+		{
+			if (isTrackEnabled(t))
+			{
+				for (NoteEvent ne : getTrackEvents(t))
+				{
+					if (mapNote(t, ne.note.id) != null)
+					{
 						if (ne.startMicros < start)
 							start = ne.startMicros;
 						break;
@@ -715,20 +809,25 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return start;
 	}
 
-	public long lastNoteEnd(boolean accountForSustain) {
+	public long lastNoteEnd(boolean accountForSustain)
+	{
 		long end = Long.MIN_VALUE;
 
 		// The last note to start playing isn't necessarily the last note to end.
 		// Check the last several notes to find the one that ends last.
 		int notesToCheck = 1000;
 
-		for (int t = 0; t < getTrackCount(); t++) {
-			if (isTrackEnabled(t)) {
+		for (int t = 0; t < getTrackCount(); t++)
+		{
+			if (isTrackEnabled(t))
+			{
 				List<NoteEvent> evts = getTrackEvents(t);
 				ListIterator<NoteEvent> iter = evts.listIterator(evts.size());
-				while (iter.hasPrevious()) {
+				while (iter.hasPrevious())
+				{
 					NoteEvent ne = iter.previous();
-					if (mapNote(t, ne.note.id) != null) {
+					if (mapNote(t, ne.note.id) != null)
+					{
 						long noteEnd;
 						if (!accountForSustain || instrument.isSustainable(ne.note.id))
 							noteEnd = ne.endMicros;
@@ -748,61 +847,70 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return end;
 	}
 
-	public AbcProject getOwnerProject() {
+	public AbcProject getOwnerProject()
+	{
 		return ownerProject;
 	}
 
-	public SequenceInfo getSequenceInfo() {
+	public SequenceInfo getSequenceInfo()
+	{
 		return sequenceInfo;
 	}
 
-	public int getTrackCount() {
+	public int getTrackCount()
+	{
 		return sequenceInfo.getTrackCount();
 	}
 
-	@Override
-	public String getTitle() {
+	@Override public String getTitle()
+	{
 		return title;
 	}
 
-	@Override
-	public String toString() {
+	@Override public String toString()
+	{
 		String val = getPartNumber() + ". " + getTitle();
 		if (getEnabledTrackCount() == 0)
 			val += "*";
 		return val;
 	}
 
-	public void setTitle(String name) {
+	public void setTitle(String name)
+	{
 		if (name == null)
 			throw new NullPointerException();
 
-		if (!this.title.equals(name)) {
+		if (!this.title.equals(name))
+		{
 			this.title = name;
 			fireChangeEvent(AbcPartProperty.TITLE);
 		}
 	}
 
-	public LotroInstrument[] getSupportedInstruments() {
+	public LotroInstrument[] getSupportedInstruments()
+	{
 		//return LotroInstrument.getNonDrumInstruments();
 		return LotroInstrument.values();
 	}
 
-	@Override
-	public LotroInstrument getInstrument() {
+	@Override public LotroInstrument getInstrument()
+	{
 		return instrument;
 	}
 
-	@Override
-	public void setInstrument(LotroInstrument instrument) {
+	@Override public void setInstrument(LotroInstrument instrument)
+	{
 		if (instrument == null)
 			throw new NullPointerException();
 
-		if (this.instrument != instrument) {
+		if (this.instrument != instrument)
+		{
 			this.instrument = instrument;
 			boolean affectsPreview = false;
-			for (boolean enabled : trackEnabled) {
-				if (enabled) {
+			for (boolean enabled : trackEnabled)
+			{
+				if (enabled)
+				{
 					affectsPreview = true;
 					break;
 				}
@@ -811,113 +919,140 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	}
 
-	public boolean isEnabled() {
+	public boolean isEnabled()
+	{
 		return enabled;
 	}
 
-	public void setEnabled(boolean partEnabled) {
-		if (this.enabled != partEnabled) {
+	public void setEnabled(boolean partEnabled)
+	{
+		if (this.enabled != partEnabled)
+		{
 			this.enabled = partEnabled;
 			fireChangeEvent(AbcPartProperty.ENABLED);
 		}
 	}
 
-	public int getBaseTranspose() {
+	public int getBaseTranspose()
+	{
 		return isDrumPart() ? 0 : baseTranspose;
 	}
 
-	public void setBaseTranspose(int baseTranspose) {
-		if (this.baseTranspose != baseTranspose) {
+	public void setBaseTranspose(int baseTranspose)
+	{
+		if (this.baseTranspose != baseTranspose)
+		{
 			this.baseTranspose = baseTranspose;
 			fireChangeEvent(AbcPartProperty.BASE_TRANSPOSE, !isDrumPart() /* affectsAbcPreview */);
 		}
 	}
 
-	public int getTrackTranspose(int track) {
+	public int getTrackTranspose(int track)
+	{
 		return isDrumPart() ? 0 : trackTranspose[track];
 	}
 
-	public void setTrackTranspose(int track, int transpose) {
-		if (trackTranspose[track] != transpose) {
+	public void setTrackTranspose(int track, int transpose)
+	{
+		if (trackTranspose[track] != transpose)
+		{
 			trackTranspose[track] = transpose;
 			fireChangeEvent(AbcPartProperty.TRACK_TRANSPOSE, isTrackEnabled(track) /* previewRelated */, track);
 		}
 	}
 
-	public int getTranspose(int track) {
+	public int getTranspose(int track)
+	{
 		return getBaseTranspose() + getTrackTranspose(track) - getInstrument().octaveDelta * 12;
 	}
 
-	public boolean isTrackEnabled(int track) {
+	public boolean isTrackEnabled(int track)
+	{
 		return trackEnabled[track];
 	}
 
-	public void setTrackEnabled(int track, boolean enabled) {
-		if (trackEnabled[track] != enabled) {
+	public void setTrackEnabled(int track, boolean enabled)
+	{
+		if (trackEnabled[track] != enabled)
+		{
 			trackEnabled[track] = enabled;
 			enabledTrackCount += enabled ? 1 : -1;
 			fireChangeEvent(AbcPartProperty.TRACK_ENABLED, track);
 		}
 	}
 
-	public int getTrackVolumeAdjust(int track) {
+	public int getTrackVolumeAdjust(int track)
+	{
 		return trackVolumeAdjust[track];
 	}
 
-	public void setTrackVolumeAdjust(int track, int volumeAdjust) {
-		if (trackVolumeAdjust[track] != volumeAdjust) {
+	public void setTrackVolumeAdjust(int track, int volumeAdjust)
+	{
+		if (trackVolumeAdjust[track] != volumeAdjust)
+		{
 			trackVolumeAdjust[track] = volumeAdjust;
 			fireChangeEvent(AbcPartProperty.VOLUME_ADJUST, track);
 		}
 	}
 
-	public int getEnabledTrackCount() {
+	public int getEnabledTrackCount()
+	{
 		return enabledTrackCount;
 	}
 
-	public int getPreviewSequenceTrackNumber() {
+	public int getPreviewSequenceTrackNumber()
+	{
 		return previewSequenceTrackNumber;
 	}
 
-	@Override
-	public int getPartNumber() {
+	@Override public int getPartNumber()
+	{
 		return partNumber;
 	}
 
-	@Override
-	public void setPartNumber(int partNumber) {
-		if (this.partNumber != partNumber) {
+	@Override public void setPartNumber(int partNumber)
+	{
+		if (this.partNumber != partNumber)
+		{
 			this.partNumber = partNumber;
 			fireChangeEvent(AbcPartProperty.PART_NUMBER);
 		}
 	}
 
-	public void addAbcListener(AbcPartListener l) {
+	public void addAbcListener(AbcPartListener l)
+	{
 		changeListeners.add(l);
 	}
 
-	public void removeAbcListener(AbcPartListener l) {
+	public void removeAbcListener(AbcPartListener l)
+	{
 		changeListeners.remove(l);
 	}
 
-	protected void fireChangeEvent(AbcPartProperty property) {
+	protected void fireChangeEvent(AbcPartProperty property)
+	{
 		fireChangeEvent(property, property.isAbcPreviewRelated(), AbcPartEvent.NO_TRACK_NUMBER);
 	}
 
-	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated) {
+	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated)
+	{
 		fireChangeEvent(property, abcPreviewRelated, AbcPartEvent.NO_TRACK_NUMBER);
 	}
 
-	protected void fireChangeEvent(AbcPartProperty property, int trackNumber) {
+	protected void fireChangeEvent(AbcPartProperty property, int trackNumber)
+	{
 		fireChangeEvent(property, property.isAbcPreviewRelated(), trackNumber);
 	}
 
-	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated, int trackNumber) {
-		if (changeListeners.size() > 0) {
+	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated, int trackNumber)
+	{
+		if (changeListeners.size() > 0)
+		{
 			AbcPartEvent e = new AbcPartEvent(this, property, abcPreviewRelated, trackNumber);
 			// Listener list might be modified in the callback
 			List<AbcPartListener> listenerListCopy = new ArrayList<AbcPartListener>(changeListeners);
-			for (AbcPartListener l : listenerListCopy) {
+			for (AbcPartListener l : listenerListCopy)
+			{
 				l.abcPartChanged(e);
 			}
 		}
@@ -927,15 +1062,18 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	// DRUMS
 	//
 
-	public boolean isDrumPart() {
+	public boolean isDrumPart()
+	{
 		return instrument.isPercussion;
 	}
 
-	public boolean isCowbellPart() {
+	public boolean isCowbellPart()
+	{
 		return instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL;
 	}
 
-	public boolean isDrumTrack(int track) {
+	public boolean isDrumTrack(int track)
+	{
 		return sequenceInfo.getTrackInfo(track).isDrumTrack();
 	}
 
@@ -944,13 +1082,17 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	private BitSet[] cowbellsEnabled;
 	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
-	public DrumNoteMap getDrumMap(int track) {
-		if (drumNoteMap[track] == null) {
+	public DrumNoteMap getDrumMap(int track)
+	{
+		if (drumNoteMap[track] == null)
+		{
 			// For non-drum tracks, just use a straight pass-through
-			if (!sequenceInfo.getTrackInfo(track).isDrumTrack()) {
+			if (!sequenceInfo.getTrackInfo(track).isDrumTrack())
+			{
 				drumNoteMap[track] = new PassThroughDrumNoteMap();
 			}
-			else {
+			else
+			{
 				drumNoteMap[track] = new DrumNoteMap();
 				drumNoteMap[track].load(drumPrefs);
 			}
@@ -959,10 +1101,12 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return drumNoteMap[track];
 	}
 
-	private final ChangeListener drumMapChangeListener = new ChangeListener() {
-		@Override
-		public void stateChanged(ChangeEvent e) {
-			if (e.getSource() instanceof DrumNoteMap) {
+	private final ChangeListener drumMapChangeListener = new ChangeListener()
+	{
+		@Override public void stateChanged(ChangeEvent e)
+		{
+			if (e.getSource() instanceof DrumNoteMap)
+			{
 				DrumNoteMap map = (DrumNoteMap) e.getSource();
 
 				// Don't write pass-through drum maps to the prefs node 
@@ -976,17 +1120,20 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	};
 
-	public boolean isDrumPlayable(int track, int drumId) {
+	public boolean isDrumPlayable(int track, int drumId)
+	{
 		if (isCowbellPart())
 			return true;
 
 		return getDrumMap(track).get(drumId) != LotroDrumInfo.DISABLED.note.id;
 	}
 
-	public boolean isDrumEnabled(int track, int drumId) {
+	public boolean isDrumEnabled(int track, int drumId)
+	{
 		BitSet[] enabledSet = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
 
-		if (enabledSet == null || enabledSet[track] == null) {
+		if (enabledSet == null || enabledSet[track] == null)
+		{
 			return !isCowbellPart() || (drumId == MidiConstants.COWBELL_DRUM_ID)
 					|| !sequenceInfo.getTrackInfo(track).isDrumTrack();
 		}
@@ -994,17 +1141,22 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return enabledSet[track].get(drumId);
 	}
 
-	public void setDrumEnabled(int track, int drumId, boolean enabled) {
-		if (isDrumEnabled(track, drumId) != enabled) {
-			if (drumsEnabled == null) {
+	public void setDrumEnabled(int track, int drumId, boolean enabled)
+	{
+		if (isDrumEnabled(track, drumId) != enabled)
+		{
+			if (drumsEnabled == null)
+			{
 				drumsEnabled = new BitSet[getTrackCount()];
 			}
-			if (cowbellsEnabled == null) {
+			if (cowbellsEnabled == null)
+			{
 				cowbellsEnabled = new BitSet[getTrackCount()];
 			}
 
 			BitSet[] enabledSet = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
-			if (enabledSet[track] == null) {
+			if (enabledSet[track] == null)
+			{
 				enabledSet[track] = new BitSet(MidiConstants.NOTE_COUNT);
 				if (isCowbellPart())
 					enabledSet[track].set(MidiConstants.COWBELL_DRUM_ID, true);

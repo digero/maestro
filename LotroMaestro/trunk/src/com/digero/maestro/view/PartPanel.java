@@ -43,7 +43,8 @@ import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.TrackInfo;
 
 @SuppressWarnings("serial")
-public class PartPanel extends JPanel implements ICompileConstants, TableLayoutConstants {
+public class PartPanel extends JPanel implements ICompileConstants, TableLayoutConstants
+{
 	private static final int HGAP = 4, VGAP = 4;
 
 	private AbcPart abcPart;
@@ -71,12 +72,11 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 	private boolean initialized = false;
 
 	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer,
-			SequencerWrapper abcSequencer) {
-		super(new TableLayout(new double[] {
-			FILL,
-		}, new double[] {
-				PREFERRED, FILL
-		}));
+			SequencerWrapper abcSequencer)
+	{
+		super(new TableLayout(//
+				new double[] { FILL },//
+				new double[] { PREFERRED, FILL }));
 
 		TableLayout layout = (TableLayout) getLayout();
 		layout.setHGap(HGAP);
@@ -90,9 +90,10 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 		numberSpinnerModel = new SpinnerNumberModel(0, 0, 999, partAutoNumberer.getIncrement());
 		numberSpinner = new JSpinner(numberSpinnerModel);
-		numberSpinner.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
+		numberSpinner.addChangeListener(new ChangeListener()
+		{
+			@Override public void stateChanged(ChangeEvent e)
+			{
 				if (abcPart != null)
 					PartPanel.this.partAutoNumberer.setPartNumber(abcPart, (Integer) numberSpinner.getValue());
 			}
@@ -104,21 +105,22 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		numberSettingsButton.setVisible(false);
 
 		nameTextField = new JTextField(32);
-		nameTextField.getDocument().addDocumentListener(new DocumentListener() {
-			@Override
-			public void removeUpdate(DocumentEvent e) {
+		nameTextField.getDocument().addDocumentListener(new DocumentListener()
+		{
+			@Override public void removeUpdate(DocumentEvent e)
+			{
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
 			}
 
-			@Override
-			public void insertUpdate(DocumentEvent e) {
+			@Override public void insertUpdate(DocumentEvent e)
+			{
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
 			}
 
-			@Override
-			public void changedUpdate(DocumentEvent e) {
+			@Override public void changedUpdate(DocumentEvent e)
+			{
 				if (abcPart != null)
 					abcPart.setTitle(nameTextField.getText());
 			}
@@ -126,10 +128,12 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 		instrumentComboBox = new JComboBox<LotroInstrument>();
 		instrumentComboBox.setMaximumRowCount(12);
-		instrumentComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (abcPart != null) {
+		instrumentComboBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				if (abcPart != null)
+				{
 					LotroInstrument newInstrument = (LotroInstrument) instrumentComboBox.getSelectedItem();
 					PartPanel.this.partAutoNumberer.setInstrument(abcPart, newInstrument);
 					String title = abcPart.getTitle();
@@ -177,40 +181,50 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		initialized = true;
 	}
 
-	public void addSettingsActionListener(ActionListener listener) {
+	public void addSettingsActionListener(ActionListener listener)
+	{
 		numberSettingsButton.addActionListener(listener);
 		numberSettingsButton.setVisible(true);
 	}
 
-	private AbcPartListener abcPartListener = new AbcPartListener() {
-		@Override
-		public void abcPartChanged(AbcPartEvent e) {
-			if (e.getProperty() == AbcPartProperty.PART_NUMBER) {
+	private AbcPartListener abcPartListener = new AbcPartListener()
+	{
+		@Override public void abcPartChanged(AbcPartEvent e)
+		{
+			if (e.getProperty() == AbcPartProperty.PART_NUMBER)
+			{
 				numberSpinner.setValue(abcPart.getPartNumber());
 			}
 		}
 	};
 
-	public void settingsChanged() {
+	public void settingsChanged()
+	{
 		numberSpinnerModel.setStepSize(partAutoNumberer.getIncrement());
 	}
 
-	public void setAbcPart(AbcPart abcPart) {
+	public void setAbcPart(AbcPart abcPart)
+	{
 		messageLabel.setVisible(false);
 
 		if (this.abcPart == abcPart && initialized)
 			return;
 
-		if (this.abcPart != null) {
-			try {
+		if (this.abcPart != null)
+		{
+			try
+			{
 				numberSpinner.commitEdit();
 			}
-			catch (ParseException e) {}
+			catch (ParseException e)
+			{
+			}
 			this.abcPart.removeAbcListener(abcPartListener);
 			this.abcPart = null;
 		}
 
-		if (abcPart == null) {
+		if (abcPart == null)
+		{
 			numberSpinner.setEnabled(false);
 			nameTextField.setEnabled(false);
 			instrumentComboBox.setEnabled(false);
@@ -223,7 +237,8 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 			clearTrackListPanel();
 		}
-		else {
+		else
+		{
 			numberSpinner.setEnabled(true);
 			nameTextField.setEnabled(true);
 			instrumentComboBox.setEnabled(true);
@@ -236,9 +251,11 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 			clearTrackListPanel();
 
-			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList()) {
+			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList())
+			{
 				int trackNumber = track.getTrackNumber();
-				if (track.hasEvents()) {
+				if (track.hasEvents())
+				{
 					TrackPanel trackPanel = new TrackPanel(track, sequencer, abcPart, abcSequencer);
 					trackPanel.setAbcPreviewMode(isAbcPreviewMode);
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(trackPanel.getPreferredSize().height);
@@ -258,7 +275,8 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		}
 
 		this.abcPart = abcPart;
-		if (this.abcPart != null) {
+		if (this.abcPart != null)
+		{
 			this.abcPart.addAbcListener(abcPartListener);
 		}
 
@@ -267,50 +285,63 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		repaint();
 	}
 
-	public void setAbcPreviewMode(boolean isAbcPreviewMode) {
-		if (this.isAbcPreviewMode != isAbcPreviewMode) {
+	public void setAbcPreviewMode(boolean isAbcPreviewMode)
+	{
+		if (this.isAbcPreviewMode != isAbcPreviewMode)
+		{
 			this.isAbcPreviewMode = isAbcPreviewMode;
-			for (Component child : trackListPanel.getComponents()) {
-				if (child instanceof TrackPanel) {
+			for (Component child : trackListPanel.getComponents())
+			{
+				if (child instanceof TrackPanel)
+				{
 					((TrackPanel) child).setAbcPreviewMode(isAbcPreviewMode);
 				}
-				else if (child instanceof DrumPanel) {
+				else if (child instanceof DrumPanel)
+				{
 					((DrumPanel) child).setAbcPreviewMode(isAbcPreviewMode);
 				}
 			}
 		}
 	}
 
-	public boolean isAbcPreviewMode() {
+	public boolean isAbcPreviewMode()
+	{
 		return isAbcPreviewMode;
 	}
 
-	public void showInfoMessage(String message) {
+	public void showInfoMessage(String message)
+	{
 		setAbcPart(null);
 
 		messageLabel.setText(message);
 		messageLabel.setVisible(true);
 	}
 
-	private void updateTracksVisible() {
+	private void updateTracksVisible()
+	{
 		if (abcPart == null)
 			return;
 
 		boolean percussion = abcPart.getInstrument().isPercussion;
 		boolean setHeight = false;
 
-		for (Component child : trackListPanel.getComponents()) {
-			if (child instanceof TrackPanel) {
+		for (Component child : trackListPanel.getComponents())
+		{
+			if (child instanceof TrackPanel)
+			{
 				TrackPanel trackPanel = (TrackPanel) child;
 				child.setEnabled(percussion || trackPanel.getTrackInfo().hasEvents());
-				if (!setHeight && !percussion) {
+				if (!setHeight && !percussion)
+				{
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(child.getPreferredSize().height);
 					setHeight = true;
 				}
 			}
-			else if (child instanceof DrumPanel) {
+			else if (child instanceof DrumPanel)
+			{
 				child.setVisible(percussion);
-				if (!setHeight && percussion) {
+				if (!setHeight && percussion)
+				{
 					trackScrollPane.getVerticalScrollBar().setUnitIncrement(child.getPreferredSize().height);
 					setHeight = true;
 				}
@@ -318,9 +349,12 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		}
 	}
 
-	private void clearTrackListPanel() {
-		for (Component child : trackListPanel.getComponents()) {
-			if (child instanceof IDiscardable) {
+	private void clearTrackListPanel()
+	{
+		for (Component child : trackListPanel.getComponents())
+		{
+			if (child instanceof IDiscardable)
+			{
 				((IDiscardable) child).discard();
 			}
 		}
@@ -329,7 +363,8 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		trackListLayout.setHorizontalGroup(trackListHGroup = trackListLayout.createParallelGroup());
 	}
 
-	public void setSequencer(NoteFilterSequencerWrapper sequencer) {
+	public void setSequencer(NoteFilterSequencerWrapper sequencer)
+	{
 		AbcPart abcPartTmp = this.abcPart;
 		setAbcPart(null);
 		this.sequencer = sequencer;

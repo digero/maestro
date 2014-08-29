@@ -24,7 +24,8 @@ import com.digero.common.util.IDiscardable;
 import com.digero.common.util.ParseException;
 import com.digero.maestro.MaestroMain;
 
-public class DrumNoteMap implements IDiscardable {
+public class DrumNoteMap implements IDiscardable
+{
 	public static final String FILE_SUFFIX = "drummap.txt";
 	protected static final byte DISABLED_NOTE_ID = (byte) LotroDrumInfo.DISABLED.note.id;
 	private static final String MAP_PREFS_KEY = "DrumNoteMap.map";
@@ -32,14 +33,17 @@ public class DrumNoteMap implements IDiscardable {
 	private byte[] map = null;
 	private List<ChangeListener> listeners = null;
 
-	public byte get(int midiNoteId) {
-		if (midiNoteId < Byte.MIN_VALUE || midiNoteId > Byte.MAX_VALUE) {
+	public byte get(int midiNoteId)
+	{
+		if (midiNoteId < Byte.MIN_VALUE || midiNoteId > Byte.MAX_VALUE)
+		{
 			throw new IllegalArgumentException();
 		}
 		return get((byte) midiNoteId);
 	}
 
-	public byte get(byte midiNoteId) {
+	public byte get(byte midiNoteId)
+	{
 		// Map hasn't been initialized yet, use defaults
 		if (map == null)
 			return getDefaultMapping(midiNoteId);
@@ -47,32 +51,39 @@ public class DrumNoteMap implements IDiscardable {
 		return map[midiNoteId];
 	}
 
-	public void set(int midiNoteId, int value) {
+	public void set(int midiNoteId, int value)
+	{
 		if ((midiNoteId < Byte.MIN_VALUE || midiNoteId > Byte.MAX_VALUE)
-				|| (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE)) {
+				|| (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE))
+		{
 			throw new IllegalArgumentException();
 		}
 		set((byte) midiNoteId, (byte) value);
 	}
 
-	public void set(byte midiNoteId, byte value) {
-		if (get(midiNoteId) != value) {
+	public void set(byte midiNoteId, byte value)
+	{
+		if (get(midiNoteId) != value)
+		{
 			ensureMap();
 			map[midiNoteId] = value;
 			fireChangeEvent();
 		}
 	}
 
-	protected byte getDefaultMapping(byte noteId) {
+	protected byte getDefaultMapping(byte noteId)
+	{
 		return DISABLED_NOTE_ID;
 	}
 
-	private void ensureMap() {
+	private void ensureMap()
+	{
 		if (map == null)
 			map = getFailsafeDefault();
 	}
 
-	public void addChangeListener(ChangeListener listener) {
+	public void addChangeListener(ChangeListener listener)
+	{
 		if (listeners == null)
 			listeners = new ArrayList<ChangeListener>(2);
 
@@ -80,40 +91,51 @@ public class DrumNoteMap implements IDiscardable {
 			listeners.add(listener);
 	}
 
-	public void removeChangeListener(ChangeListener listener) {
+	public void removeChangeListener(ChangeListener listener)
+	{
 		if (listeners != null)
 			listeners.remove(listener);
 	}
 
-	private void fireChangeEvent() {
-		if (listeners != null) {
+	private void fireChangeEvent()
+	{
+		if (listeners != null)
+		{
 			ChangeEvent e = new ChangeEvent(this);
-			for (ChangeListener l : listeners) {
+			for (ChangeListener l : listeners)
+			{
 				l.stateChanged(e);
 			}
 		}
 	}
 
-	@Override
-	public void discard() {
+	@Override public void discard()
+	{
 		listeners = null;
 	}
 
-	public void save(Preferences prefs) {
+	public void save(Preferences prefs)
+	{
 		ensureMap();
 		prefs.putByteArray(MAP_PREFS_KEY, map);
 	}
 
-	public void load(Preferences prefs) {
+	public void load(Preferences prefs)
+	{
 		map = prefs.getByteArray(MAP_PREFS_KEY, null);
-		if (map == null || map.length != MidiConstants.NOTE_COUNT) {
+		if (map == null || map.length != MidiConstants.NOTE_COUNT)
+		{
 			map = getFailsafeDefault();
 		}
-		else {
+		else
+		{
 			byte[] failsafe = null;
-			for (int i = 0; i < map.length; i++) {
-				if (map[i] != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(map[i])) {
-					if (failsafe == null) {
+			for (int i = 0; i < map.length; i++)
+			{
+				if (map[i] != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(map[i]))
+				{
+					if (failsafe == null)
+					{
 						failsafe = getFailsafeDefault();
 					}
 					map[i] = failsafe[i];
@@ -122,19 +144,23 @@ public class DrumNoteMap implements IDiscardable {
 		}
 	}
 
-	public void save(File outputFile) throws IOException {
+	public void save(File outputFile) throws IOException
+	{
 		PrintStream outStream = null;
-		try {
+		try
+		{
 			outStream = new PrintStream(outputFile);
 			save(outStream);
 		}
-		finally {
+		finally
+		{
 			if (outStream != null)
 				outStream.close();
 		}
 	}
 
-	public void save(PrintStream out) {
+	public void save(PrintStream out)
+	{
 		ensureMap();
 
 		out.println("% LOTRO Drum Map");
@@ -150,16 +176,19 @@ public class DrumNoteMap implements IDiscardable {
 		out.println();
 
 		int maxDrumLen = MidiConstants.getDrumName(MidiConstants.LOWEST_DRUM_ID - 1).length();
-		for (int i = MidiConstants.LOWEST_DRUM_ID; i <= MidiConstants.HIGHEST_DRUM_ID; i++) {
+		for (int i = MidiConstants.LOWEST_DRUM_ID; i <= MidiConstants.HIGHEST_DRUM_ID; i++)
+		{
 			String drumName = MidiConstants.getDrumName(i);
 			if (maxDrumLen < drumName.length())
 				maxDrumLen = drumName.length();
 		}
 
-		for (int midiNoteId = 0; midiNoteId < map.length; midiNoteId++) {
+		for (int midiNoteId = 0; midiNoteId < map.length; midiNoteId++)
+		{
 			// Only write non-drum IDs if they actually have a mapping
 			if ((midiNoteId < MidiConstants.LOWEST_DRUM_ID || midiNoteId > MidiConstants.HIGHEST_DRUM_ID)
-					&& map[midiNoteId] == DISABLED_NOTE_ID) {
+					&& map[midiNoteId] == DISABLED_NOTE_ID)
+			{
 				continue;
 			}
 
@@ -181,23 +210,28 @@ public class DrumNoteMap implements IDiscardable {
 		}
 	}
 
-	public void load(File inputFile) throws IOException, ParseException {
+	public void load(File inputFile) throws IOException, ParseException
+	{
 		FileInputStream inputStream = null;
-		try {
+		try
+		{
 			inputStream = new FileInputStream(inputFile);
 			load(inputStream, inputFile.getName());
 		}
-		finally {
+		finally
+		{
 			if (inputStream != null)
 				inputStream.close();
 		}
 	}
 
-	public void load(InputStream inputStream) throws IOException, ParseException {
+	public void load(InputStream inputStream) throws IOException, ParseException
+	{
 		load(inputStream, null);
 	}
 
-	private void load(InputStream inputStream, String inputFileName) throws IOException, ParseException {
+	private void load(InputStream inputStream, String inputFileName) throws IOException, ParseException
+	{
 		if (map == null)
 			map = new byte[MidiConstants.NOTE_COUNT];
 
@@ -206,11 +240,13 @@ public class DrumNoteMap implements IDiscardable {
 		BufferedReader rdr = new BufferedReader(new InputStreamReader(inputStream));
 		String line;
 		int lineNumber = 0;
-		while ((line = rdr.readLine()) != null) {
+		while ((line = rdr.readLine()) != null)
+		{
 			lineNumber++;
 
 			int commentIndex = line.indexOf('%');
-			if (commentIndex >= 0) {
+			if (commentIndex >= 0)
+			{
 				line = line.substring(0, commentIndex);
 			}
 			line = line.trim();
@@ -219,25 +255,31 @@ public class DrumNoteMap implements IDiscardable {
 
 			byte midiNote;
 			byte lotroNote;
-			try {
+			try
+			{
 				StringTokenizer tokenizer = new StringTokenizer(line, " \t=>");
 				midiNote = Byte.parseByte(tokenizer.nextToken());
 				lotroNote = Byte.parseByte(tokenizer.nextToken());
-				if (tokenizer.hasMoreTokens()) {
+				if (tokenizer.hasMoreTokens())
+				{
 					throw new ParseException("Invalid line (too many tokens)", inputFileName, lineNumber);
 				}
 			}
-			catch (NoSuchElementException nse) {
+			catch (NoSuchElementException nse)
+			{
 				throw new ParseException("Invalid line (too few tokens)", inputFileName, lineNumber);
 			}
-			catch (NumberFormatException nfe) {
+			catch (NumberFormatException nfe)
+			{
 				throw new ParseException("Invalid note ID", inputFileName, lineNumber);
 			}
 
-			if (midiNote < MidiConstants.LOWEST_NOTE_ID || midiNote > MidiConstants.HIGHEST_NOTE_ID) {
+			if (midiNote < MidiConstants.LOWEST_NOTE_ID || midiNote > MidiConstants.HIGHEST_NOTE_ID)
+			{
 				throw new ParseException("MIDI note is invalid", inputFileName, lineNumber);
 			}
-			if (lotroNote != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(lotroNote)) {
+			if (lotroNote != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(lotroNote))
+			{
 				throw new ParseException("ABC note is invalid", inputFileName, lineNumber);
 			}
 
@@ -251,7 +293,8 @@ public class DrumNoteMap implements IDiscardable {
 	 * This can be used as a backup in the event that loading the drum map from
 	 * a file fails.
 	 */
-	public byte[] getFailsafeDefault() {
+	public byte[] getFailsafeDefault()
+	{
 		byte[] failsafe = new byte[MidiConstants.NOTE_COUNT];
 
 		Arrays.fill(failsafe, DISABLED_NOTE_ID);

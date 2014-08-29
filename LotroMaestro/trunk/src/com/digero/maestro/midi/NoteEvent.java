@@ -24,7 +24,8 @@ package com.digero.maestro.midi;
 
 import com.digero.common.midi.Note;
 
-public class NoteEvent implements Comparable<NoteEvent> {
+public class NoteEvent implements Comparable<NoteEvent>
+{
 	public final Note note;
 	public final int velocity;
 	public long startMicros;
@@ -32,33 +33,39 @@ public class NoteEvent implements Comparable<NoteEvent> {
 	public NoteEvent tiesFrom = null;
 	public NoteEvent tiesTo = null;
 
-	public NoteEvent(Note note, int velocity, long startMicros, long endMicros) {
+	public NoteEvent(Note note, int velocity, long startMicros, long endMicros)
+	{
 		this.note = note;
 		this.velocity = velocity;
 		this.startMicros = startMicros;
 		this.endMicros = endMicros;
 	}
 
-	public long getLength() {
+	public long getLength()
+	{
 		return endMicros - startMicros;
 	}
 
-	public void setLength(long length) {
+	public void setLength(long length)
+	{
 		endMicros = startMicros + length;
 	}
 
-	public long getTieLength() {
+	public long getTieLength()
+	{
 		return getTieEnd().endMicros - getTieStart().startMicros;
 	}
 
-	public NoteEvent getTieStart() {
+	public NoteEvent getTieStart()
+	{
 		if (tiesFrom == null)
 			return this;
 		assert tiesFrom.startMicros < this.startMicros;
 		return tiesFrom.getTieStart();
 	}
 
-	public NoteEvent getTieEnd() {
+	public NoteEvent getTieEnd()
+	{
 		if (tiesTo == null)
 			return this;
 		assert tiesTo.endMicros > this.endMicros;
@@ -71,14 +78,17 @@ public class NoteEvent implements Comparable<NoteEvent> {
 	 * @param splitPointMicros The time index to split the NoteEvent.
 	 * @return The new NoteEvent that was created starting at splitPointMicros.
 	 */
-	public NoteEvent splitWithTie(long splitPointMicros) {
+	public NoteEvent splitWithTie(long splitPointMicros)
+	{
 		assert splitPointMicros > startMicros && splitPointMicros < endMicros;
 
 		NoteEvent next = new NoteEvent(note, velocity, splitPointMicros, endMicros);
 		this.endMicros = splitPointMicros;
 
-		if (note != Note.REST) {
-			if (this.tiesTo != null) {
+		if (note != Note.REST)
+		{
+			if (this.tiesTo != null)
+			{
 				next.tiesTo = this.tiesTo;
 				this.tiesTo.tiesFrom = next;
 			}
@@ -89,9 +99,10 @@ public class NoteEvent implements Comparable<NoteEvent> {
 		return next;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof NoteEvent) {
+	@Override public boolean equals(Object obj)
+	{
+		if (obj instanceof NoteEvent)
+		{
 			NoteEvent that = (NoteEvent) obj;
 			return (this.startMicros == that.startMicros) && (this.endMicros == that.endMicros)
 					&& (this.note.id == that.note.id);
@@ -99,13 +110,13 @@ public class NoteEvent implements Comparable<NoteEvent> {
 		return false;
 	}
 
-	@Override
-	public int hashCode() {
+	@Override public int hashCode()
+	{
 		return ((int) startMicros) ^ ((int) endMicros) ^ note.id;
 	}
 
-	@Override
-	public int compareTo(NoteEvent that) {
+	@Override public int compareTo(NoteEvent that)
+	{
 		if (that == null)
 			return 1;
 

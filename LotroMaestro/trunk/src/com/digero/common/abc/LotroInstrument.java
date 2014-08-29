@@ -24,7 +24,8 @@ package com.digero.common.abc;
 
 import com.digero.common.midi.Note;
 
-public enum LotroInstrument {
+public enum LotroInstrument
+{
 	LUTE(Note.C2, Note.C5, false, 24, 0, false), //
 	HARP(Note.C2, Note.C5, false, 46, 0, false), //
 	THEORBO(Note.C2, Note.C5, false, 32, -1, false), //
@@ -45,7 +46,8 @@ public enum LotroInstrument {
 	public final int octaveDelta;
 
 	private LotroInstrument(Note low, Note high, boolean sustainable, int midiProgramId, int octaveDelta,
-			boolean isPercussion) {
+			boolean isPercussion)
+	{
 		this.lowestPlayable = low;
 		this.highestPlayable = high;
 		this.sustainable = sustainable;
@@ -54,16 +56,20 @@ public enum LotroInstrument {
 		this.isPercussion = isPercussion;
 	}
 
-	public boolean isSustainable(int noteId) {
+	public boolean isSustainable(int noteId)
+	{
 		return sustainable && isPlayable(noteId);
 	}
 
-	public boolean isPlayable(int noteId) {
+	public boolean isPlayable(int noteId)
+	{
 		return noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
 	}
 
-	public boolean isBadNote(int noteId) {
-		if (this == PIBGORN) {
+	public boolean isBadNote(int noteId)
+	{
+		if (this == PIBGORN)
+		{
 			return noteId == Note.C2.id || noteId == Note.Cs2.id || noteId == Note.As2.id || noteId == Note.Gs4.id
 					|| noteId == Note.As4.id;
 		}
@@ -71,8 +77,8 @@ public enum LotroInstrument {
 		return false;
 	}
 
-	@Override
-	public String toString() {
+	@Override public String toString()
+	{
 		if (this == MOOR_COWBELL)
 			return "Moor Cowbell";
 

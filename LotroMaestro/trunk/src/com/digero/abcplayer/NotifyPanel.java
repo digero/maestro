@@ -2,7 +2,8 @@ package com.digero.abcplayer;
 
 import javax.swing.JPanel;
 
-public class NotifyPanel extends JPanel {
+public class NotifyPanel extends JPanel
+{
 //	public enum MessageType {
 //		INFO, WARNING, ERROR
 //	}

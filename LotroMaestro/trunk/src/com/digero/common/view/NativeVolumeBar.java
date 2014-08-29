@@ -14,7 +14,8 @@ import javax.swing.JPanel;
 
 import com.digero.common.midi.VolumeTransceiver;
 
-public class NativeVolumeBar extends JPanel {
+public class NativeVolumeBar extends JPanel
+{
 	private static final int PTR_WIDTH = 12;
 	private static final int PTR_HEIGHT = 12;
 	private static final int BAR_HEIGHT = 6;
@@ -25,7 +26,8 @@ public class NativeVolumeBar extends JPanel {
 
 	public static final int MAX_VOLUME = VolumeTransceiver.MAX_VOLUME;
 
-	public interface Callback {
+	public interface Callback
+	{
 		int getVolume();
 
 		void setVolume(int volume);
@@ -34,7 +36,8 @@ public class NativeVolumeBar extends JPanel {
 	private Callback callback;
 	private boolean useInvertedColors;
 
-	public NativeVolumeBar(Callback callback) {
+	public NativeVolumeBar(Callback callback)
+	{
 		this.callback = callback;
 
 		MouseHandler mouseHandler = new MouseHandler();
@@ -46,8 +49,8 @@ public class NativeVolumeBar extends JPanel {
 		setPreferredSize(sz);
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		super.paintComponent(g);
 
 		Graphics2D g2 = (Graphics2D) g;
@@ -87,28 +90,34 @@ public class NativeVolumeBar extends JPanel {
 		g2.drawOval(left, 0, PTR_WIDTH - 1, PTR_HEIGHT - 1);
 	}
 
-	public void setUseInvertedColors(boolean useInvertedColors) {
+	public void setUseInvertedColors(boolean useInvertedColors)
+	{
 		this.useInvertedColors = useInvertedColors;
 	}
 
-	public boolean isUseInvertedColors() {
+	public boolean isUseInvertedColors()
+	{
 		return useInvertedColors;
 	}
 
-	private class MouseHandler extends MouseAdapter {
-		private int getPosition(int x) {
+	private class MouseHandler extends MouseAdapter
+	{
+		private int getPosition(int x)
+		{
 			int pos = (int) ((x + 1 - SIDE_PAD) * MAX_VOLUME / (getWidth() - 2 * SIDE_PAD));
-			if (pos < 0) {
+			if (pos < 0)
+			{
 				pos = 0;
 			}
-			if (pos > MAX_VOLUME) {
+			if (pos > MAX_VOLUME)
+			{
 				pos = (int) MAX_VOLUME;
 			}
 			return pos;
 		}
 
-		@Override
-		public void mousePressed(MouseEvent e) {
+		@Override public void mousePressed(MouseEvent e)
+		{
 			if (!NativeVolumeBar.this.isEnabled())
 				return;
 			callback.setVolume(getPosition(e.getX()));
@@ -116,8 +125,8 @@ public class NativeVolumeBar extends JPanel {
 			requestFocus();
 		}
 
-		@Override
-		public void mouseDragged(MouseEvent e) {
+		@Override public void mouseDragged(MouseEvent e)
+		{
 			if (!NativeVolumeBar.this.isEnabled())
 				return;
 			callback.setVolume(getPosition(e.getX()));

@@ -1,6 +1,7 @@
 package com.digero.common.midi;
 
-public interface IMidiConstants {
+public interface IMidiConstants
+{
 	public static final int META_TEXT = 0x01;
 	public static final int META_COPYRIGHT = 0x02;
 	public static final int META_TRACK_NAME = 0x03;

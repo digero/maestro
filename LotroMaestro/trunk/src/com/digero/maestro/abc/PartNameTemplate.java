@@ -15,50 +15,61 @@ import com.digero.common.abc.LotroInstrument;
 import com.digero.common.util.Pair;
 import com.digero.common.util.Util;
 
-public class PartNameTemplate {
-	public static class Settings {
+public class PartNameTemplate
+{
+	public static class Settings
+	{
 		private String partNamePattern;
 
-		private Settings(Preferences prefs) {
+		private Settings(Preferences prefs)
+		{
 			partNamePattern = prefs.get("partNamePattern", "$SongTitle ($SongLength) - $PartName");
 		}
 
-		public Settings(Settings source) {
+		public Settings(Settings source)
+		{
 			copyFrom(source);
 		}
 
-		private void save(Preferences prefs) {
+		private void save(Preferences prefs)
+		{
 			prefs.put("partNamePattern", partNamePattern);
 		}
 
-		private void copyFrom(Settings source) {
+		private void copyFrom(Settings source)
+		{
 			this.partNamePattern = source.partNamePattern;
 		}
 
-		public String getPartNamePattern() {
+		public String getPartNamePattern()
+		{
 			return partNamePattern;
 		}
 
-		public void setPartNamePattern(String partNamePattern) {
+		public void setPartNamePattern(String partNamePattern)
+		{
 			this.partNamePattern = partNamePattern;
 		}
 	}
 
-	public static abstract class Variable {
+	public static abstract class Variable
+	{
 		private String description;
 
-		private Variable(String description) {
+		private Variable(String description)
+		{
 			this.description = description;
 		}
 
 		public abstract String getValue();
 
-		public String getDescription() {
+		public String getDescription()
+		{
 			return description;
 		}
 
-		@Override
-		public String toString() {
+		@Override public String toString()
+		{
 			return getValue();
 		}
 	}
@@ -71,65 +82,74 @@ public class PartNameTemplate {
 
 	private SortedMap<String, Variable> variables;
 
-	public PartNameTemplate(Preferences prefsNode, AbcMetadataSource metadata_) {
+	public PartNameTemplate(Preferences prefsNode, AbcMetadataSource metadata_)
+	{
 		this.prefsNode = prefsNode;
 		this.settings = new Settings(prefsNode);
 		this.metadata = metadata_;
 
-		Comparator<String> caseInsensitiveStringComparator = new Comparator<String>() {
-			@Override
-			public int compare(String a, String b) {
+		Comparator<String> caseInsensitiveStringComparator = new Comparator<String>()
+		{
+			@Override public int compare(String a, String b)
+			{
 				return a.compareToIgnoreCase(b);
 			}
 		};
 
 		variables = new TreeMap<String, Variable>(caseInsensitiveStringComparator);
 
-		variables.put("$SongTitle", new Variable("The title of the song, as entered in the \"T:\" field") {
-			@Override
-			public String getValue() {
+		variables.put("$SongTitle", new Variable("The title of the song, as entered in the \"T:\" field")
+		{
+			@Override public String getValue()
+			{
 				return metadata.getSongTitle();
 			}
 		});
-		variables.put("$SongLength", new Variable("The playing time of the song in mm:ss format") {
-			@Override
-			public String getValue() {
+		variables.put("$SongLength", new Variable("The playing time of the song in mm:ss format")
+		{
+			@Override public String getValue()
+			{
 				return Util.formatDuration(metadata.getSongLengthMicros());
 			}
 		});
-		variables.put("$SongComposer", new Variable("The song composer's name, as entered in the \"C:\" field") {
-			@Override
-			public String getValue() {
+		variables.put("$SongComposer", new Variable("The song composer's name, as entered in the \"C:\" field")
+		{
+			@Override public String getValue()
+			{
 				return metadata.getComposer();
 			}
 		});
-		variables.put("$SongTranscriber", new Variable("Your name, as entered in the \"Z:\" field") {
-			@Override
-			public String getValue() {
+		variables.put("$SongTranscriber", new Variable("Your name, as entered in the \"Z:\" field")
+		{
+			@Override public String getValue()
+			{
 				return metadata.getTranscriber();
 			}
 		});
-		variables.put("$PartName", new Variable("The part name for the individual ABC part") {
-			@Override
-			public String getValue() {
+		variables.put("$PartName", new Variable("The part name for the individual ABC part")
+		{
+			@Override public String getValue()
+			{
 				if (currentAbcPart == null)
 					return "";
 
 				return currentAbcPart.getTitle();
 			}
 		});
-		variables.put("$PartNumber", new Variable("The part number for the individual ABC part") {
-			@Override
-			public String getValue() {
+		variables.put("$PartNumber", new Variable("The part number for the individual ABC part")
+		{
+			@Override public String getValue()
+			{
 				if (currentAbcPart == null)
 					return "0";
 
 				return "" + currentAbcPart.getPartNumber();
 			}
 		});
-		variables.put("$PartInstrument", new Variable("The instrument for the individual ABC part") {
-			@Override
-			public String getValue() {
+		variables.put("$PartInstrument", new Variable("The instrument for the individual ABC part")
+		{
+			@Override public String getValue()
+			{
 				if (currentAbcPart == null)
 					return LotroInstrument.LUTE.toString();
 
@@ -139,9 +159,10 @@ public class PartNameTemplate {
 		variables.put("$FilePath", new Variable("The path to the ABC file including the ABC file name, "
 				+ "if it is in a subdirectory of the LOTRO/Music directory.\n"
 				+ "If the file is saved directly in the LOTRO/Music directory, "
-				+ "this will be the same as <b>$FileName</b>.") {
-			@Override
-			public String getValue() {
+				+ "this will be the same as <b>$FileName</b>.")
+		{
+			@Override public String getValue()
+			{
 				if (metadata.getSaveFile() == null)
 					return "";
 
@@ -150,8 +171,10 @@ public class PartNameTemplate {
 
 				String path = saveFileName;
 				boolean foundRoot = false;
-				for (File file = metadata.getSaveFile().getParentFile(); file != null; file = file.getParentFile()) {
-					if (root.equals(file)) {
+				for (File file = metadata.getSaveFile().getParentFile(); file != null; file = file.getParentFile())
+				{
+					if (root.equals(file))
+					{
 						foundRoot = true;
 						break;
 					}
@@ -164,9 +187,10 @@ public class PartNameTemplate {
 				return saveFileName;
 			}
 		});
-		variables.put("$FileName", new Variable("The name of the ABC file, without the .abc extension") {
-			@Override
-			public String getValue() {
+		variables.put("$FileName", new Variable("The name of the ABC file, without the .abc extension")
+		{
+			@Override public String getValue()
+			{
 				if (metadata.getSaveFile() == null)
 					return "";
 
@@ -175,40 +199,49 @@ public class PartNameTemplate {
 		});
 	}
 
-	public Settings getSettingsCopy() {
+	public Settings getSettingsCopy()
+	{
 		return new Settings(settings);
 	}
 
-	public void setSettings(Settings settings) {
+	public void setSettings(Settings settings)
+	{
 		this.settings.copyFrom(settings);
 		this.settings.save(prefsNode);
 	}
 
-	public AbcMetadataSource getMetadataSource() {
+	public AbcMetadataSource getMetadataSource()
+	{
 		return metadata;
 	}
 
-	public void setMetadataSource(AbcMetadataSource metadata) {
+	public void setMetadataSource(AbcMetadataSource metadata)
+	{
 		this.metadata = metadata;
 	}
 
-	public void setCurrentAbcPart(AbcPartMetadataSource currentAbcPart) {
+	public void setCurrentAbcPart(AbcPartMetadataSource currentAbcPart)
+	{
 		this.currentAbcPart = currentAbcPart;
 	}
 
-	public AbcPartMetadataSource getCurrentAbcPart() {
+	public AbcPartMetadataSource getCurrentAbcPart()
+	{
 		return currentAbcPart;
 	}
 
-	public SortedMap<String, Variable> getVariables() {
+	public SortedMap<String, Variable> getVariables()
+	{
 		return Collections.unmodifiableSortedMap(variables);
 	}
 
-	public String formatName(AbcPartMetadataSource currentAbcPart) {
+	public String formatName(AbcPartMetadataSource currentAbcPart)
+	{
 		return formatName(settings.getPartNamePattern(), currentAbcPart);
 	}
 
-	public String formatName(String partNamePattern, AbcPartMetadataSource currentAbcPart) {
+	public String formatName(String partNamePattern, AbcPartMetadataSource currentAbcPart)
+	{
 		this.currentAbcPart = currentAbcPart;
 		String name = partNamePattern;
 
@@ -216,15 +249,18 @@ public class PartNameTemplate {
 		Matcher matcher = regex.matcher(name);
 
 		ArrayList<Pair<Integer, Integer>> matches = new ArrayList<Pair<Integer, Integer>>();
-		while (matcher.find()) {
+		while (matcher.find())
+		{
 			matches.add(new Pair<Integer, Integer>(matcher.start(), matcher.end()));
 		}
 
 		ListIterator<Pair<Integer, Integer>> reverseIter = matches.listIterator(matches.size());
-		while (reverseIter.hasPrevious()) {
+		while (reverseIter.hasPrevious())
+		{
 			Pair<Integer, Integer> match = reverseIter.previous();
 			Variable var = variables.get(name.substring(match.first, match.second));
-			if (var != null) {
+			if (var != null)
+			{
 				name = name.substring(0, match.first) + var.getValue() + name.substring(match.second);
 			}
 		}

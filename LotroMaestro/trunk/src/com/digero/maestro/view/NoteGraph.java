@@ -37,7 +37,8 @@ import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
 
-public class NoteGraph extends JPanel implements SequencerListener, IDiscardable {
+public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
+{
 	protected final SequencerWrapper sequencer;
 	protected TrackInfo trackInfo;
 
@@ -64,12 +65,14 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private JPanel indicatorLine;
 
-	public NoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo, int minRenderedNoteId, int maxRenderedNoteId) {
+	public NoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo, int minRenderedNoteId, int maxRenderedNoteId)
+	{
 		this(sequencer, trackInfo, minRenderedNoteId, maxRenderedNoteId, 3, 2);
 	}
 
 	public NoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo, int minRenderedNoteId, int maxRenderedNoteId,
-			double noteWidthPx, double noteHeightPx) {
+			double noteWidthPx, double noteHeightPx)
+	{
 
 		super((LayoutManager) null);
 
@@ -95,95 +98,116 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		setOpaque(false);
 		setPreferredSize(new Dimension(200, 16));
 
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
+		addComponentListener(new ComponentAdapter()
+		{
+			@Override public void componentResized(ComponentEvent e)
+			{
 				invalidateTransform();
 				repositionIndicator();
 			}
 		});
 	}
 
-	@Override
-	public void discard() {
+	@Override public void discard()
+	{
 		sequencer.removeChangeListener(this);
 	}
 
-	protected int transposeNote(int noteId) {
+	protected int transposeNote(int noteId)
+	{
 		return noteId;
 	}
 
-	protected boolean isNotePlayable(int noteId) {
+	protected boolean isNotePlayable(int noteId)
+	{
 		return true;
 	}
 
-	protected boolean isNoteVisible(NoteEvent ne) {
+	protected boolean isNoteVisible(NoteEvent ne)
+	{
 		return true;
 	}
 
-	public void setOctaveLinesVisible(boolean octaveLinesVisible) {
-		if (this.octaveLinesVisible != octaveLinesVisible) {
+	public void setOctaveLinesVisible(boolean octaveLinesVisible)
+	{
+		if (this.octaveLinesVisible != octaveLinesVisible)
+		{
 			this.octaveLinesVisible = octaveLinesVisible;
 			repaint();
 		}
 	}
 
-	public boolean isOctaveLinesVisible() {
+	public boolean isOctaveLinesVisible()
+	{
 		return octaveLinesVisible;
 	}
 
-	public final void setNoteColor(ColorTable noteColor) {
-		if (this.noteColor != noteColor) {
+	public final void setNoteColor(ColorTable noteColor)
+	{
+		if (this.noteColor != noteColor)
+		{
 			this.noteColor = noteColor;
 			Arrays.fill(noteColorByDynamics, null);
 			repaint();
 		}
 	}
 
-	public final void setBadNoteColor(ColorTable badNoteColor) {
-		if (this.badNoteColor != badNoteColor) {
+	public final void setBadNoteColor(ColorTable badNoteColor)
+	{
+		if (this.badNoteColor != badNoteColor)
+		{
 			this.badNoteColor = badNoteColor;
 			Arrays.fill(badNoteColorByDynamics, null);
 			repaint();
 		}
 	}
 
-	public final void setNoteOnColor(ColorTable noteOnColor) {
-		if (this.noteOnColor != noteOnColor) {
+	public final void setNoteOnColor(ColorTable noteOnColor)
+	{
+		if (this.noteOnColor != noteOnColor)
+		{
 			this.noteOnColor = noteOnColor;
 			repaint();
 		}
 	}
 
-	public void setDeltaVolume(int deltaVolume) {
-		if (this.deltaVolume != deltaVolume) {
+	public void setDeltaVolume(int deltaVolume)
+	{
+		if (this.deltaVolume != deltaVolume)
+		{
 			this.deltaVolume = deltaVolume;
 			repaint();
 		}
 	}
 
-	public int getDeltaVolume() {
+	public int getDeltaVolume()
+	{
 		return deltaVolume;
 	}
 
-	public void setTrackInfo(TrackInfo trackInfo) {
+	public void setTrackInfo(TrackInfo trackInfo)
+	{
 		this.trackInfo = trackInfo;
 		invalidateTransform();
 		repaint();
 	}
 
-	public void setShowingNoteVelocity(boolean showingNoteVelocity) {
-		if (this.showingNoteVelocity != showingNoteVelocity) {
+	public void setShowingNoteVelocity(boolean showingNoteVelocity)
+	{
+		if (this.showingNoteVelocity != showingNoteVelocity)
+		{
 			this.showingNoteVelocity = showingNoteVelocity;
 			repaint();
 		}
 	}
 
-	public boolean isShowingNoteVelocity() {
+	public boolean isShowingNoteVelocity()
+	{
 		return showingNoteVelocity;
 	}
 
-	protected List<NoteEvent> getEvents() {
+	protected List<NoteEvent> getEvents()
+	{
 		if (trackInfo == null)
 			return Collections.emptyList();
 
@@ -192,7 +216,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private AffineTransform noteToScreenXForm = null; // Always use getTransform()
 
-	protected final void invalidateTransform() {
+	protected final void invalidateTransform()
+	{
 		noteToScreenXForm = null;
 		repaint();
 	}
@@ -200,8 +225,10 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	/**
 	 * Gets a transform that converts song coordinates into screen coordinates.
 	 */
-	protected final AffineTransform getTransform() {
-		if (noteToScreenXForm == null) {
+	protected final AffineTransform getTransform()
+	{
+		if (noteToScreenXForm == null)
+		{
 			// The transform currently depends on:
 			//  * This panel's width/height
 			//  * The length of the sequence
@@ -219,17 +246,21 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			double noteH = MIN_RENDERED - MAX_RENDERED;
 
 			AffineTransform scrnXForm;
-			if (noteW <= 0 || scrnW <= 0 || scrnH <= 0) {
+			if (noteW <= 0 || scrnW <= 0 || scrnH <= 0)
+			{
 				scrnXForm = new AffineTransform();
 			}
-			else {
+			else
+			{
 				scrnXForm = new AffineTransform(scrnW, 0, 0, scrnH, scrnX, scrnY);
-				try {
+				try
+				{
 					AffineTransform noteXForm = new AffineTransform(noteW, 0, 0, noteH, noteX, noteY);
 					noteXForm.invert();
 					scrnXForm.concatenate(noteXForm);
 				}
-				catch (NoninvertibleTransformException e) {
+				catch (NoninvertibleTransformException e)
+				{
 					e.printStackTrace();
 					scrnXForm.setToIdentity();
 				}
@@ -245,55 +276,65 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	private long lastPaintedSongPos = -1;
 	private long songPos = -1;
 
-	protected boolean isShowingNotesOn() {
+	protected boolean isShowingNotesOn()
+	{
 		if (trackInfo == null)
 			return false;
 
 		return sequencer.isRunning() && sequencer.isTrackActive(trackInfo.getTrackNumber());
 	}
 
-	private void repositionIndicator() {
+	private void repositionIndicator()
+	{
 		AffineTransform xform = getTransform();
 		Point2D.Double pt = new Point2D.Double(sequencer.getThumbPosition(), 0);
 		xform.transform(pt, pt);
 		indicatorLine.setBounds((int) pt.x, 0, 1, getHeight());
 	}
 
-	@Override
-	public void propertyChanged(SequencerEvent evt) {
-		if (evt.getProperty() == SequencerProperty.LENGTH) {
+	@Override public void propertyChanged(SequencerEvent evt)
+	{
+		if (evt.getProperty() == SequencerProperty.LENGTH)
+		{
 			invalidateTransform();
 		}
 
-		if (evt.getProperty().isInMask(SequencerProperty.THUMB_POSITION_MASK)) {
+		if (evt.getProperty().isInMask(SequencerProperty.THUMB_POSITION_MASK))
+		{
 			repositionIndicator();
 		}
 
-		if (evt.getProperty() == SequencerProperty.IS_DRAGGING) {
+		if (evt.getProperty() == SequencerProperty.IS_DRAGGING)
+		{
 			indicatorLine.setBackground(sequencer.isDragging() ? ColorTable.INDICATOR_ACTIVE.get()
 					: ColorTable.INDICATOR.get());
 		}
 
 		// Repaint the parts that need it
-		if (evt.getProperty() == SequencerProperty.POSITION) {
+		if (evt.getProperty() == SequencerProperty.POSITION)
+		{
 			final long currentSongPos = sequencer.getPosition();
 			final long leftSongPos = Math.min(currentSongPos, Math.min(lastPaintedMinSongPos, songPos));
 			final long rightSongPos = Math.max(currentSongPos, Math.max(lastPaintedSongPos, songPos))
 					+ SequencerWrapper.UPDATE_FREQUENCY_MICROS;
 			songPos = currentSongPos;
 
-			if (leftSongPos < 0) {
+			if (leftSongPos < 0)
+			{
 				repaint();
 			}
-			else {
+			else
+			{
 				AffineTransform xform = getTransform();
 				long left = leftSongPos;
 				long right = rightSongPos;
 
 				// The song position changes frequently, so only repaint the rect that 
 				// contains the notes that were/are playing
-				if (isShowingNotesOn()) {
-					for (NoteEvent ne : getEvents()) {
+				if (isShowingNotesOn())
+				{
+					for (NoteEvent ne : getEvents())
+					{
 						if (ne.endMicros < leftSongPos)
 							continue;
 						if (ne.startMicros > rightSongPos)
@@ -317,8 +358,10 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				repaint(x, 0, width, getHeight());
 			}
 		}
-		else {
-			switch (evt.getProperty()) {
+		else
+		{
+			switch (evt.getProperty())
+			{
 			case DRAG_POSITION:
 			case IS_DRAGGING:
 			case TEMPO:
@@ -341,19 +384,22 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private Rectangle2D.Double rectTmp = new Rectangle2D.Double();
 
-	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height) {
+	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height)
+	{
 		fillNote(g2, ne, noteId, minWidth, height, 0, 0);
 	}
 
 	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double extraWidth,
-			double extraHeight) {
+			double extraHeight)
+	{
 		double width = Math.max(minWidth, ne.getLength());
 		double y = Util.clamp(noteId, MIN_RENDERED, MAX_RENDERED);
 		rectTmp.setRect(ne.startMicros - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2 * extraHeight);
 		g2.fill(rectTmp);
 	}
 
-	private void fillNoteVelocity(Graphics2D g2, NoteEvent ne, Dynamics dynamics) {
+	private void fillNoteVelocity(Graphics2D g2, NoteEvent ne, Dynamics dynamics)
+	{
 		int velocity = dynamics.midiVol;
 
 		AffineTransform xform = getTransform();
@@ -376,13 +422,15 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 	private static final int SAT = 1, BRT = 2;
 
-	private static Color makeDynamicColor(Color base, Dynamics dyn, float weight) {
+	private static Color makeDynamicColor(Color base, Dynamics dyn, float weight)
+	{
 		hsb = Color.RGBtoHSB(base.getRed(), base.getGreen(), base.getBlue(), hsb);
 		// Adjust the brightness based on the volume dynamics
 		hsb[BRT] *= (1 - weight) + weight * dyn.midiVol / 128.0f;
 
 		// If the brightness is nearing max, also reduce the saturation to enahance the effect
-		if (hsb[BRT] > 0.9f) {
+		if (hsb[BRT] > 0.9f)
+		{
 			hsb[SAT] = Math.max(0.0f, hsb[SAT] - (hsb[BRT] - 0.9f));
 			hsb[BRT] = Math.min(1.0f, hsb[BRT]);
 		}
@@ -390,24 +438,28 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		return new Color(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]));
 	}
 
-	private Color getNoteColorEx(NoteEvent ne, Color baseColor, Color[] cachedColorByDynamics) {
+	private Color getNoteColorEx(NoteEvent ne, Color baseColor, Color[] cachedColorByDynamics)
+	{
 		Dynamics dyn = Dynamics.fromMidiVelocity(ne.velocity + deltaVolume);
-		if (cachedColorByDynamics[dyn.ordinal()] == null) {
+		if (cachedColorByDynamics[dyn.ordinal()] == null)
+		{
 			cachedColorByDynamics[dyn.ordinal()] = makeDynamicColor(baseColor, dyn, 0.25f);
 		}
 		return cachedColorByDynamics[dyn.ordinal()];
 	}
 
-	private Color getNoteColor(NoteEvent ne) {
+	private Color getNoteColor(NoteEvent ne)
+	{
 		return getNoteColorEx(ne, noteColor.get(), noteColorByDynamics);
 	}
 
-	private Color getBadNoteColor(NoteEvent ne) {
+	private Color getBadNoteColor(NoteEvent ne)
+	{
 		return getNoteColorEx(ne, badNoteColor.get(), badNoteColorByDynamics);
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		Graphics2D g2 = (Graphics2D) g;
 
 		Object hintAntialiasSav = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
@@ -421,32 +473,37 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		long clipPosEnd = Long.MAX_VALUE;
 
 		Rectangle clipRect = g2.getClipBounds();
-		if (clipRect != null) {
+		if (clipRect != null)
+		{
 			// Add +/- 2 to account for antialiasing (1 would probably be enough) 
 			Point2D.Double leftPoint = new Point2D.Double(clipRect.getMinX() - 2, clipRect.getMinY());
 			Point2D.Double rightPoint = new Point2D.Double(clipRect.getMaxX() + 2, clipRect.getMaxY());
-			try {
+			try
+			{
 				xform.inverseTransform(leftPoint, leftPoint);
 				xform.inverseTransform(rightPoint, rightPoint);
 
 				clipPosStart = (long) Math.floor(Math.min(leftPoint.x, rightPoint.x));
 				clipPosEnd = (long) Math.ceil(Math.max(leftPoint.x, rightPoint.x));
 			}
-			catch (NoninvertibleTransformException e) {
+			catch (NoninvertibleTransformException e)
+			{
 				e.printStackTrace();
 			}
 		}
 
 		g2.transform(xform);
 
-		if (octaveLinesVisible) {
+		if (octaveLinesVisible)
+		{
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
 			int minBarOctave = MIN_RENDERED / 12 + 1;
 			int maxBarOctave = MAX_RENDERED / 12 - 1;
 			double lineHeight = Math.abs(1 / xform.getScaleY());
 			g2.setColor(ColorTable.OCTAVE_LINE.get());
-			for (int barOctave = minBarOctave; barOctave <= maxBarOctave; barOctave++) {
+			for (int barOctave = minBarOctave; barOctave <= maxBarOctave; barOctave++)
+			{
 				rectTmp.setRect(0, barOctave * 12, sequencer.getLength(), lineHeight);
 				g2.fill(rectTmp);
 			}
@@ -457,9 +514,11 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		boolean showNotesOn = isShowingNotesOn() && songPos >= 0;
 		long minSongPos = songPos;
 
-		if (showNotesOn) {
+		if (showNotesOn)
+		{
 			// Highlight all notes that are on, or were on since we last painted (up to 100ms ago) 
-			if (lastPaintedSongPos >= 0 && lastPaintedSongPos < songPos) {
+			if (lastPaintedSongPos >= 0 && lastPaintedSongPos < songPos)
+			{
 				minSongPos = Math.max(lastPaintedSongPos, songPos - 4 * SequencerWrapper.UPDATE_FREQUENCY_MICROS);
 			}
 		}
@@ -474,41 +533,49 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		if (notesBad != null)
 			notesBad.clear();
 
-		if (!isShowingNoteVelocity()) {
+		if (!isShowingNoteVelocity())
+		{
 			// Normal rendering
 
 			// Paint the playable notes and keep track of the currently sounding and unplayable notes
 			g2.setColor(noteColor.get());
-			for (int i = 0; i < noteEvents.size(); i++) {
+			for (int i = 0; i < noteEvents.size(); i++)
+			{
 				NoteEvent ne = noteEvents.get(i);
 
 				// Don't bother drawing the note if it's clipped
 				if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
 					continue;
 
-				if (isNoteVisible(ne)) {
+				if (isNoteVisible(ne))
+				{
 					int noteId = transposeNote(ne.note.id);
 
 					if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
-							&& sequencer.isNoteActive(ne.note.id)) {
+							&& sequencer.isNoteActive(ne.note.id))
+					{
 						if (notesOn == null)
 							notesOn = new BitSet(noteEvents.size());
 						notesOn.set(i);
 					}
-					else if (!isNotePlayable(noteId)) {
+					else if (!isNotePlayable(noteId))
+					{
 						if (notesBad == null)
 							notesBad = new BitSet(noteEvents.size());
 						notesBad.set(i);
 					}
-					else {
+					else
+					{
 						g2.setColor(getNoteColor(ne));
 						fillNote(g2, ne, noteId, minLength, height);
 					}
 				}
 			}
 
-			if (notesBad != null) {
-				for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1)) {
+			if (notesBad != null)
+			{
+				for (int i = notesBad.nextSetBit(0); i >= 0; i = notesBad.nextSetBit(i + 1))
+				{
 					NoteEvent ne = noteEvents.get(i);
 					g2.setColor(getBadNoteColor(ne));
 					int noteId = transposeNote(ne.note.id);
@@ -516,13 +583,15 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				}
 			}
 
-			if (notesOn != null) {
+			if (notesOn != null)
+			{
 				double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
 				double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
 				double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
 
 				g2.setColor(noteOnBorder.get());
-				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
+				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1))
+				{
 					NoteEvent ne = noteEvents.get(i);
 					int noteId = transposeNote(ne.note.id);
 
@@ -531,7 +600,8 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				}
 
 				g2.setColor(noteOnColor.get());
-				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1)) {
+				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1))
+				{
 					NoteEvent ne = noteEvents.get(i);
 					int noteId = transposeNote(ne.note.id);
 
@@ -539,14 +609,17 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				}
 			}
 		}
-		else {
+		else
+		{
 			// Render the volume of each note instead of its note value
 			Dynamics[] dynamicsValues = Dynamics.values();
 
 			// Render from highest dynamics to lowest.
 			// Out of range notes are rendered with (d == dynamicsValues.length) and (d == -1)
-			for (int d = dynamicsValues.length; d >= -1; --d) {
-				for (int i = 0; i < noteEvents.size(); i++) {
+			for (int d = dynamicsValues.length; d >= -1; --d)
+			{
+				for (int i = 0; i < noteEvents.size(); i++)
+				{
 					NoteEvent ne = noteEvents.get(i);
 
 					if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
@@ -568,32 +641,39 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 					// Note that we're rendering the "above max" dynamics in the *second* pass 
 					// (the first is d == dynamicsValues.length). This lets us render those bad 
 					// notes on top and makes them more visible.
-					if (d == dynamicsValues.length - 1) {
+					if (d == dynamicsValues.length - 1)
+					{
 						// Only rendering notes where (velocity > Dynamics.MAXIMUM.midiVol) in this pass
 						if (!(velocity > Dynamics.MAXIMUM.midiVol))
 							continue;
 					}
-					else if (d == -1) {
+					else if (d == -1)
+					{
 						// Only rendering notes where (velocity < Dynamics.MINIMUM.midiVol) in this pass
 						if (!(velocity < Dynamics.MINIMUM.midiVol))
 							continue;
 					}
-					else if (isOutOfRange || Dynamics.fromMidiVelocity(velocity) != dynamicsRenderedInThisPass) {
+					else if (isOutOfRange || Dynamics.fromMidiVelocity(velocity) != dynamicsRenderedInThisPass)
+					{
 						// Only rendering notes that have the particular velocity in this pass
 						continue;
 					}
 
-					if (isNoteVisible(ne)) {
+					if (isNoteVisible(ne))
+					{
 						if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
-								&& sequencer.isNoteActive(ne.note.id)) {
+								&& sequencer.isNoteActive(ne.note.id))
+						{
 							g2.setColor(noteOnColor.get());
 							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
 						}
-						else if (isOutOfRange) {
+						else if (isOutOfRange)
+						{
 							g2.setColor(badNoteColor.get());
 							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
 						}
-						else {
+						else
+						{
 							g2.setColor(getNoteColor(ne));
 							fillNoteVelocity(g2, ne, dynamicsRenderedInThisPass);
 						}
@@ -606,11 +686,14 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, hintAntialiasSav);
 	}
 
-	private class MyMouseListener extends MouseAdapter {
-		private long positionFromEvent(MouseEvent e) {
+	private class MyMouseListener extends MouseAdapter
+	{
+		private long positionFromEvent(MouseEvent e)
+		{
 			AffineTransform xform = getTransform();
 			Point2D.Double pt = new Point2D.Double(e.getX(), e.getY());
-			try {
+			try
+			{
 				xform.inverseTransform(pt, pt);
 				long ret = (long) pt.x;
 				if (ret < 0)
@@ -619,13 +702,15 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 					ret = sequencer.getLength() - 1;
 				return ret;
 			}
-			catch (NoninvertibleTransformException e1) {
+			catch (NoninvertibleTransformException e1)
+			{
 				e1.printStackTrace();
 				return 0;
 			}
 		}
 
-		private boolean isDragCanceled(MouseEvent e) {
+		private boolean isDragCanceled(MouseEvent e)
+		{
 			if (trackInfo == null)
 				return true;
 
@@ -638,32 +723,38 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			return (pt.x < -32 || pt.x > dragArea.getWidth() + 32) || (pt.y < -32 || pt.y > dragArea.getHeight() + 32);
 		}
 
-		@Override
-		public void mousePressed(MouseEvent e) {
-			if (e.getButton() == MouseEvent.BUTTON1 && trackInfo != null) {
+		@Override public void mousePressed(MouseEvent e)
+		{
+			if (e.getButton() == MouseEvent.BUTTON1 && trackInfo != null)
+			{
 				sequencer.setDragging(true);
 				sequencer.setDragPosition(positionFromEvent(e));
 			}
 		}
 
-		@Override
-		public void mouseDragged(MouseEvent e) {
-			if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
-				if (!isDragCanceled(e)) {
+		@Override public void mouseDragged(MouseEvent e)
+		{
+			if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0)
+			{
+				if (!isDragCanceled(e))
+				{
 					sequencer.setDragging(true);
 					sequencer.setDragPosition(positionFromEvent(e));
 				}
-				else {
+				else
+				{
 					sequencer.setDragging(false);
 				}
 			}
 		}
 
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			if (e.getButton() == MouseEvent.BUTTON1) {
+		@Override public void mouseReleased(MouseEvent e)
+		{
+			if (e.getButton() == MouseEvent.BUTTON1)
+			{
 				sequencer.setDragging(false);
-				if (!isDragCanceled(e)) {
+				if (!isDragCanceled(e))
+				{
 					sequencer.setPosition(positionFromEvent(e));
 				}
 			}

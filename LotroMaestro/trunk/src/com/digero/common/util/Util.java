@@ -21,20 +21,24 @@ import javax.swing.JFrame;
 
 import sun.awt.shell.ShellFolder;
 
-public final class Util {
-	private Util() {
+public final class Util
+{
+	private Util()
+	{
 		// Can't instantiate class
 	}
 
-	public static Color grayscale(Color orig) {
+	public static Color grayscale(Color orig)
+	{
 		float[] hsb = Color.RGBtoHSB(orig.getRed(), orig.getGreen(), orig.getBlue(), null);
 		return Color.getHSBColor(0.0f, 0.0f, hsb[2]);
 	}
 
 	public static final String ELLIPSIS = "...";
 
-	@SuppressWarnings("deprecation")
-	public static String ellipsis(String text, float maxWidth, Font font) {
+	@SuppressWarnings("deprecation")//
+	public static String ellipsis(String text, float maxWidth, Font font)
+	{
 		FontMetrics metrics = Toolkit.getDefaultToolkit().getFontMetrics(font);
 
 		float width = metrics.stringWidth(text);
@@ -51,7 +55,8 @@ public final class Util {
 
 		// find the longest string that fits into
 		// the control boundaries using bisection method 
-		while (seg > 1) {
+		while (seg > 1)
+		{
 			seg -= seg / 2;
 
 			int left = len + seg;
@@ -60,7 +65,8 @@ public final class Util {
 			if (left > right)
 				continue;
 
-			if (trimToWordBoundary) {
+			if (trimToWordBoundary)
+			{
 				// trim at a word boundary using regular expressions 
 				matcher.region(0, left);
 				if (matcher.find())
@@ -74,7 +80,8 @@ public final class Util {
 
 			// candidate string fits into boundaries, try a longer string
 			// stop when seg <= 1
-			if (width <= maxWidth) {
+			if (width <= maxWidth)
+			{
 				len += seg;
 				fit = tst;
 			}
@@ -87,7 +94,8 @@ public final class Util {
 		return fit;
 	}
 
-	public static File getUserDocumentsPath() {
+	public static File getUserDocumentsPath()
+	{
 		String userHome = System.getProperty("user.home", "");
 		File docs = new File(userHome + "/Documents");
 		if (docs.isDirectory())
@@ -98,7 +106,8 @@ public final class Util {
 		return new File(userHome);
 	}
 
-	public static File getUserMusicPath() {
+	public static File getUserMusicPath()
+	{
 		String userHome = System.getProperty("user.home", "");
 		File music = new File(userHome + "/Music");
 		if (music.isDirectory())
@@ -110,10 +119,12 @@ public final class Util {
 		return getUserDocumentsPath();
 	}
 
-	public static File getLotroMusicPath(boolean create) {
+	public static File getLotroMusicPath(boolean create)
+	{
 		File docs = getUserDocumentsPath();
 		File lotro = new File(docs.getAbsolutePath() + "/The Lord of the Rings Online");
-		if (lotro.isDirectory()) {
+		if (lotro.isDirectory())
+		{
 			File music = new File(lotro.getAbsolutePath() + "/Music");
 			if (music.isDirectory() || create && music.mkdir())
 				return music;
@@ -123,7 +134,8 @@ public final class Util {
 		return docs;
 	}
 
-	public static int clamp(int value, int min, int max) {
+	public static int clamp(int value, int min, int max)
+	{
 		assert min <= max;
 		if (value < min)
 			return min;
@@ -132,7 +144,8 @@ public final class Util {
 		return value;
 	}
 
-	public static long clamp(long value, long min, long max) {
+	public static long clamp(long value, long min, long max)
+	{
 		assert min <= max;
 		if (value < min)
 			return min;
@@ -141,7 +154,8 @@ public final class Util {
 		return value;
 	}
 
-	public static double clamp(double value, double min, double max) {
+	public static double clamp(double value, double min, double max)
+	{
 		assert min <= max;
 		if (value < min)
 			return min;
@@ -150,7 +164,8 @@ public final class Util {
 		return value;
 	}
 
-	public static float clamp(float value, float min, float max) {
+	public static float clamp(float value, float min, float max)
+	{
 		assert min <= max;
 		if (value < min)
 			return min;
@@ -160,8 +175,10 @@ public final class Util {
 	}
 
 	/** Greatest Common Divisor */
-	public static int gcd(int a, int b) {
-		while (b != 0) {
+	public static int gcd(int a, int b)
+	{
+		while (b != 0)
+		{
 			int t = b;
 			b = a % b;
 			a = t;
@@ -170,8 +187,10 @@ public final class Util {
 	}
 
 	/** Greatest Common Divisor */
-	public static long gcd(long a, long b) {
-		while (b != 0) {
+	public static long gcd(long a, long b)
+	{
+		while (b != 0)
+		{
 			long t = b;
 			b = a % b;
 			a = t;
@@ -180,37 +199,50 @@ public final class Util {
 	}
 
 	/** Least Common Multiple */
-	public static int lcm(int a, int b) {
+	public static int lcm(int a, int b)
+	{
 		return (a / gcd(a, b)) * b;
 	}
 
 	/** Least Common Multiple */
-	public static long lcm(long a, long b) {
+	public static long lcm(long a, long b)
+	{
 		return (a / gcd(a, b)) * b;
 	}
 
-	public static boolean openURL(String url) {
-		try {
-			if (System.getProperty("os.name").startsWith("Windows")) {
+	public static boolean openURL(String url)
+	{
+		try
+		{
+			if (System.getProperty("os.name").startsWith("Windows"))
+			{
 				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
 				return true;
 			}
 		}
-		catch (Exception e) {}
+		catch (Exception e)
+		{
+		}
 		return false;
 	}
 
-	public static File resolveShortcut(File file) {
-		if (file.getName().toLowerCase().endsWith(".lnk")) {
-			try {
+	public static File resolveShortcut(File file)
+	{
+		if (file.getName().toLowerCase().endsWith(".lnk"))
+		{
+			try
+			{
 				return ShellFolder.getShellFolder(file).getLinkLocation();
 			}
-			catch (Exception e) {}
+			catch (Exception e)
+			{
+			}
 		}
 		return file;
 	}
 
-	public static void initWinBounds(final JFrame frame, final Preferences prefs, int defaultW, int defaultH) {
+	public static void initWinBounds(final JFrame frame, final Preferences prefs, int defaultW, int defaultH)
+	{
 		Dimension mainScreen = Toolkit.getDefaultToolkit().getScreenSize();
 
 		int width = prefs.getInt("width", defaultW);
@@ -223,18 +255,22 @@ public final class Util {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice[] gs = ge.getScreenDevices();
 		Rectangle onScreen = null;
-		for (int i = 0; i < gs.length; i++) {
+		for (int i = 0; i < gs.length; i++)
+		{
 			Rectangle monitorBounds = gs[i].getDefaultConfiguration().getBounds();
-			if (monitorBounds.intersects(x, y, width, height)) {
+			if (monitorBounds.intersects(x, y, width, height))
+			{
 				onScreen = monitorBounds;
 				break;
 			}
 		}
-		if (onScreen == null) {
+		if (onScreen == null)
+		{
 			x = (mainScreen.width - width) / 2;
 			y = (mainScreen.height - height) / 2;
 		}
-		else {
+		else
+		{
 			if (x < onScreen.x)
 				x = onScreen.x;
 			else if (x + width > onScreen.x + onScreen.width)
@@ -251,37 +287,43 @@ public final class Util {
 		int maximized = prefs.getInt("maximized", 0) & JFrame.MAXIMIZED_BOTH;
 		frame.setExtendedState((frame.getExtendedState() & ~JFrame.MAXIMIZED_BOTH) | maximized);
 
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+		frame.addComponentListener(new ComponentAdapter()
+		{
+			@Override public void componentResized(ComponentEvent e)
+			{
+				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0)
+				{
 					prefs.putInt("width", frame.getWidth());
 					prefs.putInt("height", frame.getHeight());
 				}
 			}
 
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+			@Override public void componentMoved(ComponentEvent e)
+			{
+				if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0)
+				{
 					prefs.putInt("x", frame.getX());
 					prefs.putInt("y", frame.getY());
 				}
 			}
 		});
 
-		frame.addWindowStateListener(new WindowStateListener() {
-			@Override
-			public void windowStateChanged(WindowEvent e) {
+		frame.addWindowStateListener(new WindowStateListener()
+		{
+			@Override public void windowStateChanged(WindowEvent e)
+			{
 				prefs.putInt("maximized", e.getNewState() & JFrame.MAXIMIZED_BOTH);
 			}
 		});
 	}
 
-	public static String formatDuration(long micros) {
+	public static String formatDuration(long micros)
+	{
 		return formatDuration(micros, 0);
 	}
 
-	public static String formatDuration(long micros, long maxMicros) {
+	public static String formatDuration(long micros, long maxMicros)
+	{
 		if (maxMicros < micros)
 			maxMicros = micros;
 
@@ -299,17 +341,21 @@ public final class Util {
 		tMax %= 60 * 60;
 		int minMax = tMax / 60;
 
-		if (hrMax > 0) {
+		if (hrMax > 0)
+		{
 			s.append(hr).append(':');
-			if (min < 10) {
+			if (min < 10)
+			{
 				s.append('0');
 			}
 		}
-		else if (minMax >= 10 && min < 10) {
+		else if (minMax >= 10 && min < 10)
+		{
 			s.append('0');
 		}
 		s.append(min).append(':');
-		if (sec < 10) {
+		if (sec < 10)
+		{
 			s.append('0');
 		}
 		s.append(sec);
@@ -317,27 +363,32 @@ public final class Util {
 		return s.toString();
 	}
 
-	public static String quote(String in) {
+	public static String quote(String in)
+	{
 		return "\"" + in.replace("\"", "\\\"") + "\"";
 	}
 
-	public static String htmlEscape(String in) {
+	public static String htmlEscape(String in)
+	{
 		return in.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
-	public static boolean stringEndsWithIgnoreCase(String source, String suffix) {
+	public static boolean stringEndsWithIgnoreCase(String source, String suffix)
+	{
 		int beginIndex = source.length() - suffix.length();
 		return (beginIndex >= 0) && source.substring(beginIndex, source.length()).equalsIgnoreCase(suffix);
 	}
 
-	public static String fileNameWithoutExtension(File file) {
+	public static String fileNameWithoutExtension(File file)
+	{
 		if (file.isDirectory())
 			return file.getName();
 
 		return fileNameWithoutExtension(file.getName());
 	}
 
-	public static String fileNameWithoutExtension(String fileName) {
+	public static String fileNameWithoutExtension(String fileName)
+	{
 		int dot = fileName.lastIndexOf('.');
 		if (dot > 0)
 			fileName = fileName.substring(0, dot);

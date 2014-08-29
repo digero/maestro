@@ -19,7 +19,8 @@ import com.digero.common.util.IDiscardable;
 import com.sun.media.sound.MidiUtils;
 import com.sun.media.sound.MidiUtils.TempoCache;
 
-public class SequencerWrapper implements IMidiConstants, IDiscardable {
+public class SequencerWrapper implements IMidiConstants, IDiscardable
+{
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
 
@@ -40,7 +41,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	private List<SequencerListener> listenersRemovedWhileFiring = null;
 	private boolean isFiringEvent = false;
 
-	public SequencerWrapper() throws MidiUnavailableException {
+	public SequencerWrapper() throws MidiUnavailableException
+	{
 		sequencer = MidiSystem.getSequencer(false);
 		sequencer.open();
 		transmitter = sequencer.getTransmitter();
@@ -48,13 +50,15 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		transmitter.setReceiver(receiver);
 	}
 
-	protected Receiver createReceiver() throws MidiUnavailableException {
+	protected Receiver createReceiver() throws MidiUnavailableException
+	{
 		return MidiSystem.getReceiver();
 	}
 
-	@Override
-	public void discard() {
-		if (sequencer != null) {
+	@Override public void discard()
+	{
+		if (sequencer != null)
+		{
 			stop();
 		}
 
@@ -63,7 +67,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		if (updateTimer != null)
 			updateTimer.stop();
 
-		if (transceivers != null) {
+		if (transceivers != null)
+		{
 			for (Transceiver t : transceivers)
 				t.close();
 			transceivers = null;
@@ -79,7 +84,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 			sequencer.close();
 	}
 
-	public void addTransceiver(Transceiver transceiver) {
+	public void addTransceiver(Transceiver transceiver)
+	{
 		Transmitter lastTransmitter = transmitter;
 		if (!transceivers.isEmpty())
 			lastTransmitter = transceivers.get(transceivers.size() - 1);
@@ -91,12 +97,15 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		transceivers.add(transceiver);
 	}
 
-	private class TimerActionListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (sequencer != null && sequencer.isOpen()) {
+	private class TimerActionListener implements ActionListener
+	{
+		@Override public void actionPerformed(ActionEvent e)
+		{
+			if (sequencer != null && sequencer.isOpen())
+			{
 				long songPos = sequencer.getMicrosecondPosition();
-				if (songPos >= getLength()) {
+				if (songPos >= getLength())
+				{
 					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
 					// deadlock when calling setMicrosecondPosition(0) exactly when the sequencer 
 					// hits the end of the sequence.  It looks like it's safe to call 
@@ -105,13 +114,16 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 					sequencer.setTickPosition(0);
 					lastUpdatePosition = songPos;
 				}
-				else {
-					if (lastUpdatePosition != songPos) {
+				else
+				{
+					if (lastUpdatePosition != songPos)
+					{
 						lastUpdatePosition = songPos;
 						fireChangeEvent(SequencerProperty.POSITION);
 					}
 					boolean running = sequencer.isRunning();
-					if (lastRunning != running) {
+					if (lastRunning != running)
+					{
 						lastRunning = running;
 						if (running)
 							updateTimer.start();
@@ -124,16 +136,20 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public void reset(boolean fullReset) {
+	public void reset(boolean fullReset)
+	{
 		stop();
 		setPosition(0);
 
-		if (fullReset) {
+		if (fullReset)
+		{
 			Sequence seqSave = sequencer.getSequence();
-			try {
+			try
+			{
 				sequencer.setSequence((Sequence) null);
 			}
-			catch (InvalidMidiDataException e) {
+			catch (InvalidMidiDataException e)
+			{
 				// This won't happen
 				throw new RuntimeException(e);
 			}
@@ -142,49 +158,59 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 			transmitter.close();
 			receiver.close();
 
-			try {
+			try
+			{
 				sequencer = MidiSystem.getSequencer(false);
 				sequencer.open();
 				transmitter = sequencer.getTransmitter();
 				receiver = createReceiver();
 			}
-			catch (MidiUnavailableException e1) {
+			catch (MidiUnavailableException e1)
+			{
 				throw new RuntimeException(e1);
 			}
 
-			try {
+			try
+			{
 				sequencer.setSequence(seqSave);
 			}
-			catch (InvalidMidiDataException e) {
+			catch (InvalidMidiDataException e)
+			{
 				// This won't happen
 				throw new RuntimeException(e);
 			}
 
 			// Hook up the transmitter to the receiver through any transceivers that we have
 			Transmitter prevTransmitter = transmitter;
-			for (Transceiver transceiver : transceivers) {
+			for (Transceiver transceiver : transceivers)
+			{
 				prevTransmitter.setReceiver(transceiver);
 				prevTransmitter = transceiver;
 			}
 			prevTransmitter.setReceiver(receiver);
 
-			try {
+			try
+			{
 				ShortMessage msg = new ShortMessage();
 				msg.setMessage(ShortMessage.SYSTEM_RESET);
 				receiver.send(msg, -1);
 			}
-			catch (InvalidMidiDataException e) {
+			catch (InvalidMidiDataException e)
+			{
 				e.printStackTrace();
 			}
 		}
-		else { // Not a full reset
+		else
+		{ // Not a full reset
 			boolean isOpen = sequencer.isOpen();
-			try {
+			try
+			{
 				if (!isOpen)
 					sequencer.open();
 
 				ShortMessage msg = new ShortMessage();
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
+				for (int i = 0; i < CHANNEL_COUNT; i++)
+				{
 					msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, 0, 0);
 					receiver.send(msg, -1);
 					msg.setMessage(ShortMessage.CONTROL_CHANGE, i, ALL_CONTROLLERS_OFF, 0);
@@ -193,10 +219,12 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 				msg.setMessage(ShortMessage.SYSTEM_RESET);
 				receiver.send(msg, -1);
 			}
-			catch (MidiUnavailableException e) {
+			catch (MidiUnavailableException e)
+			{
 				// Ignore
 			}
-			catch (InvalidMidiDataException e) {
+			catch (InvalidMidiDataException e)
+			{
 				// Ignore
 				e.printStackTrace();
 			}
@@ -206,62 +234,78 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public long getTickPosition() {
+	public long getTickPosition()
+	{
 		return sequencer.getTickPosition();
 	}
 
-	public void setTickPosition(long tick) {
-		if (tick != getTickPosition()) {
+	public void setTickPosition(long tick)
+	{
+		if (tick != getTickPosition())
+		{
 			sequencer.setTickPosition(tick);
 			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
 
-	public long getPosition() {
+	public long getPosition()
+	{
 		return sequencer.getMicrosecondPosition();
 	}
 
-	public void setPosition(long position) {
-		if (position == 0) {
+	public void setPosition(long position)
+	{
+		if (position == 0)
+		{
 			// Sun's RealtimeSequencer isn't entirely reliable when calling 
 			// setMicrosecondPosition(0). Instead call setTickPosition(0),  
 			// which has the same effect and isn't so buggy.
 			setTickPosition(0);
 		}
-		else if (position != getPosition()) {
+		else if (position != getPosition())
+		{
 			sequencer.setMicrosecondPosition(position);
 			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
 
-	public long getLength() {
+	public long getLength()
+	{
 		return sequencer.getMicrosecondLength();
 	}
 
-	public float getTempoFactor() {
+	public float getTempoFactor()
+	{
 		return sequencer.getTempoFactor();
 	}
 
-	public void setTempoFactor(float tempo) {
-		if (tempo != getTempoFactor()) {
+	public void setTempoFactor(float tempo)
+	{
+		if (tempo != getTempoFactor())
+		{
 			sequencer.setTempoFactor(tempo);
 			fireChangeEvent(SequencerProperty.TEMPO);
 		}
 	}
 
-	public boolean isRunning() {
+	public boolean isRunning()
+	{
 		return sequencer.isRunning();
 	}
 
-	public void setRunning(boolean isRunning) {
-		if (isRunning != this.isRunning()) {
-			if (isRunning) {
+	public void setRunning(boolean isRunning)
+	{
+		if (isRunning != this.isRunning())
+		{
+			if (isRunning)
+			{
 				sequencer.start();
 				updateTimer.start();
 			}
-			else {
+			else
+			{
 				sequencer.stop();
 				updateTimer.stop();
 			}
@@ -271,31 +315,39 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public void start() {
+	public void start()
+	{
 		setRunning(true);
 	}
 
-	public void stop() {
+	public void stop()
+	{
 		setRunning(false);
 	}
 
-	public boolean getTrackMute(int track) {
+	public boolean getTrackMute(int track)
+	{
 		return sequencer.getTrackMute(track);
 	}
 
-	public void setTrackMute(int track, boolean mute) {
-		if (mute != this.getTrackMute(track)) {
+	public void setTrackMute(int track, boolean mute)
+	{
+		if (mute != this.getTrackMute(track))
+		{
 			sequencer.setTrackMute(track, mute);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
 	}
 
-	public boolean getTrackSolo(int track) {
+	public boolean getTrackSolo(int track)
+	{
 		return sequencer.getTrackSolo(track);
 	}
 
-	public void setTrackSolo(int track, boolean solo) {
-		if (solo != this.getTrackSolo(track)) {
+	public void setTrackSolo(int track, boolean solo)
+	{
+		if (solo != this.getTrackSolo(track))
+		{
 			sequencer.setTrackSolo(track, solo);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
@@ -304,7 +356,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	/**
 	 * Takes into account both muting and solo.
 	 */
-	public boolean isTrackActive(int track) {
+	public boolean isTrackActive(int track)
+	{
 		Sequence song = sequencer.getSequence();
 
 		if (song == null)
@@ -313,7 +366,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		if (sequencer.getTrackSolo(track))
 			return true;
 
-		for (int i = song.getTracks().length - 1; i >= 0; --i) {
+		for (int i = song.getTracks().length - 1; i >= 0; --i)
+		{
 			if (i != track && sequencer.getTrackSolo(i))
 				return false;
 		}
@@ -325,7 +379,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for
 	 * convienience.
 	 */
-	public boolean isNoteActive(int noteId) {
+	public boolean isNoteActive(int noteId)
+	{
 		return true;
 	}
 
@@ -333,53 +388,66 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 	 * If dragging, returns the drag position. Otherwise returns the song
 	 * position.
 	 */
-	public long getThumbPosition() {
+	public long getThumbPosition()
+	{
 		return isDragging() ? getDragPosition() : getPosition();
 	}
 
 	/** If dragging, returns the drag tick. Otherwise returns the song tick. */
-	public long getThumbTick() {
+	public long getThumbTick()
+	{
 		return isDragging() ? getDragTick() : getTickPosition();
 	}
 
-	public long getDragPosition() {
+	public long getDragPosition()
+	{
 		return dragPosition;
 	}
 
-	public long getDragTick() {
+	public long getDragTick()
+	{
 		return MidiUtils.microsecond2tick(getSequence(), getDragPosition(), tempoCache);
 	}
 
-	public void setDragTick(long tick) {
+	public void setDragTick(long tick)
+	{
 		setDragPosition(MidiUtils.tick2microsecond(getSequence(), tick, tempoCache));
 	}
 
-	public void setDragPosition(long dragPosition) {
-		if (this.dragPosition != dragPosition) {
+	public void setDragPosition(long dragPosition)
+	{
+		if (this.dragPosition != dragPosition)
+		{
 			this.dragPosition = dragPosition;
 			fireChangeEvent(SequencerProperty.DRAG_POSITION);
 		}
 	}
 
-	public boolean isDragging() {
+	public boolean isDragging()
+	{
 		return isDragging;
 	}
 
-	public void setDragging(boolean isDragging) {
-		if (this.isDragging != isDragging) {
+	public void setDragging(boolean isDragging)
+	{
+		if (this.isDragging != isDragging)
+		{
 			this.isDragging = isDragging;
 			fireChangeEvent(SequencerProperty.IS_DRAGGING);
 		}
 	}
 
-	public void addChangeListener(SequencerListener l) {
-		if (isFiringEvent) {
+	public void addChangeListener(SequencerListener l)
+	{
+		if (isFiringEvent)
+		{
 			if (listenersAddedWhileFiring == null)
 				listenersAddedWhileFiring = new ArrayList<SequencerListener>();
 
 			listenersAddedWhileFiring.add(l);
 		}
-		else {
+		else
+		{
 			if (listeners == null)
 				listeners = new ArrayList<SequencerListener>();
 
@@ -387,38 +455,48 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public void removeChangeListener(SequencerListener l) {
-		if (isFiringEvent) {
+	public void removeChangeListener(SequencerListener l)
+	{
+		if (isFiringEvent)
+		{
 			if (listenersRemovedWhileFiring == null)
 				listenersRemovedWhileFiring = new ArrayList<SequencerListener>();
 
 			listenersRemovedWhileFiring.add(l);
 		}
-		else {
+		else
+		{
 			if (listeners != null)
 				listeners.remove(l);
 		}
 	}
 
-	protected void fireChangeEvent(SequencerProperty property) {
-		if (listeners != null) {
+	protected void fireChangeEvent(SequencerProperty property)
+	{
+		if (listeners != null)
+		{
 			isFiringEvent = true;
-			try {
+			try
+			{
 				SequencerEvent e = new SequencerEvent(this, property);
-				for (SequencerListener l : listeners) {
+				for (SequencerListener l : listeners)
+				{
 					l.propertyChanged(e);
 				}
 			}
-			finally {
+			finally
+			{
 				isFiringEvent = false;
 
-				if (listenersAddedWhileFiring != null) {
+				if (listenersAddedWhileFiring != null)
+				{
 					for (SequencerListener l : listenersAddedWhileFiring)
 						listeners.add(l);
 
 					listenersAddedWhileFiring = null;
 				}
-				if (listenersRemovedWhileFiring != null) {
+				if (listenersRemovedWhileFiring != null)
+				{
 					for (SequencerListener l : listenersRemovedWhileFiring)
 						listeners.remove(l);
 
@@ -428,8 +506,10 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public void setSequence(Sequence sequence) throws InvalidMidiDataException {
-		if (sequencer.getSequence() != sequence) {
+	public void setSequence(Sequence sequence) throws InvalidMidiDataException
+	{
+		if (sequencer.getSequence() != sequence)
+		{
 			boolean preLoaded = isLoaded();
 			sequencer.setSequence(sequence);
 			if (sequence != null)
@@ -441,37 +521,46 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable {
 		}
 	}
 
-	public void clearSequence() {
-		try {
+	public void clearSequence()
+	{
+		try
+		{
 			setSequence(null);
 		}
-		catch (InvalidMidiDataException e) {
+		catch (InvalidMidiDataException e)
+		{
 			// This shouldn't happen
 			throw new RuntimeException(e);
 		}
 	}
 
-	public boolean isLoaded() {
+	public boolean isLoaded()
+	{
 		return sequencer.getSequence() != null;
 	}
 
-	public Sequence getSequence() {
+	public Sequence getSequence()
+	{
 		return sequencer.getSequence();
 	}
 
-	public Transmitter getTransmitter() {
+	public Transmitter getTransmitter()
+	{
 		return transmitter;
 	}
 
-	public Receiver getReceiver() {
+	public Receiver getReceiver()
+	{
 		return receiver;
 	}
 
-	public void open() throws MidiUnavailableException {
+	public void open() throws MidiUnavailableException
+	{
 		sequencer.open();
 	}
 
-	public void close() {
+	public void close()
+	{
 		sequencer.close();
 	}
 }

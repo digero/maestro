@@ -2,6 +2,7 @@ package com.digero.maestro.abc;
 
 import java.util.List;
 
-public interface AbcProject {
+public interface AbcProject
+{
 	List<AbcPart> getAllParts();
 }

@@ -10,51 +10,62 @@ import java.util.List;
 
 import javax.swing.JLabel;
 
-public class LinkButton extends JLabel {
+public class LinkButton extends JLabel
+{
 	private List<ActionListener> listeners = null;
 
-	public LinkButton() {
+	public LinkButton()
+	{
 		init();
 	}
 
-	public LinkButton(String text) {
+	public LinkButton(String text)
+	{
 		super("<html><u>" + text + "</u></html>");
 		init();
 	}
 
-	private void init() {
+	private void init()
+	{
 		setForeground(ColorTable.LINK.get());
 		setOpaque(false);
 		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
+		addMouseListener(new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent e)
+			{
+				if (e.getButton() == MouseEvent.BUTTON1)
+				{
 					fireActionEvent();
 				}
 			}
 		});
 	}
 
-	public void addActionListener(ActionListener listener) {
+	public void addActionListener(ActionListener listener)
+	{
 		if (listeners == null)
 			listeners = new ArrayList<ActionListener>(1);
 
 		listeners.add(listener);
 	}
 
-	public void removeActionListener(ActionListener listener) {
+	public void removeActionListener(ActionListener listener)
+	{
 		if (listeners != null)
 			listeners.remove(listener);
 	}
 
-	protected void fireActionEvent() {
+	protected void fireActionEvent()
+	{
 		if (listeners != null && listeners.isEmpty())
 			listeners = null;
 
-		if (listeners != null) {
+		if (listeners != null)
+		{
 			ActionEvent e = new ActionEvent(this, 0, "click");
-			for (ActionListener l : listeners) {
+			for (ActionListener l : listeners)
+			{
 				l.actionPerformed(e);
 			}
 		}

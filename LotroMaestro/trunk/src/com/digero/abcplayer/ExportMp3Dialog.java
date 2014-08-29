@@ -32,10 +32,12 @@ import javax.swing.border.Border;
 
 import com.digero.common.util.Util;
 
-public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
+public class ExportMp3Dialog extends JDialog implements TableLayoutConstants
+{
 	private static final int TEXT_FIELD_COLS = 28;
 
-	private enum Quality {
+	private enum Quality
+	{
 		Medium, Standard, Extreme
 	}
 
@@ -56,7 +58,8 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 	private List<ActionListener> actionListeners;
 
 	public ExportMp3Dialog(JFrame parent, File lameExe, Preferences prefs, File abcFile, String songTitle,
-			String songArtist) {
+			String songArtist)
+	{
 		super(parent, AbcPlayer.APP_NAME + " - Export to MP3", false);
 
 		this.prefs = prefs;
@@ -65,14 +68,15 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 
 		Border outerBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
 
-		layout = new TableLayout(new double[] {
-				PREFERRED, FILL, PREFERRED
-		}, new double[] {});
+		layout = new TableLayout(//
+				new double[] { PREFERRED, FILL, PREFERRED },//
+				new double[] { });
 		content = new JPanel(layout);
 
 		String saveDir = prefs.get("saveDirectory", abcFile.getParentFile().getAbsolutePath());
 		String saveName = abcFile.getName();
-		if (saveName.toLowerCase().endsWith(".abc")) {
+		if (saveName.toLowerCase().endsWith(".abc"))
+		{
 			saveName = saveName.substring(0, saveName.length() - 4) + ".mp3";
 		}
 		File saveFile = new File(saveDir, saveName);
@@ -85,13 +89,15 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 
 		JButton browseButton = new JButton("Browse...");
 		browseButton.setMnemonic(KeyEvent.VK_B);
-		browseButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		browseButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				JFileChooser fc = new JFileChooser();
 				fc.setSelectedFile(new File(saveAsField.getText()));
 				int result = fc.showSaveDialog(ExportMp3Dialog.this);
-				if (result == JFileChooser.APPROVE_OPTION) {
+				if (result == JFileChooser.APPROVE_OPTION)
+				{
 					File f = fc.getSelectedFile();
 					if (f.getName().indexOf('.') < 0)
 						f = new File(f.getParentFile(), f + ".mp3");
@@ -104,7 +110,8 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		qualityButtons = new JRadioButton[Quality.values().length];
 		qualityButtonGroup = new ButtonGroup();
 		int iQuality = Util.clamp(prefs.getInt("quality", Quality.Standard.ordinal()), 0, qualityButtons.length - 1);
-		for (Quality q : Quality.values()) {
+		for (Quality q : Quality.values())
+		{
 			int i = q.ordinal();
 			qualityButtons[i] = new JRadioButton(q.toString(), i == iQuality);
 			qualityButtonGroup.add(qualityButtons[i]);
@@ -116,7 +123,8 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		addRow("Album", albumField, null);
 		addRow("Quality", qualityPanel, qualityPanel);
 		addRow("Save As", saveAsField, browseButton);
-		for (int r = 0; r < layout.getNumRow(); r++) {
+		for (int r = 0; r < layout.getNumRow(); r++)
+		{
 			layout.setRow(r, 1.0 / layout.getNumRow());
 		}
 		layout.insertRow(layout.getNumRow(), 16);
@@ -125,10 +133,12 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		JButton okButton = new JButton("Convert");
 		okButton.setMnemonic(KeyEvent.VK_O);
 		okButton.setFont(okButton.getFont().deriveFont(Font.BOLD));
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (validateFile()) {
+		okButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				if (validateFile())
+				{
 					saveSettings();
 					setVisible(false);
 					fireActionPerformed();
@@ -137,9 +147,10 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		});
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setMnemonic(KeyEvent.VK_C);
-		cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		cancelButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				setVisible(false);
 			}
 		});
@@ -161,7 +172,8 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		setResizable(false);
 	}
 
-	private void addRow(String labelText, Component element, Component element2) {
+	private void addRow(String labelText, Component element, Component element2)
+	{
 		int row = layout.getNumRow();
 		layout.insertRow(row, PREFERRED);
 
@@ -169,10 +181,12 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
 		content.add(label, "0, " + row);
 
-		if (element == element2) {
+		if (element == element2)
+		{
 			content.add(element, "1, " + row + ", 2, " + row);
 		}
-		else {
+		else
+		{
 			if (element != null)
 				content.add(element, "1, " + row + ", L, C");
 			if (element2 != null)
@@ -180,50 +194,61 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		}
 	}
 
-	public Preferences getPreferencesNode() {
+	public Preferences getPreferencesNode()
+	{
 		return prefs;
 	}
 
-	private void saveSettings() {
+	private void saveSettings()
+	{
 		prefs.putBoolean("addLotro", addLotroCheckbox.isSelected());
 		prefs.put("album", albumField.getText());
 		prefs.putInt("quality", getQualityIndex());
 		prefs.put("saveDirectory", getSaveFile().getParentFile().getAbsolutePath());
 	}
 
-	private int getQualityIndex() {
-		for (int i = 0; i < qualityButtons.length; i++) {
+	private int getQualityIndex()
+	{
+		for (int i = 0; i < qualityButtons.length; i++)
+		{
 			if (qualityButtons[i].isSelected())
 				return i;
 		}
 		return Quality.Medium.ordinal();
 	}
 
-	public String getSongTitle() {
+	public String getSongTitle()
+	{
 		String title = titleField.getText().trim();
-		if (title.length() > 0 && addLotroCheckbox.isSelected()) {
+		if (title.length() > 0 && addLotroCheckbox.isSelected())
+		{
 			title += " (LOTRO)";
 		}
 		return title;
 	}
 
-	public String getArtist() {
+	public String getArtist()
+	{
 		return artistField.getText().trim();
 	}
 
-	public String getAlbum() {
+	public String getAlbum()
+	{
 		return albumField.getText().trim();
 	}
 
-	public String getQuality() {
+	public String getQuality()
+	{
 		return qualityButtons[getQualityIndex()].getText().toLowerCase();
 	}
 
-	public File getSaveFile() {
+	public File getSaveFile()
+	{
 		return new File(saveAsField.getText());
 	}
 
-	public String getCommandLine(File wav) {
+	public String getCommandLine(File wav)
+	{
 		String args = " --silent";
 		args += " --preset " + getQuality();
 		if (getSongTitle().length() > 0)
@@ -237,54 +262,67 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		return Util.quote(lameExe.getAbsolutePath()) + args;
 	}
 
-	private boolean validateFile() {
+	private boolean validateFile()
+	{
 		File f = new File(saveAsField.getText());
 
-		if (f.isDirectory()) {
+		if (f.isDirectory())
+		{
 			JOptionPane.showMessageDialog(this, "Specified path is a folder:\n" + f.getAbsolutePath(), "Invalid file",
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		else if (f.exists()) {
+		else if (f.exists())
+		{
 			int result = JOptionPane.showConfirmDialog(this, "File " + f.getName() + " already exists. Overwrite?",
 					"Confirm overwrite", JOptionPane.YES_NO_CANCEL_OPTION);
-			if (result == JOptionPane.CANCEL_OPTION) {
+			if (result == JOptionPane.CANCEL_OPTION)
+			{
 				setVisible(false);
 				return false;
 			}
 			return result == JOptionPane.OK_OPTION;
 		}
-		else if (!f.getParentFile().exists()) {
+		else if (!f.getParentFile().exists())
+		{
 			int result = JOptionPane.showConfirmDialog(this, "Folder \"" + f.getParentFile().getName()
 					+ "\" doesn't exist. Create?", "Create directory", JOptionPane.OK_CANCEL_OPTION);
-			if (result == JOptionPane.OK_OPTION) {
-				if (!f.getParentFile().mkdirs()) {
+			if (result == JOptionPane.OK_OPTION)
+			{
+				if (!f.getParentFile().mkdirs())
+				{
 					JOptionPane.showMessageDialog(this, "Failed to create parent folder", "Failed to create folder",
 							JOptionPane.ERROR_MESSAGE);
 					return false;
 				}
 				return true;
 			}
-			else {
+			else
+			{
 				return false;
 			}
 		}
-		else {
+		else
+		{
 			return true;
 		}
 	}
 
-	public void addActionListener(ActionListener listener) {
+	public void addActionListener(ActionListener listener)
+	{
 		actionListeners.add(listener);
 	}
 
-	public void removeActionListener(ActionListener listener) {
+	public void removeActionListener(ActionListener listener)
+	{
 		actionListeners.remove(listener);
 	}
 
-	private void fireActionPerformed() {
+	private void fireActionPerformed()
+	{
 		ActionEvent e = new ActionEvent(this, 0, null);
-		for (ActionListener listener : actionListeners) {
+		for (ActionListener listener : actionListeners)
+		{
 			listener.actionPerformed(e);
 		}
 	}
