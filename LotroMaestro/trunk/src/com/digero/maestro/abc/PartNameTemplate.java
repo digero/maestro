@@ -77,6 +77,7 @@ public class PartNameTemplate {
 		this.metadata = metadata_;
 
 		Comparator<String> caseInsensitiveStringComparator = new Comparator<String>() {
+			@Override
 			public int compare(String a, String b) {
 				return a.compareToIgnoreCase(b);
 			}
@@ -85,26 +86,31 @@ public class PartNameTemplate {
 		variables = new TreeMap<String, Variable>(caseInsensitiveStringComparator);
 
 		variables.put("$SongTitle", new Variable("The title of the song, as entered in the \"T:\" field") {
+			@Override
 			public String getValue() {
 				return metadata.getSongTitle();
 			}
 		});
 		variables.put("$SongLength", new Variable("The playing time of the song in mm:ss format") {
+			@Override
 			public String getValue() {
 				return Util.formatDuration(metadata.getSongLengthMicros());
 			}
 		});
 		variables.put("$SongComposer", new Variable("The song composer's name, as entered in the \"C:\" field") {
+			@Override
 			public String getValue() {
 				return metadata.getComposer();
 			}
 		});
 		variables.put("$SongTranscriber", new Variable("Your name, as entered in the \"Z:\" field") {
+			@Override
 			public String getValue() {
 				return metadata.getTranscriber();
 			}
 		});
 		variables.put("$PartName", new Variable("The part name for the individual ABC part") {
+			@Override
 			public String getValue() {
 				if (currentAbcPart == null)
 					return "";
@@ -113,6 +119,7 @@ public class PartNameTemplate {
 			}
 		});
 		variables.put("$PartNumber", new Variable("The part number for the individual ABC part") {
+			@Override
 			public String getValue() {
 				if (currentAbcPart == null)
 					return "0";
@@ -121,6 +128,7 @@ public class PartNameTemplate {
 			}
 		});
 		variables.put("$PartInstrument", new Variable("The instrument for the individual ABC part") {
+			@Override
 			public String getValue() {
 				if (currentAbcPart == null)
 					return LotroInstrument.LUTE.toString();
@@ -132,6 +140,7 @@ public class PartNameTemplate {
 				+ "if it is in a subdirectory of the LOTRO/Music directory.\n"
 				+ "If the file is saved directly in the LOTRO/Music directory, "
 				+ "this will be the same as <b>$FileName</b>.") {
+			@Override
 			public String getValue() {
 				if (metadata.getSaveFile() == null)
 					return "";
@@ -156,6 +165,7 @@ public class PartNameTemplate {
 			}
 		});
 		variables.put("$FileName", new Variable("The name of the ABC file, without the .abc extension") {
+			@Override
 			public String getValue() {
 				if (metadata.getSaveFile() == null)
 					return "";

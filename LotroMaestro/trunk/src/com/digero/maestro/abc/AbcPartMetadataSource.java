@@ -6,6 +6,6 @@ public interface AbcPartMetadataSource {
 	public String getTitle();
 
 	public int getPartNumber();
-	
+
 	public LotroInstrument getInstrument();
 }

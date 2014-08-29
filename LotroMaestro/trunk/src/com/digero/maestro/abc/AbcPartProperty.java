@@ -17,7 +17,7 @@ public enum AbcPartProperty {
 	private AbcPartProperty() {
 		this.renderRelated = true;
 	}
-	
+
 	private AbcPartProperty(boolean renderRelated) {
 		this.renderRelated = renderRelated;
 	}

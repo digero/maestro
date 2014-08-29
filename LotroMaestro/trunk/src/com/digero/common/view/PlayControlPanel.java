@@ -53,6 +53,7 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 		playButton = new JButton(playIcon);
 		playButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				sequencer.setRunning(!sequencer.isRunning());
 			}
@@ -60,12 +61,14 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 		stopButton = new JButton(stopIcon);
 		stopButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				sequencer.reset(false);
 			}
 		});
 
 		sequencer.addChangeListener(new SequencerListener() {
+			@Override
 			public void propertyChanged(SequencerEvent evt) {
 				updateButtonStates();
 			}
@@ -76,7 +79,7 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 			volumeBar = new NativeVolumeBar(volumeManager);
 
 			TableLayout volumeLayout = new TableLayout(new double[] {
-					PREFERRED
+				PREFERRED
 			}, new double[] {
 					PREFERRED, PREFERRED
 			});

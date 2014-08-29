@@ -101,9 +101,11 @@ public class VolumeBar extends JPanel {
 			return pos;
 		}
 
+		@Override
 		public void mouseClicked(MouseEvent e) {
 		}
 
+		@Override
 		public void mousePressed(MouseEvent e) {
 			if (!VolumeBar.this.isEnabled())
 				return;
@@ -112,9 +114,11 @@ public class VolumeBar extends JPanel {
 			requestFocus();
 		}
 
+		@Override
 		public void mouseReleased(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (!VolumeBar.this.isEnabled())
 				return;
@@ -122,12 +126,15 @@ public class VolumeBar extends JPanel {
 			repaint();
 		}
 
+		@Override
 		public void mouseMoved(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseEntered(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseExited(MouseEvent e) {
 		}
 	}

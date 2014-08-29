@@ -86,6 +86,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		JButton browseButton = new JButton("Browse...");
 		browseButton.setMnemonic(KeyEvent.VK_B);
 		browseButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
 				fc.setSelectedFile(new File(saveAsField.getText()));
@@ -125,6 +126,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		okButton.setMnemonic(KeyEvent.VK_O);
 		okButton.setFont(okButton.getFont().deriveFont(Font.BOLD));
 		okButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (validateFile()) {
 					saveSettings();
@@ -136,6 +138,7 @@ public class ExportMp3Dialog extends JDialog implements TableLayoutConstants {
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setMnemonic(KeyEvent.VK_C);
 		cancelButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 			}

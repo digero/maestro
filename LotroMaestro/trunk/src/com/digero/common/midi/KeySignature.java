@@ -221,7 +221,7 @@ public class KeySignature implements IMidiConstants {
 		};
 
 		Note root = Note.GbX;
-		
+
 		for (int i = -6; i <= 6; i++) {
 			KeySignature key = new KeySignature(i, true);
 			System.out.print(key + ":\t");

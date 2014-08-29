@@ -320,7 +320,7 @@ public final class Util {
 	public static String quote(String in) {
 		return "\"" + in.replace("\"", "\\\"") + "\"";
 	}
-	
+
 	public static String htmlEscape(String in) {
 		return in.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}

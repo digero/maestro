@@ -151,9 +151,11 @@ public class TempoBar extends JPanel implements SequencerListener {
 			return tempo;
 		}
 
+		@Override
 		public void mouseClicked(MouseEvent e) {
 		}
 
+		@Override
 		public void mousePressed(MouseEvent e) {
 			if (!TempoBar.this.isEnabled())
 				return;
@@ -171,12 +173,14 @@ public class TempoBar extends JPanel implements SequencerListener {
 			}
 		}
 
+		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON1) {
 				draggingButton1 = false;
 			}
 		}
 
+		@Override
 		public void mouseDragged(MouseEvent e) {
 			if (!TempoBar.this.isEnabled())
 				return;
@@ -186,12 +190,15 @@ public class TempoBar extends JPanel implements SequencerListener {
 			}
 		}
 
+		@Override
 		public void mouseMoved(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseEntered(MouseEvent e) {
 		}
 
+		@Override
 		public void mouseExited(MouseEvent e) {
 		}
 	}

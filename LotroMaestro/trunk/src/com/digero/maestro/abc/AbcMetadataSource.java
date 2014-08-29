@@ -12,6 +12,6 @@ public interface AbcMetadataSource {
 	public long getSongLengthMicros();
 
 	public File getSaveFile();
-	
+
 	public String getPartName(AbcPartMetadataSource abcPart);
 }
