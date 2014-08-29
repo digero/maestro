@@ -12,15 +12,19 @@ import java.util.prefs.Preferences;
 
 import com.digero.common.abc.LotroInstrument;
 
-public class PartAutoNumberer {
-	public static class Settings {
+public class PartAutoNumberer
+{
+	public static class Settings
+	{
 		private Map<LotroInstrument, Integer> firstNumber;
 		private boolean incrementByTen;
 
-		private Settings(Preferences prefs) {
+		private Settings(Preferences prefs)
+		{
 			firstNumber = new HashMap<LotroInstrument, Integer>(LotroInstrument.values().length);
 			int i = 0;
-			for (LotroInstrument instrument : LotroInstrument.values()) {
+			for (LotroInstrument instrument : LotroInstrument.values())
+			{
 				if (instrument != LotroInstrument.MOOR_COWBELL && instrument != LotroInstrument.PIBGORN)
 					firstNumber.put(instrument, prefs.getInt(instrument.toString(), ++i));
 			}
@@ -34,39 +38,48 @@ public class PartAutoNumberer {
 			incrementByTen = prefs.getBoolean("incrementByTen", true);
 		}
 
-		private void save(Preferences prefs) {
-			for (Entry<LotroInstrument, Integer> entry : firstNumber.entrySet()) {
+		private void save(Preferences prefs)
+		{
+			for (Entry<LotroInstrument, Integer> entry : firstNumber.entrySet())
+			{
 				prefs.putInt(entry.getKey().toString(), entry.getValue());
 			}
 			prefs.putBoolean("incrementByTen", incrementByTen);
 		}
 
-		public Settings(Settings source) {
+		public Settings(Settings source)
+		{
 			copyFrom(source);
 		}
 
-		public void copyFrom(Settings source) {
+		public void copyFrom(Settings source)
+		{
 			firstNumber = new HashMap<LotroInstrument, Integer>(source.firstNumber);
 			incrementByTen = source.incrementByTen;
 		}
 
-		public int getIncrement() {
+		public int getIncrement()
+		{
 			return incrementByTen ? 10 : 1;
 		}
 
-		public boolean isIncrementByTen() {
+		public boolean isIncrementByTen()
+		{
 			return incrementByTen;
 		}
 
-		public void setIncrementByTen(boolean incrementByTen) {
+		public void setIncrementByTen(boolean incrementByTen)
+		{
 			this.incrementByTen = incrementByTen;
 		}
 
-		public void setFirstNumber(LotroInstrument instrument, int number) {
+		public void setFirstNumber(LotroInstrument instrument, int number)
+		{
 			firstNumber.put(instrument, number);
 		}
 
-		public int getFirstNumber(LotroInstrument instrument) {
+		public int getFirstNumber(LotroInstrument instrument)
+		{
 			return firstNumber.get(instrument);
 		}
 	}
@@ -75,39 +88,48 @@ public class PartAutoNumberer {
 	private Preferences prefsNode;
 	private List<? extends NumberedAbcPart> parts;
 
-	public PartAutoNumberer(Preferences prefsNode, List<? extends NumberedAbcPart> parts) {
+	public PartAutoNumberer(Preferences prefsNode, List<? extends NumberedAbcPart> parts)
+	{
 		this.prefsNode = prefsNode;
 		this.parts = parts;
 		settings = new Settings(prefsNode);
 	}
 
-	public Settings getSettingsCopy() {
+	public Settings getSettingsCopy()
+	{
 		return new Settings(settings);
 	}
 
-	public boolean isIncrementByTen() {
+	public boolean isIncrementByTen()
+	{
 		return settings.isIncrementByTen();
 	}
 
-	public int getIncrement() {
+	public int getIncrement()
+	{
 		return settings.getIncrement();
 	}
 
-	public int getFirstNumber(LotroInstrument instrument) {
+	public int getFirstNumber(LotroInstrument instrument)
+	{
 		return settings.getFirstNumber(instrument);
 	}
 
-	public void setSettings(Settings settings) {
+	public void setSettings(Settings settings)
+	{
 		this.settings.copyFrom(settings);
 		this.settings.save(prefsNode);
 	}
 
-	public void renumberAllParts() {
+	public void renumberAllParts()
+	{
 		Set<Integer> numbersInUse = new HashSet<Integer>(parts.size());
 
-		for (NumberedAbcPart part : parts) {
+		for (NumberedAbcPart part : parts)
+		{
 			int partNumber = getFirstNumber(part.getInstrument());
-			while (numbersInUse.contains(partNumber)) {
+			while (numbersInUse.contains(partNumber))
+			{
 				partNumber += getIncrement();
 			}
 			numbersInUse.add(partNumber);
@@ -115,14 +137,18 @@ public class PartAutoNumberer {
 		}
 	}
 
-	public void onPartAdded(NumberedAbcPart partAdded) {
+	public void onPartAdded(NumberedAbcPart partAdded)
+	{
 		int newPartNumber = settings.getFirstNumber(partAdded.getInstrument());
 
 		boolean conflict;
-		do {
+		do
+		{
 			conflict = false;
-			for (NumberedAbcPart part : parts) {
-				if (part != partAdded && part.getPartNumber() == newPartNumber) {
+			for (NumberedAbcPart part : parts)
+			{
+				if (part != partAdded && part.getPartNumber() == newPartNumber)
+				{
 					newPartNumber += getIncrement();
 					conflict = true;
 				}
@@ -132,22 +158,28 @@ public class PartAutoNumberer {
 		partAdded.setPartNumber(newPartNumber);
 	}
 
-	public void onPartDeleted(NumberedAbcPart partDeleted) {
-		for (NumberedAbcPart part : parts) {
+	public void onPartDeleted(NumberedAbcPart partDeleted)
+	{
+		for (NumberedAbcPart part : parts)
+		{
 			int partNumber = part.getPartNumber();
 			int deletedNumber = partDeleted.getPartNumber();
 			int partFirstNumber = getFirstNumber(part.getInstrument());
 			int deletedFirstNumber = getFirstNumber(partDeleted.getInstrument());
 			if (part != partDeleted && partNumber > deletedNumber && partNumber > partFirstNumber
-					&& partFirstNumber == deletedFirstNumber) {
+					&& partFirstNumber == deletedFirstNumber)
+			{
 				part.setPartNumber(partNumber - getIncrement());
 			}
 		}
 	}
 
-	public void setPartNumber(NumberedAbcPart partToChange, int newPartNumber) {
-		for (NumberedAbcPart part : parts) {
-			if (part != partToChange && part.getPartNumber() == newPartNumber) {
+	public void setPartNumber(NumberedAbcPart partToChange, int newPartNumber)
+	{
+		for (NumberedAbcPart part : parts)
+		{
+			if (part != partToChange && part.getPartNumber() == newPartNumber)
+			{
 				part.setPartNumber(partToChange.getPartNumber());
 				break;
 			}
@@ -155,19 +187,23 @@ public class PartAutoNumberer {
 		partToChange.setPartNumber(newPartNumber);
 	}
 
-	public void setInstrument(NumberedAbcPart partToChange, LotroInstrument newInstrument) {
-		if (newInstrument != partToChange.getInstrument()) {
+	public void setInstrument(NumberedAbcPart partToChange, LotroInstrument newInstrument)
+	{
+		if (newInstrument != partToChange.getInstrument())
+		{
 			onPartDeleted(partToChange);
 			partToChange.setInstrument(newInstrument);
 			onPartAdded(partToChange);
 		}
 	}
 
-	public LotroInstrument[] getSortedInstrumentList() {
+	public LotroInstrument[] getSortedInstrumentList()
+	{
 		LotroInstrument[] instruments = LotroInstrument.values();
-		Arrays.sort(instruments, new Comparator<LotroInstrument>() {
-			@Override
-			public int compare(LotroInstrument a, LotroInstrument b) {
+		Arrays.sort(instruments, new Comparator<LotroInstrument>()
+		{
+			@Override public int compare(LotroInstrument a, LotroInstrument b)
+			{
 				int diff = getFirstNumber(a) - getFirstNumber(b);
 				if (diff != 0)
 					return diff;

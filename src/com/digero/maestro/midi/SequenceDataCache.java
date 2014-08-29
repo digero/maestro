@@ -16,7 +16,8 @@ import javax.sound.midi.Track;
 import com.digero.common.midi.IMidiConstants;
 import com.sun.media.sound.MidiUtils;
 
-public class SequenceDataCache implements IMidiConstants {
+public class SequenceDataCache implements IMidiConstants
+{
 	private final int primaryTempoMPQ;
 	private NavigableMap<Long, Integer> tempo = new TreeMap<Long, Integer>();
 
@@ -25,7 +26,8 @@ public class SequenceDataCache implements IMidiConstants {
 	private MapByChannel pitchBendCoarse = new MapByChannel(DEFAULT_PITCH_BEND_RANGE_SEMITONES);
 	private MapByChannel pitchBendFine = new MapByChannel(DEFAULT_PITCH_BEND_RANGE_CENTS);
 
-	public SequenceDataCache(Sequence song) {
+	public SequenceDataCache(Sequence song)
+	{
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 		boolean isPPQ = song.getDivisionType() == Sequence.PPQ;
 
@@ -34,26 +36,33 @@ public class SequenceDataCache implements IMidiConstants {
 		Arrays.fill(rpn, REGISTERED_PARAM_NONE);
 
 		Track[] tracks = song.getTracks();
-		for (int i = 0; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++)
+		{
 			Track track = tracks[i];
 
-			for (int j = 0, sz = track.size(); j < sz; j++) {
+			for (int j = 0, sz = track.size(); j < sz; j++)
+			{
 				MidiEvent evt = track.get(j);
 				MidiMessage msg = evt.getMessage();
 				long tick = evt.getTick();
 
-				if (msg instanceof ShortMessage) {
+				if (msg instanceof ShortMessage)
+				{
 					ShortMessage m = (ShortMessage) msg;
 					int cmd = m.getCommand();
 					int ch = m.getChannel();
 
-					if (cmd == ShortMessage.PROGRAM_CHANGE) {
-						if (ch != DRUM_CHANNEL) {
+					if (cmd == ShortMessage.PROGRAM_CHANGE)
+					{
+						if (ch != DRUM_CHANNEL)
+						{
 							instruments.put(ch, tick, m.getData1());
 						}
 					}
-					else if (cmd == ShortMessage.CONTROL_CHANGE) {
-						switch (m.getData1()) {
+					else if (cmd == ShortMessage.CONTROL_CHANGE)
+					{
+						switch (m.getData1())
+						{
 						case CHANNEL_VOLUME_CONTROLLER_COARSE:
 							volume.put(ch, tick, m.getData2());
 							break;
@@ -74,20 +83,24 @@ public class SequenceDataCache implements IMidiConstants {
 						}
 					}
 				}
-				else if (i == 0 && isPPQ && MidiUtils.isMetaTempo(msg)) {
+				else if (i == 0 && isPPQ && MidiUtils.isMetaTempo(msg))
+				{
 					Entry<Long, Integer> prevTempo = tempo.floorEntry(tick);
 					long prevTempoTick;
 					int prevTempoMPQ;
-					if (prevTempo == null) {
+					if (prevTempo == null)
+					{
 						prevTempoTick = 0;
 						prevTempoMPQ = DEFAULT_TEMPO_MPQ;
 					}
-					else {
+					else
+					{
 						prevTempoTick = prevTempo.getKey();
 						prevTempoMPQ = prevTempo.getValue();
 					}
 
-					if (tick > prevTempoTick) {
+					if (tick > prevTempoTick)
+					{
 						Long uSecObj = tempoLengths.get(prevTempoMPQ);
 						long uSec = (uSecObj != null) ? uSecObj : 0;
 						uSec += MidiUtils.ticks2microsec(tick, prevTempoMPQ, song.getResolution());
@@ -100,26 +113,31 @@ public class SequenceDataCache implements IMidiConstants {
 		}
 
 		Entry<Integer, Long> max = null;
-		for (Entry<Integer, Long> entry : tempoLengths.entrySet()) {
+		for (Entry<Integer, Long> entry : tempoLengths.entrySet())
+		{
 			if (max == null || entry.getValue() > max.getValue())
 				max = entry;
 		}
 		primaryTempoMPQ = (max == null) ? DEFAULT_TEMPO_MPQ : max.getKey();
 	}
 
-	public int getInstrument(int channel, long tick) {
+	public int getInstrument(int channel, long tick)
+	{
 		return instruments.get(channel, tick);
 	}
 
-	public int getVolume(int channel, long tick) {
+	public int getVolume(int channel, long tick)
+	{
 		return volume.get(channel, tick);
 	}
 
-	public double getPitchBendRange(int channel, long tick) {
+	public double getPitchBendRange(int channel, long tick)
+	{
 		return pitchBendCoarse.get(channel, tick) + (pitchBendFine.get(channel, tick) / 100.0);
 	}
 
-	public int getTempoMPQ(long tick) {
+	public int getTempoMPQ(long tick)
+	{
 		Entry<Long, Integer> entry = tempo.floorEntry(tick);
 		if (entry == null) // No changes before this tick
 			return DEFAULT_TEMPO_MPQ;
@@ -127,40 +145,48 @@ public class SequenceDataCache implements IMidiConstants {
 		return entry.getValue();
 	}
 
-	public int getTempoBPM(long tick) {
+	public int getTempoBPM(long tick)
+	{
 		return (int) Math.round(MidiUtils.convertTempo(getTempoMPQ(tick)));
 	}
 
-	public int getPrimaryTempoMPQ() {
+	public int getPrimaryTempoMPQ()
+	{
 		return primaryTempoMPQ;
 	}
 
-	public int getPrimaryTempoBPM() {
+	public int getPrimaryTempoBPM()
+	{
 		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
-	public NavigableMap<Long, Integer> getTickToTempoMPQMap() {
+	public NavigableMap<Long, Integer> getTickToTempoMPQMap()
+	{
 		return tempo;
 	}
 
-	private static class MapByChannel {
+	private static class MapByChannel
+	{
 		private NavigableMap<Long, Integer>[] map;
 		private int defaultValue;
 
-		@SuppressWarnings("unchecked")
-		public MapByChannel(int defaultValue) {
+		@SuppressWarnings("unchecked")//
+		public MapByChannel(int defaultValue)
+		{
 			map = new NavigableMap[CHANNEL_COUNT];
 			this.defaultValue = defaultValue;
 		}
 
-		public void put(int channel, long tick, Integer value) {
+		public void put(int channel, long tick, Integer value)
+		{
 			if (map[channel] == null)
 				map[channel] = new TreeMap<Long, Integer>();
 
 			map[channel].put(tick, value);
 		}
 
-		public int get(int channel, long tick) {
+		public int get(int channel, long tick)
+		{
 			if (map[channel] == null)
 				return defaultValue;
 

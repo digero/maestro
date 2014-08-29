@@ -1,6 +1,7 @@
 package com.digero.common.abc;
 
-public interface AbcConstants {
+public interface AbcConstants
+{
 	// Chord
 	public static final int MAX_CHORD_NOTES = 6;
 

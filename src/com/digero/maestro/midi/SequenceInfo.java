@@ -36,7 +36,8 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
  * type 1.
  */
-public class SequenceInfo implements IMidiConstants {
+public class SequenceInfo implements IMidiConstants
+{
 	private Sequence sequence;
 	private String fileName;
 	private String title;
@@ -47,7 +48,8 @@ public class SequenceInfo implements IMidiConstants {
 
 //	private NavigableMap<Long, Integer> microsToTempoMap;
 
-	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException {
+	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
+	{
 		if (params.abcInfo == null)
 			params.abcInfo = new AbcInfo();
 		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file.getName(), AbcToMidi.convert(params));
@@ -56,17 +58,20 @@ public class SequenceInfo implements IMidiConstants {
 		return sequenceInfo;
 	}
 
-	public static SequenceInfo fromMidi(File midiFile) throws InvalidMidiDataException, IOException, ParseException {
+	public static SequenceInfo fromMidi(File midiFile) throws InvalidMidiDataException, IOException, ParseException
+	{
 		return new SequenceInfo(midiFile.getName(), MidiSystem.getSequence(midiFile));
 	}
 
 	public static SequenceInfo fromAbcParts(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm,
 			KeySignature key, long songStartMicros, long songEndMicros, boolean useLotroInstruments)
-			throws InvalidMidiDataException, AbcConversionException {
+			throws InvalidMidiDataException, AbcConversionException
+	{
 		return new SequenceInfo(parts, metadata, tm, key, songStartMicros, songEndMicros, useLotroInstruments);
 	}
 
-	private SequenceInfo(String fileName, Sequence sequence) throws InvalidMidiDataException, ParseException {
+	private SequenceInfo(String fileName, Sequence sequence) throws InvalidMidiDataException, ParseException
+	{
 		this.fileName = fileName;
 		this.sequence = sequence;
 
@@ -77,7 +82,8 @@ public class SequenceInfo implements IMidiConstants {
 		fixupTrackLength(sequence);
 
 		Track[] tracks = sequence.getTracks();
-		if (tracks.length == 0) {
+		if (tracks.length == 0)
+		{
 			throw new InvalidMidiDataException("The MIDI file doesn't have any tracks");
 		}
 
@@ -86,7 +92,8 @@ public class SequenceInfo implements IMidiConstants {
 
 		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
 		endMicros = 0;
-		for (int i = 0; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++)
+		{
 			TrackInfo track = new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache);
 			trackInfoList.add(track);
 
@@ -105,10 +112,12 @@ public class SequenceInfo implements IMidiConstants {
 //		}
 
 		composer = "";
-		if (trackInfoList.get(0).hasName()) {
+		if (trackInfoList.get(0).hasName())
+		{
 			title = trackInfoList.get(0).getName();
 		}
-		else {
+		else
+		{
 			title = fileName;
 			int dot = title.lastIndexOf('.');
 			if (dot > 0)
@@ -121,7 +130,8 @@ public class SequenceInfo implements IMidiConstants {
 
 	private SequenceInfo(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm, KeySignature key,
 			long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException,
-			AbcConversionException {
+			AbcConversionException
+	{
 
 		this.fileName = metadata.getSongTitle() + ".abc";
 		this.tempoBPM = tm.tempo;
@@ -141,12 +151,14 @@ public class SequenceInfo implements IMidiConstants {
 		PanGenerator panner = new PanGenerator();
 		this.trackInfoList = new ArrayList<TrackInfo>(parts.size());
 		this.endMicros = 0;
-		for (AbcPart part : parts) {
+		for (AbcPart part : parts)
+		{
 			int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
 			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan,
 					useLotroInstruments);
 
-			if (trackInfo.hasEvents()) {
+			if (trackInfo.hasEvents())
+			{
 				this.endMicros = Math.max(this.endMicros,
 						trackInfo.getEvents().get(trackInfo.getEventCount() - 1).endMicros);
 			}
@@ -157,52 +169,65 @@ public class SequenceInfo implements IMidiConstants {
 		this.trackInfoList = Collections.unmodifiableList(this.trackInfoList);
 	}
 
-	public String getFileName() {
+	public String getFileName()
+	{
 		return fileName;
 	}
 
-	public Sequence getSequence() {
+	public Sequence getSequence()
+	{
 		return sequence;
 	}
 
-	public String getTitle() {
+	public String getTitle()
+	{
 		return title;
 	}
 
-	public String getComposer() {
+	public String getComposer()
+	{
 		return composer;
 	}
 
-	public int getTrackCount() {
+	public int getTrackCount()
+	{
 		return trackInfoList.size();
 	}
 
-	public TrackInfo getTrackInfo(int track) {
+	public TrackInfo getTrackInfo(int track)
+	{
 		return trackInfoList.get(track);
 	}
 
-	public List<TrackInfo> getTrackList() {
+	public List<TrackInfo> getTrackList()
+	{
 		return trackInfoList;
 	}
 
-	public int getTempoBPM() {
+	public int getTempoBPM()
+	{
 		return tempoBPM;
 	}
 
-	public long getEndMicros() {
+	public long getEndMicros()
+	{
 		return endMicros;
 	}
 
-	public KeySignature getKeySignature() {
-		for (TrackInfo track : trackInfoList) {
+	public KeySignature getKeySignature()
+	{
+		for (TrackInfo track : trackInfoList)
+		{
 			if (track.getKeySignature() != null)
 				return track.getKeySignature();
 		}
 		return KeySignature.C_MAJOR;
 	}
 
-	public TimeSignature getTimeSignature() {
-		for (TrackInfo track : trackInfoList) {
+	public TimeSignature getTimeSignature()
+	{
+		for (TrackInfo track : trackInfoList)
+		{
 			if (track.getTimeSignature() != null)
 				return track.getTimeSignature();
 		}
@@ -214,12 +239,13 @@ public class SequenceInfo implements IMidiConstants {
 //		return microsToTempoMap;
 //	}
 
-	@Override
-	public String toString() {
+	@Override public String toString()
+	{
 		return getTitle();
 	}
 
-	private static int findMainTempo(Sequence sequence, TempoCache tempoCache) {
+	private static int findMainTempo(Sequence sequence, TempoCache tempoCache)
+	{
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 
 		long bestTempoLength = 0;
@@ -230,17 +256,20 @@ public class SequenceInfo implements IMidiConstants {
 
 		Track track0 = sequence.getTracks()[0];
 		int c = track0.size();
-		for (int i = 0; i < c; i++) {
+		for (int i = 0; i < c; i++)
+		{
 			MidiEvent evt = track0.get(i);
 			MidiMessage msg = evt.getMessage();
-			if (MidiUtils.isMetaTempo(msg)) {
+			if (MidiUtils.isMetaTempo(msg))
+			{
 				long nextTempoStart = MidiUtils.tick2microsecond(sequence, evt.getTick(), tempoCache);
 
 				Long lengthObj = tempoLengths.get(curTempoBPM);
 				long length = (lengthObj == null) ? 0 : lengthObj;
 				length += nextTempoStart - curTempoStart;
 
-				if (length > bestTempoLength) {
+				if (length > bestTempoLength)
+				{
 					bestTempoLength = length;
 					bestTempoBPM = curTempoBPM;
 				}
@@ -256,7 +285,8 @@ public class SequenceInfo implements IMidiConstants {
 		long length = (lengthObj == null) ? 0 : lengthObj;
 		length += sequence.getMicrosecondLength() - curTempoStart;
 
-		if (length > bestTempoLength) {
+		if (length > bestTempoLength)
+		{
 			bestTempoLength = length;
 			bestTempoBPM = curTempoBPM;
 		}
@@ -300,16 +330,22 @@ public class SequenceInfo implements IMidiConstants {
 //		return lcmTempoBPM;
 	}
 
-	public long calcFirstNoteTick() {
+	public long calcFirstNoteTick()
+	{
 		long firstNoteTick = Long.MAX_VALUE;
-		for (Track t : sequence.getTracks()) {
-			for (int j = 0; j < t.size(); j++) {
+		for (Track t : sequence.getTracks())
+		{
+			for (int j = 0; j < t.size(); j++)
+			{
 				MidiEvent evt = t.get(j);
 				MidiMessage msg = evt.getMessage();
-				if (msg instanceof ShortMessage) {
+				if (msg instanceof ShortMessage)
+				{
 					ShortMessage m = (ShortMessage) msg;
-					if (m.getCommand() == ShortMessage.NOTE_ON) {
-						if (evt.getTick() < firstNoteTick) {
+					if (m.getCommand() == ShortMessage.NOTE_ON)
+					{
+						if (evt.getTick() < firstNoteTick)
+						{
 							firstNoteTick = evt.getTick();
 						}
 						break;
@@ -322,31 +358,38 @@ public class SequenceInfo implements IMidiConstants {
 		return firstNoteTick;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static void fixupTrackLength(Sequence song) {
+	@SuppressWarnings("unchecked")//
+	public static void fixupTrackLength(Sequence song)
+	{
 //		System.out.println("Before: " + Util.formatDuration(song.getMicrosecondLength()));
 //		TempoCache tempoCache = new TempoCache(song);
 		Track[] tracks = song.getTracks();
 		List<MidiEvent>[] suspectEvents = new List[tracks.length];
 		long endTick = 0;
 
-		for (int i = 0; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++)
+		{
 			Track track = tracks[i];
-			for (int j = track.size() - 1; j >= 0; --j) {
+			for (int j = track.size() - 1; j >= 0; --j)
+			{
 				MidiEvent evt = track.get(j);
-				if (MidiUtils.isMetaEndOfTrack(evt.getMessage())) {
+				if (MidiUtils.isMetaEndOfTrack(evt.getMessage()))
+				{
 					if (suspectEvents[i] == null)
 						suspectEvents[i] = new ArrayList<MidiEvent>();
 					suspectEvents[i].add(evt);
 				}
-				else if (evt.getTick() > endTick) {
+				else if (evt.getTick() > endTick)
+				{
 					// Seems like some songs have extra meta messages way past the end
-					if (evt.getMessage() instanceof MetaMessage) {
+					if (evt.getMessage() instanceof MetaMessage)
+					{
 						if (suspectEvents[i] == null)
 							suspectEvents[i] = new ArrayList<MidiEvent>();
 						suspectEvents[i].add(0, evt);
 					}
-					else {
+					else
+					{
 						endTick = evt.getTick();
 						break;
 					}
@@ -354,9 +397,12 @@ public class SequenceInfo implements IMidiConstants {
 			}
 		}
 
-		for (int i = 0; i < tracks.length; i++) {
-			for (MidiEvent evt : suspectEvents[i]) {
-				if (evt.getTick() > endTick) {
+		for (int i = 0; i < tracks.length; i++)
+		{
+			for (MidiEvent evt : suspectEvents[i])
+			{
+				if (evt.getTick() > endTick)
+				{
 					tracks[i].remove(evt);
 //					System.out.println("Moving event from "
 //							+ Util.formatDuration(MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache)) + " to "
@@ -375,18 +421,23 @@ public class SequenceInfo implements IMidiConstants {
 	/**
 	 * Separates the MIDI file to have one track per channel (Type 1).
 	 */
-	public static void convertToType1(Sequence song) {
-		if (song.getTracks().length == 1) {
+	public static void convertToType1(Sequence song)
+	{
+		if (song.getTracks().length == 1)
+		{
 			Track track0 = song.getTracks()[0];
 			Track[] tracks = new Track[CHANNEL_COUNT];
 
 			int trackNumber = 1;
 			int i = 0;
-			while (i < track0.size()) {
+			while (i < track0.size())
+			{
 				MidiEvent evt = track0.get(i);
-				if (evt.getMessage() instanceof ShortMessage) {
+				if (evt.getMessage() instanceof ShortMessage)
+				{
 					int chan = ((ShortMessage) evt.getMessage()).getChannel();
-					if (tracks[chan] == null) {
+					if (tracks[chan] == null)
+					{
 						tracks[chan] = song.createTrack();
 						String trackName = (chan == DRUM_CHANNEL) ? "Drums" : ("Track " + trackNumber);
 						trackNumber++;
@@ -404,7 +455,8 @@ public class SequenceInfo implements IMidiConstants {
 	/**
 	 * Ensures that there are no tracks with both drums and notes.
 	 */
-	public static void separateDrumTracks(Sequence song) {
+	public static void separateDrumTracks(Sequence song)
+	{
 		Track[] tracks = song.getTracks();
 		// This doesn't work on Type 0 MIDI files
 		if (tracks.length <= 1)
@@ -417,22 +469,29 @@ public class SequenceInfo implements IMidiConstants {
 		int[] trackContents = new int[tracks.length];
 		boolean hasMixed = false;
 
-		for (int i = 0; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++)
+		{
 			Track track = tracks[i];
-			for (int j = 0; j < track.size(); j++) {
+			for (int j = 0; j < track.size(); j++)
+			{
 				MidiEvent evt = track.get(j);
 				MidiMessage msg = evt.getMessage();
-				if (msg instanceof ShortMessage) {
+				if (msg instanceof ShortMessage)
+				{
 					ShortMessage m = (ShortMessage) msg;
-					if (m.getCommand() == ShortMessage.NOTE_ON) {
-						if (m.getChannel() == DRUM_CHANNEL) {
+					if (m.getCommand() == ShortMessage.NOTE_ON)
+					{
+						if (m.getChannel() == DRUM_CHANNEL)
+						{
 							trackContents[i] |= DRUMS;
 						}
-						else {
+						else
+						{
 							trackContents[i] |= NOTES;
 						}
 
-						if (trackContents[i] == MIXED) {
+						if (trackContents[i] == MIXED)
+						{
 							hasMixed = true;
 							break;
 						}
@@ -447,14 +506,18 @@ public class SequenceInfo implements IMidiConstants {
 
 		Track drumTrack = song.createTrack();
 		drumTrack.add(MidiFactory.createTrackNameEvent("Drums"));
-		for (int i = 0; i < tracks.length; i++) {
+		for (int i = 0; i < tracks.length; i++)
+		{
 			Track track = tracks[i];
-			if (trackContents[i] == MIXED) {
+			if (trackContents[i] == MIXED)
+			{
 				// Mixed track: copy only the events on the drum channel
-				for (int j = 0; j < track.size(); j++) {
+				for (int j = 0; j < track.size(); j++)
+				{
 					MidiEvent evt = track.get(j);
 					MidiMessage msg = evt.getMessage();
-					if ((msg instanceof ShortMessage) && ((ShortMessage) msg).getChannel() == DRUM_CHANNEL) {
+					if ((msg instanceof ShortMessage) && ((ShortMessage) msg).getChannel() == DRUM_CHANNEL)
+					{
 						drumTrack.add(evt);
 						if (track.remove(evt))
 							j--;

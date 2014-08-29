@@ -17,7 +17,8 @@ import javax.swing.event.ChangeListener;
 
 import com.digero.common.view.ColorTable;
 
-public class Colorizer extends JPanel {
+public class Colorizer extends JPanel
+{
 	private JComboBox<ColorTable> picker;
 	private SpinnerNumberModel hue;
 	private SpinnerNumberModel sat;
@@ -25,14 +26,16 @@ public class Colorizer extends JPanel {
 	private boolean updating = false;
 	private JPanel refresher;
 
-	public Colorizer(JPanel coloredPanel) {
+	public Colorizer(JPanel coloredPanel)
+	{
 		super(new BorderLayout());
 		this.refresher = coloredPanel;
 		picker = new JComboBox<ColorTable>(ColorTable.values());
 
-		picker.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		picker.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				updateSpinners();
 			}
 		});
@@ -41,10 +44,12 @@ public class Colorizer extends JPanel {
 		sat = new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05);
 		brt = new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05);
 
-		ChangeListener cl = new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				if (!updating) {
+		ChangeListener cl = new ChangeListener()
+		{
+			@Override public void stateChanged(ChangeEvent e)
+			{
+				if (!updating)
+				{
 					float h = hue.getNumber().floatValue();
 					float s = sat.getNumber().floatValue();
 					float b = brt.getNumber().floatValue();
@@ -59,11 +64,9 @@ public class Colorizer extends JPanel {
 		sat.addChangeListener(cl);
 		brt.addChangeListener(cl);
 
-		JPanel spinners = new JPanel(new TableLayout(new double[] {
-				TableLayout.PREFERRED, 0.33, TableLayout.PREFERRED, 0.33, TableLayout.PREFERRED, 0.34
-		}, new double[] {
-			TableLayout.PREFERRED
-		}));
+		JPanel spinners = new JPanel(new TableLayout(//
+				new double[] { TableLayout.PREFERRED, 0.33, TableLayout.PREFERRED, 0.33, TableLayout.PREFERRED, 0.34 },//
+				new double[] { TableLayout.PREFERRED }));
 		spinners.add(new JLabel("H:"), "0, 0");
 		spinners.add(new JSpinner(hue), "1, 0");
 		spinners.add(new JLabel(" S:"), "2, 0");
@@ -77,7 +80,8 @@ public class Colorizer extends JPanel {
 		updateSpinners();
 	}
 
-	private void updateSpinners() {
+	private void updateSpinners()
+	{
 		boolean updatingSav = updating;
 		updating = true;
 

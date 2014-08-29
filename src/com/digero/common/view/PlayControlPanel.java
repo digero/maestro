@@ -17,7 +17,8 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerWrapper;
 
-public class PlayControlPanel extends JPanel implements TableLayoutConstants {
+public class PlayControlPanel extends JPanel implements TableLayoutConstants
+{
 	private SequencerWrapper sequencer;
 
 	private SongPositionBar songPositionBar;
@@ -30,17 +31,17 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 
 	private NativeVolumeBar volumeBar;
 
-	public PlayControlPanel(SequencerWrapper sequencer, NativeVolumeBar.Callback volumeManager) {
+	public PlayControlPanel(SequencerWrapper sequencer, NativeVolumeBar.Callback volumeManager)
+	{
 		this(sequencer, volumeManager, "play", "pause", "stop");
 	}
 
 	public PlayControlPanel(SequencerWrapper seq, NativeVolumeBar.Callback volumeManager, String playIconName,
-			String pauseIconName, String stopIconName) {
-		super(new TableLayout(new double[] {
-				4, 0.50, 4, PREFERRED, PREFERRED, 4, 0.50, 4, PREFERRED, 4
-		}, new double[] {
-				4, PREFERRED, 4, PREFERRED, 2
-		}));
+			String pauseIconName, String stopIconName)
+	{
+		super(new TableLayout(//
+				new double[] { 4, 0.50, 4, PREFERRED, PREFERRED, 4, 0.50, 4, PREFERRED, 4 },//
+				new double[] { 4, PREFERRED, 4, PREFERRED, 2 }));
 
 		this.sequencer = seq;
 
@@ -52,37 +53,39 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 		songPositionLabel = new SongPositionLabel(seq);
 
 		playButton = new JButton(playIcon);
-		playButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		playButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				sequencer.setRunning(!sequencer.isRunning());
 			}
 		});
 
 		stopButton = new JButton(stopIcon);
-		stopButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		stopButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				sequencer.reset(false);
 			}
 		});
 
-		sequencer.addChangeListener(new SequencerListener() {
-			@Override
-			public void propertyChanged(SequencerEvent evt) {
+		sequencer.addChangeListener(new SequencerListener()
+		{
+			@Override public void propertyChanged(SequencerEvent evt)
+			{
 				updateButtonStates();
 			}
 		});
 
 		JPanel volumePanel = new JPanel();
-		if (volumeManager != null) {
+		if (volumeManager != null)
+		{
 			volumeBar = new NativeVolumeBar(volumeManager);
 
-			TableLayout volumeLayout = new TableLayout(new double[] {
-				PREFERRED
-			}, new double[] {
-					PREFERRED, PREFERRED
-			});
+			TableLayout volumeLayout = new TableLayout(//
+					new double[] { PREFERRED },//
+					new double[] { PREFERRED, PREFERRED });
 			volumePanel.setLayout(volumeLayout);
 			volumePanel.add(new JLabel("Volume"), "0, 0, c, c");
 			volumePanel.add(volumeBar, "0, 1, f, c");
@@ -97,12 +100,14 @@ public class PlayControlPanel extends JPanel implements TableLayoutConstants {
 		add(volumePanel, "6, 3, c, c");
 	}
 
-	public void onVolumeChanged() {
+	public void onVolumeChanged()
+	{
 		if (volumeBar != null)
 			volumeBar.repaint();
 	}
 
-	private void updateButtonStates() {
+	private void updateButtonStates()
+	{
 		playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
 		playButton.setEnabled(sequencer.isLoaded());
 		stopButton.setEnabled(sequencer.isLoaded() && (sequencer.isRunning() || sequencer.getPosition() != 0));

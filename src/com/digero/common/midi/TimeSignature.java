@@ -6,7 +6,8 @@ import javax.sound.midi.MetaMessage;
 /**
  * Representation of a MIDI time signature.
  */
-public class TimeSignature implements IMidiConstants {
+public class TimeSignature implements IMidiConstants
+{
 	public static final int MAX_DENOMINATOR = 8;
 	public static final TimeSignature FOUR_FOUR = new TimeSignature(4, 4);
 
@@ -23,7 +24,8 @@ public class TimeSignature implements IMidiConstants {
 	 * @throws IllegalArgumentException If the numerator is not less than 256,
 	 *             or the denominator is not a power of 2.
 	 */
-	public TimeSignature(int numerator, int denominator) {
+	public TimeSignature(int numerator, int denominator)
+	{
 		verifyData(numerator, denominator);
 
 		this.numerator = numerator;
@@ -32,19 +34,23 @@ public class TimeSignature implements IMidiConstants {
 		this.thirtySecondNotes = 8;
 	}
 
-	public TimeSignature(MetaMessage midiMessage) {
+	public TimeSignature(MetaMessage midiMessage)
+	{
 		byte[] data = midiMessage.getData();
-		if (midiMessage.getType() != META_TIME_SIGNATURE || data.length < 4) {
+		if (midiMessage.getType() != META_TIME_SIGNATURE || data.length < 4)
+		{
 			throw new IllegalArgumentException("Midi message is not a time signature event");
 		}
 
-		if ((1 << data[1]) > MAX_DENOMINATOR) {
+		if ((1 << data[1]) > MAX_DENOMINATOR)
+		{
 			this.numerator = 4;
 			this.denominator = 4;
 			this.metronome = 24;
 			this.thirtySecondNotes = 8;
 		}
-		else {
+		else
+		{
 			this.numerator = data[0];
 			this.denominator = 1 << data[1];
 			this.metronome = data[2];
@@ -52,19 +58,24 @@ public class TimeSignature implements IMidiConstants {
 		}
 	}
 
-	public TimeSignature(String str) {
+	public TimeSignature(String str)
+	{
 		str = str.trim();
-		if (str.equals("C")) {
+		if (str.equals("C"))
+		{
 			this.numerator = 4;
 			this.denominator = 4;
 		}
-		else if (str.equals("C|")) {
+		else if (str.equals("C|"))
+		{
 			this.numerator = 2;
 			this.denominator = 2;
 		}
-		else {
+		else
+		{
 			String[] parts = str.split("[/:| ]");
-			if (parts.length != 2) {
+			if (parts.length != 2)
+			{
 				throw new IllegalArgumentException("The string: \"" + str
 						+ "\" is not a valid time signature (expected format: 4/4)");
 			}
@@ -79,23 +90,29 @@ public class TimeSignature implements IMidiConstants {
 	/**
 	 * A best-guess as to whether this time signature represents compound meter.
 	 */
-	public boolean isCompound() {
+	public boolean isCompound()
+	{
 		return (numerator % 3) == 0;
 	}
 
-	private static void verifyData(int numerator, int denominator) {
-		if (denominator == 0 || denominator != (1 << floorLog2(denominator))) {
+	private static void verifyData(int numerator, int denominator)
+	{
+		if (denominator == 0 || denominator != (1 << floorLog2(denominator)))
+		{
 			throw new IllegalArgumentException("The denominator of the time signature must be a power of 2");
 		}
-		if (denominator > MAX_DENOMINATOR) {
+		if (denominator > MAX_DENOMINATOR)
+		{
 			throw new IllegalArgumentException("The denominator must be less than or equal to " + MAX_DENOMINATOR);
 		}
-		if (numerator > 255) {
+		if (numerator > 255)
+		{
 			throw new IllegalArgumentException("The numerator of the time signature must be less than 256");
 		}
 	}
 
-	public MetaMessage toMidiMessage() {
+	public MetaMessage toMidiMessage()
+	{
 		MetaMessage midiMessage = new MetaMessage();
 		byte[] data = new byte[4];
 		data[0] = (byte) numerator;
@@ -103,28 +120,31 @@ public class TimeSignature implements IMidiConstants {
 		data[2] = metronome;
 		data[3] = thirtySecondNotes;
 
-		try {
+		try
+		{
 			midiMessage.setMessage(META_TIME_SIGNATURE, data, data.length);
 		}
-		catch (InvalidMidiDataException e) {
+		catch (InvalidMidiDataException e)
+		{
 			throw new RuntimeException(e);
 		}
 		return midiMessage;
 	}
 
-	@Override
-	public String toString() {
+	@Override public String toString()
+	{
 		return numerator + "/" + denominator;
 	}
 
-	@Override
-	public int hashCode() {
+	@Override public int hashCode()
+	{
 		return (denominator << 24) ^ (numerator << 16) ^ (((int) metronome) << 8) ^ thirtySecondNotes;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof TimeSignature) {
+	@Override public boolean equals(Object obj)
+	{
+		if (obj instanceof TimeSignature)
+		{
 			TimeSignature that = (TimeSignature) obj;
 			return this.numerator == that.numerator && this.denominator == that.denominator
 					&& this.metronome == that.metronome && this.thirtySecondNotes == that.thirtySecondNotes;
@@ -136,25 +156,31 @@ public class TimeSignature implements IMidiConstants {
 	 * @return The floor of the binary logarithm for a 32 bit integer. -1 is
 	 *         returned if n is 0.
 	 */
-	private static byte floorLog2(int n) {
+	private static byte floorLog2(int n)
+	{
 		byte pos = 0; // Position of the most significant bit
-		if (n >= (1 << 16)) {
+		if (n >= (1 << 16))
+		{
 			n >>>= 16;
 			pos += 16;
 		}
-		if (n >= (1 << 8)) {
+		if (n >= (1 << 8))
+		{
 			n >>>= 8;
 			pos += 8;
 		}
-		if (n >= (1 << 4)) {
+		if (n >= (1 << 4))
+		{
 			n >>>= 4;
 			pos += 4;
 		}
-		if (n >= (1 << 2)) {
+		if (n >= (1 << 2))
+		{
 			n >>>= 2;
 			pos += 2;
 		}
-		if (n >= (1 << 1)) {
+		if (n >= (1 << 1))
+		{
 			pos += 1;
 		}
 		return ((n == 0) ? (-1) : pos);

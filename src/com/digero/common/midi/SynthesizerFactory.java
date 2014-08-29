@@ -13,19 +13,23 @@ import javax.sound.midi.Synthesizer;
 
 import com.sun.media.sound.AudioSynthesizer;
 
-public class SynthesizerFactory {
+public class SynthesizerFactory
+{
 	private static Soundbank lotroSoundbank = null;
 	private static File soundFontFile = new File("LotroInstruments.sf2");
 
-	public static void setSoundFontLocation(File soundFontFile) {
-		if (SynthesizerFactory.soundFontFile != soundFontFile) {
+	public static void setSoundFontLocation(File soundFontFile)
+	{
+		if (SynthesizerFactory.soundFontFile != soundFontFile)
+		{
 			SynthesizerFactory.soundFontFile = soundFontFile;
 			lotroSoundbank = null;
 		}
 	}
 
 	public static Synthesizer getLotroSynthesizer() throws MidiUnavailableException, InvalidMidiDataException,
-			IOException {
+			IOException
+	{
 		Synthesizer synth = MidiSystem.getSynthesizer();
 		if (synth != null)
 			initLotroSynthesizer(synth);
@@ -33,7 +37,8 @@ public class SynthesizerFactory {
 	}
 
 	public static AudioSynthesizer getLotroAudioSynthesizer() throws MidiUnavailableException,
-			InvalidMidiDataException, IOException {
+			InvalidMidiDataException, IOException
+	{
 		AudioSynthesizer synth = findAudioSynthesizer();
 		if (synth != null)
 			initLotroSynthesizer(synth);
@@ -41,25 +46,32 @@ public class SynthesizerFactory {
 	}
 
 	public static void initLotroSynthesizer(Synthesizer synth) throws MidiUnavailableException,
-			InvalidMidiDataException, IOException {
+			InvalidMidiDataException, IOException
+	{
 		synth.open();
 		synth.unloadAllInstruments(getLotroSoundbank());
 		synth.loadAllInstruments(getLotroSoundbank());
 	}
 
-	public static Soundbank getLotroSoundbank() throws InvalidMidiDataException, IOException {
-		if (lotroSoundbank == null) {
-			try {
+	public static Soundbank getLotroSoundbank() throws InvalidMidiDataException, IOException
+	{
+		if (lotroSoundbank == null)
+		{
+			try
+			{
 				lotroSoundbank = MidiSystem.getSoundbank(soundFontFile);
 			}
-			catch (NullPointerException npe) {
+			catch (NullPointerException npe)
+			{
 				// JARSoundbankReader throws a NullPointerException if the file doesn't exist
 				StackTraceElement trace = npe.getStackTrace()[0];
 				if (trace.getClassName().equals("com.sun.media.sound.JARSoundbankReader")
-						&& trace.getMethodName().equals("isZIP")) {
+						&& trace.getMethodName().equals("isZIP"))
+				{
 					throw new IOException("Soundbank file not found");
 				}
-				else {
+				else
+				{
 					throw npe;
 				}
 			}
@@ -70,7 +82,8 @@ public class SynthesizerFactory {
 	/*
 	 * Find available AudioSynthesizer.
 	 */
-	public static AudioSynthesizer findAudioSynthesizer() throws MidiUnavailableException {
+	public static AudioSynthesizer findAudioSynthesizer() throws MidiUnavailableException
+	{
 		// First check if default synthesizer is AudioSynthesizer.
 		Synthesizer synth = MidiSystem.getSynthesizer();
 		if (synth instanceof AudioSynthesizer)
@@ -78,7 +91,8 @@ public class SynthesizerFactory {
 
 		// If default synhtesizer is not AudioSynthesizer, check others.
 		Info[] infos = MidiSystem.getMidiDeviceInfo();
-		for (int i = 0; i < infos.length; i++) {
+		for (int i = 0; i < infos.length; i++)
+		{
 			MidiDevice dev = MidiSystem.getMidiDevice(infos[i]);
 			if (dev instanceof AudioSynthesizer)
 				return (AudioSynthesizer) dev;

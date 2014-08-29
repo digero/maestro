@@ -11,43 +11,54 @@ import javax.swing.UIManager;
 import com.digero.common.util.Version;
 import com.digero.maestro.view.ProjectFrame;
 
-public class MaestroMain {
+public class MaestroMain
+{
 	public static final String APP_NAME = "Maestro";
 	public static final String APP_URL = "http://lotro.acasylum.com/maestro/";
 	public static Version APP_VERSION = new Version(0, 0, 0);
 
 	private static ProjectFrame mainWindow = null;
 
-	public static void main(final String[] args) throws Exception {
-		try {
+	public static void main(final String[] args) throws Exception
+	{
+		try
+		{
 			Properties props = new Properties();
 			props.load(MaestroMain.class.getResourceAsStream("version.txt"));
 			String versionString = props.getProperty("version.Maestro");
 			if (versionString != null)
 				APP_VERSION = Version.parseVersion(versionString);
 		}
-		catch (IOException ex) {}
+		catch (IOException ex)
+		{
+		}
 
 		System.setProperty("sun.sound.useNewAudioEngine", "true");
 
-		try {
+		try
+		{
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
-		catch (Exception e) {}
+		catch (Exception e)
+		{
+		}
 
 		mainWindow = new ProjectFrame();
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		SwingUtilities.invokeAndWait(new Runnable() {
-			@Override
-			public void run() {
+		SwingUtilities.invokeAndWait(new Runnable()
+		{
+			@Override public void run()
+			{
 				mainWindow.setVisible(true);
 				openSongFromCommandLine(args);
 			}
 		});
-		try {
+		try
+		{
 			ready();
 		}
-		catch (UnsatisfiedLinkError err) {
+		catch (UnsatisfiedLinkError err)
+		{
 			// Ignore (we weren't started via WinRun4J)
 		}
 	}
@@ -56,22 +67,24 @@ public class MaestroMain {
 	public static native void ready();
 
 	/** A new activation from WinRun4J (a.k.a. a file was opened) */
-	public static void activate(final String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
+	public static void activate(final String[] args)
+	{
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			@Override public void run()
+			{
 				openSongFromCommandLine(args);
 			}
 		});
 	}
 
-	public static void execute(String cmdLine) {
-		openSongFromCommandLine(new String[] {
-			cmdLine
-		});
+	public static void execute(String cmdLine)
+	{
+		openSongFromCommandLine(new String[] { cmdLine });
 	}
 
-	private static void openSongFromCommandLine(String[] args) {
+	private static void openSongFromCommandLine(String[] args)
+	{
 		if (mainWindow == null)
 			return;
 
@@ -79,7 +92,8 @@ public class MaestroMain {
 		if ((state & JFrame.ICONIFIED) != 0)
 			mainWindow.setExtendedState(state & ~JFrame.ICONIFIED);
 
-		if (args.length > 0) {
+		if (args.length > 0)
+		{
 			File file = new File(args[0]);
 			if (file.exists())
 				mainWindow.openSong(file);
@@ -87,14 +101,16 @@ public class MaestroMain {
 	}
 
 	/** @deprecated Use isNativeVolumeSupported() instead. */
-	@Deprecated
-	public static native boolean isVolumeSupported();
+	@Deprecated public static native boolean isVolumeSupported();
 
-	public static boolean isNativeVolumeSupported() {
-		try {
+	public static boolean isNativeVolumeSupported()
+	{
+		try
+		{
 			return isVolumeSupported();
 		}
-		catch (UnsatisfiedLinkError err) {
+		catch (UnsatisfiedLinkError err)
+		{
 			return false;
 		}
 	}
@@ -103,7 +119,8 @@ public class MaestroMain {
 
 	public static native void setVolume(float volume);
 
-	public static void onVolumeChanged() {
+	public static void onVolumeChanged()
+	{
 		if (mainWindow != null)
 			mainWindow.onVolumeChanged();
 	}

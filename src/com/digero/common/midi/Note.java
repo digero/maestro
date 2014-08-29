@@ -25,7 +25,8 @@ package com.digero.common.midi;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Note {
+public enum Note
+{
 	REST(-1), //
 	CX, CsX, DbX(CsX), DX, DsX, EbX(DsX), EX, FX, FsX, GbX(FsX), GX, GsX, AbX(GsX), AX, AsX, BbX(AsX), BX, //
 	C0, Cs0, Db0(Cs0), D0, Ds0, Eb0(Ds0), E0, F0, Fs0, Gb0(Fs0), G0, Gs0, Ab0(Gs0), A0, As0, Bb0(As0), B0, //
@@ -50,15 +51,18 @@ public enum Note {
 	public final int naturalId;
 	public final int octave;
 
-	public boolean isSharp() {
+	public boolean isSharp()
+	{
 		return id > naturalId;
 	}
 
-	public boolean isFlat() {
+	public boolean isFlat()
+	{
 		return id < naturalId;
 	}
 
-	public Note getEnharmonicNote(boolean sharp) {
+	public Note getEnharmonicNote(boolean sharp)
+	{
 		if (isWhiteKey() || sharp == isSharp())
 			return this;
 
@@ -69,40 +73,50 @@ public enum Note {
 	/**
 	 * Returns true if this note has no accidentals in the key of C major.
 	 */
-	public boolean isWhiteKey() {
+	public boolean isWhiteKey()
+	{
 		return id == naturalId;
 	}
 
-	public static boolean isPlayable(Note n) {
+	public static boolean isPlayable(Note n)
+	{
 		return isPlayable(n.id);
 	}
 
-	public static boolean isPlayable(int id) {
+	public static boolean isPlayable(int id)
+	{
 		return id >= MIN_PLAYABLE.id && id <= MAX_PLAYABLE.id;
 	}
 
-	public static Note fromId(int id) {
+	public static Note fromId(int id)
+	{
 		if (id == REST.id)
 			return REST;
 
-		if (lookupId == null) {
+		if (lookupId == null)
+		{
 			lookupId = new Note[B9.id + 1];
-			for (Note n : values()) {
+			for (Note n : values())
+			{
 				if (n != REST && lookupId[n.id] == null)
 					lookupId[n.id] = n;
 			}
 		}
 
-		if (id < 0 || id >= lookupId.length) {
+		if (id < 0 || id >= lookupId.length)
+		{
 			return null;
 		}
 		return lookupId[id];
 	}
 
-	public static Note fromAbc(String abc) {
-		if (lookupAbc == null) {
+	public static Note fromAbc(String abc)
+	{
+		if (lookupAbc == null)
+		{
 			lookupAbc = new HashMap<String, Note>(values().length * 4 / 3 + 1);
-			for (Note n : values()) {
+			for (Note n : values())
+			{
 				lookupAbc.put(n.abc, n);
 			}
 		}
@@ -110,35 +124,42 @@ public enum Note {
 		return lookupAbc.get(abc);
 	}
 
-	public static Note fromName(String name) {
+	public static Note fromName(String name)
+	{
 		return (Note) Enum.valueOf(Note.class, name);
 	}
 
 	private static Note[] lookupId = null;
 	private static Map<String, Note> lookupAbc = null;
 
-	private static class IdGenerator {
+	private static class IdGenerator
+	{
 		private static int next = 0;
 	}
 
-	private Note() {
+	private Note()
+	{
 		this(IdGenerator.next);
 	}
 
-	private Note(Note copyFrom) {
+	private Note(Note copyFrom)
+	{
 		this(copyFrom.id);
 	}
 
-	private Note(int id) {
+	private Note(int id)
+	{
 		this.id = id;
 		IdGenerator.next = id + 1;
 
-		if (id == -1) {
+		if (id == -1)
+		{
 			this.abc = "z";
 			naturalId = id;
 			octave = 0;
 		}
-		else {
+		else
+		{
 			String s = toString();
 			String octaveString = s.substring(s.length() - 1);
 			if (octaveString.equals("X"))
@@ -147,15 +168,18 @@ public enum Note {
 				octave = Integer.parseInt(octaveString);
 			StringBuilder abc = new StringBuilder(2 + Math.abs(octave - 3));
 
-			if (s.indexOf('s') == 1) {
+			if (s.indexOf('s') == 1)
+			{
 				abc.append('^');
 				naturalId = id - 1;
 			}
-			else if (s.indexOf('b') == 1) {
+			else if (s.indexOf('b') == 1)
+			{
 				abc.append('_');
 				naturalId = id + 1;
 			}
-			else {
+			else
+			{
 				//abc.append('=');
 				naturalId = id;
 			}
@@ -177,7 +201,8 @@ public enum Note {
 		}
 	}
 
-	public String getDisplayName() {
+	public String getDisplayName()
+	{
 		return toString().replace('s', '#');
 	}
 }

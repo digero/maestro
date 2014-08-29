@@ -16,15 +16,19 @@ import javax.sound.sampled.AudioSystem;
 import com.digero.common.midi.SynthesizerFactory;
 import com.sun.media.sound.AudioSynthesizer;
 
-public class MidiToWav {
+public class MidiToWav
+{
 	/*
 	 * Render sequence using selected or default soundbank into wave audio file.
 	 */
-	public static void render(Sequence sequence, OutputStream out) throws MidiUnavailableException {
-		try {
+	public static void render(Sequence sequence, OutputStream out) throws MidiUnavailableException
+	{
+		try
+		{
 			// Find available AudioSynthesizer.
 			AudioSynthesizer synth = SynthesizerFactory.findAudioSynthesizer();
-			if (synth == null) {
+			if (synth == null)
+			{
 				throw new MidiUnavailableException("Failed to find appropriate synthesizer");
 			}
 
@@ -52,7 +56,8 @@ public class MidiToWav {
 			if (opened)
 				synth.open();
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -60,7 +65,8 @@ public class MidiToWav {
 	/*
 	 * Send entiry MIDI Sequence into Receiver using timestamps.
 	 */
-	public static double send(Sequence seq, Receiver recv) {
+	public static double send(Sequence seq, Receiver recv)
+	{
 		float divtype = seq.getDivisionType();
 		assert (seq.getDivisionType() == Sequence.PPQ);
 		Track[] tracks = seq.getTracks();
@@ -69,15 +75,19 @@ public class MidiToWav {
 		int seqres = seq.getResolution();
 		long lasttick = 0;
 		long curtime = 0;
-		while (true) {
+		while (true)
+		{
 			MidiEvent selevent = null;
 			int seltrack = -1;
-			for (int i = 0; i < tracks.length; i++) {
+			for (int i = 0; i < tracks.length; i++)
+			{
 				int trackpos = trackspos[i];
 				Track track = tracks[i];
-				if (trackpos < track.size()) {
+				if (trackpos < track.size())
+				{
 					MidiEvent event = track.get(trackpos);
-					if (selevent == null || event.getTick() < selevent.getTick()) {
+					if (selevent == null || event.getTick() < selevent.getTick())
+					{
 						selevent = event;
 						seltrack = i;
 					}
@@ -93,14 +103,17 @@ public class MidiToWav {
 				curtime = (long) ((tick * 1000000.0 * divtype) / seqres);
 			lasttick = tick;
 			MidiMessage msg = selevent.getMessage();
-			if (msg instanceof MetaMessage) {
+			if (msg instanceof MetaMessage)
+			{
 				if (divtype == Sequence.PPQ)
-					if (((MetaMessage) msg).getType() == 0x51) {
+					if (((MetaMessage) msg).getType() == 0x51)
+					{
 						byte[] data = ((MetaMessage) msg).getData();
 						mpq = ((data[0] & 0xff) << 16) | ((data[1] & 0xff) << 8) | (data[2] & 0xff);
 					}
 			}
-			else {
+			else
+			{
 				if (recv != null)
 					recv.send(msg, curtime);
 			}

@@ -11,63 +11,73 @@ import javax.sound.midi.ShortMessage;
 
 import com.digero.common.util.ICompileConstants;
 
-public class NoteFilterTransceiver implements Transceiver, IMidiConstants, ICompileConstants {
+public class NoteFilterTransceiver implements Transceiver, IMidiConstants, ICompileConstants
+{
 	private Receiver receiver = null;
 	private boolean hasAbcPart = false;
 	private Set<Integer>[] notesOn;
 	private Set<Integer> solos = new HashSet<Integer>();
 
-	@SuppressWarnings("unchecked")
-	public void onAbcPartChanged(boolean hasAbcPart) {
+	@SuppressWarnings("unchecked")//
+	public void onAbcPartChanged(boolean hasAbcPart)
+	{
 		this.hasAbcPart = hasAbcPart;
 		notesOn = new Set[CHANNEL_COUNT];
 	}
 
-	public void setNoteSolo(int drumId, boolean solo) {
-		if (solo) {
+	public void setNoteSolo(int drumId, boolean solo)
+	{
+		if (solo)
+		{
 			solos.add(drumId);
 			turnOffInactiveNotes();
 		}
-		else {
+		else
+		{
 			solos.remove(drumId);
 		}
 	}
 
-	public boolean getNoteSolo(int noteId) {
+	public boolean getNoteSolo(int noteId)
+	{
 		return solos.contains(noteId);
 	}
 
-	public boolean isNoteActive(int noteId) {
+	public boolean isNoteActive(int noteId)
+	{
 		return (!solos.isEmpty()) ? solos.contains(noteId) : true;
 	}
 
-	public boolean isAnyNoteSolo() {
+	public boolean isAnyNoteSolo()
+	{
 		return !solos.isEmpty();
 	}
 
-	@Override
-	public void close() {
+	@Override public void close()
+	{
 		// Nothing to do
 	}
 
-	@Override
-	public Receiver getReceiver() {
+	@Override public Receiver getReceiver()
+	{
 		return receiver;
 	}
 
-	@Override
-	public void setReceiver(Receiver receiver) {
+	@Override public void setReceiver(Receiver receiver)
+	{
 		this.receiver = receiver;
 	}
 
-	private boolean isNoteOn(int channel, int noteId) {
+	private boolean isNoteOn(int channel, int noteId)
+	{
 		if (notesOn[channel] == null)
 			return false;
 
 		return notesOn[channel].contains(noteId);
 	}
 
-	private void setNoteOn(int channel, int noteId, boolean on) {
+	private void setNoteOn(int channel, int noteId, boolean on)
+	{
 		if (notesOn[channel] == null)
 			notesOn[channel] = new HashSet<Integer>();
 
@@ -77,18 +87,22 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 			notesOn[channel].remove(noteId);
 	}
 
-	private void turnOffInactiveNotes() {
+	private void turnOffInactiveNotes()
+	{
 		if (receiver == null)
 			return;
 
-		for (int c = 0; c < CHANNEL_COUNT; c++) {
+		for (int c = 0; c < CHANNEL_COUNT; c++)
+		{
 			if (notesOn[c] == null)
 				continue;
 
 			Iterator<Integer> iter = notesOn[c].iterator();
-			while (iter.hasNext()) {
+			while (iter.hasNext())
+			{
 				int noteId = iter.next();
-				if (!isNoteActive(noteId)) {
+				if (!isNoteActive(noteId))
+				{
 					iter.remove();
 					MidiEvent evt = MidiFactory.createNoteOffEvent(noteId, c, -1);
 					receiver.send(evt.getMessage(), evt.getTick());
@@ -97,12 +111,13 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 		}
 	}
 
-	@Override
-	public void send(MidiMessage message, long timeStamp) {
+	@Override public void send(MidiMessage message, long timeStamp)
+	{
 		if (receiver == null)
 			return;
 
-		if (hasAbcPart && message instanceof ShortMessage) {
+		if (hasAbcPart && message instanceof ShortMessage)
+		{
 			ShortMessage m = (ShortMessage) message;
 			int c = m.getChannel();
 			int cmd = m.getCommand();

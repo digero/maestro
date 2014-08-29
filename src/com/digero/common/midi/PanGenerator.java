@@ -5,16 +5,19 @@ import java.util.regex.Pattern;
 
 import com.digero.common.abc.LotroInstrument;
 
-public class PanGenerator {
+public class PanGenerator
+{
 	public static final int CENTER = 64;
 
 	private int[] count;
 
-	public PanGenerator() {
+	public PanGenerator()
+	{
 		count = new int[LotroInstrument.values().length];
 	}
 
-	public void reset() {
+	public void reset()
+	{
 		Arrays.fill(count, 0);
 	}
 
@@ -22,7 +25,8 @@ public class PanGenerator {
 	static final Pattern rightRegex = Pattern.compile("\\b(right)\\b");
 	static final Pattern centerRegex = Pattern.compile("\\b(middle|center)\\b");
 
-	public int get(LotroInstrument instrument, String partTitle) {
+	public int get(LotroInstrument instrument, String partTitle)
+	{
 		int pan = get(instrument);
 
 		String titleLower = partTitle.toLowerCase();
@@ -36,14 +40,16 @@ public class PanGenerator {
 		return pan;
 	}
 
-	public int get(LotroInstrument instrument) {
+	public int get(LotroInstrument instrument)
+	{
 		if (instrument == LotroInstrument.MOOR_COWBELL)
 			instrument = LotroInstrument.COWBELL;
 
 		int sign;
 		int c = count[instrument.ordinal()]++;
 
-		switch (c % 3) {
+		switch (c % 3)
+		{
 		case 0:
 			sign = 1;
 			break;
@@ -55,7 +61,8 @@ public class PanGenerator {
 			break;
 		}
 
-		switch (instrument) {
+		switch (instrument)
+		{
 		case HARP:
 			return CENTER + sign * -45;
 		case FLUTE:

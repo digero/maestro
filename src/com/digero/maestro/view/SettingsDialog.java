@@ -39,7 +39,8 @@ import com.digero.maestro.abc.AbcPartMetadataSource;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
 
-public class SettingsDialog extends JDialog implements TableLayoutConstants {
+public class SettingsDialog extends JDialog implements TableLayoutConstants
+{
 	public static final int NUMBERING_TAB = 0;
 	public static final int NAME_TEMPLATE_TAB = 1;
 
@@ -56,7 +57,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 	private PartNameTemplate nameTemplate;
 	private JLabel nameTemplateExampleLabel;
 
-	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings, PartNameTemplate nameTemplate) {
+	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings, PartNameTemplate nameTemplate)
+	{
 		super(owner, "Options", true);
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 
@@ -68,18 +70,20 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		JButton okButton = new JButton("OK");
 		getRootPane().setDefaultButton(okButton);
 		okButton.setMnemonic('O');
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		okButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				success = true;
 				SettingsDialog.this.setVisible(false);
 			}
 		});
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setMnemonic('C');
-		cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		cancelButton.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				success = false;
 				SettingsDialog.this.setVisible(false);
 			}
@@ -88,19 +92,18 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		final String CLOSE_WINDOW_ACTION = "com.digero.maestro.view.SettingsDialog:CLOSE_WINDOW_ACTION";
 		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 				CLOSE_WINDOW_ACTION);
-		getRootPane().getActionMap().put(CLOSE_WINDOW_ACTION, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		getRootPane().getActionMap().put(CLOSE_WINDOW_ACTION, new AbstractAction()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				success = false;
 				SettingsDialog.this.setVisible(false);
 			}
 		});
 
-		JPanel buttonsPanel = new JPanel(new TableLayout(new double[] {
-				0.50, 0.50
-		}, new double[] {
-			PREFERRED
-		}));
+		JPanel buttonsPanel = new JPanel(new TableLayout(//
+				new double[] { 0.50, 0.50 },//
+				new double[] { PREFERRED }));
 		((TableLayout) buttonsPanel.getLayout()).setHGap(PAD);
 		buttonsPanel.add(okButton, "0, 0, f, f");
 		buttonsPanel.add(cancelButton, "1, 0, f, f");
@@ -119,7 +122,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		setContentPane(mainPanel);
 		pack();
 
-		if (owner != null) {
+		if (owner != null)
+		{
 			int left = owner.getX() + (owner.getWidth() - this.getWidth()) / 2;
 			int top = owner.getY() + (owner.getHeight() - this.getHeight()) / 2;
 			this.setLocation(left, top);
@@ -129,12 +133,13 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		updateNameTemplateExample();
 	}
 
-	private JPanel createNumberingPanel() {
+	private JPanel createNumberingPanel()
+	{
 		JLabel instrumentsTitle = new JLabel("<html><b><u>First part number</u></b></html>");
 
-		TableLayout instrumentsLayout = new TableLayout(new double[] {
-				50, PREFERRED, 2 * PAD, 50, PREFERRED
-		}, new double[] {});
+		TableLayout instrumentsLayout = new TableLayout(//
+				new double[] { 50, PREFERRED, 2 * PAD, 50, PREFERRED },//
+				new double[] { });
 		instrumentsLayout.setHGap(PAD);
 		instrumentsLayout.setVGap(3);
 		JPanel instrumentsPanel = new JPanel(instrumentsLayout);
@@ -142,16 +147,19 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 
 		final List<InstrumentSpinner> instrumentSpinners = new ArrayList<InstrumentSpinner>();
 		LotroInstrument[] instruments = LotroInstrument.values();
-		for (int i = 0; i < instruments.length; i++) {
+		for (int i = 0; i < instruments.length; i++)
+		{
 			LotroInstrument inst = instruments[i];
 
 			int row = i;
 			int col = 0;
-			if (i >= (instruments.length + 1) / 2) {
+			if (i >= (instruments.length + 1) / 2)
+			{
 				row -= (instruments.length + 1) / 2;
 				col = 3;
 			}
-			else {
+			else
+			{
 				instrumentsLayout.insertRow(row, PREFERRED);
 			}
 			InstrumentSpinner spinner = new InstrumentSpinner(inst);
@@ -165,29 +173,31 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 				+ "<b>1</b>: number Lute parts as 10, 11, 12, etc.<br>"
 				+ "<b>10</b>: number Lute parts as 1, 11, 21, etc.</html>");
 
-		final JComboBox<Integer> incrementComboBox = new JComboBox<Integer>(new Integer[] {
-				1, 10
-		});
+		final JComboBox<Integer> incrementComboBox = new JComboBox<Integer>(new Integer[] { 1, 10 });
 		incrementComboBox.setSelectedItem(numSettings.getIncrement());
-		incrementComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		incrementComboBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
 				int oldInc = numSettings.getIncrement();
 				int newInc = (Integer) incrementComboBox.getSelectedItem();
 				if (oldInc == newInc)
 					return;
 
 				numbererSettingsChanged = true;
-				for (InstrumentSpinner spinner : instrumentSpinners) {
+				for (InstrumentSpinner spinner : instrumentSpinners)
+				{
 					int firstNumber = numSettings.getFirstNumber(spinner.instrument);
 					firstNumber = (firstNumber * oldInc) / newInc;
 					numSettings.setFirstNumber(spinner.instrument, firstNumber);
 					spinner.setValue(firstNumber);
 
-					if (newInc == 1) {
+					if (newInc == 1)
+					{
 						spinner.getModel().setMaximum(999);
 					}
-					else {
+					else
+					{
 						spinner.getModel().setMaximum(10);
 					}
 				}
@@ -196,22 +206,18 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			}
 		});
 
-		TableLayout incrementPanelLayout = new TableLayout(new double[] {
-				PREFERRED, FILL
-		}, new double[] {
-			PREFERRED
-		});
+		TableLayout incrementPanelLayout = new TableLayout(//
+				new double[] { PREFERRED, FILL },//
+				new double[] { PREFERRED });
 		incrementPanelLayout.setHGap(10);
 		JPanel incrementPanel = new JPanel(incrementPanelLayout);
 		incrementPanel.setBorder(BorderFactory.createEmptyBorder(0, PAD, 0, 0));
 		incrementPanel.add(incrementComboBox, "0, 0, C, T");
 		incrementPanel.add(incrementDescr, "1, 0");
 
-		TableLayout numberingLayout = new TableLayout(new double[] {
-			FILL
-		}, new double[] {
-				PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED
-		});
+		TableLayout numberingLayout = new TableLayout(//
+				new double[] { FILL },//
+				new double[] { PREFERRED, PREFERRED, PREFERRED, PREFERRED, PREFERRED });
 
 		numberingLayout.setVGap(PAD);
 		JPanel numberingPanel = new JPanel(numberingLayout);
@@ -224,10 +230,12 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		return numberingPanel;
 	}
 
-	private class InstrumentSpinner extends JSpinner implements ChangeListener {
+	private class InstrumentSpinner extends JSpinner implements ChangeListener
+	{
 		private LotroInstrument instrument;
 
-		public InstrumentSpinner(LotroInstrument instrument) {
+		public InstrumentSpinner(LotroInstrument instrument)
+		{
 			super(new SpinnerNumberModel(numSettings.getFirstNumber(instrument), 0, numSettings.isIncrementByTen() ? 10
 					: 999, 1));
 
@@ -235,35 +243,37 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			addChangeListener(this);
 		}
 
-		@Override
-		public SpinnerNumberModel getModel() {
+		@Override public SpinnerNumberModel getModel()
+		{
 			return (SpinnerNumberModel) super.getModel();
 		}
 
-		@Override
-		public void stateChanged(ChangeEvent e) {
+		@Override public void stateChanged(ChangeEvent e)
+		{
 			numSettings.setFirstNumber(instrument, (Integer) getValue());
 			numbererSettingsChanged = true;
 		}
 	}
 
-	private JPanel createNameTemplatePanel() {
+	private JPanel createNameTemplatePanel()
+	{
 		final JTextField partNameTextField = new JTextField(nameTemplateSettings.getPartNamePattern(), 40);
-		partNameTextField.getDocument().addDocumentListener(new DocumentListener() {
-			@Override
-			public void removeUpdate(DocumentEvent e) {
+		partNameTextField.getDocument().addDocumentListener(new DocumentListener()
+		{
+			@Override public void removeUpdate(DocumentEvent e)
+			{
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();
 			}
 
-			@Override
-			public void insertUpdate(DocumentEvent e) {
+			@Override public void insertUpdate(DocumentEvent e)
+			{
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();
 			}
 
-			@Override
-			public void changedUpdate(DocumentEvent e) {
+			@Override public void changedUpdate(DocumentEvent e)
+			{
 				nameTemplateSettings.setPartNamePattern(partNameTextField.getText());
 				updateNameTemplateExample();
 			}
@@ -309,7 +319,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		MockMetadataSource mockMetadata = new MockMetadataSource(originalMetadataSource);
 		nameTemplate.setMetadataSource(mockMetadata);
 		nameTemplate.setCurrentAbcPart(mockMetadata);
-		for (Entry<String, PartNameTemplate.Variable> entry : nameTemplate.getVariables().entrySet()) {
+		for (Entry<String, PartNameTemplate.Variable> entry : nameTemplate.getVariables().entrySet())
+		{
 			String tooltipText = "<html><b>" + entry.getKey() + "</b><br>"
 					+ entry.getValue().getDescription().replace("\n", "<br>") + "</html>";
 
@@ -328,7 +339,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		return nameTemplatePanel;
 	}
 
-	private void updateNameTemplateExample() {
+	private void updateNameTemplateExample()
+	{
 		AbcMetadataSource originalMetadataSource = nameTemplate.getMetadataSource();
 		MockMetadataSource mockMetadata = new MockMetadataSource(originalMetadataSource);
 		nameTemplate.setMetadataSource(mockMetadata);
@@ -344,79 +356,87 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 		nameTemplate.setMetadataSource(originalMetadataSource);
 	}
 
-	public void setActiveTab(int tab) {
+	public void setActiveTab(int tab)
+	{
 		if (tab >= 0 && tab < tabPanel.getComponentCount())
 			tabPanel.setSelectedIndex(tab);
 	}
 
-	public int getActiveTab() {
+	public int getActiveTab()
+	{
 		return tabPanel.getSelectedIndex();
 	}
 
-	public boolean isSuccess() {
+	public boolean isSuccess()
+	{
 		return success;
 	}
 
-	public boolean isNumbererSettingsChanged() {
+	public boolean isNumbererSettingsChanged()
+	{
 		return numbererSettingsChanged;
 	}
 
-	public PartAutoNumberer.Settings getNumbererSettings() {
+	public PartAutoNumberer.Settings getNumbererSettings()
+	{
 		return numSettings;
 	}
 
-	public PartNameTemplate.Settings getNameTemplateSettings() {
+	public PartNameTemplate.Settings getNameTemplateSettings()
+	{
 		return nameTemplateSettings;
 	}
 
-	private static class MockMetadataSource implements AbcMetadataSource, AbcPartMetadataSource {
+	private static class MockMetadataSource implements AbcMetadataSource, AbcPartMetadataSource
+	{
 		private AbcMetadataSource originalSource;
 
-		public MockMetadataSource(AbcMetadataSource originalSource) {
+		public MockMetadataSource(AbcMetadataSource originalSource)
+		{
 			this.originalSource = originalSource;
 		}
 
-		@Override
-		public String getTitle() {
+		@Override public String getTitle()
+		{
 			return "First Flute";
 		}
 
-		@Override
-		public LotroInstrument getInstrument() {
+		@Override public LotroInstrument getInstrument()
+		{
 			return LotroInstrument.FLUTE;
 		}
 
-		@Override
-		public int getPartNumber() {
+		@Override public int getPartNumber()
+		{
 			return 4;
 		}
 
-		@Override
-		public String getSongTitle() {
+		@Override public String getSongTitle()
+		{
 			if (originalSource != null && originalSource.getSongTitle().length() > 0)
 				return originalSource.getSongTitle();
 
 			return "Example Title";
 		}
 
-		@Override
-		public String getComposer() {
+		@Override public String getComposer()
+		{
 			if (originalSource != null && originalSource.getComposer().length() > 0)
 				return originalSource.getComposer();
 
 			return "Example Composer";
 		}
 
-		@Override
-		public String getTranscriber() {
+		@Override public String getTranscriber()
+		{
 			if (originalSource != null && originalSource.getTranscriber().length() > 0)
 				return originalSource.getTranscriber();
 
 			return "Your Name Here";
 		}
 
-		@Override
-		public long getSongLengthMicros() {
+		@Override public long getSongLengthMicros()
+		{
 			long length = 0;
 			if (originalSource != null)
 				length = originalSource.getSongLengthMicros();
@@ -424,9 +444,10 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			return (length != 0) ? length : 227000000/* 3:47 */;
 		}
 
-		@Override
-		public File getSaveFile() {
-			if (originalSource != null) {
+		@Override public File getSaveFile()
+		{
+			if (originalSource != null)
+			{
 				File saveFile = originalSource.getSaveFile();
 				if (saveFile != null)
 					return saveFile;
@@ -435,8 +456,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants {
 			return new File(Util.getLotroMusicPath(false), "band/examplesong.abc");
 		}
 
-		@Override
-		public String getPartName(AbcPartMetadataSource abcPart) {
+		@Override public String getPartName(AbcPartMetadataSource abcPart)
+		{
 			return null;
 		}
 	}

@@ -1,6 +1,7 @@
 package com.digero.maestro.abc;
 
-public enum AbcPartProperty {
+public enum AbcPartProperty
+{
 	TITLE(false), //
 	PART_NUMBER(false), //
 	ENABLED, //
@@ -14,19 +15,23 @@ public enum AbcPartProperty {
 
 	private final boolean renderRelated;
 
-	private AbcPartProperty() {
+	private AbcPartProperty()
+	{
 		this.renderRelated = true;
 	}
 
-	private AbcPartProperty(boolean renderRelated) {
+	private AbcPartProperty(boolean renderRelated)
+	{
 		this.renderRelated = renderRelated;
 	}
 
-	public boolean isNoteGraphRelated() {
+	public boolean isNoteGraphRelated()
+	{
 		return renderRelated;
 	}
 
-	public boolean isAbcPreviewRelated() {
+	public boolean isAbcPreviewRelated()
+	{
 		return renderRelated;
 	}
 }

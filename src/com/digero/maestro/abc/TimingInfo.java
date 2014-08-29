@@ -2,7 +2,8 @@ package com.digero.maestro.abc;
 
 import com.digero.common.midi.TimeSignature;
 
-public class TimingInfo {
+public class TimingInfo
+{
 	public static final int ONE_SECOND_MICROS = 1000000;
 	public static final int ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
 	public static final int SHORTEST_NOTE_MICROS = ONE_MINUTE_MICROS / 1000;
@@ -23,12 +24,14 @@ public class TimingInfo {
 	public final int barLength;
 
 	public TimingInfo(int sourceTempo, int exportTempo, TimeSignature meter, boolean useTripletTiming)
-			throws AbcConversionException {
+			throws AbcConversionException
+	{
 		this.tempo = sourceTempo;
 		this.exportTempo = exportTempo;
 		this.meter = meter;
 
-		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO) {
+		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO)
+		{
 			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between " + MIN_TEMPO
 					+ " and " + MAX_TEMPO + ".");
 		}
@@ -48,7 +51,8 @@ public class TimingInfo {
 				minNoteDivisor *= 3;
 			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (minNoteDivisor / 4);
 			int minNoteLengthAtExportTempo = (ONE_MINUTE_MICROS / exportTempo) / (minNoteDivisor / 4);
-			while (minNoteLengthAtExportTempo < SHORTEST_NOTE_MICROS) {
+			while (minNoteLengthAtExportTempo < SHORTEST_NOTE_MICROS)
+			{
 				minNoteLengthAtExportTempo *= 2;
 				minNoteLength *= 2;
 				minNoteDivisor /= 2;
@@ -56,13 +60,15 @@ public class TimingInfo {
 
 			assert minNoteDivisor > 0;
 
-			while (minNoteLengthAtExportTempo >= SHORTEST_NOTE_MICROS * 2) {
+			while (minNoteLengthAtExportTempo >= SHORTEST_NOTE_MICROS * 2)
+			{
 				minNoteLengthAtExportTempo /= 2;
 				minNoteLength /= 2;
 				minNoteDivisor *= 2;
 			}
 
-			if (meter.denominator > minNoteDivisor) {
+			if (meter.denominator > minNoteDivisor)
+			{
 				throw new AbcConversionException("The denominator of the meter must be no greater than "
 						+ minNoteDivisor);
 			}
@@ -78,31 +84,38 @@ public class TimingInfo {
 //		barLength = Integer.MAX_VALUE;
 	}
 
-	public int getBPM() {
+	public int getBPM()
+	{
 		return tempo / (defaultDivisor / 4);
 	}
 
-	public int getMPQN() {
+	public int getMPQN()
+	{
 		return ONE_MINUTE_MICROS / getBPM();
 	}
 
-	public int getMidiResolution() {
+	public int getMidiResolution()
+	{
 		return minNoteDivisor * 12;
 	}
 
-	public long getMidiTicks(long micros) {
+	public long getMidiTicks(long micros)
+	{
 		return (long) ((double) micros * getMidiResolution() / getMPQN());
 	}
 
-	public long getMicros(long midiTicks) {
+	public long getMicros(long midiTicks)
+	{
 		return (long) ((double) midiTicks * getMPQN() / getMidiResolution());
 	}
 
-	public long getBarStart(long micros) {
+	public long getBarStart(long micros)
+	{
 		return (micros / barLength) * barLength;
 	}
 
-	public long getBarEnd(long micros) {
+	public long getBarEnd(long micros)
+	{
 		return (micros / barLength + 1) * barLength;
 	}
 }

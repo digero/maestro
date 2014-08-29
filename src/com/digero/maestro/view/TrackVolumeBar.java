@@ -23,7 +23,8 @@ import com.digero.common.abc.Dynamics;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 
-public class TrackVolumeBar extends JPanel implements IDiscardable {
+public class TrackVolumeBar extends JPanel implements IDiscardable
+{
 	private static final int PTR_WIDTH = 6;
 	private static final int PTR_HEIGHT = 16;
 	private static final int BAR_HEIGHT = 10;
@@ -48,7 +49,8 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 	private boolean mouseWithin = false;
 	private boolean mouseDown = false;
 
-	public TrackVolumeBar(int trackMinVelocity, int trackMaxVelocity) {
+	public TrackVolumeBar(int trackMinVelocity, int trackMaxVelocity)
+	{
 		MIN_VALUE = Dynamics.MINIMUM.midiVol - trackMaxVelocity;
 		MAX_VALUE = Dynamics.MAXIMUM.midiVol - trackMinVelocity;
 
@@ -62,30 +64,36 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		setPreferredSize(sz);
 	}
 
-	@Override
-	public void discard() {
-		if (actionListeners != null) {
+	@Override public void discard()
+	{
+		if (actionListeners != null)
+		{
 			actionListeners.clear();
 			actionListeners = null;
 		}
 	}
 
-	public int getDeltaVolume() {
+	public int getDeltaVolume()
+	{
 		return value;
 	}
 
-	public void setDeltaVolume(int deltaVolume) {
-		if (deltaVolume != value) {
+	public void setDeltaVolume(int deltaVolume)
+	{
+		if (deltaVolume != value)
+		{
 			value = Util.clamp(deltaVolume, MIN_VALUE, MAX_VALUE);
 			fireActionEvent();
 		}
 	}
 
-	public boolean isDragging() {
+	public boolean isDragging()
+	{
 		return mouseDown;
 	}
 
-	public void addActionListener(ActionListener trackVolumeListener) {
+	public void addActionListener(ActionListener trackVolumeListener)
+	{
 		if (actionListeners == null)
 			actionListeners = new ArrayList<ActionListener>();
 
@@ -93,21 +101,24 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 			actionListeners.add(trackVolumeListener);
 	}
 
-	public void removeActionListener(ActionListener trackVolumeListener) {
+	public void removeActionListener(ActionListener trackVolumeListener)
+	{
 		if (actionListeners != null)
 			actionListeners.remove(trackVolumeListener);
 	}
 
-	protected void fireActionEvent() {
-		if (actionListeners != null) {
+	protected void fireActionEvent()
+	{
+		if (actionListeners != null)
+		{
 			ActionEvent e = new ActionEvent(this, 0, null);
 			for (ActionListener l : actionListeners)
 				l.actionPerformed(e);
 		}
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		super.paintComponent(g);
 
 		Graphics2D g2 = (Graphics2D) g;
@@ -154,7 +165,8 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		g2.drawRoundRect(x, y, right - x - 1, BAR_HEIGHT, ROUND, ROUND);
 
 		// Pointer
-		if (mouseDown || mouseWithin) {
+		if (mouseDown || mouseWithin)
+		{
 			int left = ptrPos - PTR_WIDTH / 2;
 
 			final Color PTR_COLOR_1 = Color.WHITE;
@@ -167,18 +179,22 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 		}
 	}
 
-	private class InputHandler implements MouseListener, MouseMotionListener, KeyListener {
+	private class InputHandler implements MouseListener, MouseMotionListener, KeyListener
+	{
 		private int deltaAtDragStart = value;
 
-		private void handleDrag(MouseEvent e) {
+		private void handleDrag(MouseEvent e)
+		{
 			int x = e.getX();
 			int y = e.getY();
 			if ((y < -DRAG_MARGIN_Y || y > getHeight() + DRAG_MARGIN_Y)
-					|| (x < -DRAG_MARGIN_X || x > getWidth() + DRAG_MARGIN_X)) {
+					|| (x < -DRAG_MARGIN_X || x > getWidth() + DRAG_MARGIN_X))
+			{
 				// Cancel the drag
 				value = deltaAtDragStart;
 			}
-			else {
+			else
+			{
 				float xMin = SIDE_PAD;
 				float xMax = getWidth() - 2 * SIDE_PAD;
 
@@ -194,8 +210,10 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 			repaint();
 		}
 
-		private void endDrag(boolean success) {
-			if (mouseDown) {
+		private void endDrag(boolean success)
+		{
+			if (mouseDown)
+			{
 				mouseDown = false;
 				if (!success)
 					value = deltaAtDragStart;
@@ -205,9 +223,10 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 			}
 		}
 
-		@Override
-		public void mousePressed(MouseEvent e) {
-			if (isEnabled() && e.getButton() == MouseEvent.BUTTON1) {
+		@Override public void mousePressed(MouseEvent e)
+		{
+			if (isEnabled() && e.getButton() == MouseEvent.BUTTON1)
+			{
 				mouseDown = true;
 				deltaAtDragStart = value;
 				handleDrag(e);
@@ -215,54 +234,56 @@ public class TrackVolumeBar extends JPanel implements IDiscardable {
 			}
 		}
 
-		@Override
-		public void mouseDragged(MouseEvent e) {
+		@Override public void mouseDragged(MouseEvent e)
+		{
 			if (isEnabled() && mouseDown && (e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0)
 				handleDrag(e);
 		}
 
-		@Override
-		public void mouseReleased(MouseEvent e) {
+		@Override public void mouseReleased(MouseEvent e)
+		{
 			if (isEnabled() && e.getButton() == MouseEvent.BUTTON1)
 				endDrag(true);
 		}
 
-		@Override
-		public void mouseClicked(MouseEvent e) {
+		@Override public void mouseClicked(MouseEvent e)
+		{
 		}
 
-		@Override
-		public void mouseMoved(MouseEvent e) {
+		@Override public void mouseMoved(MouseEvent e)
+		{
 		}
 
-		@Override
-		public void mouseEntered(MouseEvent e) {
-			if (isEnabled()) {
+		@Override public void mouseEntered(MouseEvent e)
+		{
+			if (isEnabled())
+			{
 				mouseWithin = true;
 				repaint();
 			}
 		}
 
-		@Override
-		public void mouseExited(MouseEvent e) {
-			if (mouseWithin) {
+		@Override public void mouseExited(MouseEvent e)
+		{
+			if (mouseWithin)
+			{
 				mouseWithin = false;
 				repaint();
 			}
 		}
 
-		@Override
-		public void keyPressed(KeyEvent e) {
+		@Override public void keyPressed(KeyEvent e)
+		{
 			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
 				endDrag(false);
 		}
 
-		@Override
-		public void keyReleased(KeyEvent e) {
+		@Override public void keyReleased(KeyEvent e)
+		{
 		}
 
-		@Override
-		public void keyTyped(KeyEvent e) {
+		@Override public void keyTyped(KeyEvent e)
+		{
 		}
 	}
 }

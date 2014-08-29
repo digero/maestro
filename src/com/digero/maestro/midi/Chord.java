@@ -30,64 +30,78 @@ import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.midi.Note;
 
-public class Chord implements AbcConstants {
+public class Chord implements AbcConstants
+{
 	private long startMicros;
 	private long endMicros;
 	private boolean hasTooManyNotes = false;
 	private List<NoteEvent> notes = new ArrayList<NoteEvent>();
 
-	public Chord(NoteEvent firstNote) {
+	public Chord(NoteEvent firstNote)
+	{
 		startMicros = firstNote.startMicros;
 		endMicros = firstNote.endMicros;
 		notes.add(firstNote);
 	}
 
-	public long getStartMicros() {
+	public long getStartMicros()
+	{
 		return startMicros;
 	}
 
-	public long getEndMicros() {
+	public long getEndMicros()
+	{
 		return endMicros;
 	}
 
-	public int size() {
+	public int size()
+	{
 		return notes.size();
 	}
 
-	public boolean hasTooManyNotes() {
+	public boolean hasTooManyNotes()
+	{
 		return hasTooManyNotes;
 	}
 
-	public NoteEvent get(int i) {
+	public NoteEvent get(int i)
+	{
 		return notes.get(i);
 	}
 
-	public boolean add(NoteEvent ne, boolean force) {
-		while (force && size() >= MAX_CHORD_NOTES) {
+	public boolean add(NoteEvent ne, boolean force)
+	{
+		while (force && size() >= MAX_CHORD_NOTES)
+		{
 			remove(size() - 1);
 			hasTooManyNotes = true;
 		}
 		return add(ne);
 	}
 
-	public boolean add(NoteEvent ne) {
-		if (ne.getLength() == 0) {
+	public boolean add(NoteEvent ne)
+	{
+		if (ne.getLength() == 0)
+		{
 			hasTooManyNotes = true;
 			return false;
 		}
 
-		if (size() >= MAX_CHORD_NOTES) {
+		if (size() >= MAX_CHORD_NOTES)
+		{
 			return false;
 		}
 
 		notes.add(ne);
-		if (ne.endMicros < endMicros) {
+		if (ne.endMicros < endMicros)
+		{
 			endMicros = ne.endMicros;
 		}
 		return true;
 	}
 
-	public NoteEvent remove(int i) {
+	public NoteEvent remove(int i)
+	{
 		if (size() <= 1)
 			return null;
 
@@ -98,13 +112,16 @@ public class Chord implements AbcConstants {
 		return ne;
 	}
 
-	public boolean remove(NoteEvent ne) {
+	public boolean remove(NoteEvent ne)
+	{
 		return notes.remove(ne);
 	}
 
-	public Dynamics calcDynamics() {
+	public Dynamics calcDynamics()
+	{
 		int velocity = Integer.MIN_VALUE;
-		for (NoteEvent ne : notes) {
+		for (NoteEvent ne : notes)
+		{
 			if (ne.note != Note.REST && ne.tiesFrom == null && ne.velocity > velocity)
 				velocity = ne.velocity;
 		}
@@ -115,18 +132,23 @@ public class Chord implements AbcConstants {
 		return Dynamics.fromMidiVelocity(velocity);
 	}
 
-	public void recalcEndMicros() {
-		if (!notes.isEmpty()) {
+	public void recalcEndMicros()
+	{
+		if (!notes.isEmpty())
+		{
 			this.endMicros = notes.get(0).endMicros;
-			for (int k = 1; k < notes.size(); k++) {
-				if (notes.get(k).endMicros < endMicros) {
+			for (int k = 1; k < notes.size(); k++)
+			{
+				if (notes.get(k).endMicros < endMicros)
+				{
 					this.endMicros = notes.get(k).endMicros;
 				}
 			}
 		}
 	}
 
-	public void sort() {
+	public void sort()
+	{
 		Collections.sort(notes);
 	}
 }
