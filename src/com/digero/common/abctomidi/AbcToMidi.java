@@ -988,7 +988,7 @@ public class AbcToMidi
 								track.add(noteOff);
 								noteOffEvents.add(noteOff);
 
-								tiedNotes.remove((Integer) noteId);
+								tiedNotes.remove(noteId);
 							}
 						}
 

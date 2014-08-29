@@ -90,10 +90,9 @@ public class SynthesizerFactory
 			return (AudioSynthesizer) synth;
 
 		// If default synhtesizer is not AudioSynthesizer, check others.
-		Info[] infos = MidiSystem.getMidiDeviceInfo();
-		for (int i = 0; i < infos.length; i++)
+		for (Info info : MidiSystem.getMidiDeviceInfo())
 		{
-			MidiDevice dev = MidiSystem.getMidiDevice(infos[i]);
+			MidiDevice dev = MidiSystem.getMidiDevice(info);
 			if (dev instanceof AudioSynthesizer)
 				return (AudioSynthesizer) dev;
 		}

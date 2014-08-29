@@ -128,8 +128,8 @@ public class TrackVolumeBar extends JPanel implements IDiscardable
 		int vMax = MAX_VALUE;
 		int vCtr = DEFAULT_VALUE;
 
-		int ptrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (value - vMin) / (vMax - vMin));
-		int ctrPos = (int) (SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (vCtr - vMin) / (vMax - vMin));
+		int ptrPos = SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (value - vMin) / (vMax - vMin);
+		int ctrPos = SIDE_PAD + (getWidth() - 2 * SIDE_PAD) * (vCtr - vMin) / (vMax - vMin);
 		ctrPos = ctrPos + PTR_WIDTH * (2 * ctrPos - getWidth()) / (2 * getWidth());
 
 		int fillStart = 0;
@@ -200,7 +200,7 @@ public class TrackVolumeBar extends JPanel implements IDiscardable
 
 				float v = (MAX_VALUE - MIN_VALUE) * (x - xMin) / xMax + MIN_VALUE;
 
-				value = Util.clamp((int) Math.round(v / STEP_SIZE) * STEP_SIZE, MIN_VALUE, MAX_VALUE);
+				value = Util.clamp(Math.round(v / STEP_SIZE) * STEP_SIZE, MIN_VALUE, MAX_VALUE);
 
 				if (value != MIN_VALUE && value != MAX_VALUE && Math.abs(value - DEFAULT_VALUE) < VALUE_GUTTER)
 					value = DEFAULT_VALUE;

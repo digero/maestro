@@ -126,7 +126,7 @@ public enum Note
 
 	public static Note fromName(String name)
 	{
-		return (Note) Enum.valueOf(Note.class, name);
+		return Enum.valueOf(Note.class, name);
 	}
 
 	private static Note[] lookupId = null;

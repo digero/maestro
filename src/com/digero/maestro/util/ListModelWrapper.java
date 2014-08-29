@@ -25,7 +25,7 @@ public class ListModelWrapper<E> extends AbstractList<E>
 
 	@Override public E get(int index)
 	{
-		return (E) listModel.getElementAt(index);
+		return listModel.getElementAt(index);
 	}
 
 	@Override public int size()
@@ -35,7 +35,7 @@ public class ListModelWrapper<E> extends AbstractList<E>
 
 	@Override public E set(int index, E element)
 	{
-		return (E) listModel.set(index, element);
+		return listModel.set(index, element);
 	}
 
 	@Override public void add(int index, E element)
@@ -45,7 +45,7 @@ public class ListModelWrapper<E> extends AbstractList<E>
 
 	@Override public E remove(int index)
 	{
-		return (E) listModel.remove(index);
+		return listModel.remove(index);
 	}
 
 	@Override public boolean remove(Object o)

@@ -494,7 +494,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private void updateTempoLabel()
 	{
 		float tempo = sequencer.getTempoFactor();
-		int t = (int) Math.round(tempo * 100);
+		int t = Math.round(tempo * 100);
 //		int bpm = (int) Math.round(tempo * (abcInfo.isEmpty() ? 120 : abcInfo.getTempoBPM()));
 		tempoLabel.setText("Tempo: " + t + "%");
 	}
@@ -518,12 +518,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		// Handle the case where the window was last saved on
 		// a screen that is no longer connected
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] gs = ge.getScreenDevices();
 		Rectangle onScreen = null;
-		for (int i = 0; i < gs.length; i++)
+		for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices())
 		{
-			Rectangle monitorBounds = gs[i].getDefaultConfiguration().getBounds();
+			Rectangle monitorBounds = device.getDefaultConfiguration().getBounds();
 			if (monitorBounds.intersects(x, y, width, height))
 			{
 				onScreen = monitorBounds;

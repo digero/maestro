@@ -173,7 +173,7 @@ public class SongPositionBar extends JPanel implements SequencerListener
 			if (seq == null)
 				return 0;
 
-			long pos = (long) ((x + 1 - SIDE_PAD) * seq.getLength() / (getWidth() - 2 * SIDE_PAD));
+			long pos = (x + 1 - SIDE_PAD) * seq.getLength() / (getWidth() - 2 * SIDE_PAD);
 			return Util.clamp(pos, 0, seq.getLength() - 1);
 		}
 
