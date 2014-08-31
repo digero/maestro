@@ -26,41 +26,96 @@ import com.digero.common.midi.Note;
 
 public class NoteEvent implements Comparable<NoteEvent>
 {
+	private final ITempoCache tempoCache;
+
 	public final Note note;
 	public final int velocity;
-	public long startMicros;
-	public long endMicros;
+
+	private long startTick;
+	private long endTick;
+	private long startMicrosCached;
+	private long endMicrosCached;
+
 	public NoteEvent tiesFrom = null;
 	public NoteEvent tiesTo = null;
 
-	public NoteEvent(Note note, int velocity, long startMicros, long endMicros)
+	public NoteEvent(Note note, int velocity, long startTick, long endTick, ITempoCache tempoCache)
 	{
 		this.note = note;
 		this.velocity = velocity;
-		this.startMicros = startMicros;
-		this.endMicros = endMicros;
+		this.tempoCache = tempoCache;
+		setStartTick(startTick);
+		setEndTick(endTick);
 	}
 
-	public long getLength()
+	public ITempoCache getTempoCache()
 	{
-		return endMicros - startMicros;
+		return tempoCache;
 	}
 
-	public void setLength(long length)
+	public long getStartTick()
 	{
-		endMicros = startMicros + length;
+		return startTick;
 	}
 
-	public long getTieLength()
+	public long getEndTick()
 	{
-		return getTieEnd().endMicros - getTieStart().startMicros;
+		return endTick;
+	}
+
+	public void setStartTick(long startTick)
+	{
+		this.startTick = startTick;
+		this.startMicrosCached = -1;
+	}
+
+	public void setEndTick(long endTick)
+	{
+		this.endTick = endTick;
+		this.endMicrosCached = -1;
+	}
+
+	public void setLengthTicks(long tickLength)
+	{
+		setEndTick(startTick + tickLength);
+	}
+
+	public long getLengthTicks()
+	{
+		return endTick - startTick;
+	}
+
+	@Deprecated public long getStartMicros()
+	{
+		if (startMicrosCached == -1)
+			startMicrosCached = tempoCache.tickToMicros(startTick);
+
+		return startMicrosCached;
+	}
+
+	@Deprecated public long getEndMicros()
+	{
+		if (endMicrosCached == -1)
+			endMicrosCached = tempoCache.tickToMicros(endTick);
+
+		return endMicrosCached;
+	}
+
+	@Deprecated public long getLengthMicros()
+	{
+		return getEndMicros() - getStartMicros();
+	}
+
+	@Deprecated public long getTieLengthMicros()
+	{
+		return getTieEnd().getEndMicros() - getTieStart().getStartMicros();
 	}
 
 	public NoteEvent getTieStart()
 	{
 		if (tiesFrom == null)
 			return this;
-		assert tiesFrom.startMicros < this.startMicros;
+		assert tiesFrom.startTick < this.startTick;
 		return tiesFrom.getTieStart();
 	}
 
@@ -68,22 +123,22 @@ public class NoteEvent implements Comparable<NoteEvent>
 	{
 		if (tiesTo == null)
 			return this;
-		assert tiesTo.endMicros > this.endMicros;
+		assert tiesTo.endTick > this.endTick;
 		return tiesTo.getTieEnd();
 	}
 
 	/**
 	 * Splits the NoteEvent into two events with a tie between them.
 	 * 
-	 * @param splitPointMicros The time index to split the NoteEvent.
-	 * @return The new NoteEvent that was created starting at splitPointMicros.
+	 * @param splitPointTick The tick index to split the NoteEvent.
+	 * @return The new NoteEvent that was created starting at splitPointTick.
 	 */
-	public NoteEvent splitWithTie(long splitPointMicros)
+	public NoteEvent splitWithTieAtTick(long splitPointTick)
 	{
-		assert splitPointMicros > startMicros && splitPointMicros < endMicros;
+		assert splitPointTick > startTick && splitPointTick < endTick;
 
-		NoteEvent next = new NoteEvent(note, velocity, splitPointMicros, endMicros);
-		this.endMicros = splitPointMicros;
+		NoteEvent next = new NoteEvent(note, velocity, splitPointTick, endTick, tempoCache);
+		setEndTick(splitPointTick);
 
 		if (note != Note.REST)
 		{
@@ -104,7 +159,7 @@ public class NoteEvent implements Comparable<NoteEvent>
 		if (obj instanceof NoteEvent)
 		{
 			NoteEvent that = (NoteEvent) obj;
-			return (this.startMicros == that.startMicros) && (this.endMicros == that.endMicros)
+			return (this.startTick == that.startTick) && (this.endTick == that.endTick)
 					&& (this.note.id == that.note.id);
 		}
 		return false;
@@ -112,7 +167,7 @@ public class NoteEvent implements Comparable<NoteEvent>
 
 	@Override public int hashCode()
 	{
-		return ((int) startMicros) ^ ((int) endMicros) ^ note.id;
+		return ((int) startTick) ^ ((int) endTick) ^ note.id;
 	}
 
 	@Override public int compareTo(NoteEvent that)
@@ -120,14 +175,14 @@ public class NoteEvent implements Comparable<NoteEvent>
 		if (that == null)
 			return 1;
 
-		if (this.startMicros != that.startMicros)
-			return (this.startMicros > that.startMicros) ? 1 : -1;
+		if (this.startTick != that.startTick)
+			return (this.startTick > that.startTick) ? 1 : -1;
 
 		if (this.note.id != that.note.id)
 			return this.note.id - that.note.id;
 
-		if (this.endMicros != that.endMicros)
-			return (this.endMicros > that.endMicros) ? 1 : -1;
+		if (this.endTick != that.endTick)
+			return (this.endTick > that.endTick) ? 1 : -1;
 
 		return 0;
 	}

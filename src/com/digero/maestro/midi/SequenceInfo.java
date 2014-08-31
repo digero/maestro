@@ -22,15 +22,14 @@ import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
-import com.digero.common.midi.PanGenerator;
 import com.digero.common.midi.TimeSignature;
+import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.maestro.abc.AbcConversionException;
+import com.digero.maestro.abc.AbcExporter;
+import com.digero.maestro.abc.AbcExporter.ExportTrackInfo;
 import com.digero.maestro.abc.AbcMetadataSource;
-import com.digero.maestro.abc.AbcPart;
-import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
-import com.sun.media.sound.MidiUtils.TempoCache;
 
 /**
  * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
@@ -38,15 +37,13 @@ import com.sun.media.sound.MidiUtils.TempoCache;
  */
 public class SequenceInfo implements IMidiConstants
 {
-	private Sequence sequence;
-	private String fileName;
+	private final Sequence sequence;
+	private final SequenceDataCache sequenceCache;
+	private final String fileName;
 	private String title;
 	private String composer;
-	private int tempoBPM;
-	private long endMicros;
+//	private final int tempoBPM; // TODO remove tempoBPM
 	private List<TrackInfo> trackInfoList;
-
-//	private NavigableMap<Long, Integer> microsToTempoMap;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
 	{
@@ -63,11 +60,10 @@ public class SequenceInfo implements IMidiConstants
 		return new SequenceInfo(midiFile.getName(), MidiSystem.getSequence(midiFile));
 	}
 
-	public static SequenceInfo fromAbcParts(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm,
-			KeySignature key, long songStartMicros, long songEndMicros, boolean useLotroInstruments)
+	public static SequenceInfo fromAbcParts(AbcExporter abcExporter, boolean useLotroInstruments)
 			throws InvalidMidiDataException, AbcConversionException
 	{
-		return new SequenceInfo(parts, metadata, tm, key, songStartMicros, songEndMicros, useLotroInstruments);
+		return new SequenceInfo(abcExporter, useLotroInstruments);
 	}
 
 	private SequenceInfo(String fileName, Sequence sequence) throws InvalidMidiDataException, ParseException
@@ -88,28 +84,15 @@ public class SequenceInfo implements IMidiConstants
 		}
 
 		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
-		SequenceDataCache sequenceCache = new SequenceDataCache(sequence);
+		sequenceCache = new SequenceDataCache(sequence);
 
 		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
-		endMicros = 0;
 		for (int i = 0; i < tracks.length; i++)
 		{
-			TrackInfo track = new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache);
-			trackInfoList.add(track);
-
-			if (track.hasEvents())
-				endMicros = Math.max(endMicros, track.getEvents().get(track.getEventCount() - 1).endMicros);
+			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache));
 		}
 
-		tempoBPM = findMainTempo(sequence, tempoCache); //sequenceCache.getPrimaryTempoBPM(); 
-
-//		microsToTempoMap = new TreeMap<Long, Integer>();
-//		for (Entry<Long, Integer> tickToMPQ : sequenceCache.getTickToTempoMPQMap().entrySet()) {
-//			long micros = MidiUtils.tick2microsecond(sequence, tickToMPQ.getKey(), tempoCache);
-//			int bpm = (int) Math.round(MidiUtils.convertTempo(tickToMPQ.getValue()));
-//
-//			microsToTempoMap.put(micros, bpm);
-//		}
+//		tempoBPM = findMainTempo(sequence, tempoCache); //sequenceCache.getPrimaryTempoBPM(); 
 
 		composer = "";
 		if (trackInfoList.get(0).hasName())
@@ -128,45 +111,27 @@ public class SequenceInfo implements IMidiConstants
 		trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
-	private SequenceInfo(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm, KeySignature key,
-			long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException,
+	private SequenceInfo(AbcExporter abcExporter, boolean useLotroInstruments) throws InvalidMidiDataException,
 			AbcConversionException
 	{
-
+		AbcMetadataSource metadata = abcExporter.getMetadataSource();
 		this.fileName = metadata.getSongTitle() + ".abc";
-		this.tempoBPM = tm.tempo;
+//		this.tempoBPM = abcExporter.getTimingInfo().getPrimaryTempoBPM();
 		this.composer = metadata.getComposer();
 		this.title = metadata.getSongTitle();
 
-		this.sequence = new Sequence(Sequence.PPQ, tm.getMidiResolution());
+		Pair<List<ExportTrackInfo>, Sequence> result = abcExporter.exportToPreview(useLotroInstruments);
 
-		// Track 0: Title and meta info
-		Track track0 = sequence.createTrack();
-		track0.add(MidiFactory.createTrackNameEvent(this.title));
-		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
-		// The Java MIDI sequencer can sometimes miss a tempo event at tick 0
-		// Add another tempo event at tick 1 to work around the bug
-		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 1));
+		sequence = result.second;
+		sequenceCache = new SequenceDataCache(sequence);
 
-		PanGenerator panner = new PanGenerator();
-		this.trackInfoList = new ArrayList<TrackInfo>(parts.size());
-		this.endMicros = 0;
-		for (AbcPart part : parts)
+		trackInfoList = new ArrayList<TrackInfo>(result.first.size());
+		for (ExportTrackInfo i : result.first)
 		{
-			int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
-			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan,
-					useLotroInstruments);
-
-			if (trackInfo.hasEvents())
-			{
-				this.endMicros = Math.max(this.endMicros,
-						trackInfo.getEvents().get(trackInfo.getEventCount() - 1).endMicros);
-			}
-
-			trackInfoList.add(trackInfo);
+			trackInfoList.add(new TrackInfo(this, i.trackNumber, i.part.getTitle(), i.part.getInstrument(), abcExporter
+					.getTimingInfo().getMeter(), abcExporter.getKeySignature(), i.noteEvents));
 		}
-
-		this.trackInfoList = Collections.unmodifiableList(this.trackInfoList);
+		trackInfoList = Collections.unmodifiableList(this.trackInfoList);
 	}
 
 	public String getFileName()
@@ -204,14 +169,15 @@ public class SequenceInfo implements IMidiConstants
 		return trackInfoList;
 	}
 
-	public int getTempoBPM()
+	public int getPrimaryTempoBPM()
 	{
-		return tempoBPM;
+		return sequenceCache.getPrimaryTempoBPM();
 	}
 
-	public long getEndMicros()
+	@Deprecated public int getTempoBPM()
 	{
-		return endMicros;
+		return sequenceCache.getPrimaryTempoBPM();
+//		return tempoBPM;
 	}
 
 	public KeySignature getKeySignature()
@@ -234,6 +200,11 @@ public class SequenceInfo implements IMidiConstants
 		return TimeSignature.FOUR_FOUR;
 	}
 
+	public SequenceDataCache getDataCache()
+	{
+		return sequenceCache;
+	}
+
 //	/** Microseconds to BPM */
 //	public NavigableMap<Long, Integer> getMicrosToTempoMap() {
 //		return microsToTempoMap;
@@ -244,7 +215,7 @@ public class SequenceInfo implements IMidiConstants
 		return getTitle();
 	}
 
-	private static int findMainTempo(Sequence sequence, TempoCache tempoCache)
+	private static int findMainTempo(Sequence sequence, MidiUtils.TempoCache tempoCache)
 	{
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 
@@ -356,6 +327,33 @@ public class SequenceInfo implements IMidiConstants
 		if (firstNoteTick == Long.MAX_VALUE)
 			return 0;
 		return firstNoteTick;
+	}
+
+	public long calcLastNoteTick()
+	{
+		long lastNoteTick = 0;
+		for (Track t : sequence.getTracks())
+		{
+			for (int j = t.size() - 1; j >= 0; j--)
+			{
+				MidiEvent evt = t.get(j);
+				MidiMessage msg = evt.getMessage();
+				if (msg instanceof ShortMessage)
+				{
+					ShortMessage m = (ShortMessage) msg;
+					if (m.getCommand() == ShortMessage.NOTE_OFF)
+					{
+						if (evt.getTick() > lastNoteTick)
+						{
+							lastNoteTick = evt.getTick();
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		return lastNoteTick;
 	}
 
 	@SuppressWarnings("unchecked")//

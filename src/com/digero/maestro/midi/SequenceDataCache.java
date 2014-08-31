@@ -14,12 +14,18 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.midi.IMidiConstants;
+import com.digero.common.util.Util;
+import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 
-public class SequenceDataCache implements IMidiConstants
+public class SequenceDataCache implements IMidiConstants, ITempoCache
 {
+	private final int tickResolution;
+	private final float divisionType;
 	private final int primaryTempoMPQ;
-	private NavigableMap<Long, Integer> tempo = new TreeMap<Long, Integer>();
+	private NavigableMap<Long, TempoEvent> tempo = new TreeMap<Long, TempoEvent>();
+
+	private final long songLengthTicks;
 
 	private MapByChannel instruments = new MapByChannel(DEFAULT_INSTRUMENT);
 	private MapByChannel volume = new MapByChannel(DEFAULT_CHANNEL_VOLUME);
@@ -29,22 +35,29 @@ public class SequenceDataCache implements IMidiConstants
 	public SequenceDataCache(Sequence song)
 	{
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
-		boolean isPPQ = song.getDivisionType() == Sequence.PPQ;
+
+		tempo.put(0L, TempoEvent.DEFAULT_TEMPO);
+
+		divisionType = song.getDivisionType();
+		tickResolution = song.getResolution();
 
 		// Keep track of the active registered paramater number for pitch bend range
 		int[] rpn = new int[CHANNEL_COUNT];
 		Arrays.fill(rpn, REGISTERED_PARAM_NONE);
 
 		Track[] tracks = song.getTracks();
-		for (int i = 0; i < tracks.length; i++)
+		long lastTick = 0;
+		for (int iTrack = 0; iTrack < tracks.length; iTrack++)
 		{
-			Track track = tracks[i];
+			Track track = tracks[iTrack];
 
 			for (int j = 0, sz = track.size(); j < sz; j++)
 			{
 				MidiEvent evt = track.get(j);
 				MidiMessage msg = evt.getMessage();
 				long tick = evt.getTick();
+				if (tick > lastTick)
+					lastTick = tick;
 
 				if (msg instanceof ShortMessage)
 				{
@@ -83,34 +96,20 @@ public class SequenceDataCache implements IMidiConstants
 						}
 					}
 				}
-				else if (i == 0 && isPPQ && MidiUtils.isMetaTempo(msg))
+				else if (iTrack == 0 && (divisionType == Sequence.PPQ) && MidiUtils.isMetaTempo(msg))
 				{
-					Entry<Long, Integer> prevTempo = tempo.floorEntry(tick);
-					long prevTempoTick;
-					int prevTempoMPQ;
-					if (prevTempo == null)
-					{
-						prevTempoTick = 0;
-						prevTempoMPQ = DEFAULT_TEMPO_MPQ;
-					}
-					else
-					{
-						prevTempoTick = prevTempo.getKey();
-						prevTempoMPQ = prevTempo.getValue();
-					}
-
-					if (tick > prevTempoTick)
-					{
-						Long uSecObj = tempoLengths.get(prevTempoMPQ);
-						long uSec = (uSecObj != null) ? uSecObj : 0;
-						uSec += MidiUtils.ticks2microsec(tick, prevTempoMPQ, song.getResolution());
-						tempoLengths.put(prevTempoMPQ, uSec);
-					}
-
-					tempo.put(tick, MidiUtils.getTempoMPQ(msg));
+					TempoEvent te = getTempoEventForTick(tick);
+					long elapsedMicros = MidiUtils.ticks2microsec(tick - te.tick, te.tempoMPQ, tickResolution);
+					tempoLengths.put(te.tempoMPQ, elapsedMicros + Util.valueOf(tempoLengths.get(te.tempoMPQ), 0));
+					tempo.put(tick, new TempoEvent(MidiUtils.getTempoMPQ(msg), tick, te.micros + elapsedMicros));
 				}
 			}
 		}
+
+		// Account for the duration of the final tempo
+		TempoEvent te = getTempoEventForTick(lastTick);
+		long elapsedMicros = MidiUtils.ticks2microsec(lastTick - te.tick, te.tempoMPQ, tickResolution);
+		tempoLengths.put(te.tempoMPQ, elapsedMicros + Util.valueOf(tempoLengths.get(te.tempoMPQ), 0));
 
 		Entry<Integer, Long> max = null;
 		for (Entry<Integer, Long> entry : tempoLengths.entrySet())
@@ -119,6 +118,8 @@ public class SequenceDataCache implements IMidiConstants
 				max = entry;
 		}
 		primaryTempoMPQ = (max == null) ? DEFAULT_TEMPO_MPQ : max.getKey();
+
+		songLengthTicks = lastTick;
 	}
 
 	public int getInstrument(int channel, long tick)
@@ -136,13 +137,32 @@ public class SequenceDataCache implements IMidiConstants
 		return pitchBendCoarse.get(channel, tick) + (pitchBendFine.get(channel, tick) / 100.0);
 	}
 
+	public long getSongLengthTicks()
+	{
+		return songLengthTicks;
+	}
+
+	@Override public long tickToMicros(long tick)
+	{
+		if (divisionType != Sequence.PPQ)
+			return (long) (TimingInfo.ONE_SECOND_MICROS * ((double) tick / (double) (divisionType * tickResolution)));
+
+		TempoEvent te = getTempoEventForTick(tick);
+		return te.micros + MidiUtils.ticks2microsec(tick - te.tick, te.tempoMPQ, tickResolution);
+	}
+
+	@Override public long microsToTick(long micros)
+	{
+		if (divisionType != Sequence.PPQ)
+			return (long) (divisionType * tickResolution * micros / (double) TimingInfo.ONE_SECOND_MICROS);
+
+		TempoEvent te = getTempoEventForMicros(micros);
+		return te.tick + MidiUtils.microsec2ticks(micros - te.micros, te.tempoMPQ, tickResolution);
+	}
+
 	public int getTempoMPQ(long tick)
 	{
-		Entry<Long, Integer> entry = tempo.floorEntry(tick);
-		if (entry == null) // No changes before this tick
-			return DEFAULT_TEMPO_MPQ;
-
-		return entry.getValue();
+		return getTempoEventForTick(tick).tempoMPQ;
 	}
 
 	public int getTempoBPM(long tick)
@@ -160,10 +180,61 @@ public class SequenceDataCache implements IMidiConstants
 		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
-	public NavigableMap<Long, Integer> getTickToTempoMPQMap()
+	public int getTickResolution()
+	{
+		return tickResolution;
+	}
+
+	public NavigableMap<Long, TempoEvent> getTempoEvents()
 	{
 		return tempo;
 	}
+
+	/*
+	 * Tempo Handling
+	 */
+
+	public static class TempoEvent
+	{
+		private TempoEvent(int tempoMPQ, long startTick, long startMicros)
+		{
+			this.tempoMPQ = tempoMPQ;
+			this.tick = startTick;
+			this.micros = startMicros;
+		}
+
+		public static final TempoEvent DEFAULT_TEMPO = new TempoEvent(DEFAULT_TEMPO_MPQ, 0, 0);
+
+		public final int tempoMPQ;
+		public final long tick;
+		public final long micros;
+	}
+
+	public TempoEvent getTempoEventForTick(long tick)
+	{
+		Entry<Long, TempoEvent> entry = tempo.floorEntry(tick);
+		if (entry != null)
+			return entry.getValue();
+
+		return TempoEvent.DEFAULT_TEMPO;
+	}
+
+	public TempoEvent getTempoEventForMicros(long micros)
+	{
+		TempoEvent retVal = TempoEvent.DEFAULT_TEMPO;
+		for (TempoEvent event : tempo.values())
+		{
+			if (event.micros > micros)
+				break;
+
+			retVal = event;
+		}
+		return retVal;
+	}
+
+	/*
+	 * Map by channel
+	 */
 
 	private static class MapByChannel
 	{
