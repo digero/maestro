@@ -17,7 +17,6 @@ import javax.swing.Timer;
 
 import com.digero.common.util.IDiscardable;
 import com.sun.media.sound.MidiUtils;
-import com.sun.media.sound.MidiUtils.TempoCache;
 
 public class SequencerWrapper implements IMidiConstants, IDiscardable
 {
@@ -30,7 +29,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 	private List<Transceiver> transceivers = new ArrayList<Transceiver>();
 	private long dragPosition;
 	private boolean isDragging;
-	private TempoCache tempoCache = new TempoCache();
+	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
 	private long lastUpdatePosition = -1;

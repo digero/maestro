@@ -14,7 +14,6 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
-import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
@@ -49,8 +48,6 @@ public class TrackInfo implements IMidiConstants
 		this.sequenceInfo = parent;
 		this.trackNumber = trackNumber;
 
-		Sequence song = sequenceInfo.getSequence();
-
 		instruments = new HashSet<Integer>();
 		noteEvents = new ArrayList<NoteEvent>();
 		notesInUse = new TreeSet<Integer>();
@@ -80,13 +77,13 @@ public class TrackInfo implements IMidiConstants
 				if (notesOn[c] == null)
 					notesOn[c] = new ArrayList<NoteEvent>();
 
+				long tick = evt.getTick();
 				if (cmd == ShortMessage.NOTE_ON || cmd == ShortMessage.NOTE_OFF)
 				{
 					int noteId = m.getData1() + (isDrumTrack ? 0 : pitchBend[c]);
-					int velocity = m.getData2() * sequenceCache.getVolume(c, evt.getTick()) / DEFAULT_CHANNEL_VOLUME;
+					int velocity = m.getData2() * sequenceCache.getVolume(c, tick) / DEFAULT_CHANNEL_VOLUME;
 					if (velocity > 127)
 						velocity = 127;
-					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
 
 					if (cmd == ShortMessage.NOTE_ON && velocity > 0)
 					{
@@ -96,7 +93,7 @@ public class TrackInfo implements IMidiConstants
 							continue; // Note was probably bent out of range. Not great, but not a reason to fail.
 						}
 
-						NoteEvent ne = new NoteEvent(note, velocity, micros, micros);
+						NoteEvent ne = new NoteEvent(note, velocity, tick, tick, sequenceCache);
 
 						Iterator<NoteEvent> onIter = notesOn[c].iterator();
 						while (onIter.hasNext())
@@ -118,7 +115,7 @@ public class TrackInfo implements IMidiConstants
 
 						if (!isDrumTrack)
 						{
-							instruments.add(sequenceCache.getInstrument(c, evt.getTick()));
+							instruments.add(sequenceCache.getInstrument(c, tick));
 						}
 						noteEvents.add(ne);
 						notesInUse.add(ne.note.id);
@@ -133,7 +130,7 @@ public class TrackInfo implements IMidiConstants
 							if (ne.note.id == noteId)
 							{
 								iter.remove();
-								ne.endMicros = micros;
+								ne.setEndTick(tick);
 								break;
 							}
 						}
@@ -141,30 +138,34 @@ public class TrackInfo implements IMidiConstants
 				}
 				else if (cmd == ShortMessage.PITCH_BEND && !isDrumTrack)
 				{
-					long micros = MidiUtils.tick2microsecond(song, evt.getTick(), tempoCache);
-
 					double pct = 2 * (((m.getData1() | (m.getData2() << 7)) / (double) (1 << 14)) - 0.5);
-					int bend = (int) Math.round(pct * sequenceCache.getPitchBendRange(m.getChannel(), evt.getTick()));
+					int bend = (int) Math.round(pct * sequenceCache.getPitchBendRange(m.getChannel(), tick));
 
 					if (bend != pitchBend[c])
 					{
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
 						for (NoteEvent ne : notesOn[c])
 						{
-							ne.endMicros = micros;
-							// If the note is too short, just skip it
-							if (ne.getLength() < TimingInfo.SHORTEST_NOTE_MICROS)
+							long bentNoteStart = tick;
+							if (ne.getLengthMicros() < TimingInfo.SHORTEST_NOTE_MICROS)
 							{
+								// If the note is too short, just skip it. The new (bent) note will 
+								// replace it, so start the bent note at the same time this one started.
 								noteEvents.remove(ne);
-								micros = ne.startMicros;
+								bentNoteStart = ne.getStartTick();
+							}
+							else
+							{
+								ne.setEndTick(tick);
 							}
 
 							Note bn = Note.fromId(ne.note.id + bend - pitchBend[c]);
-							// If bn is null , the note was bent out of the 0-127 range. 
+							// If bn is null, the note was bent out of the 0-127 range. 
 							// Not much we can do except skip it.
 							if (bn != null)
 							{
-								NoteEvent bne = new NoteEvent(bn, ne.velocity, micros, micros);
+								NoteEvent bne = new NoteEvent(bn, ne.velocity, bentNoteStart, bentNoteStart,
+										sequenceCache);
 								noteEvents.add(bne);
 								bentNotes.add(bne);
 							}

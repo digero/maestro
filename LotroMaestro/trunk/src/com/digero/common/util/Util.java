@@ -174,6 +174,26 @@ public final class Util
 		return value;
 	}
 
+	public static int valueOf(Integer val, int defaultIfNull)
+	{
+		return (val != null) ? val : defaultIfNull;
+	}
+
+	public static long valueOf(Long val, long defaultIfNull)
+	{
+		return (val != null) ? val : defaultIfNull;
+	}
+
+	public static float valueOf(Float val, float defaultIfNull)
+	{
+		return (val != null) ? val : defaultIfNull;
+	}
+
+	public static double valueOf(Double val, double defaultIfNull)
+	{
+		return (val != null) ? val : defaultIfNull;
+	}
+
 	/** Greatest Common Divisor */
 	public static int gcd(int a, int b)
 	{

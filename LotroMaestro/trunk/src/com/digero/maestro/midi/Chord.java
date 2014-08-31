@@ -32,26 +32,38 @@ import com.digero.common.midi.Note;
 
 public class Chord implements AbcConstants
 {
-	private long startMicros;
-	private long endMicros;
+	private ITempoCache tempoCache;
+	private long startTick;
+	private long endTick;
 	private boolean hasTooManyNotes = false;
 	private List<NoteEvent> notes = new ArrayList<NoteEvent>();
 
 	public Chord(NoteEvent firstNote)
 	{
-		startMicros = firstNote.startMicros;
-		endMicros = firstNote.endMicros;
+		tempoCache = firstNote.getTempoCache();
+		startTick = firstNote.getStartTick();
+		endTick = firstNote.getEndTick();
 		notes.add(firstNote);
 	}
 
-	public long getStartMicros()
+	public long getStartTick()
 	{
-		return startMicros;
+		return startTick;
 	}
 
-	public long getEndMicros()
+	public long getEndTick()
 	{
-		return endMicros;
+		return endTick;
+	}
+
+	@Deprecated public long getStartMicros()
+	{
+		return tempoCache.tickToMicros(startTick);
+	}
+
+	@Deprecated public long getEndMicros()
+	{
+		return tempoCache.tickToMicros(endTick);
 	}
 
 	public int size()
@@ -81,7 +93,7 @@ public class Chord implements AbcConstants
 
 	public boolean add(NoteEvent ne)
 	{
-		if (ne.getLength() == 0)
+		if (ne.getLengthTicks() == 0)
 		{
 			hasTooManyNotes = true;
 			return false;
@@ -93,9 +105,9 @@ public class Chord implements AbcConstants
 		}
 
 		notes.add(ne);
-		if (ne.endMicros < endMicros)
+		if (ne.getEndTick() < endTick)
 		{
-			endMicros = ne.endMicros;
+			endTick = ne.getEndTick();
 		}
 		return true;
 	}
@@ -106,8 +118,8 @@ public class Chord implements AbcConstants
 			return null;
 
 		NoteEvent ne = notes.remove(i);
-		if (ne.endMicros == this.endMicros)
-			recalcEndMicros();
+		if (ne.getEndTick() == endTick)
+			recalcEndTick();
 
 		return ne;
 	}
@@ -132,16 +144,16 @@ public class Chord implements AbcConstants
 		return Dynamics.fromMidiVelocity(velocity);
 	}
 
-	public void recalcEndMicros()
+	public void recalcEndTick()
 	{
 		if (!notes.isEmpty())
 		{
-			this.endMicros = notes.get(0).endMicros;
+			endTick = notes.get(0).getEndTick();
 			for (int k = 1; k < notes.size(); k++)
 			{
-				if (notes.get(k).endMicros < endMicros)
+				if (notes.get(k).getEndTick() < endTick)
 				{
-					this.endMicros = notes.get(k).endMicros;
+					endTick = notes.get(k).getEndTick();
 				}
 			}
 		}
