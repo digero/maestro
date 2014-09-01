@@ -18,7 +18,7 @@ import com.sun.media.sound.AudioSynthesizer;
 
 public class MidiToWav
 {
-	/*
+	/**
 	 * Render sequence using selected or default soundbank into wave audio file.
 	 */
 	public static void render(Sequence sequence, OutputStream out) throws MidiUnavailableException
@@ -62,7 +62,7 @@ public class MidiToWav
 		}
 	}
 
-	/*
+	/**
 	 * Send entiry MIDI Sequence into Receiver using timestamps.
 	 */
 	public static double send(Sequence seq, Receiver recv)

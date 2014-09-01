@@ -103,8 +103,8 @@ public class KeySignature implements IMidiConstants
 	}
 
 	/**
-	 * Computes the default accidental in this key for the given "white-key"
-	 * note (aka natural note ID in the key of C).
+	 * Computes the default accidental in this key for the given "white-key" note (aka natural note
+	 * ID in the key of C).
 	 */
 	public Accidental getDefaultAccidental(int naturalId)
 	{

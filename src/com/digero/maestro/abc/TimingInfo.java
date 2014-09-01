@@ -90,8 +90,7 @@ public class TimingInfo
 	}
 
 	/**
-	 * Rounds the given MPQ tempo so it corresponds to a whole-number of beats
-	 * per minute.
+	 * Rounds the given MPQ tempo so it corresponds to a whole-number of beats per minute.
 	 */
 	public static double roundTempoMPQ(double tempoMPQ)
 	{

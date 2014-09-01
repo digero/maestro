@@ -21,8 +21,8 @@ public class TimeSignature implements IMidiConstants
 	 * 
 	 * @param numerator The numerator, must be less than 256.
 	 * @param denominator The denominator, must be a power of 2.
-	 * @throws IllegalArgumentException If the numerator is not less than 256,
-	 *             or the denominator is not a power of 2.
+	 * @throws IllegalArgumentException If the numerator is not less than 256, or the denominator is
+	 *             not a power of 2.
 	 */
 	public TimeSignature(int numerator, int denominator)
 	{
@@ -153,8 +153,7 @@ public class TimeSignature implements IMidiConstants
 	}
 
 	/**
-	 * @return The floor of the binary logarithm for a 32 bit integer. -1 is
-	 *         returned if n is 0.
+	 * @return The floor of the binary logarithm for a 32 bit integer. -1 is returned if n is 0.
 	 */
 	private static byte floorLog2(int n)
 	{

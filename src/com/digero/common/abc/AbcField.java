@@ -15,7 +15,7 @@ public enum AbcField
 	//
 	PART_NAME, //
 	//
-	TEMPO,
+	TEMPO, //
 	;
 
 	private static class MetaData

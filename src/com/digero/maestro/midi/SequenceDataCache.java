@@ -229,10 +229,9 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		return tempo;
 	}
 
-	/*
+	/**
 	 * Tempo Handling
 	 */
-
 	public static class TempoEvent
 	{
 		private TempoEvent(int tempoMPQ, long startTick, long startMicros)
@@ -271,10 +270,9 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		return prev;
 	}
 
-	/*
+	/**
 	 * Map by channel
 	 */
-
 	private static class MapByChannel
 	{
 		private NavigableMap<Long, Integer>[] map;
