@@ -9,7 +9,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.digero.common.midi.TimeSignature;
-import com.digero.common.util.Util;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.sun.media.sound.MidiUtils;
@@ -106,35 +105,6 @@ public class QuantizedTimingInfo implements ITempoCache
 
 			timingInfoByTick.put(tick, event);
 		}
-
-		// TODO remove
-//		Iterator<SequenceDataCache.TempoEvent> sourceIter = source.getTempoEvents().values().iterator();
-//		Iterator<TimingInfoEvent> resultIter = timingInfoByTick.values().iterator();
-//		while (sourceIter.hasNext())
-//		{
-//			SequenceDataCache.TempoEvent sourceEvent = sourceIter.next();
-//			TimingInfoEvent resultEvent = null;
-//			if (resultIter.hasNext())
-//				resultEvent = resultIter.next();
-//
-//			int sourceBPM = (int) Math.round(MidiUtils.convertTempo(sourceEvent.tempoMPQ));
-//			System.out.print(sourceBPM + "\t" + sourceEvent.tick);
-//
-//			while (sourceIter.hasNext()
-//					&& (resultEvent == null || resultEvent.info.getTempoMPQ() != sourceEvent.tempoMPQ))
-//			{
-//				sourceEvent = sourceIter.next();
-//				sourceBPM = (int) Math.round(MidiUtils.convertTempo(sourceEvent.tempoMPQ));
-//				System.out.println();
-//				System.out.print(sourceBPM + "\t" + sourceEvent.tick);
-//			}
-//
-//			if (resultEvent != null)
-//			{
-//				System.out.print("\t" + (resultEvent.tick - sourceEvent.tick) + "\t" + resultEvent.barNumber);
-//			}
-//			System.out.println();
-//		}
 	}
 
 	public int getPrimaryTempoMPQ()
@@ -193,7 +163,7 @@ public class QuantizedTimingInfo implements ITempoCache
 	@Override public long microsToTick(long micros)
 	{
 		TimingInfoEvent e = getTimingEventForMicros(micros);
-		return e.tick + MidiUtils.ticks2microsec(micros - e.micros, e.info.getTempoMPQ(), e.info.getResolutionPPQ());
+		return e.tick + MidiUtils.microsec2ticks(micros - e.micros, e.info.getTempoMPQ(), e.info.getResolutionPPQ());
 	}
 
 	public int tickToBarNumber(long tick)
@@ -329,12 +299,6 @@ public class QuantizedTimingInfo implements ITempoCache
 			this.micros = micros;
 			this.barNumber = barNumber;
 			this.info = info;
-		}
-
-		// TODO remove
-		@Override public String toString()
-		{
-			return "{ info=" + info + " time=" + Util.formatDuration(micros) + " barNumber=" + barNumber + " }\n";
 		}
 	}
 }
