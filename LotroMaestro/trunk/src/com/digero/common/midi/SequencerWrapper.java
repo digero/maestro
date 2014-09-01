@@ -380,8 +380,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 	}
 
 	/**
-	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for
-	 * convienience.
+	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for convienience.
 	 */
 	public boolean isNoteActive(int noteId)
 	{
@@ -389,8 +388,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 	}
 
 	/**
-	 * If dragging, returns the drag position. Otherwise returns the song
-	 * position.
+	 * If dragging, returns the drag position. Otherwise returns the song position.
 	 */
 	public long getThumbPosition()
 	{

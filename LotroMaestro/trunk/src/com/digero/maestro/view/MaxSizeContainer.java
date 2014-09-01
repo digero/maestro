@@ -7,8 +7,8 @@ import java.awt.Dimension;
 import javax.swing.JPanel;
 
 /**
- * Returns a preferred size that's no larger than the specified max size, since
- * TableLayout only uses preferred size, ignoring maximum size.
+ * Returns a preferred size that's no larger than the specified max size, since TableLayout only
+ * uses preferred size, ignoring maximum size.
  */
 public class MaxSizeContainer extends JPanel
 {

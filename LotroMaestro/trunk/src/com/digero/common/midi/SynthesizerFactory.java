@@ -79,8 +79,8 @@ public class SynthesizerFactory
 		return lotroSoundbank;
 	}
 
-	/*
-	 * Find available AudioSynthesizer.
+	/**
+	 * Find available AudioSynthesizer
 	 */
 	public static AudioSynthesizer findAudioSynthesizer() throws MidiUnavailableException
 	{

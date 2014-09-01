@@ -68,8 +68,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	}
 
 	/**
-	 * Maps from a MIDI note to an ABC note. If no mapping is available, returns
-	 * <code>null</code>.
+	 * Maps from a MIDI note to an ABC note. If no mapping is available, returns <code>null</code>.
 	 */
 	public Note mapNote(int track, int noteId)
 	{

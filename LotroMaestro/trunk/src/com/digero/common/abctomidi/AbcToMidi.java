@@ -354,8 +354,8 @@ public class AbcToMidi
 	private static final int NOTE_TIE = 7;
 
 	/**
-	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above
-	 * the beginning of the octave (c)
+	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above the beginning of the
+	 * octave (c)
 	 */
 	private static final int[] CHR_NOTE_DELTA = { 9, 11, 0, 2, 4, 5, 7 };
 

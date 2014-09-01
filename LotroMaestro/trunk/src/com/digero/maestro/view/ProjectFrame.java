@@ -1488,8 +1488,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	/**
-	 * Slight modification to JFormattedTextField to select the contents when it
-	 * receives focus.
+	 * Slight modification to JFormattedTextField to select the contents when it receives focus.
 	 */
 	private static class MyFormattedTextField extends JFormattedTextField
 	{

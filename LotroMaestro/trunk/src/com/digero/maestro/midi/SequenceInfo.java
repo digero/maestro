@@ -30,8 +30,7 @@ import com.digero.maestro.abc.AbcMetadataSource;
 import com.sun.media.sound.MidiUtils;
 
 /**
- * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
- * type 1.
+ * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to type 1.
  */
 public class SequenceInfo implements IMidiConstants
 {

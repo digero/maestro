@@ -48,13 +48,10 @@ public class QuantizedTimingInfo implements ITempoCache
 
 		Collection<TimingInfoEvent> reversedEvents = timingInfoByTick.descendingMap().values();
 
-		/*
-		 * Go through the tempo events from the MIDI file and quantize them so
-		 * each event starts at an integral multiple of the previous event's
-		 * MinNoteLengthTicks. This ensures that we can split notes at each
-		 * tempo change without creating a note that is shorter than
-		 * MinNoteLengthTicks.
-		 */
+		/* Go through the tempo events from the MIDI file and quantize them so each event starts at
+		 * an integral multiple of the previous event's MinNoteLengthTicks. This ensures that we can
+		 * split notes at each tempo change without creating a note that is shorter than
+		 * MinNoteLengthTicks. */
 		for (SequenceDataCache.TempoEvent sourceEvent : source.getTempoEvents().values())
 		{
 			long tick = 0;
@@ -75,13 +72,10 @@ public class QuantizedTimingInfo implements ITempoCache
 				// Quantize the tick length to the floor multiple of gridUnitTicks
 				long lengthTicks = ((sourceEvent.tick - prev.tick) / gridUnitTicks) * gridUnitTicks;
 
-				/*
-				 * If the new event has a coarser timing grid than prev, then
-				 * it's possible that the bar splits will not align to the grid.
-				 * To avoid this, adjust the length so that the new event starts
-				 * at a time that will allow the bar to land on the quantization
-				 * grid.
-				 */
+				/* If the new event has a coarser timing grid than prev, then it's possible that the
+				 * bar splits will not align to the grid. To avoid this, adjust the length so that
+				 * the new event starts at a time that will allow the bar to land on the
+				 * quantization grid. */
 				while (lengthTicks > 0)
 				{
 					double barNumberTmp = prev.barNumber + lengthTicks / ((double) prev.info.getBarLengthTicks());
