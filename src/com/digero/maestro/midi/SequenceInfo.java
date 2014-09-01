@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -42,7 +40,6 @@ public class SequenceInfo implements IMidiConstants
 	private final String fileName;
 	private String title;
 	private String composer;
-//	private final int tempoBPM; // TODO remove tempoBPM
 	private List<TrackInfo> trackInfoList;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
@@ -92,8 +89,6 @@ public class SequenceInfo implements IMidiConstants
 			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache));
 		}
 
-//		tempoBPM = findMainTempo(sequence, tempoCache); //sequenceCache.getPrimaryTempoBPM(); 
-
 		composer = "";
 		if (trackInfoList.get(0).hasName())
 		{
@@ -116,7 +111,6 @@ public class SequenceInfo implements IMidiConstants
 	{
 		AbcMetadataSource metadata = abcExporter.getMetadataSource();
 		this.fileName = metadata.getSongTitle() + ".abc";
-//		this.tempoBPM = abcExporter.getTimingInfo().getPrimaryTempoBPM();
 		this.composer = metadata.getComposer();
 		this.title = metadata.getSongTitle();
 
@@ -174,12 +168,6 @@ public class SequenceInfo implements IMidiConstants
 		return sequenceCache.getPrimaryTempoBPM();
 	}
 
-	@Deprecated public int getTempoBPM()
-	{
-		return sequenceCache.getPrimaryTempoBPM();
-//		return tempoBPM;
-	}
-
 	public KeySignature getKeySignature()
 	{
 		for (TrackInfo track : trackInfoList)
@@ -205,100 +193,9 @@ public class SequenceInfo implements IMidiConstants
 		return sequenceCache;
 	}
 
-//	/** Microseconds to BPM */
-//	public NavigableMap<Long, Integer> getMicrosToTempoMap() {
-//		return microsToTempoMap;
-//	}
-
 	@Override public String toString()
 	{
 		return getTitle();
-	}
-
-	private static int findMainTempo(Sequence sequence, MidiUtils.TempoCache tempoCache)
-	{
-		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
-
-		long bestTempoLength = 0;
-		int bestTempoBPM = 120;
-
-		long curTempoStart = 0;
-		int curTempoBPM = 120;
-
-		Track track0 = sequence.getTracks()[0];
-		int c = track0.size();
-		for (int i = 0; i < c; i++)
-		{
-			MidiEvent evt = track0.get(i);
-			MidiMessage msg = evt.getMessage();
-			if (MidiUtils.isMetaTempo(msg))
-			{
-				long nextTempoStart = MidiUtils.tick2microsecond(sequence, evt.getTick(), tempoCache);
-
-				Long lengthObj = tempoLengths.get(curTempoBPM);
-				long length = (lengthObj == null) ? 0 : lengthObj;
-				length += nextTempoStart - curTempoStart;
-
-				if (length > bestTempoLength)
-				{
-					bestTempoLength = length;
-					bestTempoBPM = curTempoBPM;
-				}
-
-				tempoLengths.put(curTempoBPM, length);
-
-				curTempoBPM = (int) (MidiUtils.convertTempo(MidiUtils.getTempoMPQ(msg)) + 0.5);
-				curTempoStart = nextTempoStart;
-			}
-		}
-
-		Long lengthObj = tempoLengths.get(curTempoBPM);
-		long length = (lengthObj == null) ? 0 : lengthObj;
-		length += sequence.getMicrosecondLength() - curTempoStart;
-
-		if (length > bestTempoLength)
-		{
-			bestTempoLength = length;
-			bestTempoBPM = curTempoBPM;
-		}
-
-		return bestTempoBPM;
-
-//		tempoLengths.put(curTempoBPM, length);
-//
-//		// Now find the least common multiple of the best tempos 
-//		// that encompass at least 99% of the song, up to 10000 BPM
-//		final double maxPct = 0.99;
-//		final int maxBPM = 10000;
-//
-//		int lcmTempoBPM = bestTempoBPM;
-//		long lcmTempoLength = bestTempoLength;
-//		tempoLengths.remove(bestTempoBPM);
-//
-//		while (!tempoLengths.isEmpty()) {
-//			bestTempoLength = 0;
-//			for (Map.Entry<Integer, Long> entry : tempoLengths.entrySet()) {
-//				if (entry.getValue() > bestTempoLength) {
-//					bestTempoLength = entry.getValue();
-//					bestTempoBPM = entry.getKey();
-//				}
-//			}
-//			if (bestTempoLength == 0)
-//				break;
-//
-//			int tempBPM = Util.lcm(lcmTempoBPM, bestTempoBPM);
-//			if (tempBPM >= maxBPM)
-//				break;
-//
-//			lcmTempoBPM = tempBPM;
-//			lcmTempoLength += bestTempoLength;
-//
-//			double lcmTempoPct = ((double) lcmTempoLength) / sequence.getMicrosecondLength();
-//			if (lcmTempoPct >= maxPct || lcmTempoBPM >= maxBPM)
-//				break;
-//		}
-//
-//		return lcmTempoBPM;
 	}
 
 	public long calcFirstNoteTick()

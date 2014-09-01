@@ -275,6 +275,11 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 		return sequencer.getMicrosecondLength();
 	}
 
+	public long getTickLength()
+	{
+		return sequencer.getTickLength();
+	}
+
 	public float getTempoFactor()
 	{
 		return sequencer.getTempoFactor();
@@ -405,11 +410,17 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 
 	public long getDragTick()
 	{
+		if (getSequence() == null)
+			return 0;
+
 		return MidiUtils.microsecond2tick(getSequence(), getDragPosition(), tempoCache);
 	}
 
 	public void setDragTick(long tick)
 	{
+		if (getSequence() == null)
+			return;
+
 		setDragPosition(MidiUtils.tick2microsecond(getSequence(), tick, tempoCache));
 	}
 

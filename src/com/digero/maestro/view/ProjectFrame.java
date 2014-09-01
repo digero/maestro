@@ -136,7 +136,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JTextField composerField;
 	private JTextField transcriberField;
 	private JSpinner transposeSpinner;
-	private JSpinner tempoSpinner;
+	private JSpinner tempoSpinner; // TODO convert tempo to percentage
 	private JButton resetTempoButton;
 	private JFormattedTextField keySignatureField;
 	private JFormattedTextField timeSignatureField;
@@ -164,7 +164,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private Icon abcPlayIcon;
 	private Icon abcPauseIcon;
 
-	private long abcPreviewStartMicros = 0;
+	private long abcPreviewStartTick = 0;
 	private float abcPreviewTempoFactor = 1.0f;
 	private boolean echoingPosition = false;
 
@@ -825,13 +825,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						long pos = sequencer.getPosition() - abcPreviewStartMicros;
-						abcSequencer.setPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+						// TODO remove
+//						long tick = sequencer.getTickPosition() - abcPreviewStartTick;
+//						abcSequencer.setTickPosition(Util.clamp(tick, 0, abcSequencer.getTickLength()));
+						abcSequencer.setTickPosition(Util.clamp(sequencer.getTickPosition(), abcPreviewStartTick,
+								abcSequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						long pos = sequencer.getDragPosition() - abcPreviewStartMicros;
-						abcSequencer.setDragPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
+						// TODO remove
+//						long tick = sequencer.getDragTick() - abcPreviewStartTick;
+//						abcSequencer.setDragTick(Util.clamp(tick, 0, abcSequencer.getTickLength()));
+						abcSequencer.setDragTick(Util.clamp(sequencer.getDragTick(), abcPreviewStartTick,
+								abcSequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING)
 					{
@@ -863,13 +869,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						long pos = abcSequencer.getPosition() + abcPreviewStartMicros;
-						sequencer.setPosition(Util.clamp(pos, 0, sequencer.getLength()));
+						// TODO remove
+//						long tick = abcSequencer.getTickPosition() + abcPreviewStartTick;
+//						sequencer.setTickPosition(Util.clamp(tick, 0, sequencer.getTickLength()));
+						sequencer.setTickPosition(Util.clamp(abcSequencer.getTickPosition(), 0,
+								sequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						long pos = abcSequencer.getDragPosition() + abcPreviewStartMicros;
-						sequencer.setDragPosition(Util.clamp(pos, 0, sequencer.getLength()));
+						// TODO remove
+//						long tick = abcSequencer.getDragTick() + abcPreviewStartTick;
+//						sequencer.setDragTick(Util.clamp(tick, 0, sequencer.getTickLength()));
+						sequencer.setDragTick(Util.clamp(abcSequencer.getDragTick(), 0, sequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING)
 					{
@@ -1096,6 +1107,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		return (TimeSignature) timeSignatureField.getValue();
 	}
 
+	public boolean isTripletTiming()
+	{
+		return tripletCheckBox.isSelected();
+	}
+
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>()
 	{
 		@Override public int compare(AbcPart p1, AbcPart p2)
@@ -1126,7 +1142,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		sequencer.reset(true);
 		abcSequencer.reset(false);
 		abcSequencer.setTempoFactor(1.0f);
-		abcPreviewStartMicros = 0;
+		abcPreviewStartTick = 0;
 
 		songTitleField.setText("");
 		composerField.setText("");
@@ -1336,7 +1352,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		if (sequenceInfo == null)
 		{
-			abcPreviewStartMicros = 0;
+			abcPreviewStartTick = 0;
 			abcPreviewTempoFactor = 1.0f;
 			abcSequencer.clearSequence();
 			abcSequencer.reset(false);
@@ -1354,29 +1370,27 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			AbcExporter exporter = getAbcExporter();
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(exporter, !failedToLoadLotroInstruments);
 
-			long startMicros = exporter.getExportStartMicros();
-
-			long position = sequencer.getPosition() - startMicros;
-			abcPreviewStartMicros = startMicros;
+			long tick = sequencer.getTickPosition();
+			abcPreviewStartTick = exporter.getExportStartTick();
 			abcPreviewTempoFactor = abcSequencer.getTempoFactor();
 
 			boolean running = abcSequencer.isRunning();
 			abcSequencer.reset(false);
 			abcSequencer.setSequence(previewSequenceInfo.getSequence());
 
-			if (position < 0)
-				position = 0;
+			if (tick < abcPreviewStartTick)
+				tick = abcPreviewStartTick;
 
-			if (position >= abcSequencer.getLength())
+			if (tick >= abcSequencer.getTickLength())
 			{
-				position = 0;
+				tick = 0;
 				running = false;
 			}
 
 			if (running && sequencer.isRunning())
 				sequencer.stop();
 
-			abcSequencer.setPosition(position);
+			abcSequencer.setTickPosition(tick);
 			abcSequencer.setRunning(running);
 		}
 		catch (InvalidMidiDataException e)
@@ -1516,7 +1530,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		try
 		{
 			AbcExporter exporter = getAbcExporter();
-			Pair<Long, Long> startEndTick = exporter.getSongStartEndTick(false, true);
+			Pair<Long, Long> startEndTick = exporter
+					.getSongStartEndTick(false /* lengthenToBar */, true /* accountForSustain */);
 			QuantizedTimingInfo qtm = exporter.getTimingInfo();
 
 			return qtm.tickToMicros(startEndTick.second) - qtm.tickToMicros(startEndTick.first);
@@ -1527,15 +1542,15 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		}
 	}
 
-	private QuantizedTimingInfo getTimingInfo() throws AbcConversionException
+	private QuantizedTimingInfo getAbcTimingInfo() throws AbcConversionException
 	{
 		if (timingInfo == null //
 				|| timingInfo.getExportTempoFactor() != getTempoFactor() //
 				|| timingInfo.getMeter() != getTimeSignature() //
-				|| timingInfo.isTripletTiming() != tripletCheckBox.isSelected())
+				|| timingInfo.isTripletTiming() != isTripletTiming())
 		{
 			timingInfo = new QuantizedTimingInfo(sequenceInfo.getDataCache(), getTempoFactor(), getTimeSignature(),
-					tripletCheckBox.isSelected());
+					isTripletTiming());
 		}
 
 		return timingInfo;
@@ -1543,7 +1558,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 	private AbcExporter getAbcExporter() throws AbcConversionException
 	{
-		QuantizedTimingInfo qtm = getTimingInfo();
+		QuantizedTimingInfo qtm = getAbcTimingInfo();
 		KeySignature key = getKeySignature();
 
 		if (abcExporter == null)

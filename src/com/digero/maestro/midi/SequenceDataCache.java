@@ -14,6 +14,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
@@ -23,6 +24,8 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 	private final int tickResolution;
 	private final float divisionType;
 	private final int primaryTempoMPQ;
+	private final int minTempoMPQ;
+	private final int maxTempoMPQ;
 	private NavigableMap<Long, TempoEvent> tempo = new TreeMap<Long, TempoEvent>();
 
 	private final long songLengthTicks;
@@ -37,6 +40,8 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
 
 		tempo.put(0L, TempoEvent.DEFAULT_TEMPO);
+		int minTempoMPQ = Integer.MAX_VALUE;
+		int maxTempoMPQ = Integer.MIN_VALUE;
 
 		divisionType = song.getDivisionType();
 		tickResolution = song.getResolution();
@@ -102,6 +107,11 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 					long elapsedMicros = MidiUtils.ticks2microsec(tick - te.tick, te.tempoMPQ, tickResolution);
 					tempoLengths.put(te.tempoMPQ, elapsedMicros + Util.valueOf(tempoLengths.get(te.tempoMPQ), 0));
 					tempo.put(tick, new TempoEvent(MidiUtils.getTempoMPQ(msg), tick, te.micros + elapsedMicros));
+
+					if (te.tempoMPQ < minTempoMPQ)
+						minTempoMPQ = te.tempoMPQ;
+					if (te.tempoMPQ > maxTempoMPQ)
+						maxTempoMPQ = te.tempoMPQ;
 				}
 			}
 		}
@@ -118,6 +128,9 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 				max = entry;
 		}
 		primaryTempoMPQ = (max == null) ? DEFAULT_TEMPO_MPQ : max.getKey();
+
+		this.minTempoMPQ = (minTempoMPQ == Integer.MAX_VALUE) ? DEFAULT_TEMPO_MPQ : minTempoMPQ;
+		this.maxTempoMPQ = (maxTempoMPQ == Integer.MIN_VALUE) ? DEFAULT_TEMPO_MPQ : maxTempoMPQ;
 
 		songLengthTicks = lastTick;
 	}
@@ -180,9 +193,35 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
+	public int getMinTempoMPQ()
+	{
+		return minTempoMPQ;
+	}
+
+	public int getMinTempoBPM()
+	{
+		return (int) Math.round(MidiUtils.convertTempo(getMinTempoMPQ()));
+	}
+
+	public int getMaxTempoMPQ()
+	{
+		return maxTempoMPQ;
+	}
+
+	public int getMaxTempoBPM()
+	{
+		return (int) Math.round(MidiUtils.convertTempo(getMaxTempoMPQ()));
+	}
+
 	public int getTickResolution()
 	{
 		return tickResolution;
+	}
+
+	public long getBarLengthTicks(TimeSignature meter)
+	{
+		// tickResolution is in ticks per quarter note
+		return 4L * tickResolution * meter.numerator / meter.denominator;
 	}
 
 	public NavigableMap<Long, TempoEvent> getTempoEvents()
@@ -221,15 +260,15 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 
 	public TempoEvent getTempoEventForMicros(long micros)
 	{
-		TempoEvent retVal = TempoEvent.DEFAULT_TEMPO;
+		TempoEvent prev = TempoEvent.DEFAULT_TEMPO;
 		for (TempoEvent event : tempo.values())
 		{
 			if (event.micros > micros)
 				break;
 
-			retVal = event;
+			prev = event;
 		}
-		return retVal;
+		return prev;
 	}
 
 	/*
