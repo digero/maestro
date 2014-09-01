@@ -31,10 +31,12 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
+import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.TrackInfo;
 
 public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
@@ -494,6 +496,27 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		}
 
 		g2.transform(xform);
+
+		if (trackInfo != null)
+		{
+			g2.setColor(ColorTable.BAR_LINE.get());
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+
+			double lineWidth = Math.abs(1.0 / xform.getScaleX());
+
+			SequenceDataCache data = trackInfo.getSequenceInfo().getDataCache();
+			long barLengthTicks = data.getBarLengthTicks(TimeSignature.FOUR_FOUR); // TODO use actual time signature
+
+			long firstBarTick = (data.microsToTick(clipPosStart) / barLengthTicks) * barLengthTicks;
+			long lastBarTick = (data.microsToTick(clipPosEnd) / barLengthTicks) * barLengthTicks;
+
+			for (long barTick = firstBarTick; barTick <= lastBarTick; barTick += barLengthTicks)
+			{
+				long barMicros = data.tickToMicros(barTick);
+				rectTmp.setRect(barMicros, MIN_RENDERED - 1, lineWidth, MAX_RENDERED - MIN_RENDERED + 2);
+				g2.fill(rectTmp);
+			}
+		}
 
 		if (octaveLinesVisible)
 		{

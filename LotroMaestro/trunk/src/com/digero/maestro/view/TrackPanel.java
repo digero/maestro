@@ -690,7 +690,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		public TrackNoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo)
 		{
-			super(sequencer, trackInfo, Note.C2.id - 12, Note.C5.id + 12);
+			super(sequencer, trackInfo, Note.MIN_PLAYABLE.id - 12, Note.MAX_PLAYABLE.id + 12);
 		}
 
 		public void setShowingAbcNotesOn(boolean showingAbcNotesOn)

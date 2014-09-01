@@ -1,5 +1,7 @@
 package com.digero.maestro.abc;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
@@ -7,24 +9,23 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.digero.common.midi.TimeSignature;
+import com.digero.common.util.Util;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.sun.media.sound.MidiUtils;
 
+// TODO rename: AbcTimingInfo(?)
 public class QuantizedTimingInfo implements ITempoCache
 {
 	// Tick => TimingInfoEvent
 	private final NavigableMap<Long, TimingInfoEvent> timingInfoByTick = new TreeMap<Long, TimingInfoEvent>();
-
-//	// Bar number => TimingInfoEvent
-//	private final NavigableMap<Double, TimingInfoEvent> timingInfoByBar = new TreeMap<Double, TimingInfoEvent>();
 
 	private NavigableSet<Long> barStartTicks = null;
 	private Long[] barStartTickByBar = null;
 	private final long songLengthTicks;
 	private final int tickResolution;
 
-	private final int primaryTempoBPM;
+	private final int primaryTempoMPQ;
 	private final float exportTempoFactor;
 	private final TimeSignature meter;
 	private final boolean tripletTiming;
@@ -32,7 +33,8 @@ public class QuantizedTimingInfo implements ITempoCache
 	public QuantizedTimingInfo(SequenceDataCache source, float exportTempoFactor, TimeSignature meter,
 			boolean useTripletTiming) throws AbcConversionException
 	{
-		this.primaryTempoBPM = source.getPrimaryTempoBPM();
+		double exportPrimaryTempoMPQ = TimingInfo.roundTempoMPQ(source.getPrimaryTempoMPQ() / exportTempoFactor);
+		this.primaryTempoMPQ = (int) Math.round(exportPrimaryTempoMPQ * exportTempoFactor);
 		this.exportTempoFactor = exportTempoFactor;
 		this.meter = meter;
 		this.tripletTiming = useTripletTiming;
@@ -40,9 +42,11 @@ public class QuantizedTimingInfo implements ITempoCache
 		this.songLengthTicks = source.getSongLengthTicks();
 		final int resolution = source.getTickResolution();
 
-		TimingInfo defaultTiming = new TimingInfo(source.getPrimaryTempoMPQ(), resolution, exportTempoFactor,
-				meter, useTripletTiming);
+		TimingInfo defaultTiming = new TimingInfo(source.getPrimaryTempoMPQ(), resolution, exportTempoFactor, meter,
+				useTripletTiming);
 		timingInfoByTick.put(0L, new TimingInfoEvent(0, 0, 0, defaultTiming));
+
+		Collection<TimingInfoEvent> reversedEvents = timingInfoByTick.descendingMap().values();
 
 		/*
 		 * Go through the tempo events from the MIDI file and quantize them so
@@ -59,30 +63,104 @@ public class QuantizedTimingInfo implements ITempoCache
 			TimingInfo info = new TimingInfo(sourceEvent.tempoMPQ, resolution, exportTempoFactor, meter,
 					useTripletTiming);
 
-			Map.Entry<Long, TimingInfoEvent> previousEntry = timingInfoByTick.lowerEntry(sourceEvent.tick);
-			if (previousEntry != null)
+			// Iterate over the existing events in reverse order
+			Iterator<TimingInfoEvent> reverseIterator = reversedEvents.iterator();
+			while (reverseIterator.hasNext())
 			{
-				TimingInfoEvent prev = previousEntry.getValue();
-				long minTickLength = prev.info.getMinNoteLengthTicks();
+				TimingInfoEvent prev = reverseIterator.next();
+				assert prev.tick <= sourceEvent.tick;
 
-				// Quantize the tick length to the nearest multiple of minTickLength
-				long tickLength = ((sourceEvent.tick - prev.tick + minTickLength / 2) / minTickLength) * minTickLength;
+				long gridUnitTicks = prev.info.getMinNoteLengthTicks();
 
-				tick = prev.tick + tickLength;
-				micros = prev.micros + MidiUtils.ticks2microsec(tickLength, prev.info.getTempoMPQ(), resolution);
-				barNumber = prev.barNumber + tickLength / ((double) prev.info.getBarLengthTicks());
+				// Quantize the tick length to the floor multiple of gridUnitTicks
+				long lengthTicks = ((sourceEvent.tick - prev.tick) / gridUnitTicks) * gridUnitTicks;
+
+				/*
+				 * If the new event has a coarser timing grid than prev, then
+				 * it's possible that the bar splits will not align to the grid.
+				 * To avoid this, adjust the length so that the new event starts
+				 * at a time that will allow the bar to land on the quantization
+				 * grid.
+				 */
+				while (lengthTicks > 0)
+				{
+					double barNumberTmp = prev.barNumber + lengthTicks / ((double) prev.info.getBarLengthTicks());
+					double gridUnitsRemaining = ((Math.ceil(barNumberTmp) - barNumberTmp) * info.getBarLengthTicks())
+							/ info.getMinNoteLengthTicks();
+
+					final double epsilon = TimingInfo.MIN_TEMPO_BPM / (2.0 * TimingInfo.MAX_TEMPO_BPM);
+					if (Math.abs(gridUnitsRemaining - Math.round(gridUnitsRemaining)) <= epsilon)
+						break; // Ok, the bar ends on the grid
+
+					lengthTicks -= gridUnitTicks;
+				}
+
+				if (lengthTicks == 0)
+				{
+					// The prev tempo event was quantized to zero-length; remove it
+					reverseIterator.remove();
+					continue;
+				}
+
+				tick = prev.tick + lengthTicks;
+				micros = prev.micros + MidiUtils.ticks2microsec(lengthTicks, prev.info.getTempoMPQ(), resolution);
+				barNumber = prev.barNumber + lengthTicks / ((double) prev.info.getBarLengthTicks());
+				break;
 			}
 
 			TimingInfoEvent event = new TimingInfoEvent(tick, micros, barNumber, info);
 
 			timingInfoByTick.put(tick, event);
-//			timingInfoByBar.put(barNumber, event);
 		}
+
+		// TODO remove
+//		Iterator<SequenceDataCache.TempoEvent> sourceIter = source.getTempoEvents().values().iterator();
+//		Iterator<TimingInfoEvent> resultIter = timingInfoByTick.values().iterator();
+//		while (sourceIter.hasNext())
+//		{
+//			SequenceDataCache.TempoEvent sourceEvent = sourceIter.next();
+//			TimingInfoEvent resultEvent = null;
+//			if (resultIter.hasNext())
+//				resultEvent = resultIter.next();
+//
+//			int sourceBPM = (int) Math.round(MidiUtils.convertTempo(sourceEvent.tempoMPQ));
+//			System.out.print(sourceBPM + "\t" + sourceEvent.tick);
+//
+//			while (sourceIter.hasNext()
+//					&& (resultEvent == null || resultEvent.info.getTempoMPQ() != sourceEvent.tempoMPQ))
+//			{
+//				sourceEvent = sourceIter.next();
+//				sourceBPM = (int) Math.round(MidiUtils.convertTempo(sourceEvent.tempoMPQ));
+//				System.out.println();
+//				System.out.print(sourceBPM + "\t" + sourceEvent.tick);
+//			}
+//
+//			if (resultEvent != null)
+//			{
+//				System.out.print("\t" + (resultEvent.tick - sourceEvent.tick) + "\t" + resultEvent.barNumber);
+//			}
+//			System.out.println();
+//		}
+	}
+
+	public int getPrimaryTempoMPQ()
+	{
+		return primaryTempoMPQ;
 	}
 
 	public int getPrimaryTempoBPM()
 	{
-		return primaryTempoBPM;
+		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
+	}
+
+	public int getPrimaryExportTempoMPQ()
+	{
+		return (int) Math.round(primaryTempoMPQ / exportTempoFactor);
+	}
+
+	public int getPrimaryExportTempoBPM()
+	{
+		return (int) Math.round(MidiUtils.convertTempo((double) primaryTempoMPQ / exportTempoFactor));
 	}
 
 	public float getExportTempoFactor()
@@ -107,8 +185,9 @@ public class QuantizedTimingInfo implements ITempoCache
 
 	public long quantize(long tick)
 	{
-		long grid = getTimingInfo(tick).getMinNoteLengthTicks();
-		return ((tick + grid / 2) / grid) * grid;
+		TimingInfoEvent e = getTimingEventForTick(tick);
+		long grid = e.info.getMinNoteLengthTicks();
+		return e.tick + ((tick - e.tick + grid / 2) / grid) * grid;
 	}
 
 	@Override public long tickToMicros(long tick)
@@ -154,9 +233,6 @@ public class QuantizedTimingInfo implements ITempoCache
 
 	public long barNumberToBarStartTick(int barNumber)
 	{
-//		TimingInfoEvent e = timingInfoByBar.floorEntry((double) barNumber).getValue();
-//		return e.tick + Math.round((barNumber - e.barNumber) * e.info.getBarLengthTicks());
-
 		if (barStartTickByBar == null)
 			calcBarStarts();
 
@@ -259,6 +335,12 @@ public class QuantizedTimingInfo implements ITempoCache
 			this.micros = micros;
 			this.barNumber = barNumber;
 			this.info = info;
+		}
+
+		// TODO remove
+		@Override public String toString()
+		{
+			return "{ info=" + info + " time=" + Util.formatDuration(micros) + " barNumber=" + barNumber + " }\n";
 		}
 	}
 }

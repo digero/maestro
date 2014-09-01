@@ -106,11 +106,6 @@ public class NoteEvent implements Comparable<NoteEvent>
 		return getEndMicros() - getStartMicros();
 	}
 
-	@Deprecated public long getTieLengthMicros()
-	{
-		return getTieEnd().getEndMicros() - getTieStart().getStartMicros();
-	}
-
 	public NoteEvent getTieStart()
 	{
 		if (tiesFrom == null)
