@@ -24,7 +24,6 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.TimeSignature;
 import com.digero.maestro.abc.TimingInfo;
-import com.sun.media.sound.MidiUtils;
 
 public class TrackInfo implements IMidiConstants
 {
@@ -42,8 +41,8 @@ public class TrackInfo implements IMidiConstants
 	private final int maxVelocity;
 
 	@SuppressWarnings("unchecked")//
-	TrackInfo(SequenceInfo parent, Track track, int trackNumber, MidiUtils.TempoCache tempoCache,
-			SequenceDataCache sequenceCache) throws InvalidMidiDataException
+	TrackInfo(SequenceInfo parent, Track track, int trackNumber, SequenceDataCache sequenceCache)
+			throws InvalidMidiDataException
 	{
 		this.sequenceInfo = parent;
 		this.trackNumber = trackNumber;
@@ -146,17 +145,14 @@ public class TrackInfo implements IMidiConstants
 						List<NoteEvent> bentNotes = new ArrayList<NoteEvent>();
 						for (NoteEvent ne : notesOn[c])
 						{
-							long bentNoteStart = tick;
+							ne.setEndTick(tick);
+							long bendTick = tick;
 							if (ne.getLengthMicros() < TimingInfo.SHORTEST_NOTE_MICROS)
 							{
 								// If the note is too short, just skip it. The new (bent) note will 
 								// replace it, so start the bent note at the same time this one started.
 								noteEvents.remove(ne);
-								bentNoteStart = ne.getStartTick();
-							}
-							else
-							{
-								ne.setEndTick(tick);
+								bendTick = ne.getStartTick();
 							}
 
 							Note bn = Note.fromId(ne.note.id + bend - pitchBend[c]);
@@ -164,8 +160,7 @@ public class TrackInfo implements IMidiConstants
 							// Not much we can do except skip it.
 							if (bn != null)
 							{
-								NoteEvent bne = new NoteEvent(bn, ne.velocity, bentNoteStart, bentNoteStart,
-										sequenceCache);
+								NoteEvent bne = new NoteEvent(bn, ne.velocity, bendTick, bendTick, sequenceCache);
 								noteEvents.add(bne);
 								bentNotes.add(bne);
 							}
@@ -395,13 +390,4 @@ public class TrackInfo implements IMidiConstants
 	{
 		return maxVelocity;
 	}
-
-//	public int[] addNoteVelocities(int[] velocities) {
-//		if (velocities == null)
-//			velocities = new int[this.noteVelocities.length];
-//		for (int i = 0; i < this.noteVelocities.length; i++) {
-//			velocities[i] += this.noteVelocities[i];
-//		}
-//		return velocities;
-//	}
 }
