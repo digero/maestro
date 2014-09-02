@@ -188,16 +188,16 @@ public class AbcExporter
 	public Pair<List<ExportTrackInfo>, Sequence> exportToPreview(boolean useLotroInstruments)
 			throws AbcConversionException, InvalidMidiDataException
 	{
+		Pair<Long, Long> startEndTick = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
+		exportStartTick = startEndTick.first;
+		exportEndTick = startEndTick.second;
+
 		Sequence sequence = new Sequence(Sequence.PPQ, qtm.getMidiResolution());
 
 		// Track 0: Title and meta info
 		Track track0 = sequence.createTrack();
 		track0.add(MidiFactory.createTrackNameEvent(metadata.getSongTitle()));
 		addMidiTempoEvents(track0);
-
-		Pair<Long, Long> startEndTick = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
-		exportStartTick = startEndTick.first;
-		exportEndTick = startEndTick.second;
 
 		PanGenerator panner = new PanGenerator();
 		List<ExportTrackInfo> infoList = new ArrayList<ExportTrackInfo>();
@@ -214,6 +214,9 @@ public class AbcExporter
 	{
 		for (QuantizedTimingInfo.TimingInfoEvent event : qtm.getTimingInfoByTick().values())
 		{
+			if (event.tick > exportEndTick)
+				break;
+
 			track0.add(MidiFactory.createTempoEvent(event.info.getTempoMPQ(), event.tick));
 
 			if (event.tick == 0)

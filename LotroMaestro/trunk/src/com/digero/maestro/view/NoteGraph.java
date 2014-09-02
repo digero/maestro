@@ -31,7 +31,6 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerListener;
 import com.digero.common.midi.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
-import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
@@ -505,7 +504,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 			double lineWidth = Math.abs(1.0 / xform.getScaleX());
 
 			SequenceDataCache data = trackInfo.getSequenceInfo().getDataCache();
-			long barLengthTicks = data.getBarLengthTicks(TimeSignature.FOUR_FOUR); // TODO use actual time signature
+			long barLengthTicks = data.getBarLengthTicks();
 
 			long firstBarTick = (data.microsToTick(clipPosStart) / barLengthTicks) * barLengthTicks;
 			long lastBarTick = (data.microsToTick(clipPosEnd) / barLengthTicks) * barLengthTicks;

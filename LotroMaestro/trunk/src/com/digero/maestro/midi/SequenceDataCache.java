@@ -7,25 +7,28 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
+import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 
-public class SequenceDataCache implements IMidiConstants, ITempoCache
+public class SequenceDataCache implements IMidiConstants, ITempoCache, IBarNumberCache
 {
 	private final int tickResolution;
 	private final float divisionType;
 	private final int primaryTempoMPQ;
 	private final int minTempoMPQ;
 	private final int maxTempoMPQ;
+	private final TimeSignature timeSignature;
 	private NavigableMap<Long, TempoEvent> tempo = new TreeMap<Long, TempoEvent>();
 
 	private final long songLengthTicks;
@@ -42,6 +45,7 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		tempo.put(0L, TempoEvent.DEFAULT_TEMPO);
 		int minTempoMPQ = Integer.MAX_VALUE;
 		int maxTempoMPQ = Integer.MIN_VALUE;
+		TimeSignature timeSignature = null;
 
 		divisionType = song.getDivisionType();
 		tickResolution = song.getResolution();
@@ -113,6 +117,14 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 					if (te.tempoMPQ > maxTempoMPQ)
 						maxTempoMPQ = te.tempoMPQ;
 				}
+				else if (msg instanceof MetaMessage)
+				{
+					MetaMessage m = (MetaMessage) msg;
+					if (m.getType() == META_TIME_SIGNATURE && timeSignature == null)
+					{
+						timeSignature = new TimeSignature(m);
+					}
+				}
 			}
 		}
 
@@ -131,6 +143,7 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 
 		this.minTempoMPQ = (minTempoMPQ == Integer.MAX_VALUE) ? DEFAULT_TEMPO_MPQ : minTempoMPQ;
 		this.maxTempoMPQ = (maxTempoMPQ == Integer.MIN_VALUE) ? DEFAULT_TEMPO_MPQ : maxTempoMPQ;
+		this.timeSignature = (timeSignature == null) ? TimeSignature.FOUR_FOUR : timeSignature;
 
 		songLengthTicks = lastTick;
 	}
@@ -218,10 +231,20 @@ public class SequenceDataCache implements IMidiConstants, ITempoCache
 		return tickResolution;
 	}
 
-	public long getBarLengthTicks(TimeSignature meter)
+	public TimeSignature getTimeSignature()
+	{
+		return timeSignature;
+	}
+
+	public long getBarLengthTicks()
 	{
 		// tickResolution is in ticks per quarter note
-		return 4L * tickResolution * meter.numerator / meter.denominator;
+		return 4L * tickResolution * timeSignature.numerator / timeSignature.denominator;
+	}
+
+	@Override public int tickToBarNumber(long tick)
+	{
+		return (int) (tick / getBarLengthTicks());
 	}
 
 	public NavigableMap<Long, TempoEvent> getTempoEvents()

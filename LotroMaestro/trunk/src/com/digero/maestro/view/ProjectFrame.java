@@ -81,10 +81,12 @@ import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
+import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
+import com.digero.common.view.BarNumberLabel;
 import com.digero.common.view.ColorTable;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionLabel;
@@ -158,6 +160,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private NativeVolumeBar volumeBar;
 	private SongPositionLabel midiPositionLabel;
 	private SongPositionLabel abcPositionLabel;
+	private BarNumberLabel midiBarLabel;
+	private BarNumberLabel abcBarLabel;
 
 	private Icon playIcon;
 	private Icon pauseIcon;
@@ -552,17 +556,27 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		playButtonPanel.add(stopButton, "1, 0");
 
 		midiPositionLabel = new SongPositionLabel(sequencer);
-		abcPositionLabel = new SongPositionLabel(abcSequencer, true);
+
+		abcPositionLabel = new SongPositionLabel(abcSequencer, true /* adjustForTempo */);
 		abcPositionLabel.setVisible(!midiPositionLabel.isVisible());
 
+		midiBarLabel = new BarNumberLabel(sequencer, null);
+		midiBarLabel.setToolTipText("Bar number");
+
+		abcBarLabel = new BarNumberLabel(abcSequencer, null);
+		abcBarLabel.setToolTipText("Bar number");
+		abcBarLabel.setVisible(!midiBarLabel.isVisible());
+
 		JPanel playControlPanel = new JPanel(new TableLayout(//
-				new double[] { 4, 0.50, 4, PREFERRED, 4, 0.50, 4, 4 },//
-				new double[] { 0, PREFERRED }));
-		playControlPanel.add(playButtonPanel, "3, 1, C, C");
-		playControlPanel.add(modeButtonPanel, "1, 1, C, F");
-		playControlPanel.add(volumePanel, "5, 1, C, C");
-		playControlPanel.add(midiPositionLabel, "7, 1");
-		playControlPanel.add(abcPositionLabel, "7, 1");
+				new double[] { 4, 0.50, 4, PREFERRED, 4, 0.50, 4, PREFERRED, 4 },//
+				new double[] { PREFERRED, 4, PREFERRED }));
+		playControlPanel.add(playButtonPanel, "3, 0, 3, 2, C, C");
+		playControlPanel.add(modeButtonPanel, "1, 0, 1, 2, C, F");
+		playControlPanel.add(volumePanel, "5, 0, 5, 2, C, C");
+		playControlPanel.add(midiPositionLabel, "7, 0, R, B");
+		playControlPanel.add(abcPositionLabel, "7, 0, R, B");
+		playControlPanel.add(midiBarLabel, "7, 2, R, T");
+		playControlPanel.add(abcBarLabel, "7, 2, R, T");
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
 		abcPartsAndSettings.add(songInfoPanel, BorderLayout.NORTH);
@@ -627,16 +641,27 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		updateButtons(true);
 	}
 
+	private static void discardObject(IDiscardable object)
+	{
+		if (object != null)
+			object.discard();
+	}
+
 	@Override public void dispose()
 	{
+		discardObject(sequencer);
+		discardObject(abcSequencer);
+
 		for (AbcPart part : parts)
 		{
-			part.discard();
+			discardObject(part);
 		}
 		parts.clear();
 
-		sequencer.discard();
-		abcSequencer.discard();
+		discardObject(midiPositionLabel);
+		discardObject(abcPositionLabel);
+		discardObject(midiBarLabel);
+		discardObject(abcBarLabel);
 
 		super.dispose();
 	}
@@ -1140,6 +1165,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		timeSignatureField.setValue(TimeSignature.FOUR_FOUR);
 		tripletCheckBox.setSelected(false);
 		setTitle(MaestroMain.APP_NAME);
+		midiBarLabel.setBarNumberCache(null);
+		abcBarLabel.setBarNumberCache(null);
+		abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
+		abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 
 		updateButtons(false);
 	}
@@ -1182,6 +1211,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
 			tripletCheckBox.setSelected(false);
+			midiBarLabel.setBarNumberCache(sequenceInfo.getDataCache());
 
 			if (isAbc)
 			{
@@ -1297,6 +1327,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			midiPositionLabel.setVisible(!newAbcPreviewMode);
 			abcPositionLabel.setVisible(newAbcPreviewMode);
+			midiBarLabel.setVisible(!newAbcPreviewMode);
+			abcBarLabel.setVisible(newAbcPreviewMode);
 			midiModeRadioButton.setSelected(!newAbcPreviewMode);
 			abcModeRadioButton.setSelected(newAbcPreviewMode);
 
@@ -1344,6 +1376,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			abcPreviewTempoFactor = 1.0f;
 			abcSequencer.clearSequence();
 			abcSequencer.reset(false);
+			abcBarLabel.setBarNumberCache(null);
+			abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
+			abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 			return false;
 		}
 
@@ -1361,6 +1396,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			long tick = sequencer.getTickPosition();
 			abcPreviewStartTick = exporter.getExportStartTick();
 			abcPreviewTempoFactor = abcSequencer.getTempoFactor();
+			abcBarLabel.setBarNumberCache(getAbcTimingInfo());
+			abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
+			abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 
 			boolean running = abcSequencer.isRunning();
 			abcSequencer.reset(false);
