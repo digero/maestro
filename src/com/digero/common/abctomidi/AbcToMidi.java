@@ -26,6 +26,7 @@ import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
@@ -63,7 +64,7 @@ public class AbcToMidi
 		}
 	}
 
-	public static class AbcInfo implements AbcConstants
+	public static class AbcInfo implements AbcConstants, IBarNumberCache
 	{
 		private static class PartInfo
 		{
@@ -130,7 +131,7 @@ public class AbcToMidi
 			return z;
 		}
 
-		public int getBarNumber(long tick)
+		@Override public int tickToBarNumber(long tick)
 		{
 			Entry<Long, Integer> e = bars.floorEntry(tick);
 			if (e == null)
@@ -224,6 +225,7 @@ public class AbcToMidi
 
 		private void setExtendedMetadata(AbcField field, String value)
 		{
+			// TODO handle tempo
 			switch (field)
 			{
 			case SONG_TITLE:

@@ -16,9 +16,10 @@ import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
 import com.digero.common.util.IDiscardable;
+import com.digero.maestro.midi.ITempoCache;
 import com.sun.media.sound.MidiUtils;
 
-public class SequencerWrapper implements IMidiConstants, IDiscardable
+public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardable
 {
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
@@ -269,6 +270,22 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 			lastUpdateTick = sequencer.getTickPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
+	}
+
+	@Override public long microsToTick(long micros)
+	{
+		if (getSequence() == null)
+			return 0;
+
+		return MidiUtils.microsecond2tick(getSequence(), micros, tempoCache);
+	}
+
+	@Override public long tickToMicros(long tick)
+	{
+		if (getSequence() == null)
+			return 0;
+
+		return MidiUtils.tick2microsecond(getSequence(), tick, tempoCache);
 	}
 
 	public long getLength()

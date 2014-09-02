@@ -8,13 +8,14 @@ import java.util.NavigableSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.TimeSignature;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.sun.media.sound.MidiUtils;
 
 // TODO rename: AbcTimingInfo(?)
-public class QuantizedTimingInfo implements ITempoCache
+public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 {
 	// Tick => TimingInfoEvent
 	private final NavigableMap<Long, TimingInfoEvent> timingInfoByTick = new TreeMap<Long, TimingInfoEvent>();
@@ -166,7 +167,7 @@ public class QuantizedTimingInfo implements ITempoCache
 		return e.tick + MidiUtils.microsec2ticks(micros - e.micros, e.info.getTempoMPQ(), e.info.getResolutionPPQ());
 	}
 
-	public int tickToBarNumber(long tick)
+	@Override public int tickToBarNumber(long tick)
 	{
 		TimingInfoEvent e = getTimingEventForTick(tick);
 		return (int) Math.floor(e.barNumber + (tick - e.tick) / ((double) e.info.getBarLengthTicks()));
