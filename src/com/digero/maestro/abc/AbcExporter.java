@@ -119,29 +119,44 @@ public class AbcExporter
 			}
 
 			// TODO clean this up
-			out.println();
-			out.println("%%tempo-ppq " + qtm.getMidiResolution());
-			if (qtm.getTimingInfoByTick().size() > 1)
 			{
-				final String SONG_TEMPO = "%%tempo-change ";
-				final int WRAP_LENGTH = 160;
-				StringBuilder sb = new StringBuilder(SONG_TEMPO);
-				int lineLength = sb.length();
+				out.println();
+				out.println("%%tempo-ppq " + qtm.getMidiResolution());
+
+				final String SONG_TEMPO = "%%tempo-map ";
+				final int WRAP_LENGTH = 160 - SONG_TEMPO.length();
+				int numTempoChanges = 0;
+				StringBuilder sb = new StringBuilder(0);
+				int primaryTempoBPM = qtm.getPrimaryExportTempoBPM();
 				for (QuantizedTimingInfo.TimingInfoEvent event : qtm.getTimingInfoByTick().values())
 				{
-					String ti = event.info.getExportTempoBPM() + "@" + event.tick + ";";
-					if (lineLength + ti.length() > WRAP_LENGTH)
+					if (event.tick > exportEndTick)
+						break;
+
+					long tick = event.tick - exportStartTick;
+					if (tick <= 0)
 					{
+						tick = 0;
+						numTempoChanges = 0;
+						sb.setLength(0);
+					}
+
+					String tempoString = event.info.getExportTempoBPM() + "/" + primaryTempoBPM + "@" + tick + ";";
+					if (sb.length() + tempoString.length() > WRAP_LENGTH)
+					{
+						out.print(SONG_TEMPO);
 						out.println(sb.substring(0, sb.length() - 1)); // Exclude trailing ";"
 						sb.setLength(0);
-						sb.append(SONG_TEMPO);
-						lineLength = sb.length();
 					}
-					sb.append(ti);
-					lineLength += ti.length();
+					sb.append(tempoString);
+					numTempoChanges++;
 				}
 
-				out.println(sb.substring(0, sb.length() - 1)); // Exclude trailing ";"
+				if (numTempoChanges > 1)
+				{
+					out.print(SONG_TEMPO);
+					out.println(sb.substring(0, sb.length() - 1)); // Exclude trailing ";"
+				}
 			}
 
 			out.println();
@@ -576,8 +591,7 @@ public class AbcExporter
 	}
 
 	/**
-	 * Combine the tracks into one, quantize the note lengths, separate into
-	 * chords.
+	 * Combine the tracks into one, quantize the note lengths, separate into chords.
 	 */
 	private List<Chord> combineAndQuantize(AbcPart part, boolean addTies, final long songStartTick,
 			final long songEndTick) throws AbcConversionException
@@ -848,13 +862,10 @@ public class AbcExporter
 					assert (ins > i);
 					events.add(ins, next);
 
-					/*
-					 * If the final note is less than a full bar length, just
-					 * tie it to the original note rather than creating a hard
-					 * break. We don't want the last piece of a long sustained
-					 * note to be a short blast. LOTRO won't complain about a
-					 * note being too long if it's part of a tie.
-					 */
+					/* If the final note is less than a full bar length, just tie it to the original
+					 * note rather than creating a hard break. We don't want the last piece of a
+					 * long sustained note to be a short blast. LOTRO won't complain about a note
+					 * being too long if it's part of a tie. */
 					TimingInfo tmNext = qtm.getTimingInfo(next.getStartTick());
 					if (next.getLengthTicks() < tmNext.getBarLengthTicks() && ne.note != Note.REST)
 					{
@@ -937,6 +948,11 @@ public class AbcExporter
 					endTick = lastNoteEnd;
 			}
 		}
+
+		if (startTick == Long.MAX_VALUE)
+			startTick = 0;
+		if (endTick == Long.MIN_VALUE)
+			endTick = 0;
 
 		return new Pair<Long, Long>(startTick, endTick);
 	}
