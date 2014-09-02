@@ -825,17 +825,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						// TODO remove
-//						long tick = sequencer.getTickPosition() - abcPreviewStartTick;
-//						abcSequencer.setTickPosition(Util.clamp(tick, 0, abcSequencer.getTickLength()));
 						abcSequencer.setTickPosition(Util.clamp(sequencer.getTickPosition(), abcPreviewStartTick,
 								abcSequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						// TODO remove
-//						long tick = sequencer.getDragTick() - abcPreviewStartTick;
-//						abcSequencer.setDragTick(Util.clamp(tick, 0, abcSequencer.getTickLength()));
 						abcSequencer.setDragTick(Util.clamp(sequencer.getDragTick(), abcPreviewStartTick,
 								abcSequencer.getTickLength()));
 					}
@@ -869,17 +863,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						// TODO remove
-//						long tick = abcSequencer.getTickPosition() + abcPreviewStartTick;
-//						sequencer.setTickPosition(Util.clamp(tick, 0, sequencer.getTickLength()));
 						sequencer.setTickPosition(Util.clamp(abcSequencer.getTickPosition(), 0,
 								sequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						// TODO remove
-//						long tick = abcSequencer.getDragTick() + abcPreviewStartTick;
-//						sequencer.setDragTick(Util.clamp(tick, 0, sequencer.getTickLength()));
 						sequencer.setDragTick(Util.clamp(abcSequencer.getDragTick(), 0, sequencer.getTickLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING)

@@ -39,7 +39,7 @@ public class SequenceInfo implements IMidiConstants
 	private final String fileName;
 	private String title;
 	private String composer;
-	private List<TrackInfo> trackInfoList;
+	private final List<TrackInfo> trackInfoList;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
 	{
@@ -79,13 +79,12 @@ public class SequenceInfo implements IMidiConstants
 			throw new InvalidMidiDataException("The MIDI file doesn't have any tracks");
 		}
 
-		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
 		sequenceCache = new SequenceDataCache(sequence);
 
-		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
+		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(tracks.length);
 		for (int i = 0; i < tracks.length; i++)
 		{
-			trackInfoList.add(new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache));
+			trackInfoList.add(new TrackInfo(this, tracks[i], i, sequenceCache));
 		}
 
 		composer = "";
@@ -102,7 +101,7 @@ public class SequenceInfo implements IMidiConstants
 			title = title.replace('_', ' ');
 		}
 
-		trackInfoList = Collections.unmodifiableList(trackInfoList);
+		this.trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
 	private SequenceInfo(AbcExporter abcExporter, boolean useLotroInstruments) throws InvalidMidiDataException,
@@ -118,13 +117,14 @@ public class SequenceInfo implements IMidiConstants
 		sequence = result.second;
 		sequenceCache = new SequenceDataCache(sequence);
 
-		trackInfoList = new ArrayList<TrackInfo>(result.first.size());
+		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(result.first.size());
 		for (ExportTrackInfo i : result.first)
 		{
 			trackInfoList.add(new TrackInfo(this, i.trackNumber, i.part.getTitle(), i.part.getInstrument(), abcExporter
 					.getTimingInfo().getMeter(), abcExporter.getKeySignature(), i.noteEvents));
 		}
-		trackInfoList = Collections.unmodifiableList(this.trackInfoList);
+
+		this.trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
 	public String getFileName()
