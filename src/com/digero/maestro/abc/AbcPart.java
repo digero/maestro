@@ -118,6 +118,9 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 			}
 		}
 
+		if (startTick == Long.MAX_VALUE)
+			startTick = 0;
+
 		return startTick;
 	}
 

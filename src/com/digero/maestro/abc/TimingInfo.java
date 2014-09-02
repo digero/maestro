@@ -156,10 +156,4 @@ public class TimingInfo
 	{
 		return minNoteDivisor * minNoteLengthTicks * meter.numerator / meter.denominator;
 	}
-
-	// TODO remove
-	@Override public String toString()
-	{
-		return "{ BPM=" + getTempoBPM() + " }";
-	}
 }

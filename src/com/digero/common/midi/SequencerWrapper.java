@@ -32,7 +32,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
-	private long lastUpdatePosition = -1;
+	private long lastUpdateTick = -1;
 	private boolean lastRunning = false;
 
 	private List<SequencerListener> listeners = null;
@@ -102,8 +102,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 		{
 			if (sequencer != null && sequencer.isOpen())
 			{
-				long songPos = sequencer.getMicrosecondPosition();
-				if (songPos >= getLength())
+				long songTick = sequencer.getTickPosition();
+				if (songTick >= getTickLength())
 				{
 					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
 					// deadlock when calling setMicrosecondPosition(0) exactly when the sequencer 
@@ -111,13 +111,13 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 					// sequencer.setTickPosition(0).
 					sequencer.stop();
 					sequencer.setTickPosition(0);
-					lastUpdatePosition = songPos;
+					lastUpdateTick = songTick;
 				}
 				else
 				{
-					if (lastUpdatePosition != songPos)
+					if (lastUpdateTick != songTick)
 					{
-						lastUpdatePosition = songPos;
+						lastUpdateTick = songTick;
 						fireChangeEvent(SequencerProperty.POSITION);
 					}
 					boolean running = sequencer.isRunning();
@@ -200,7 +200,8 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 			}
 		}
 		else
-		{ // Not a full reset
+		{
+			// Not a full reset
 			boolean isOpen = sequencer.isOpen();
 			try
 			{
@@ -243,7 +244,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 		if (tick != getTickPosition())
 		{
 			sequencer.setTickPosition(tick);
-			lastUpdatePosition = sequencer.getMicrosecondPosition();
+			lastUpdateTick = sequencer.getTickPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
@@ -265,7 +266,7 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 		else if (position != getPosition())
 		{
 			sequencer.setMicrosecondPosition(position);
-			lastUpdatePosition = sequencer.getMicrosecondPosition();
+			lastUpdateTick = sequencer.getTickPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
@@ -395,7 +396,9 @@ public class SequencerWrapper implements IMidiConstants, IDiscardable
 		return isDragging() ? getDragPosition() : getPosition();
 	}
 
-	/** If dragging, returns the drag tick. Otherwise returns the song tick. */
+	/**
+	 * If dragging, returns the drag tick. Otherwise returns the song tick.
+	 */
 	public long getThumbTick()
 	{
 		return isDragging() ? getDragTick() : getTickPosition();
