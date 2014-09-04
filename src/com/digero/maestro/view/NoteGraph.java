@@ -35,7 +35,6 @@ import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
-import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.TrackInfo;
 
 public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
@@ -336,16 +335,16 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				{
 					for (NoteEvent ne : getEvents())
 					{
-						if (ne.getEndMicros() < leftSongPos)
+						if (ne.endMicros < leftSongPos)
 							continue;
-						if (ne.getStartMicros() > rightSongPos)
+						if (ne.startMicros > rightSongPos)
 							break;
 
 						// This note event is or was playing
-						if (ne.getStartMicros() < left)
-							left = ne.getStartMicros();
-						if (ne.getEndMicros() > right)
-							right = ne.getEndMicros();
+						if (ne.startMicros < left)
+							left = ne.startMicros;
+						if (ne.endMicros > right)
+							right = ne.endMicros;
 					}
 				}
 
@@ -393,10 +392,9 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 	private void fillNote(Graphics2D g2, NoteEvent ne, int noteId, double minWidth, double height, double extraWidth,
 			double extraHeight)
 	{
-		double width = Math.max(minWidth, ne.getLengthMicros());
+		double width = Math.max(minWidth, ne.getLength());
 		double y = Util.clamp(noteId, MIN_RENDERED, MAX_RENDERED);
-		rectTmp.setRect(ne.getStartMicros() - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2
-				* extraHeight);
+		rectTmp.setRect(ne.startMicros - extraWidth, y - extraHeight, width + 2 * extraWidth, height + 2 * extraHeight);
 		g2.fill(rectTmp);
 	}
 
@@ -407,13 +405,13 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		AffineTransform xform = getTransform();
 
 		double minWidth = NOTE_VELOCITY_MIN_WIDTH_PX / xform.getScaleX();
-		double width = Math.max(minWidth, ne.getLengthMicros());
+		double width = Math.max(minWidth, ne.getLength());
 
 		double minHeight = Math.abs(NOTE_VELOCITY_MIN_HEIGHT_PX / xform.getScaleY());
 		double height = ((double) (velocity - Dynamics.MINIMUM.midiVol) / Dynamics.MAXIMUM.midiVol)
 				* (MAX_RENDERED - MIN_RENDERED - minHeight) + minHeight;
 
-		rectTmp.setRect(ne.getStartMicros(), MIN_RENDERED, width, height);
+		rectTmp.setRect(ne.startMicros, MIN_RENDERED, width, height);
 		g2.fill(rectTmp);
 	}
 
@@ -496,27 +494,6 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 		g2.transform(xform);
 
-		if (trackInfo != null)
-		{
-			g2.setColor(ColorTable.BAR_LINE.get());
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-
-			double lineWidth = Math.abs(1.0 / xform.getScaleX());
-
-			SequenceDataCache data = trackInfo.getSequenceInfo().getDataCache();
-			long barLengthTicks = data.getBarLengthTicks();
-
-			long firstBarTick = (data.microsToTick(clipPosStart) / barLengthTicks) * barLengthTicks;
-			long lastBarTick = (data.microsToTick(clipPosEnd) / barLengthTicks) * barLengthTicks;
-
-			for (long barTick = firstBarTick; barTick <= lastBarTick; barTick += barLengthTicks)
-			{
-				long barMicros = data.tickToMicros(barTick);
-				rectTmp.setRect(barMicros, MIN_RENDERED - 1, lineWidth, MAX_RENDERED - MIN_RENDERED + 2);
-				g2.fill(rectTmp);
-			}
-		}
-
 		if (octaveLinesVisible)
 		{
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
@@ -567,14 +544,14 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				NoteEvent ne = noteEvents.get(i);
 
 				// Don't bother drawing the note if it's clipped
-				if (ne.getEndMicros() < clipPosStart || ne.getStartMicros() > clipPosEnd)
+				if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
 					continue;
 
 				if (isNoteVisible(ne))
 				{
 					int noteId = transposeNote(ne.note.id);
 
-					if (showNotesOn && songPos >= ne.getStartMicros() && minSongPos <= ne.getEndMicros()
+					if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
 							&& sequencer.isNoteActive(ne.note.id))
 					{
 						if (notesOn == null)
@@ -645,7 +622,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 				{
 					NoteEvent ne = noteEvents.get(i);
 
-					if (ne.getEndMicros() < clipPosStart || ne.getStartMicros() > clipPosEnd)
+					if (ne.endMicros < clipPosStart || ne.startMicros > clipPosEnd)
 						continue;
 
 					int velocity = ne.velocity + deltaVolume;
@@ -684,7 +661,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 
 					if (isNoteVisible(ne))
 					{
-						if (showNotesOn && songPos >= ne.getStartMicros() && minSongPos <= ne.getEndMicros()
+						if (showNotesOn && songPos >= ne.startMicros && minSongPos <= ne.endMicros
 								&& sequencer.isNoteActive(ne.note.id))
 						{
 							g2.setColor(noteOnColor.get());

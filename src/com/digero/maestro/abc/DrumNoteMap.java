@@ -290,7 +290,8 @@ public class DrumNoteMap implements IDiscardable
 	}
 
 	/**
-	 * This can be used as a backup in the event that loading the drum map from a file fails.
+	 * This can be used as a backup in the event that loading the drum map from
+	 * a file fails.
 	 */
 	public byte[] getFailsafeDefault()
 	{

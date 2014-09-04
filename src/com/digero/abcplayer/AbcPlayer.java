@@ -98,7 +98,6 @@ import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.util.Version;
 import com.digero.common.view.AboutDialog;
-import com.digero.common.view.BarNumberLabel;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
@@ -202,7 +201,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private SongPositionBar songPositionBar;
 	private SongPositionLabel songPositionLabel;
-	private BarNumberLabel barNumberLabel;
+	private JLabel barCountLabel;
 	private JLabel tempoLabel;
 	private TempoBar tempoBar;
 	private NativeVolumeBar volumeBar;
@@ -381,8 +380,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		songPositionBar = new SongPositionBar(sequencer);
 		songPositionLabel = new SongPositionLabel(sequencer);
-		barNumberLabel = new BarNumberLabel(sequencer, null);
-		barNumberLabel.setToolTipText("Bar number");
+		barCountLabel = new JLabel("0/0");
+		barCountLabel.setToolTipText("Bar number");
 
 		try
 		{
@@ -438,7 +437,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		controlPanel.add(stopButton, "6, 3");
 		controlPanel.add(tempoPanel, "2, 3, c, c");
 		controlPanel.add(volumePanel, "8, 3, c, c");
-		controlPanel.add(barNumberLabel, "9, 3, 11, 3, r, t");
+		controlPanel.add(barCountLabel, "9, 3, 11, 3, r, t");
 
 		sequencer.addChangeListener(new SequencerListener()
 		{
@@ -450,6 +449,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					updateButtonStates();
 				}
 
+				if (barCountLabel.isVisible() && p.isInMask(SequencerProperty.THUMB_POSITION_MASK))
+				{
+					updateBarCountLabel();
+				}
 				if (p.isInMask(SequencerProperty.TEMPO.mask | SequencerProperty.SEQUENCE.mask))
 				{
 					updateTempoLabel();
@@ -494,6 +497,12 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		int t = Math.round(tempo * 100);
 //		int bpm = (int) Math.round(tempo * (abcInfo.isEmpty() ? 120 : abcInfo.getTempoBPM()));
 		tempoLabel.setText("Tempo: " + t + "%");
+	}
+
+	private void updateBarCountLabel()
+	{
+		int bar = abcInfo.getBarNumber(sequencer.getThumbTick()) + 1;
+		barCountLabel.setText(bar + "/" + abcInfo.getBarCount());
 	}
 
 	private void initializeWindowBounds()
@@ -1151,8 +1160,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		updateButtonStates();
 		updateTitleLabel();
 
-		barNumberLabel.setBarNumberCache(abcInfo);
-		barNumberLabel.setVisible(abcInfo.getBarCount() > 0);
+		barCountLabel.setVisible(abcInfo.getBarCount() > 0);
+		updateBarCountLabel();
 
 		sequencer.start();
 
@@ -1250,8 +1259,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		updateButtonStates();
 		updateTitleLabel();
 
-		barNumberLabel.setBarNumberCache(abcInfo);
-		barNumberLabel.setVisible(abcInfo.getBarCount() > 0);
+		barCountLabel.setVisible(abcInfo.getBarCount() > 0);
+		updateBarCountLabel();
 
 		return true;
 	}

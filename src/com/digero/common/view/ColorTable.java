@@ -11,8 +11,7 @@ public enum ColorTable
 	NOTE_ON_BORDER(new Color(0xAA000000, true)),
 	INDICATOR(new Color(0x66FFFFFF, true)),
 	INDICATOR_ACTIVE(new Color(0xAAFFFFFF, true)),
-	OCTAVE_LINE(new Color(0xAA3C3C3C, true)),
-	BAR_LINE(new Color(0xAA3C3C3C, true)),
+	OCTAVE_LINE(new Color(0x3C3C3C)),
 	LINK(new Color(0x336699)),
 
 	NOTE_ENABLED     (Color.getHSBColor(0.61f, 0.75f, 1.00f)),

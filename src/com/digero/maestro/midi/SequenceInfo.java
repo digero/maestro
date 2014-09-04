@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -20,26 +22,31 @@ import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
+import com.digero.common.midi.PanGenerator;
 import com.digero.common.midi.TimeSignature;
-import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.maestro.abc.AbcConversionException;
-import com.digero.maestro.abc.AbcExporter;
-import com.digero.maestro.abc.AbcExporter.ExportTrackInfo;
 import com.digero.maestro.abc.AbcMetadataSource;
+import com.digero.maestro.abc.AbcPart;
+import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
+import com.sun.media.sound.MidiUtils.TempoCache;
 
 /**
- * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to type 1.
+ * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to
+ * type 1.
  */
 public class SequenceInfo implements IMidiConstants
 {
-	private final Sequence sequence;
-	private final SequenceDataCache sequenceCache;
-	private final String fileName;
+	private Sequence sequence;
+	private String fileName;
 	private String title;
 	private String composer;
-	private final List<TrackInfo> trackInfoList;
+	private int tempoBPM;
+	private long endMicros;
+	private List<TrackInfo> trackInfoList;
+
+//	private NavigableMap<Long, Integer> microsToTempoMap;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
 	{
@@ -56,10 +63,11 @@ public class SequenceInfo implements IMidiConstants
 		return new SequenceInfo(midiFile.getName(), MidiSystem.getSequence(midiFile));
 	}
 
-	public static SequenceInfo fromAbcParts(AbcExporter abcExporter, boolean useLotroInstruments)
+	public static SequenceInfo fromAbcParts(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm,
+			KeySignature key, long songStartMicros, long songEndMicros, boolean useLotroInstruments)
 			throws InvalidMidiDataException, AbcConversionException
 	{
-		return new SequenceInfo(abcExporter, useLotroInstruments);
+		return new SequenceInfo(parts, metadata, tm, key, songStartMicros, songEndMicros, useLotroInstruments);
 	}
 
 	private SequenceInfo(String fileName, Sequence sequence) throws InvalidMidiDataException, ParseException
@@ -79,13 +87,29 @@ public class SequenceInfo implements IMidiConstants
 			throw new InvalidMidiDataException("The MIDI file doesn't have any tracks");
 		}
 
-		sequenceCache = new SequenceDataCache(sequence);
+		MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache(sequence);
+		SequenceDataCache sequenceCache = new SequenceDataCache(sequence);
 
-		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(tracks.length);
+		trackInfoList = new ArrayList<TrackInfo>(tracks.length);
+		endMicros = 0;
 		for (int i = 0; i < tracks.length; i++)
 		{
-			trackInfoList.add(new TrackInfo(this, tracks[i], i, sequenceCache));
+			TrackInfo track = new TrackInfo(this, tracks[i], i, tempoCache, sequenceCache);
+			trackInfoList.add(track);
+
+			if (track.hasEvents())
+				endMicros = Math.max(endMicros, track.getEvents().get(track.getEventCount() - 1).endMicros);
 		}
+
+		tempoBPM = findMainTempo(sequence, tempoCache); //sequenceCache.getPrimaryTempoBPM(); 
+
+//		microsToTempoMap = new TreeMap<Long, Integer>();
+//		for (Entry<Long, Integer> tickToMPQ : sequenceCache.getTickToTempoMPQMap().entrySet()) {
+//			long micros = MidiUtils.tick2microsecond(sequence, tickToMPQ.getKey(), tempoCache);
+//			int bpm = (int) Math.round(MidiUtils.convertTempo(tickToMPQ.getValue()));
+//
+//			microsToTempoMap.put(micros, bpm);
+//		}
 
 		composer = "";
 		if (trackInfoList.get(0).hasName())
@@ -101,30 +125,48 @@ public class SequenceInfo implements IMidiConstants
 			title = title.replace('_', ' ');
 		}
 
-		this.trackInfoList = Collections.unmodifiableList(trackInfoList);
+		trackInfoList = Collections.unmodifiableList(trackInfoList);
 	}
 
-	private SequenceInfo(AbcExporter abcExporter, boolean useLotroInstruments) throws InvalidMidiDataException,
+	private SequenceInfo(List<AbcPart> parts, AbcMetadataSource metadata, TimingInfo tm, KeySignature key,
+			long songStartMicros, long songEndMicros, boolean useLotroInstruments) throws InvalidMidiDataException,
 			AbcConversionException
 	{
-		AbcMetadataSource metadata = abcExporter.getMetadataSource();
+
 		this.fileName = metadata.getSongTitle() + ".abc";
+		this.tempoBPM = tm.tempo;
 		this.composer = metadata.getComposer();
 		this.title = metadata.getSongTitle();
 
-		Pair<List<ExportTrackInfo>, Sequence> result = abcExporter.exportToPreview(useLotroInstruments);
+		this.sequence = new Sequence(Sequence.PPQ, tm.getMidiResolution());
 
-		sequence = result.second;
-		sequenceCache = new SequenceDataCache(sequence);
+		// Track 0: Title and meta info
+		Track track0 = sequence.createTrack();
+		track0.add(MidiFactory.createTrackNameEvent(this.title));
+		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 0));
+		// The Java MIDI sequencer can sometimes miss a tempo event at tick 0
+		// Add another tempo event at tick 1 to work around the bug
+		track0.add(MidiFactory.createTempoEvent(tm.getMPQN(), 1));
 
-		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(result.first.size());
-		for (ExportTrackInfo i : result.first)
+		PanGenerator panner = new PanGenerator();
+		this.trackInfoList = new ArrayList<TrackInfo>(parts.size());
+		this.endMicros = 0;
+		for (AbcPart part : parts)
 		{
-			trackInfoList.add(new TrackInfo(this, i.trackNumber, i.part.getTitle(), i.part.getInstrument(), abcExporter
-					.getTimingInfo().getMeter(), abcExporter.getKeySignature(), i.noteEvents));
+			int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
+			TrackInfo trackInfo = part.exportToPreview(this, tm, key, songStartMicros, songEndMicros, pan,
+					useLotroInstruments);
+
+			if (trackInfo.hasEvents())
+			{
+				this.endMicros = Math.max(this.endMicros,
+						trackInfo.getEvents().get(trackInfo.getEventCount() - 1).endMicros);
+			}
+
+			trackInfoList.add(trackInfo);
 		}
 
-		this.trackInfoList = Collections.unmodifiableList(trackInfoList);
+		this.trackInfoList = Collections.unmodifiableList(this.trackInfoList);
 	}
 
 	public String getFileName()
@@ -162,9 +204,14 @@ public class SequenceInfo implements IMidiConstants
 		return trackInfoList;
 	}
 
-	public int getPrimaryTempoBPM()
+	public int getTempoBPM()
 	{
-		return sequenceCache.getPrimaryTempoBPM();
+		return tempoBPM;
+	}
+
+	public long getEndMicros()
+	{
+		return endMicros;
 	}
 
 	public KeySignature getKeySignature()
@@ -187,14 +234,100 @@ public class SequenceInfo implements IMidiConstants
 		return TimeSignature.FOUR_FOUR;
 	}
 
-	public SequenceDataCache getDataCache()
-	{
-		return sequenceCache;
-	}
+//	/** Microseconds to BPM */
+//	public NavigableMap<Long, Integer> getMicrosToTempoMap() {
+//		return microsToTempoMap;
+//	}
 
 	@Override public String toString()
 	{
 		return getTitle();
+	}
+
+	private static int findMainTempo(Sequence sequence, TempoCache tempoCache)
+	{
+		Map<Integer, Long> tempoLengths = new HashMap<Integer, Long>();
+
+		long bestTempoLength = 0;
+		int bestTempoBPM = 120;
+
+		long curTempoStart = 0;
+		int curTempoBPM = 120;
+
+		Track track0 = sequence.getTracks()[0];
+		int c = track0.size();
+		for (int i = 0; i < c; i++)
+		{
+			MidiEvent evt = track0.get(i);
+			MidiMessage msg = evt.getMessage();
+			if (MidiUtils.isMetaTempo(msg))
+			{
+				long nextTempoStart = MidiUtils.tick2microsecond(sequence, evt.getTick(), tempoCache);
+
+				Long lengthObj = tempoLengths.get(curTempoBPM);
+				long length = (lengthObj == null) ? 0 : lengthObj;
+				length += nextTempoStart - curTempoStart;
+
+				if (length > bestTempoLength)
+				{
+					bestTempoLength = length;
+					bestTempoBPM = curTempoBPM;
+				}
+
+				tempoLengths.put(curTempoBPM, length);
+
+				curTempoBPM = (int) (MidiUtils.convertTempo(MidiUtils.getTempoMPQ(msg)) + 0.5);
+				curTempoStart = nextTempoStart;
+			}
+		}
+
+		Long lengthObj = tempoLengths.get(curTempoBPM);
+		long length = (lengthObj == null) ? 0 : lengthObj;
+		length += sequence.getMicrosecondLength() - curTempoStart;
+
+		if (length > bestTempoLength)
+		{
+			bestTempoLength = length;
+			bestTempoBPM = curTempoBPM;
+		}
+
+		return bestTempoBPM;
+
+//		tempoLengths.put(curTempoBPM, length);
+//
+//		// Now find the least common multiple of the best tempos 
+//		// that encompass at least 99% of the song, up to 10000 BPM
+//		final double maxPct = 0.99;
+//		final int maxBPM = 10000;
+//
+//		int lcmTempoBPM = bestTempoBPM;
+//		long lcmTempoLength = bestTempoLength;
+//		tempoLengths.remove(bestTempoBPM);
+//
+//		while (!tempoLengths.isEmpty()) {
+//			bestTempoLength = 0;
+//			for (Map.Entry<Integer, Long> entry : tempoLengths.entrySet()) {
+//				if (entry.getValue() > bestTempoLength) {
+//					bestTempoLength = entry.getValue();
+//					bestTempoBPM = entry.getKey();
+//				}
+//			}
+//			if (bestTempoLength == 0)
+//				break;
+//
+//			int tempBPM = Util.lcm(lcmTempoBPM, bestTempoBPM);
+//			if (tempBPM >= maxBPM)
+//				break;
+//
+//			lcmTempoBPM = tempBPM;
+//			lcmTempoLength += bestTempoLength;
+//
+//			double lcmTempoPct = ((double) lcmTempoLength) / sequence.getMicrosecondLength();
+//			if (lcmTempoPct >= maxPct || lcmTempoBPM >= maxBPM)
+//				break;
+//		}
+//
+//		return lcmTempoBPM;
 	}
 
 	public long calcFirstNoteTick()
@@ -223,33 +356,6 @@ public class SequenceInfo implements IMidiConstants
 		if (firstNoteTick == Long.MAX_VALUE)
 			return 0;
 		return firstNoteTick;
-	}
-
-	public long calcLastNoteTick()
-	{
-		long lastNoteTick = 0;
-		for (Track t : sequence.getTracks())
-		{
-			for (int j = t.size() - 1; j >= 0; j--)
-			{
-				MidiEvent evt = t.get(j);
-				MidiMessage msg = evt.getMessage();
-				if (msg instanceof ShortMessage)
-				{
-					ShortMessage m = (ShortMessage) msg;
-					if (m.getCommand() == ShortMessage.NOTE_OFF)
-					{
-						if (evt.getTick() > lastNoteTick)
-						{
-							lastNoteTick = evt.getTick();
-						}
-						break;
-					}
-				}
-			}
-		}
-
-		return lastNoteTick;
 	}
 
 	@SuppressWarnings("unchecked")//

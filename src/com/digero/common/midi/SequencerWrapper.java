@@ -16,10 +16,10 @@ import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
 import com.digero.common.util.IDiscardable;
-import com.digero.maestro.midi.ITempoCache;
 import com.sun.media.sound.MidiUtils;
+import com.sun.media.sound.MidiUtils.TempoCache;
 
-public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardable
+public class SequencerWrapper implements IMidiConstants, IDiscardable
 {
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;
@@ -30,10 +30,10 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	private List<Transceiver> transceivers = new ArrayList<Transceiver>();
 	private long dragPosition;
 	private boolean isDragging;
-	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
+	private TempoCache tempoCache = new TempoCache();
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
-	private long lastUpdateTick = -1;
+	private long lastUpdatePosition = -1;
 	private boolean lastRunning = false;
 
 	private List<SequencerListener> listeners = null;
@@ -103,8 +103,8 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 		{
 			if (sequencer != null && sequencer.isOpen())
 			{
-				long songTick = sequencer.getTickPosition();
-				if (songTick >= getTickLength())
+				long songPos = sequencer.getMicrosecondPosition();
+				if (songPos >= getLength())
 				{
 					// There's a bug in Sun's RealTimeSequencer, where there is a possible 
 					// deadlock when calling setMicrosecondPosition(0) exactly when the sequencer 
@@ -112,13 +112,13 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 					// sequencer.setTickPosition(0).
 					sequencer.stop();
 					sequencer.setTickPosition(0);
-					lastUpdateTick = songTick;
+					lastUpdatePosition = songPos;
 				}
 				else
 				{
-					if (lastUpdateTick != songTick)
+					if (lastUpdatePosition != songPos)
 					{
-						lastUpdateTick = songTick;
+						lastUpdatePosition = songPos;
 						fireChangeEvent(SequencerProperty.POSITION);
 					}
 					boolean running = sequencer.isRunning();
@@ -201,8 +201,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 			}
 		}
 		else
-		{
-			// Not a full reset
+		{ // Not a full reset
 			boolean isOpen = sequencer.isOpen();
 			try
 			{
@@ -245,7 +244,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 		if (tick != getTickPosition())
 		{
 			sequencer.setTickPosition(tick);
-			lastUpdateTick = sequencer.getTickPosition();
+			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
 	}
@@ -267,35 +266,14 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 		else if (position != getPosition())
 		{
 			sequencer.setMicrosecondPosition(position);
-			lastUpdateTick = sequencer.getTickPosition();
+			lastUpdatePosition = sequencer.getMicrosecondPosition();
 			fireChangeEvent(SequencerProperty.POSITION);
 		}
-	}
-
-	@Override public long microsToTick(long micros)
-	{
-		if (getSequence() == null)
-			return 0;
-
-		return MidiUtils.microsecond2tick(getSequence(), micros, tempoCache);
-	}
-
-	@Override public long tickToMicros(long tick)
-	{
-		if (getSequence() == null)
-			return 0;
-
-		return MidiUtils.tick2microsecond(getSequence(), tick, tempoCache);
 	}
 
 	public long getLength()
 	{
 		return sequencer.getMicrosecondLength();
-	}
-
-	public long getTickLength()
-	{
-		return sequencer.getTickLength();
 	}
 
 	public float getTempoFactor()
@@ -398,7 +376,8 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	}
 
 	/**
-	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for convienience.
+	 * Overriden by NoteFilterSequencerWrapper. On SequencerWrapper for
+	 * convienience.
 	 */
 	public boolean isNoteActive(int noteId)
 	{
@@ -406,16 +385,15 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	}
 
 	/**
-	 * If dragging, returns the drag position. Otherwise returns the song position.
+	 * If dragging, returns the drag position. Otherwise returns the song
+	 * position.
 	 */
 	public long getThumbPosition()
 	{
 		return isDragging() ? getDragPosition() : getPosition();
 	}
 
-	/**
-	 * If dragging, returns the drag tick. Otherwise returns the song tick.
-	 */
+	/** If dragging, returns the drag tick. Otherwise returns the song tick. */
 	public long getThumbTick()
 	{
 		return isDragging() ? getDragTick() : getTickPosition();
@@ -428,17 +406,11 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 
 	public long getDragTick()
 	{
-		if (getSequence() == null)
-			return 0;
-
 		return MidiUtils.microsecond2tick(getSequence(), getDragPosition(), tempoCache);
 	}
 
 	public void setDragTick(long tick)
 	{
-		if (getSequence() == null)
-			return;
-
 		setDragPosition(MidiUtils.tick2microsecond(getSequence(), tick, tempoCache));
 	}
 

@@ -1,51 +1,39 @@
 package com.digero.maestro.abc;
 
 import com.digero.common.midi.TimeSignature;
-import com.sun.media.sound.MidiUtils;
 
 public class TimingInfo
 {
-	public static final long ONE_SECOND_MICROS = 1000000;
-	public static final long ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
-	public static final long SHORTEST_NOTE_MICROS = ONE_MINUTE_MICROS / 1000;
-	public static final long LONGEST_NOTE_MICROS = ONE_MINUTE_MICROS / 10;
-	public static final int MAX_TEMPO_BPM = (int) (ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS);
-	public static final int MIN_TEMPO_BPM = (int) ((ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS); // Round up
+	public static final int ONE_SECOND_MICROS = 1000000;
+	public static final int ONE_MINUTE_MICROS = 60 * ONE_SECOND_MICROS;
+	public static final int SHORTEST_NOTE_MICROS = ONE_MINUTE_MICROS / 1000;
+	public static final int LONGEST_NOTE_MICROS = 6 * ONE_SECOND_MICROS;
+	public static final int LONGEST_NOTE_MICROS_WORST_CASE = (2 * SHORTEST_NOTE_MICROS - 1)
+			* (LONGEST_NOTE_MICROS / (2 * SHORTEST_NOTE_MICROS - 1));
+	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
+	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
 
-	private final int tempoMPQ;
-	private final int resolutionPPQ;
-	private final float exportTempoFactor;
+	public final int tempo;
+	public final int exportTempo;
+	public final TimeSignature meter;
 
-	private final TimeSignature meter;
+	public final int defaultDivisor;
+	public final int minNoteLength;
+	public final int minNoteDivisor;
+	public final int maxNoteLength;
+	public final int barLength;
 
-	private final int defaultDivisor;
-	private final int minNoteDivisor;
-	private final long minNoteLengthTicks;
-	private final long maxNoteLengthTicks;
-
-	TimingInfo(int tempoMPQ, int resolutionPPQ, float exportTempoFactor, TimeSignature meter, boolean useTripletTiming)
+	public TimingInfo(int sourceTempo, int exportTempo, TimeSignature meter, boolean useTripletTiming)
 			throws AbcConversionException
 	{
-		// Compute the export tempo and round it to a whole-number BPM
-		double exportTempoMPQ = roundTempoMPQ((double) tempoMPQ / exportTempoFactor);
-
-		// Now adjust the tempoMPQ by however much we just rounded the export tempo
-		tempoMPQ = (int) Math.round(exportTempoMPQ * exportTempoFactor);
-
-		this.tempoMPQ = tempoMPQ;
-		this.resolutionPPQ = resolutionPPQ;
-		this.exportTempoFactor = exportTempoFactor;
+		this.tempo = sourceTempo;
+		this.exportTempo = exportTempo;
 		this.meter = meter;
 
-		final long SHORTEST_NOTE_TICKS = (long) Math.ceil((SHORTEST_NOTE_MICROS * resolutionPPQ) / exportTempoMPQ);
-		final long LONGEST_NOTE_TICKS = (long) Math.floor((LONGEST_NOTE_MICROS * resolutionPPQ) / exportTempoMPQ);
-
-		final int exportTempoBPM = (int) Math.round(MidiUtils.convertTempo(exportTempoMPQ));
-
-		if (exportTempoBPM > MAX_TEMPO_BPM || exportTempoBPM < MIN_TEMPO_BPM)
+		if (tempo > MAX_TEMPO || tempo < MIN_TEMPO)
 		{
-			throw new AbcConversionException("Tempo " + exportTempoBPM + " is out of range. Must be between "
-					+ MIN_TEMPO_BPM + " and " + MAX_TEMPO_BPM + ".");
+			throw new AbcConversionException("Tempo " + tempo + " is out of range. Must be between " + MIN_TEMPO
+					+ " and " + MAX_TEMPO + ".");
 		}
 
 		// From http://abcnotation.com/abc2mtex/abc.txt:
@@ -61,19 +49,21 @@ public class TimingInfo
 			int minNoteDivisor = defaultDivisor;
 			if (useTripletTiming)
 				minNoteDivisor *= 3;
-			long minNoteTicks = resolutionPPQ / (minNoteDivisor / 4);
-
-			while (minNoteTicks < SHORTEST_NOTE_TICKS)
+			int minNoteLength = (ONE_MINUTE_MICROS / tempo) / (minNoteDivisor / 4);
+			int minNoteLengthAtExportTempo = (ONE_MINUTE_MICROS / exportTempo) / (minNoteDivisor / 4);
+			while (minNoteLengthAtExportTempo < SHORTEST_NOTE_MICROS)
 			{
-				minNoteTicks *= 2;
+				minNoteLengthAtExportTempo *= 2;
+				minNoteLength *= 2;
 				minNoteDivisor /= 2;
 			}
 
 			assert minNoteDivisor > 0;
 
-			while (minNoteTicks >= SHORTEST_NOTE_TICKS * 2)
+			while (minNoteLengthAtExportTempo >= SHORTEST_NOTE_MICROS * 2)
 			{
-				minNoteTicks /= 2;
+				minNoteLengthAtExportTempo /= 2;
+				minNoteLength /= 2;
 				minNoteDivisor *= 2;
 			}
 
@@ -83,77 +73,49 @@ public class TimingInfo
 						+ minNoteDivisor);
 			}
 
-			this.minNoteLengthTicks = minNoteTicks;
+			this.minNoteLength = minNoteLength;
 			this.minNoteDivisor = minNoteDivisor;
-			this.maxNoteLengthTicks = minNoteTicks * (LONGEST_NOTE_TICKS / minNoteTicks);
+			this.maxNoteLength = this.minNoteLength * (LONGEST_NOTE_MICROS / minNoteLengthAtExportTempo);
 		}
+
+		this.barLength = this.minNoteDivisor * this.minNoteLength * meter.numerator / meter.denominator;
+
+		assert barLength % this.minNoteLength == 0 : barLength + " % " + this.minNoteLength + " != 0";
+//		barLength = Integer.MAX_VALUE;
 	}
 
-	/**
-	 * Rounds the given MPQ tempo so it corresponds to a whole-number of beats per minute.
-	 */
-	public static double roundTempoMPQ(double tempoMPQ)
+	public int getBPM()
 	{
-		return MidiUtils.convertTempo(Math.round(MidiUtils.convertTempo(tempoMPQ)));
+		return tempo / (defaultDivisor / 4);
 	}
 
-	public int getTempoMPQ()
+	public int getMPQN()
 	{
-		return tempoMPQ;
+		return ONE_MINUTE_MICROS / getBPM();
 	}
 
-	public int getTempoBPM()
+	public int getMidiResolution()
 	{
-		return (int) Math.round(MidiUtils.convertTempo(tempoMPQ));
+		return minNoteDivisor * 12;
 	}
 
-	public int getResolutionPPQ()
+	public long getMidiTicks(long micros)
 	{
-		return resolutionPPQ;
+		return (long) ((double) micros * getMidiResolution() / getMPQN());
 	}
 
-	public float getExportTempoFactor()
+	public long getMicros(long midiTicks)
 	{
-		return exportTempoFactor;
+		return (long) ((double) midiTicks * getMPQN() / getMidiResolution());
 	}
 
-	public int getExportTempoMPQ()
+	public long getBarStart(long micros)
 	{
-		return (int) Math.round(tempoMPQ / exportTempoFactor);
+		return (micros / barLength) * barLength;
 	}
 
-	public int getExportTempoBPM()
+	public long getBarEnd(long micros)
 	{
-		return (int) Math.round(MidiUtils.convertTempo((double) tempoMPQ / exportTempoFactor));
-	}
-
-	public TimeSignature getMeter()
-	{
-		return meter;
-	}
-
-	public int getDefaultDivisor()
-	{
-		return defaultDivisor;
-	}
-
-	public int getMinNoteDivisor()
-	{
-		return minNoteDivisor;
-	}
-
-	public long getMinNoteLengthTicks()
-	{
-		return minNoteLengthTicks;
-	}
-
-	public long getMaxNoteLengthTicks()
-	{
-		return maxNoteLengthTicks;
-	}
-
-	public long getBarLengthTicks()
-	{
-		return minNoteDivisor * minNoteLengthTicks * meter.numerator / meter.denominator;
+		return (micros / barLength + 1) * barLength;
 	}
 }

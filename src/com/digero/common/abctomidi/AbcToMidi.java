@@ -26,7 +26,6 @@ import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
@@ -64,7 +63,7 @@ public class AbcToMidi
 		}
 	}
 
-	public static class AbcInfo implements AbcConstants, IBarNumberCache
+	public static class AbcInfo implements AbcConstants
 	{
 		private static class PartInfo
 		{
@@ -131,7 +130,7 @@ public class AbcToMidi
 			return z;
 		}
 
-		@Override public int tickToBarNumber(long tick)
+		public int getBarNumber(long tick)
 		{
 			Entry<Long, Integer> e = bars.floorEntry(tick);
 			if (e == null)
@@ -225,7 +224,6 @@ public class AbcToMidi
 
 		private void setExtendedMetadata(AbcField field, String value)
 		{
-			// TODO handle tempo
 			switch (field)
 			{
 			case SONG_TITLE:
@@ -356,8 +354,8 @@ public class AbcToMidi
 	private static final int NOTE_TIE = 7;
 
 	/**
-	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above the beginning of the
-	 * octave (c)
+	 * Maps a note name (a, b, c, etc.) to the number of semitones it is above
+	 * the beginning of the octave (c)
 	 */
 	private static final int[] CHR_NOTE_DELTA = { 9, 11, 0, 2, 4, 5, 7 };
 

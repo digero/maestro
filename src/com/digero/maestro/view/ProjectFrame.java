@@ -64,6 +64,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import com.digero.common.abc.AbcField;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
@@ -81,18 +82,15 @@ import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
-import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
-import com.digero.common.view.BarNumberLabel;
 import com.digero.common.view.ColorTable;
 import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcConversionException;
-import com.digero.maestro.abc.AbcExporter;
 import com.digero.maestro.abc.AbcMetadataSource;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
@@ -102,7 +100,7 @@ import com.digero.maestro.abc.AbcPartProperty;
 import com.digero.maestro.abc.AbcProject;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
-import com.digero.maestro.abc.QuantizedTimingInfo;
+import com.digero.maestro.abc.TimingInfo;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.ListModelWrapper;
@@ -129,8 +127,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private ListModelWrapper<AbcPart> parts = new ListModelWrapper<AbcPart>(new DefaultListModel<AbcPart>());
 	private PartAutoNumberer partAutoNumberer;
 	private PartNameTemplate partNameTemplate;
-	private QuantizedTimingInfo timingInfo;
-	private AbcExporter abcExporter;
 	private boolean usingNativeVolume;
 
 	private JPanel content;
@@ -138,7 +134,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private JTextField composerField;
 	private JTextField transcriberField;
 	private JSpinner transposeSpinner;
-	private JSpinner tempoSpinner; // TODO convert tempo to percentage
+	private JSpinner tempoSpinner;
 	private JButton resetTempoButton;
 	private JFormattedTextField keySignatureField;
 	private JFormattedTextField timeSignatureField;
@@ -160,15 +156,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	private NativeVolumeBar volumeBar;
 	private SongPositionLabel midiPositionLabel;
 	private SongPositionLabel abcPositionLabel;
-	private BarNumberLabel midiBarLabel;
-	private BarNumberLabel abcBarLabel;
 
 	private Icon playIcon;
 	private Icon pauseIcon;
 	private Icon abcPlayIcon;
 	private Icon abcPauseIcon;
 
-	private long abcPreviewStartTick = 0;
+	private long abcPreviewStartMicros = 0;
 	private float abcPreviewTempoFactor = 1.0f;
 	private boolean echoingPosition = false;
 
@@ -310,7 +304,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			{
 				if (sequenceInfo != null)
 				{
-					abcSequencer.setTempoFactor(getTempoFactor());
+					abcSequencer.setTempoFactor((float) getTempo() / sequenceInfo.getTempoBPM());
 
 					if (abcSequencer.isRunning())
 					{
@@ -340,7 +334,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 				else
 				{
 					float tempoFactor = abcSequencer.getTempoFactor();
-					tempoSpinner.setValue(sequenceInfo.getPrimaryTempoBPM());
+					tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 					if (tempoFactor != 1.0f)
 						refreshPreviewSequence(false);
 				}
@@ -556,27 +550,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		playButtonPanel.add(stopButton, "1, 0");
 
 		midiPositionLabel = new SongPositionLabel(sequencer);
-
-		abcPositionLabel = new SongPositionLabel(abcSequencer, true /* adjustForTempo */);
+		abcPositionLabel = new SongPositionLabel(abcSequencer, true);
 		abcPositionLabel.setVisible(!midiPositionLabel.isVisible());
 
-		midiBarLabel = new BarNumberLabel(sequencer, null);
-		midiBarLabel.setToolTipText("Bar number");
-
-		abcBarLabel = new BarNumberLabel(abcSequencer, null);
-		abcBarLabel.setToolTipText("Bar number");
-		abcBarLabel.setVisible(!midiBarLabel.isVisible());
-
 		JPanel playControlPanel = new JPanel(new TableLayout(//
-				new double[] { 4, 0.50, 4, PREFERRED, 4, 0.50, 4, PREFERRED, 4 },//
-				new double[] { PREFERRED, 4, PREFERRED }));
-		playControlPanel.add(playButtonPanel, "3, 0, 3, 2, C, C");
-		playControlPanel.add(modeButtonPanel, "1, 0, 1, 2, C, F");
-		playControlPanel.add(volumePanel, "5, 0, 5, 2, C, C");
-		playControlPanel.add(midiPositionLabel, "7, 0, R, B");
-		playControlPanel.add(abcPositionLabel, "7, 0, R, B");
-		playControlPanel.add(midiBarLabel, "7, 2, R, T");
-		playControlPanel.add(abcBarLabel, "7, 2, R, T");
+				new double[] { 4, 0.50, 4, PREFERRED, 4, 0.50, 4, 4 },//
+				new double[] { 0, PREFERRED }));
+		playControlPanel.add(playButtonPanel, "3, 1, C, C");
+		playControlPanel.add(modeButtonPanel, "1, 1, C, F");
+		playControlPanel.add(volumePanel, "5, 1, C, C");
+		playControlPanel.add(midiPositionLabel, "7, 1");
+		playControlPanel.add(abcPositionLabel, "7, 1");
 
 		JPanel abcPartsAndSettings = new JPanel(new BorderLayout(HGAP, VGAP));
 		abcPartsAndSettings.add(songInfoPanel, BorderLayout.NORTH);
@@ -641,27 +625,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		updateButtons(true);
 	}
 
-	private static void discardObject(IDiscardable object)
-	{
-		if (object != null)
-			object.discard();
-	}
-
 	@Override public void dispose()
 	{
-		discardObject(sequencer);
-		discardObject(abcSequencer);
-
 		for (AbcPart part : parts)
 		{
-			discardObject(part);
+			part.discard();
 		}
 		parts.clear();
 
-		discardObject(midiPositionLabel);
-		discardObject(abcPositionLabel);
-		discardObject(midiBarLabel);
-		discardObject(abcBarLabel);
+		sequencer.discard();
+		abcSequencer.discard();
 
 		super.dispose();
 	}
@@ -850,13 +823,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						abcSequencer.setTickPosition(Util.clamp(sequencer.getTickPosition(), abcPreviewStartTick,
-								abcSequencer.getTickLength()));
+						long pos = sequencer.getPosition() - abcPreviewStartMicros;
+						abcSequencer.setPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						abcSequencer.setDragTick(Util.clamp(sequencer.getDragTick(), abcPreviewStartTick,
-								abcSequencer.getTickLength()));
+						long pos = sequencer.getDragPosition() - abcPreviewStartMicros;
+						abcSequencer.setDragPosition(Util.clamp(pos, 0, abcSequencer.getLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING)
 					{
@@ -888,12 +861,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					echoingPosition = true;
 					if (evt.getProperty() == SequencerProperty.POSITION)
 					{
-						sequencer.setTickPosition(Util.clamp(abcSequencer.getTickPosition(), 0,
-								sequencer.getTickLength()));
+						long pos = abcSequencer.getPosition() + abcPreviewStartMicros;
+						sequencer.setPosition(Util.clamp(pos, 0, sequencer.getLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.DRAG_POSITION)
 					{
-						sequencer.setDragTick(Util.clamp(abcSequencer.getDragTick(), 0, sequencer.getTickLength()));
+						long pos = abcSequencer.getDragPosition() + abcPreviewStartMicros;
+						sequencer.setDragPosition(Util.clamp(pos, 0, sequencer.getLength()));
 					}
 					else if (evt.getProperty() == SequencerProperty.IS_DRAGGING)
 					{
@@ -953,7 +927,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	{
 		if (sequenceInfo != null)
 		{
-			AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+			AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this, this);
 			newPart.addAbcListener(abcPartListener);
 			partAutoNumberer.onPartAdded(newPart);
 
@@ -1038,7 +1012,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			transcriberField.setEnabled(midiLoaded);
 			transposeSpinner.setEnabled(midiLoaded);
 			tempoSpinner.setEnabled(midiLoaded);
-			resetTempoButton.setEnabled(midiLoaded && sequenceInfo != null && getTempoFactor() != 1.0f);
+			resetTempoButton.setEnabled(midiLoaded && sequenceInfo != null && getTempo() != sequenceInfo.getTempoBPM());
 			resetTempoButton.setVisible(resetTempoButton.isEnabled());
 			keySignatureField.setEnabled(midiLoaded);
 			timeSignatureField.setEnabled(midiLoaded);
@@ -1102,11 +1076,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		return (Integer) tempoSpinner.getValue();
 	}
 
-	public float getTempoFactor()
-	{
-		return (float) getTempo() / sequenceInfo.getPrimaryTempoBPM();
-	}
-
 	public KeySignature getKeySignature()
 	{
 		if (SHOW_KEY_FIELD)
@@ -1118,11 +1087,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	public TimeSignature getTimeSignature()
 	{
 		return (TimeSignature) timeSignatureField.getValue();
-	}
-
-	public boolean isTripletTiming()
-	{
-		return tripletCheckBox.isSelected();
 	}
 
 	private Comparator<AbcPart> partNumberComparator = new Comparator<AbcPart>()
@@ -1155,7 +1119,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		sequencer.reset(true);
 		abcSequencer.reset(false);
 		abcSequencer.setTempoFactor(1.0f);
-		abcPreviewStartTick = 0;
+		abcPreviewStartMicros = 0;
 
 		songTitleField.setText("");
 		composerField.setText("");
@@ -1165,10 +1129,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		timeSignatureField.setValue(TimeSignature.FOUR_FOUR);
 		tripletCheckBox.setSelected(false);
 		setTitle(MaestroMain.APP_NAME);
-		midiBarLabel.setBarNumberCache(null);
-		abcBarLabel.setBarNumberCache(null);
-		abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
-		abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 
 		updateButtons(false);
 	}
@@ -1207,11 +1167,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 			composerField.setText(sequenceInfo.getComposer());
 			composerField.select(0, 0);
 			transposeSpinner.setValue(0);
-			tempoSpinner.setValue(sequenceInfo.getPrimaryTempoBPM());
+			tempoSpinner.setValue(sequenceInfo.getTempoBPM());
 			keySignatureField.setValue(sequenceInfo.getKeySignature());
 			timeSignatureField.setValue(sequenceInfo.getTimeSignature());
 			tripletCheckBox.setSelected(false);
-			midiBarLabel.setBarNumberCache(sequenceInfo.getDataCache());
 
 			if (isAbc)
 			{
@@ -1224,7 +1183,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						continue;
 					}
 
-					AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+					AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this, this);
 
 					newPart.setTitle(abcInfo.getPartName(t));
 					newPart.setPartNumber(abcInfo.getPartNumber(t));
@@ -1327,8 +1286,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 			midiPositionLabel.setVisible(!newAbcPreviewMode);
 			abcPositionLabel.setVisible(newAbcPreviewMode);
-			midiBarLabel.setVisible(!newAbcPreviewMode);
-			abcBarLabel.setVisible(newAbcPreviewMode);
 			midiModeRadioButton.setSelected(!newAbcPreviewMode);
 			abcModeRadioButton.setSelected(newAbcPreviewMode);
 
@@ -1372,13 +1329,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		if (sequenceInfo == null)
 		{
-			abcPreviewStartTick = 0;
+			abcPreviewStartMicros = 0;
 			abcPreviewTempoFactor = 1.0f;
 			abcSequencer.clearSequence();
 			abcSequencer.reset(false);
-			abcBarLabel.setBarNumberCache(null);
-			abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
-			abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 			return false;
 		}
 
@@ -1390,33 +1344,43 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 						+ "This song currently has " + parts.size() + " parts.");
 			}
 
-			AbcExporter exporter = getAbcExporter();
-			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(exporter, !failedToLoadLotroInstruments);
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
 
-			long tick = sequencer.getTickPosition();
-			abcPreviewStartTick = exporter.getExportStartTick();
+			long startMicros = Long.MAX_VALUE;
+			for (AbcPart part : parts)
+			{
+				long firstNoteStart = part.firstNoteStart();
+				if (firstNoteStart < startMicros)
+					startMicros = firstNoteStart;
+			}
+			if (startMicros == Long.MAX_VALUE)
+				startMicros = 0;
+
+			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(parts, this, tm, getKeySignature(),
+					startMicros, Long.MAX_VALUE, !failedToLoadLotroInstruments);
+
+			long position = sequencer.getPosition() - startMicros;
+			abcPreviewStartMicros = startMicros;
 			abcPreviewTempoFactor = abcSequencer.getTempoFactor();
-			abcBarLabel.setBarNumberCache(getAbcTimingInfo());
-			abcBarLabel.setInitialOffsetTick(abcPreviewStartTick);
-			abcPositionLabel.setInitialOffsetTick(abcPreviewStartTick);
 
 			boolean running = abcSequencer.isRunning();
 			abcSequencer.reset(false);
 			abcSequencer.setSequence(previewSequenceInfo.getSequence());
 
-			if (tick < abcPreviewStartTick)
-				tick = abcPreviewStartTick;
+			if (position < 0)
+				position = 0;
 
-			if (tick >= abcSequencer.getTickLength())
+			if (position >= abcSequencer.getLength())
 			{
-				tick = 0;
+				position = 0;
 				running = false;
 			}
 
 			if (running && sequencer.isRunning())
 				sequencer.stop();
 
-			abcSequencer.setTickPosition(tick);
+			abcSequencer.setPosition(position);
 			abcSequencer.setRunning(running);
 		}
 		catch (InvalidMidiDataException e)
@@ -1488,10 +1452,33 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-
 		try
 		{
-			getAbcExporter().exportToAbc(out);
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
+
+			Pair<Long, Long> startEnd = getSongStartEndMicros(tm, true, false);
+			long startMicros = startEnd.first;
+			long endMicros = startEnd.second;
+
+			if (parts.size() > 0)
+			{
+				outWriter = new PrintStream(out);
+				AbcMetadataSource meta = this;
+				outWriter.println(AbcField.SONG_TITLE + meta.getSongTitle());
+				outWriter.println(AbcField.SONG_COMPOSER + meta.getComposer());
+				outWriter.println(AbcField.SONG_DURATION + Util.formatDuration(meta.getSongLengthMicros()));
+				outWriter.println(AbcField.SONG_TRANSCRIBER + meta.getTranscriber());
+				outWriter.println();
+				outWriter.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
+				outWriter.println(AbcField.ABC_VERSION + "2.0");
+				outWriter.println();
+			}
+
+			for (AbcPart part : parts)
+			{
+				part.exportToAbc(tm, getKeySignature(), startMicros, endMicros, out);
+			}
 		}
 		catch (AbcConversionException e)
 		{
@@ -1514,7 +1501,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 	}
 
 	/**
-	 * Slight modification to JFormattedTextField to select the contents when it receives focus.
+	 * Slight modification to JFormattedTextField to select the contents when it
+	 * receives focus.
 	 */
 	private static class MyFormattedTextField extends JFormattedTextField
 	{
@@ -1547,6 +1535,33 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 		return transcriberField.getText();
 	}
 
+	private Pair<Long, Long> getSongStartEndMicros(TimingInfo tm, boolean lengthenToBar, boolean accountForSustain)
+	{
+		// Remove silent bars before the song starts
+		long startMicros = Long.MAX_VALUE;
+		long endMicros = Long.MIN_VALUE;
+		for (AbcPart part : parts)
+		{
+			long firstNoteStart = part.firstNoteStart();
+			if (firstNoteStart < startMicros)
+			{
+				// Remove integral number of bars
+				startMicros = tm.barLength * (firstNoteStart / tm.barLength);
+			}
+			long lastNoteEnd = part.lastNoteEnd(accountForSustain);
+			if (lastNoteEnd > endMicros)
+			{
+				// Lengthen to an integral number of bars
+				if (lengthenToBar)
+					endMicros = tm.barLength * ((lastNoteEnd + tm.barLength - 1) / tm.barLength);
+				else
+					endMicros = lastNoteEnd;
+			}
+		}
+
+		return new Pair<Long, Long>(startMicros, endMicros);
+	}
+
 	@Override public long getSongLengthMicros()
 	{
 		if (parts.size() == 0 || sequenceInfo == null)
@@ -1554,52 +1569,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, AbcMet
 
 		try
 		{
-			AbcExporter exporter = getAbcExporter();
-			Pair<Long, Long> startEndTick = exporter
-					.getSongStartEndTick(false /* lengthenToBar */, true /* accountForSustain */);
-			QuantizedTimingInfo qtm = exporter.getTimingInfo();
+			TimingInfo tm = new TimingInfo(sequenceInfo.getTempoBPM(), getTempo(), getTimeSignature(),
+					tripletCheckBox.isSelected());
 
-			return qtm.tickToMicros(startEndTick.second) - qtm.tickToMicros(startEndTick.first);
+			Pair<Long, Long> startEnd = getSongStartEndMicros(tm, false, true);
+			return startEnd.second - startEnd.first;
 		}
 		catch (AbcConversionException e)
 		{
 			return 0;
 		}
-	}
-
-	private QuantizedTimingInfo getAbcTimingInfo() throws AbcConversionException
-	{
-		if (timingInfo == null //
-				|| timingInfo.getExportTempoFactor() != getTempoFactor() //
-				|| timingInfo.getMeter() != getTimeSignature() //
-				|| timingInfo.isTripletTiming() != isTripletTiming())
-		{
-			timingInfo = new QuantizedTimingInfo(sequenceInfo.getDataCache(), getTempoFactor(), getTimeSignature(),
-					isTripletTiming());
-		}
-
-		return timingInfo;
-	}
-
-	private AbcExporter getAbcExporter() throws AbcConversionException
-	{
-		QuantizedTimingInfo qtm = getAbcTimingInfo();
-		KeySignature key = getKeySignature();
-
-		if (abcExporter == null)
-		{
-			abcExporter = new AbcExporter(parts, qtm, key, this);
-		}
-		else
-		{
-			if (abcExporter.getTimingInfo() != qtm)
-				abcExporter.setTimingInfo(qtm);
-
-			if (abcExporter.getKeySignature() != key)
-				abcExporter.setKeySignature(key);
-		}
-
-		return abcExporter;
 	}
 
 	@Override public File getSaveFile()
