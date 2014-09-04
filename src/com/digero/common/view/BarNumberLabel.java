@@ -84,9 +84,9 @@ public class BarNumberLabel extends JLabel implements SequencerListener, IDiscar
 		}
 
 		long tickLength = Math.max(0, sequencer.getTickLength() - initialOffsetTick);
-		long tick = Math.min(tickLength, Math.max(0, sequencer.getThumbTick() - initialOffsetTick));
+		long tick = Math.min(tickLength, sequencer.getThumbTick() - initialOffsetTick);
 
-		int barNumber = barNumberCache.tickToBarNumber(tick) + 1;
+		int barNumber = (tick < 0) ? 0 : (barNumberCache.tickToBarNumber(tick) + 1);
 		int barCount = barNumberCache.tickToBarNumber(tickLength) + 1;
 
 		if (barNumber != lastPrintedBarNumber || barCount != lastPrintedBarCount)
