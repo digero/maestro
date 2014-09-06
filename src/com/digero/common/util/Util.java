@@ -230,6 +230,28 @@ public final class Util
 		return (a / gcd(a, b)) * b;
 	}
 
+	/** Rounds value to the nearest multiple of grid */
+	public static int roundGrid(int value, int grid)
+	{
+		return ((value + grid / 2) / grid) * grid;
+	}
+
+	/** Rounds value to the nearest multiple of grid */
+	public static long roundGrid(long value, long grid)
+	{
+		return ((value + grid / 2) / grid) * grid;
+	}
+
+	public static int floorGrid(int value, int grid)
+	{
+		return (value / grid) * grid;
+	}
+
+	public static long floorGrid(long value, long grid)
+	{
+		return (value / grid) * grid;
+	}
+
 	public static boolean openURL(String url)
 	{
 		try
