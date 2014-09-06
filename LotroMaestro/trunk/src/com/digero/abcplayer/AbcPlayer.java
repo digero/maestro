@@ -109,7 +109,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
 	static final String APP_NAME = "ABC Player";
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
-	private static final String APP_URL = "http://lotro.acasylum.com/abcplayer/";
+	private static final String APP_URL = "http://code.google.com/p/lotro-maestro/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
 	private static Version APP_VERSION = new Version(0, 0, 0);
 

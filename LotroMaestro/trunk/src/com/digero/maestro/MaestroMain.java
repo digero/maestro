@@ -14,7 +14,7 @@ import com.digero.maestro.view.ProjectFrame;
 public class MaestroMain
 {
 	public static final String APP_NAME = "Maestro";
-	public static final String APP_URL = "http://lotro.acasylum.com/maestro/";
+	public static final String APP_URL = "http://code.google.com/p/lotro-maestro/";
 	public static Version APP_VERSION = new Version(0, 0, 0);
 
 	private static ProjectFrame mainWindow = null;
