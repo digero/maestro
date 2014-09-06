@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -128,6 +129,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		abcPart.addAbcListener(abcPartListener);
 
 		noteGraph = new DrumNoteGraph(seq, trackInfo);
+		noteGraph.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ColorTable.OCTAVE_LINE.get()));
 		noteGraph.addMouseListener(new MouseAdapter()
 		{
 			private int soloAbcTrack = -1;
