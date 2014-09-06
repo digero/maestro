@@ -98,79 +98,6 @@ public class AbcExporter
 		return qtm.tickToMicros(getExportEndTick());
 	}
 
-	public void exportToAbc(OutputStream os) throws AbcConversionException
-	{
-		Pair<Long, Long> startEnd = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
-		exportStartTick = startEnd.first;
-		exportEndTick = startEnd.second;
-
-		PrintStream out = new PrintStream(os);
-		if (!parts.isEmpty())
-		{
-			out.println(AbcField.SONG_TITLE + metadata.getSongTitle());
-			if (metadata.getComposer().length() > 0)
-			{
-				out.println(AbcField.SONG_COMPOSER + metadata.getComposer());
-			}
-			out.println(AbcField.SONG_DURATION + Util.formatDuration(metadata.getSongLengthMicros()));
-			if (metadata.getTranscriber().length() > 0)
-			{
-				out.println(AbcField.SONG_TRANSCRIBER + metadata.getTranscriber());
-			}
-
-			// TODO clean this up
-			{
-				out.println();
-				out.println("%%tempo-ppq " + qtm.getMidiResolution());
-
-				final String SONG_TEMPO = "%%tempo-map ";
-				final int WRAP_LENGTH = 160 - SONG_TEMPO.length();
-				int numTempoChanges = 0;
-				StringBuilder sb = new StringBuilder(0);
-				int primaryTempoBPM = qtm.getPrimaryExportTempoBPM();
-				for (QuantizedTimingInfo.TimingInfoEvent event : qtm.getTimingInfoByTick().values())
-				{
-					if (event.tick > exportEndTick)
-						break;
-
-					long tick = event.tick - exportStartTick;
-					if (tick <= 0)
-					{
-						tick = 0;
-						numTempoChanges = 0;
-						sb.setLength(0);
-					}
-
-					String tempoString = event.info.getExportTempoBPM() + "/" + primaryTempoBPM + "@" + tick + ";";
-					if (sb.length() + tempoString.length() > WRAP_LENGTH)
-					{
-						out.print(SONG_TEMPO);
-						out.println(sb.substring(0, sb.length() - 1)); // Exclude trailing ";"
-						sb.setLength(0);
-					}
-					sb.append(tempoString);
-					numTempoChanges++;
-				}
-
-				if (numTempoChanges > 1)
-				{
-					out.print(SONG_TEMPO);
-					out.println(sb.substring(0, sb.length() - 1)); // Exclude trailing ";"
-				}
-			}
-
-			out.println();
-			out.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
-			out.println(AbcField.ABC_VERSION + "2.0");
-			out.println();
-		}
-
-		for (AbcPart part : parts)
-		{
-			exportPartToAbc(part, exportStartTick, exportEndTick, out);
-		}
-	}
-
 	public class ExportTrackInfo
 	{
 		public final int trackNumber;
@@ -351,6 +278,36 @@ public class AbcExporter
 		return trackNumber;
 	}
 
+	public void exportToAbc(OutputStream os) throws AbcConversionException
+	{
+		Pair<Long, Long> startEnd = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
+		exportStartTick = startEnd.first;
+		exportEndTick = startEnd.second;
+
+		PrintStream out = new PrintStream(os);
+		if (!parts.isEmpty())
+		{
+			out.println("%abc-2.1");
+			out.println(AbcField.SONG_TITLE + metadata.getSongTitle());
+			if (metadata.getComposer().length() > 0)
+			{
+				out.println(AbcField.SONG_COMPOSER + metadata.getComposer());
+			}
+			out.println(AbcField.SONG_DURATION + Util.formatDuration(metadata.getSongLengthMicros()));
+			if (metadata.getTranscriber().length() > 0)
+			{
+				out.println(AbcField.SONG_TRANSCRIBER + metadata.getTranscriber());
+			}
+			out.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
+			out.println(AbcField.ABC_VERSION + "2.1");
+		}
+
+		for (AbcPart part : parts)
+		{
+			exportPartToAbc(part, exportStartTick, exportEndTick, out);
+		}
+	}
+
 	private void exportPartToAbc(AbcPart part, long songStartTick, long songEndTick, PrintStream out)
 			throws AbcConversionException
 	{
@@ -388,9 +345,9 @@ public class AbcExporter
 		final int BAR_LENGTH = 160;
 		final long songStartMicros = qtm.tickToMicros(songStartTick);
 		final int firstBarNumber = qtm.tickToBarNumber(songStartTick);
-		final int primaryTempoBPM = qtm.getPrimaryTempoBPM();
+		final int primaryExportTempoBPM = qtm.getPrimaryExportTempoBPM();
 		int curBarNumber = firstBarNumber;
-		int curTempoBPM = primaryTempoBPM;
+		int curExportTempoBPM = primaryExportTempoBPM;
 		Dynamics curDyn = null;
 		Dynamics initDyn = null;
 
@@ -436,7 +393,7 @@ public class AbcExporter
 		{
 			if (c.size() == 0)
 			{
-				System.err.println("Chord has no notes!");
+				assert false : "Chord has no notes!";
 				continue;
 			}
 
@@ -462,9 +419,7 @@ public class AbcExporter
 				if ((exportBarNumber + 1) % 10 == 0)
 				{
 					long micros = qtm.barNumberToMicrosecond(curBarNumber) - songStartMicros;
-					out.println("%");
 					out.println("% Bar " + (exportBarNumber + 1) + " (" + Util.formatDuration(micros) + ")");
-					out.println("%");
 				}
 
 				Arrays.fill(sharps, false);
@@ -473,20 +428,21 @@ public class AbcExporter
 
 			// Is this the start of a new tempo?
 			TimingInfo tm = qtm.getTimingInfo(c.getStartTick());
-			if (curTempoBPM != tm.getTempoBPM())
+			if (curExportTempoBPM != tm.getExportTempoBPM())
 			{
-				curTempoBPM = tm.getTempoBPM();
+				curExportTempoBPM = tm.getExportTempoBPM();
 
-//				// TODO Print the current bar?
-//				if (bar.length() > 0)
-//				{
-//					addLineBreaks.run();
-//					out.println(bar);
-//					bar.setLength(0);
-//					bar.append("\t");
-//				}
-//
-//				out.println(AbcField.TEMPO + Integer.toString(curTempoBPM));
+				// Print the partial bar
+				if (bar.length() > 0)
+				{
+					addLineBreaks.run();
+					out.println(bar);
+					bar.setLength(0);
+					bar.append("\t");
+					out.print("\t");
+				}
+
+				out.println("%%Q: " + curExportTempoBPM);
 			}
 
 			Dynamics newDyn = (initDyn != null) ? initDyn : c.calcDynamics();
@@ -508,7 +464,7 @@ public class AbcExporter
 				NoteEvent evt = c.get(j);
 				if (evt.getLengthTicks() == 0)
 				{
-					System.err.println("Zero-length note");
+					assert false : "Zero-length note";
 					continue;
 				}
 
@@ -543,10 +499,10 @@ public class AbcExporter
 				int denominator = tm.getMinNoteDivisor();
 
 				// Apply tempo
-				if (curTempoBPM != primaryTempoBPM)
+				if (curExportTempoBPM != primaryExportTempoBPM)
 				{
-					numerator *= primaryTempoBPM;
-					denominator *= curTempoBPM;
+					numerator *= primaryExportTempoBPM;
+					denominator *= curExportTempoBPM;
 				}
 
 				// Reduce the fraction
@@ -554,15 +510,20 @@ public class AbcExporter
 				numerator /= gcd;
 				denominator /= gcd;
 
-				if (numerator != 1)
-				{
-					bar.append(numerator);
-				}
-				if (denominator != 1)
+				if (numerator == 1 && denominator == 2)
 				{
 					bar.append('/');
-					if (numerator != 1 || denominator != 2)
-						bar.append(denominator);
+				}
+				else if (numerator == 1 && denominator == 4)
+				{
+					bar.append("//");
+				}
+				else
+				{
+					if (numerator != 1)
+						bar.append(numerator);
+					if (denominator != 1)
+						bar.append('/').append(denominator);
 				}
 
 				if (evt.tiesTo != null)
@@ -838,12 +799,12 @@ public class AbcExporter
 		for (int i = 0; i < events.size(); i++)
 		{
 			NoteEvent ne = events.get(i);
-			TimingInfo tmStart = qtm.getTimingInfo(ne.getStartTick());
-			long maxNoteEndTick = ne.getStartTick() + tmStart.getMaxNoteLengthTicks();
+			TimingInfo tm = qtm.getTimingInfo(ne.getStartTick());
+			long maxNoteEndTick = ne.getStartTick() + tm.getMaxNoteLengthTicks();
 
 			// Make a hard break for notes that are longer than LotRO can play
 			// Bagpipe notes up to B2 can sustain indefinitey; don't break them
-			if (ne.getEndTick() > maxNoteEndTick
+			if (ne.getEndTick() > maxNoteEndTick && ne.note != Note.REST
 					&& !(part.getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= Note.B2.id))
 			{
 				// Align with a bar boundary if it extends across 1 or more full bars.
@@ -883,16 +844,45 @@ public class AbcExporter
 			if (addTies)
 			{
 				// Tie notes across bar boundaries
-				long boundaryTick = qtm.tickToBarEndTick(ne.getStartTick());
+				long targetEndTick = Math.min(ne.getEndTick(), qtm.tickToBarEndTick(ne.getStartTick()));
 
 				// Tie notes across tempo boundaries
-				QuantizedTimingInfo.TimingInfoEvent nextTempoEvent = qtm.getNextTimingEvent(ne.getStartTick());
-				if (nextTempoEvent != null && nextTempoEvent.tick < boundaryTick)
-					boundaryTick = nextTempoEvent.tick;
+				final QuantizedTimingInfo.TimingInfoEvent nextTempoEvent = qtm.getNextTimingEvent(ne.getStartTick());
+				if (nextTempoEvent != null && nextTempoEvent.tick < targetEndTick)
+					targetEndTick = nextTempoEvent.tick;
 
-				if (ne.getEndTick() > boundaryTick)
+				/* Make sure that quarter notes start on quarter-note boundaries within the bar, and
+				 * that eighth notes start on eight-note boundaries, and so on. Add a tie at the
+				 * boundary if they start past the boundary. */
 				{
-					NoteEvent next = ne.splitWithTieAtTick(boundaryTick);
+					long barStartTick = qtm.tickToBarStartTick(ne.getStartTick());
+					long gridTicks = tm.getMinNoteLengthTicks();
+					long wholeNoteTicks = tm.getBarLengthTicks() * tm.getMeter().denominator / tm.getMeter().numerator;
+
+					// Try unit note lengths of whole, then half, quarter, eighth, sixteenth, etc.
+					for (long unitNoteTicks = wholeNoteTicks; unitNoteTicks > gridTicks * 2; unitNoteTicks /= 2)
+					{
+						// Check if this note starts on the current unit-note grid
+						final long startTickInsideBar = ne.getStartTick() - barStartTick;
+						if (Util.floorGrid(startTickInsideBar, unitNoteTicks) == startTickInsideBar)
+						{
+							// Ok, this note starts on this unit grid, now make sure it ends on the next
+							// unit grid. If it ends before the next unit grid, keep halving the length.
+							if (targetEndTick >= ne.getStartTick() + unitNoteTicks)
+							{
+								// Exception: dotted notes (1.5x the unit grid) are ok
+								if (targetEndTick != ne.getStartTick() + (unitNoteTicks * 3 / 2))
+									targetEndTick = ne.getStartTick() + unitNoteTicks;
+
+								break;
+							}
+						}
+					}
+				}
+
+				if (ne.getEndTick() > targetEndTick)
+				{
+					NoteEvent next = ne.splitWithTieAtTick(targetEndTick);
 					int ins = Collections.binarySearch(events, next);
 					if (ins < 0)
 						ins = -ins - 1;

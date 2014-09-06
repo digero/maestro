@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.TimeSignature;
+import com.digero.common.util.Util;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.sun.media.sound.MidiUtils;
@@ -151,8 +152,7 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 	public long quantize(long tick)
 	{
 		TimingInfoEvent e = getTimingEventForTick(tick);
-		long grid = e.info.getMinNoteLengthTicks();
-		return e.tick + ((tick - e.tick + grid / 2) / grid) * grid;
+		return e.tick + Util.roundGrid(tick - e.tick, e.info.getMinNoteLengthTicks());
 	}
 
 	@Override public long tickToMicros(long tick)
