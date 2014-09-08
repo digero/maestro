@@ -17,6 +17,7 @@ import java.util.prefs.Preferences;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.xml.bind.DatatypeConverter;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Element;
 
@@ -25,7 +26,9 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.ParseException;
+import com.digero.common.util.Version;
 import com.digero.maestro.MaestroMain;
+import com.digero.maestro.util.SaveUtil;
 
 public class DrumNoteMap implements IDiscardable
 {
@@ -143,13 +146,14 @@ public class DrumNoteMap implements IDiscardable
 
 	public void load(Preferences prefs)
 	{
-		map = prefs.getByteArray(MAP_PREFS_KEY, null);
-		if (map == null || map.length != MidiConstants.NOTE_COUNT)
+		setLoadedByteArray(prefs.getByteArray(MAP_PREFS_KEY, null));
+	}
+
+	private void setLoadedByteArray(byte[] bytes)
+	{
+		if (bytes != null && bytes.length == MidiConstants.NOTE_COUNT)
 		{
-			map = getFailsafeDefault();
-		}
-		else
-		{
+			map = bytes;
 			byte[] failsafe = null;
 			for (int i = 0; i < map.length; i++)
 			{
@@ -312,25 +316,48 @@ public class DrumNoteMap implements IDiscardable
 
 	public void saveToXml(Element ele)
 	{
-//		for (byte midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
+//		for (int midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
 //		{
 //			int lotroId = get(midiId);
-//			// Only write non-drum IDs if they actually have a mapping
-//			if ((midiId < MidiConstants.LOWEST_DRUM_ID || midiId > MidiConstants.HIGHEST_DRUM_ID)
-//					&& lotroId == DISABLED_NOTE_ID)
-//			{
+//			if (lotroId == DISABLED_NOTE_ID)
 //				continue;
-//			}
 //
 //			Element noteEle = ele.getOwnerDocument().createElement("Note");
 //			ele.appendChild(noteEle);
 //			noteEle.setAttribute("midiId", String.valueOf(midiId));
 //			noteEle.setAttribute("lotroId", String.valueOf(lotroId));
 //		}
-		if (map == null)
-			ele.setAttribute("isModified", String.valueOf(false));
-		else
+
+		if (map != null)
 			ele.setTextContent(DatatypeConverter.printBase64Binary(map));
+	}
+
+	public static DrumNoteMap loadFromXml(Element ele, Version fileVersion) throws ParseException
+	{
+		boolean isPassthrough;
+		try
+		{
+			isPassthrough = SaveUtil.parseValue(ele, "@isPassthrough", false);
+		}
+		catch (XPathExpressionException e)
+		{
+			e.printStackTrace();
+			assert false;
+			isPassthrough = false;
+		}
+
+		DrumNoteMap retVal = isPassthrough ? new PassThroughDrumNoteMap() : new DrumNoteMap();
+		try
+		{
+			retVal.setLoadedByteArray(SaveUtil.parseValue(ele, "text()", (byte[]) null));
+		}
+		catch (XPathExpressionException e)
+		{
+			e.printStackTrace();
+			assert false;
+		}
+
+		return retVal;
 	}
 
 	/**

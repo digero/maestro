@@ -25,6 +25,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -44,6 +45,21 @@ public class XmlUtil
 	//
 	// Document
 	//
+
+	public static Document createDocument()
+	{
+		try
+		{
+			return DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException e)
+		{
+			// How can a vanilla instance throw a configuration exception?
+			e.printStackTrace();
+			assert false : e.getMessage();
+			throw new RuntimeException(e);
+		}
+	}
 
 	public static Document openDocument(String file) throws SAXException, IOException
 	{
@@ -139,18 +155,8 @@ public class XmlUtil
 
 		@Override public void startDocument() throws SAXException
 		{
-			try
-			{
-				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-				stack.push(doc);
-			}
-			catch (ParserConfigurationException e)
-			{
-				// How can a vanilla instance throw a configuration exception?
-				e.printStackTrace();
-				assert false : e.getMessage();
-				throw new RuntimeException(e);
-			}
+			doc = createDocument();
+			stack.push(doc);
 		}
 
 		@Override public void endDocument() throws SAXException
@@ -188,9 +194,12 @@ public class XmlUtil
 		}
 	}
 
-	public static int getLineNumber(Element ele)
+	public static int getLineNumber(Node node)
 	{
-		Object data = ele.getUserData(LINE_NUMBER_USERDATA);
+		if (node instanceof Attr)
+			node = ((Attr) node).getOwnerElement();
+
+		Object data = node.getUserData(LINE_NUMBER_USERDATA);
 		if (data instanceof Integer)
 			return (Integer) data;
 

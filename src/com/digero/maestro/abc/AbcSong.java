@@ -10,8 +10,11 @@ import java.util.Set;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.swing.DefaultListModel;
+import javax.xml.xpath.XPathExpressionException;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcToMidi;
@@ -22,16 +25,24 @@ import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
+import com.digero.common.util.Version;
 import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.AbcSongEvent.AbcSongProperty;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.FileResolver;
 import com.digero.maestro.util.ListModelWrapper;
 import com.digero.maestro.util.Listener;
 import com.digero.maestro.util.ListenerList;
+import com.digero.maestro.util.SaveUtil;
+import com.digero.maestro.util.XmlUtil;
 
 public class AbcSong implements IDiscardable, AbcMetadataSource
 {
+	public static final String SONG_FILE_EXTENSION_NO_DOT = "msong";
+	public static final String SONG_FILE_EXTENSION = "." + SONG_FILE_EXTENSION_NO_DOT;
+	public static final Version SONG_FILE_VERSION = new Version(1, 0, 0);
+
 	private String title = "";
 	private String composer = "";
 	private String transcriber = "";
@@ -42,95 +53,41 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 	private boolean tripletTiming = false;
 
 	private final boolean fromAbcFile;
-	private final SequenceInfo sequenceInfo;
+	private final boolean fromXmlFile;
+	private SequenceInfo sequenceInfo;
 	private final PartAutoNumberer partAutoNumberer;
 	private final PartNameTemplate partNameTemplate;
 	private QuantizedTimingInfo timingInfo;
 	private AbcExporter abcExporter;
-	private File exportFile;
+	private File sourceFile; // The MIDI or ABC file that this song was loaded from
+	private File exportFile; // The ABC export file
+	private File saveFile; // The XML Maestro song file
 
 	private final ListModelWrapper<AbcPart> parts = new ListModelWrapper<AbcPart>(new DefaultListModel<AbcPart>());
 
 	private final ListenerList<AbcSongEvent> listeners = new ListenerList<AbcSongEvent>();
 
-	public AbcSong(File file, PartAutoNumberer partAutoNumberer, PartNameTemplate partNameTemplate) throws IOException,
-			InvalidMidiDataException, ParseException
+	public AbcSong(File file, PartAutoNumberer partAutoNumberer, PartNameTemplate partNameTemplate,
+			FileResolver fileResolver) throws IOException, InvalidMidiDataException, ParseException, SAXException
 	{
+		sourceFile = file;
+
 		this.partAutoNumberer = partAutoNumberer;
 		this.partAutoNumberer.setParts(Collections.unmodifiableList(parts));
 
 		this.partNameTemplate = partNameTemplate;
 		this.partNameTemplate.setMetadataSource(this);
 
-		// TODO handle maestro project files
 		String fileName = file.getName().toLowerCase();
+		fromXmlFile = fileName.endsWith(SONG_FILE_EXTENSION);
 		fromAbcFile = fileName.endsWith(".abc") || fileName.endsWith(".txt");
 
-		AbcInfo abcInfo = new AbcInfo();
-
-		if (fromAbcFile)
-		{
-			AbcToMidi.Params params = new AbcToMidi.Params(file);
-			params.abcInfo = abcInfo;
-			params.useLotroInstruments = false;
-			sequenceInfo = SequenceInfo.fromAbc(params);
-			exportFile = file;
-		}
+		if (fromXmlFile)
+			initFromXml(file, fileResolver);
+		else if (fromAbcFile)
+			initFromAbc(file);
 		else
-		{
-			sequenceInfo = SequenceInfo.fromMidi(file);
-		}
-
-		title = sequenceInfo.getTitle();
-		composer = sequenceInfo.getComposer();
-		transcriber = "";
-		transpose = 0;
-		tempoFactor = 1.0f;
-		if (ICompileConstants.SHOW_KEY_FIELD)
-			keySignature = sequenceInfo.getKeySignature();
-		else
-			keySignature = KeySignature.C_MAJOR;
-		timeSignature = sequenceInfo.getTimeSignature();
-
-		if (fromAbcFile)
-		{
-			int t = 0;
-			for (TrackInfo trackInfo : sequenceInfo.getTrackList())
-			{
-				if (!trackInfo.hasEvents())
-				{
-					t++;
-					continue;
-				}
-
-				AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
-
-				newPart.setTitle(abcInfo.getPartName(t));
-				newPart.setPartNumber(abcInfo.getPartNumber(t));
-				newPart.setTrackEnabled(t, true);
-
-				Set<Integer> midiInstruments = trackInfo.getInstruments();
-				for (LotroInstrument lotroInst : LotroInstrument.values())
-				{
-					if (midiInstruments.contains(lotroInst.midiProgramId))
-					{
-						newPart.setInstrument(lotroInst);
-						break;
-					}
-				}
-
-				int ins = Collections.binarySearch(parts, newPart, partNumberComparator);
-				if (ins < 0)
-					ins = -ins - 1;
-				parts.add(ins, newPart);
-
-				newPart.addAbcListener(abcPartListener);
-				t++;
-			}
-
-			tripletTiming = abcInfo.hasTriplets();
-			transcriber = abcInfo.getTranscriber();
-		}
+			initFromMidi(file);
 	}
 
 	@Override public void discard()
@@ -151,41 +108,184 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		parts.clear();
 	}
 
-	public void saveToXml(Element ele)
+	private void initFromMidi(File file) throws IOException, InvalidMidiDataException, ParseException
 	{
-		ele.setAttribute("title", title);
-		ele.setAttribute("composer", composer);
-		ele.setAttribute("transcriber", transcriber);
-		ele.setAttribute("tempoFactor", String.valueOf(tempoFactor));
-		ele.setAttribute("transpose", String.valueOf(transpose));
-		if (ICompileConstants.SHOW_KEY_FIELD)
-			ele.setAttribute("keySignature", String.valueOf(keySignature));
-		ele.setAttribute("timeSignature", String.valueOf(timeSignature));
-		ele.setAttribute("tripletTiming", String.valueOf(tripletTiming));
-		if (exportFile != null)
-			ele.setAttribute("exportFile", String.valueOf(exportFile));
+		sequenceInfo = SequenceInfo.fromMidi(file);
+		title = sequenceInfo.getTitle();
+		composer = sequenceInfo.getComposer();
+		keySignature = (ICompileConstants.SHOW_KEY_FIELD) ? sequenceInfo.getKeySignature() : KeySignature.C_MAJOR;
+		timeSignature = sequenceInfo.getTimeSignature();
+	}
 
-		DrumNoteMap defaultDrumMap = null;
+	private void initFromAbc(File file) throws IOException, InvalidMidiDataException, ParseException
+	{
+		AbcInfo abcInfo = new AbcInfo();
+
+		AbcToMidi.Params params = new AbcToMidi.Params(file);
+		params.abcInfo = abcInfo;
+		params.useLotroInstruments = false;
+		sequenceInfo = SequenceInfo.fromAbc(params);
+		exportFile = file;
+
+		title = sequenceInfo.getTitle();
+		composer = sequenceInfo.getComposer();
+		keySignature = (ICompileConstants.SHOW_KEY_FIELD) ? sequenceInfo.getKeySignature() : KeySignature.C_MAJOR;
+		timeSignature = sequenceInfo.getTimeSignature();
+
+		int t = 0;
+		for (TrackInfo trackInfo : sequenceInfo.getTrackList())
+		{
+			if (!trackInfo.hasEvents())
+			{
+				t++;
+				continue;
+			}
+
+			AbcPart newPart = new AbcPart(this);
+
+			newPart.setTitle(abcInfo.getPartName(t));
+			newPart.setPartNumber(abcInfo.getPartNumber(t));
+			newPart.setTrackEnabled(t, true);
+
+			Set<Integer> midiInstruments = trackInfo.getInstruments();
+			for (LotroInstrument lotroInst : LotroInstrument.values())
+			{
+				if (midiInstruments.contains(lotroInst.midiProgramId))
+				{
+					newPart.setInstrument(lotroInst);
+					break;
+				}
+			}
+
+			int ins = Collections.binarySearch(parts, newPart, partNumberComparator);
+			if (ins < 0)
+				ins = -ins - 1;
+			parts.add(ins, newPart);
+
+			newPart.addAbcListener(abcPartListener);
+			t++;
+		}
+
+		tripletTiming = abcInfo.hasTriplets();
+		transcriber = abcInfo.getTranscriber();
+	}
+
+	private void initFromXml(File file, FileResolver fileResolver) throws SAXException, IOException, ParseException
+	{
+		try
+		{
+			saveFile = file;
+			Document doc = XmlUtil.openDocument(sourceFile);
+			Element songEle = XmlUtil.selectSingleElement(doc, "song");
+			if (songEle == null)
+			{
+				throw new ParseException("Does not appear to be a valid Maestro file. Missing <song> root element.",
+						sourceFile.getName());
+			}
+			Version fileVersion = SaveUtil.parseValue(songEle, "@fileVersion", SONG_FILE_VERSION);
+
+			File midiFile = SaveUtil.parseValue(songEle, "sourceFile", (File) null);
+			if (midiFile == null)
+			{
+				throw SaveUtil.missingValueException(songEle, "sourceFile");
+			}
+
+			exportFile = SaveUtil.parseValue(songEle, "exportFile", exportFile);
+
+			sequenceInfo = null;
+			while (sequenceInfo == null)
+			{
+				if (midiFile == null)
+				{
+					throw new ParseException("Failed to load source MIDI or ABC file", sourceFile.getName());
+				}
+
+				try
+				{
+					sequenceInfo = SequenceInfo.fromMidi(midiFile);
+				}
+				catch (InvalidMidiDataException | IOException | ParseException e)
+				{
+					String msg = "Could not load the MIDI/ABC file that was used to create this song:\n" + midiFile
+							+ "\n\nReason:\n" + e.getMessage();
+					midiFile = fileResolver.resolveFile(midiFile, msg);
+				}
+			}
+			sourceFile = midiFile;
+
+			title = SaveUtil.parseValue(songEle, "title", sequenceInfo.getTitle());
+			composer = SaveUtil.parseValue(songEle, "composer", sequenceInfo.getComposer());
+			transcriber = SaveUtil.parseValue(songEle, "transcriber", transcriber);
+
+			tempoFactor = SaveUtil.parseValue(songEle, "exportSettings/@tempoFactor", tempoFactor);
+			transpose = SaveUtil.parseValue(songEle, "exportSettings/@transpose", transpose);
+			if (ICompileConstants.SHOW_KEY_FIELD)
+				keySignature = SaveUtil.parseValue(songEle, "exportSettings/@keySignature", keySignature);
+			timeSignature = SaveUtil.parseValue(songEle, "exportSettings/@timeSignature", timeSignature);
+			tripletTiming = SaveUtil.parseValue(songEle, "exportSettings/@tripletTiming", tripletTiming);
+
+			for (Element ele : XmlUtil.selectElements(songEle, "part"))
+			{
+				AbcPart part = AbcPart.loadFromXml(this, ele, fileVersion);
+				int ins = Collections.binarySearch(parts, part, partNumberComparator);
+				if (ins < 0)
+					ins = -ins - 1;
+				parts.add(ins, part);
+				part.addAbcListener(abcPartListener);
+			}
+		}
+		catch (XPathExpressionException e)
+		{
+			e.printStackTrace();
+			throw new ParseException("XPath error: " + e.getMessage(), null);
+		}
+	}
+
+	public Document saveToXml()
+	{
+		Document doc = XmlUtil.createDocument();
+		Element songEle = (Element) doc.appendChild(doc.createElement("song"));
+		songEle.setAttribute("fileVersion", String.valueOf(SONG_FILE_VERSION));
+
+		SaveUtil.appendChildTextElement(songEle, "sourceFile", String.valueOf(sourceFile));
+		if (exportFile != null)
+			SaveUtil.appendChildTextElement(songEle, "exportFile", String.valueOf(exportFile));
+
+		SaveUtil.appendChildTextElement(songEle, "title", title);
+		SaveUtil.appendChildTextElement(songEle, "composer", composer);
+		SaveUtil.appendChildTextElement(songEle, "transcriber", transcriber);
+
+		{
+			Element exportSettingsEle = doc.createElement("exportSettings");
+
+			if (tempoFactor != 1.0f)
+				exportSettingsEle.setAttribute("tempoFactor", String.valueOf(tempoFactor));
+
+			if (transpose != 0)
+				exportSettingsEle.setAttribute("transpose", String.valueOf(transpose));
+
+			if (ICompileConstants.SHOW_KEY_FIELD)
+			{
+				if (!keySignature.equals(sequenceInfo.getKeySignature()))
+					exportSettingsEle.setAttribute("keySignature", String.valueOf(keySignature));
+			}
+
+			if (!timeSignature.equals(sequenceInfo.getTimeSignature()))
+				exportSettingsEle.setAttribute("timeSignature", String.valueOf(timeSignature));
+
+			if (tripletTiming)
+				exportSettingsEle.setAttribute("tripletTiming", String.valueOf(tripletTiming));
+
+			if (exportSettingsEle.getAttributes().getLength() > 0 || exportSettingsEle.getChildNodes().getLength() > 0)
+				songEle.appendChild(exportSettingsEle);
+		}
 
 		for (AbcPart part : parts)
 		{
-			if (defaultDrumMap == null)
-			{
-				defaultDrumMap = new DrumNoteMap();
-				defaultDrumMap.load(part.getDrumPrefs());
-			}
-
-			Element partEle = ele.getOwnerDocument().createElement("Part");
-			ele.appendChild(partEle);
-			part.saveToXml(partEle, defaultDrumMap);
+			part.saveToXml((Element) songEle.appendChild(doc.createElement("part")));
 		}
 
-		if (defaultDrumMap != null)
-		{
-			Element drumMapEle = ele.getOwnerDocument().createElement("DefaultDrumMap");
-			ele.appendChild(drumMapEle);
-			defaultDrumMap.saveToXml(drumMapEle);
-		}
+		return doc;
 	}
 
 	public void exportAbc(File exportFile) throws FileNotFoundException, IOException, AbcConversionException
@@ -198,7 +298,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	public AbcPart createNewPart()
 	{
-		AbcPart newPart = new AbcPart(sequenceInfo, getTranspose(), this);
+		AbcPart newPart = new AbcPart(this);
 		newPart.addAbcListener(abcPartListener);
 		partAutoNumberer.onPartAdded(newPart);
 
@@ -298,10 +398,6 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		if (this.transpose != transpose)
 		{
 			this.transpose = transpose;
-			for (AbcPart part : parts)
-			{
-				part.setBaseTranspose(transpose);
-			}
 			fireChangeEvent(AbcSongProperty.TRANSPOSE);
 		}
 	}
@@ -364,9 +460,29 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		return fromAbcFile;
 	}
 
+	public boolean isFromXmlFile()
+	{
+		return fromXmlFile;
+	}
+
 	@Override public String getPartName(AbcPartMetadataSource abcPart)
 	{
 		return partNameTemplate.formatName(abcPart);
+	}
+
+	public File getSourceFile()
+	{
+		return sourceFile;
+	}
+
+	public File getSaveFile()
+	{
+		return saveFile;
+	}
+
+	public void setSaveFile(File saveFile)
+	{
+		this.saveFile = saveFile;
 	}
 
 	@Override public File getExportFile()
@@ -376,7 +492,13 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	public void setExportFile(File exportFile)
 	{
+		if (this.exportFile == null && exportFile == null)
+			return;
+		if (this.exportFile != null && this.exportFile.equals(exportFile))
+			return;
+
 		this.exportFile = exportFile;
+		fireChangeEvent(AbcSongProperty.EXPORT_FILE);
 	}
 
 	@Override public String getSongTitle()
@@ -426,10 +548,8 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	private void fireChangeEvent(AbcSongProperty property, AbcPart part)
 	{
-		if (listeners.size() == 0)
-			return;
-
-		listeners.fire(new AbcSongEvent(this, property, part));
+		if (listeners.size() > 0)
+			listeners.fire(new AbcSongEvent(this, property, part));
 	}
 
 	public QuantizedTimingInfo getAbcTimingInfo() throws AbcConversionException

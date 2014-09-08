@@ -44,7 +44,6 @@ public class MaestroMain
 		}
 
 		mainWindow = new ProjectFrame();
-		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		SwingUtilities.invokeAndWait(new Runnable()
 		{
 			@Override public void run()
