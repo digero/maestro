@@ -8,6 +8,9 @@ import java.util.prefs.Preferences;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.xml.bind.DatatypeConverter;
+
+import org.w3c.dom.Element;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
@@ -19,25 +22,29 @@ import com.digero.maestro.midi.SequenceInfo;
 
 public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable
 {
-	private SequenceInfo sequenceInfo;
-	private boolean enabled = true;
 	private int partNumber = 1;
 	private String title;
 	private LotroInstrument instrument;
-	private AbcProject ownerProject;
-	private int baseTranspose;
 	private int[] trackTranspose;
 	private boolean[] trackEnabled;
 	private int[] trackVolumeAdjust;
+	private DrumNoteMap[] drumNoteMap;
+	private BitSet[] drumsEnabled;
+	private BitSet[] cowbellsEnabled;
+
+	private SequenceInfo sequenceInfo;
+	private AbcSong ownerSong;
+	private int baseTranspose;
 	private int enabledTrackCount = 0;
 	private int previewSequenceTrackNumber = -1;
 	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
+	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
-	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcProject ownerProject)
+	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcSong ownerProject)
 	{
 		this.sequenceInfo = sequenceInfo;
 		this.baseTranspose = baseTranspose;
-		this.ownerProject = ownerProject;
+		this.ownerSong = ownerProject;
 		this.instrument = LotroInstrument.LUTE;
 		this.title = this.instrument.toString();
 
@@ -46,6 +53,44 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		this.trackEnabled = new boolean[t];
 		this.trackVolumeAdjust = new int[t];
 		this.drumNoteMap = new DrumNoteMap[t];
+	}
+
+	public void saveToXml(Element ele, DrumNoteMap defaultDrumMap)
+	{
+		ele.setAttribute("partNumber", String.valueOf(partNumber));
+		ele.setAttribute("title", String.valueOf(title));
+		ele.setAttribute("instrument", String.valueOf(instrument));
+		for (int t = 0; t < getTrackCount(); t++)
+		{
+			if (!isTrackEnabled(t))
+				continue;
+
+			Element trackEle = ele.getOwnerDocument().createElement("Track");
+			ele.appendChild(trackEle);
+
+			trackEle.setAttribute("id", String.valueOf(t));
+			trackEle.setAttribute("name", sequenceInfo.getTrackInfo(t).getName());
+			if (trackTranspose[t] != 0)
+				trackEle.setAttribute("transpose", String.valueOf(trackTranspose[t]));
+			if (trackVolumeAdjust[t] != 0)
+				trackEle.setAttribute("volumeAdjust", String.valueOf(trackVolumeAdjust[t]));
+
+			DrumNoteMap map = drumNoteMap[t];
+			if (map != null && !map.equals(defaultDrumMap)
+					&& !((map instanceof PassThroughDrumNoteMap) && !map.isModified()))
+			{
+				Element drumMapEle = ele.getOwnerDocument().createElement("DrumMap");
+				ele.appendChild(drumMapEle);
+				map.saveToXml(drumMapEle);
+			}
+
+			BitSet enabledSet = isCowbellPart() ? cowbellsEnabled[t] : drumsEnabled[t];
+			if (enabledSet != null)
+			{
+				Element drumsEnabledEle = ele.getOwnerDocument().createElement("DrumsEnabled");
+				drumsEnabledEle.setTextContent(DatatypeConverter.printBase64Binary(enabledSet.toByteArray()));
+			}
+		}
 	}
 
 	@Override public void discard()
@@ -166,9 +211,9 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return endTick;
 	}
 
-	public AbcProject getOwnerProject()
+	public AbcSong getOwnerSong()
 	{
-		return ownerProject;
+		return ownerSong;
 	}
 
 	public SequenceInfo getSequenceInfo()
@@ -235,20 +280,6 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				}
 			}
 			fireChangeEvent(AbcPartProperty.INSTRUMENT, affectsPreview);
-		}
-	}
-
-	public boolean isEnabled()
-	{
-		return enabled;
-	}
-
-	public void setEnabled(boolean partEnabled)
-	{
-		if (this.enabled != partEnabled)
-		{
-			this.enabled = partEnabled;
-			fireChangeEvent(AbcPartProperty.ENABLED);
 		}
 	}
 
@@ -401,11 +432,6 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		return sequenceInfo.getTrackInfo(track).isDrumTrack();
 	}
 
-	private DrumNoteMap[] drumNoteMap;
-	private BitSet[] drumsEnabled;
-	private BitSet[] cowbellsEnabled;
-	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
-
 	public DrumNoteMap getDrumMap(int track)
 	{
 		if (drumNoteMap[track] == null)
@@ -443,6 +469,11 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 			}
 		}
 	};
+
+	Preferences getDrumPrefs()
+	{
+		return drumPrefs;
+	}
 
 	public boolean isDrumPlayable(int track, int drumId)
 	{

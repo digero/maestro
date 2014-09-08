@@ -86,13 +86,12 @@ public class PartAutoNumberer
 
 	private Settings settings;
 	private Preferences prefsNode;
-	private List<? extends NumberedAbcPart> parts;
+	private List<? extends NumberedAbcPart> parts = null;
 
-	public PartAutoNumberer(Preferences prefsNode, List<? extends NumberedAbcPart> parts)
+	public PartAutoNumberer(Preferences prefsNode)
 	{
 		this.prefsNode = prefsNode;
-		this.parts = parts;
-		settings = new Settings(prefsNode);
+		this.settings = new Settings(prefsNode);
 	}
 
 	public Settings getSettingsCopy()
@@ -121,8 +120,16 @@ public class PartAutoNumberer
 		this.settings.save(prefsNode);
 	}
 
+	public void setParts(List<? extends NumberedAbcPart> parts)
+	{
+		this.parts = parts;
+	}
+
 	public void renumberAllParts()
 	{
+		if (parts == null)
+			return;
+
 		Set<Integer> numbersInUse = new HashSet<Integer>(parts.size());
 
 		for (NumberedAbcPart part : parts)
@@ -139,6 +146,9 @@ public class PartAutoNumberer
 
 	public void onPartAdded(NumberedAbcPart partAdded)
 	{
+		if (parts == null)
+			return;
+
 		int newPartNumber = settings.getFirstNumber(partAdded.getInstrument());
 
 		boolean conflict;
@@ -160,6 +170,9 @@ public class PartAutoNumberer
 
 	public void onPartDeleted(NumberedAbcPart partDeleted)
 	{
+		if (parts == null)
+			return;
+
 		for (NumberedAbcPart part : parts)
 		{
 			int partNumber = part.getPartNumber();
@@ -176,6 +189,9 @@ public class PartAutoNumberer
 
 	public void setPartNumber(NumberedAbcPart partToChange, int newPartNumber)
 	{
+		if (parts == null)
+			return;
+
 		for (NumberedAbcPart part : parts)
 		{
 			if (part != partToChange && part.getPartNumber() == newPartNumber)
