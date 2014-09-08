@@ -272,7 +272,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		else
 			noteGraph.setDeltaVolume(abcPart.getTrackVolumeAdjust(trackInfo.getTrackNumber()));
 
-		for (AbcPart part : abcPart.getOwnerSong().getParts())
+		for (AbcPart part : abcPart.getAbcSong().getParts())
 		{
 			if (part.isTrackEnabled(trackNumber))
 			{

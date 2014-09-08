@@ -19,6 +19,8 @@ public class AbcSongEvent extends EventObject
 		PART_ADDED, //
 		BEFORE_PART_REMOVED, //
 		PART_LIST_ORDER, //
+		//
+		EXPORT_FILE, //
 		;
 	}
 
