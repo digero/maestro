@@ -1,6 +1,5 @@
 package com.digero.maestro.abc;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -16,9 +15,12 @@ import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.util.IDiscardable;
+import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceInfo;
+import com.digero.maestro.util.Listener;
+import com.digero.maestro.util.ListenerList;
 
 public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscardable
 {
@@ -37,7 +39,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 	private int baseTranspose;
 	private int enabledTrackCount = 0;
 	private int previewSequenceTrackNumber = -1;
-	private final List<AbcPartListener> changeListeners = new ArrayList<AbcPartListener>();
+	private final ListenerList<AbcPartEvent> listeners = new ListenerList<AbcPartEvent>();
 	private Preferences drumPrefs = Preferences.userNodeForPackage(AbcPart.class).node("drums");
 
 	public AbcPart(SequenceInfo sequenceInfo, int baseTranspose, AbcSong ownerProject)
@@ -95,7 +97,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 	@Override public void discard()
 	{
-		changeListeners.clear();
+		listeners.discard();
 		sequenceInfo = null;
 		for (int i = 0; i < drumNoteMap.length; i++)
 		{
@@ -374,14 +376,14 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	}
 
-	public void addAbcListener(AbcPartListener l)
+	public void addAbcListener(Listener<AbcPartEvent> l)
 	{
-		changeListeners.add(l);
+		listeners.add(l);
 	}
 
-	public void removeAbcListener(AbcPartListener l)
+	public void removeAbcListener(Listener<AbcPartEvent> l)
 	{
-		changeListeners.remove(l);
+		listeners.remove(l);
 	}
 
 	protected void fireChangeEvent(AbcPartProperty property)
@@ -401,16 +403,10 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 	protected void fireChangeEvent(AbcPartProperty property, boolean abcPreviewRelated, int trackNumber)
 	{
-		if (changeListeners.size() > 0)
-		{
-			AbcPartEvent e = new AbcPartEvent(this, property, abcPreviewRelated, trackNumber);
-			// Listener list might be modified in the callback
-			List<AbcPartListener> listenerListCopy = new ArrayList<AbcPartListener>(changeListeners);
-			for (AbcPartListener l : listenerListCopy)
-			{
-				l.abcPartChanged(e);
-			}
-		}
+		if (listeners.size() == 0)
+			return;
+
+		listeners.fire(new AbcPartEvent(this, property, abcPreviewRelated, trackNumber));
 	}
 
 	//

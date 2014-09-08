@@ -85,8 +85,7 @@ import com.digero.maestro.abc.AbcConversionException;
 import com.digero.maestro.abc.AbcExporter;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
-import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.abc.AbcPartProperty;
+import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.AbcSong;
 import com.digero.maestro.abc.AbcSongEvent;
 import com.digero.maestro.abc.PartAutoNumberer;
@@ -1043,9 +1042,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		}
 	}
 
-	private AbcPartListener abcPartListener = new AbcPartListener()
+	private Listener<AbcPartEvent> abcPartListener = new Listener<AbcPartEvent>()
 	{
-		@Override public void abcPartChanged(AbcPartEvent e)
+		@Override public void onEvent(AbcPartEvent e)
 		{
 			if (e.getProperty() == AbcPartProperty.TRACK_ENABLED)
 				updateButtons(false);

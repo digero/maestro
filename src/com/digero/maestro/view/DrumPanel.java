@@ -31,10 +31,10 @@ import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
-import com.digero.maestro.abc.AbcPartListener;
 import com.digero.maestro.abc.LotroDrumInfo;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.Listener;
 
 @SuppressWarnings("serial")
 public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConstants, ICompileConstants
@@ -224,9 +224,9 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 			trackVolumeBar.removeActionListener(trackVolumeBarListener);
 	}
 
-	private AbcPartListener abcPartListener = new AbcPartListener()
+	private Listener<AbcPartEvent> abcPartListener = new Listener<AbcPartEvent>()
 	{
-		@Override public void abcPartChanged(AbcPartEvent e)
+		@Override public void onEvent(AbcPartEvent e)
 		{
 			if (e.isNoteGraphRelated())
 			{

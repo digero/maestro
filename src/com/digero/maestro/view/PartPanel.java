@@ -37,10 +37,10 @@ import com.digero.common.util.IDiscardable;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
-import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.abc.AbcPartProperty;
+import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.Listener;
 
 @SuppressWarnings("serial")
 public class PartPanel extends JPanel implements ICompileConstants, TableLayoutConstants
@@ -187,9 +187,9 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		numberSettingsButton.setVisible(true);
 	}
 
-	private AbcPartListener abcPartListener = new AbcPartListener()
+	private Listener<AbcPartEvent> abcPartListener = new Listener<AbcPartEvent>()
 	{
-		@Override public void abcPartChanged(AbcPartEvent e)
+		@Override public void onEvent(AbcPartEvent e)
 		{
 			if (e.getProperty() == AbcPartProperty.PART_NUMBER)
 			{

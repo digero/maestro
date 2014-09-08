@@ -22,6 +22,7 @@ import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
+import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.AbcSongEvent.AbcSongProperty;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
@@ -479,9 +480,9 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		}
 	};
 
-	private AbcPartListener abcPartListener = new AbcPartListener()
+	private Listener<AbcPartEvent> abcPartListener = new Listener<AbcPartEvent>()
 	{
-		@Override public void abcPartChanged(AbcPartEvent e)
+		@Override public void onEvent(AbcPartEvent e)
 		{
 			if (e.getProperty() == AbcPartProperty.PART_NUMBER)
 			{
