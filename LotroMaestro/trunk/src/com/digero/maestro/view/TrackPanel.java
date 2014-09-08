@@ -49,11 +49,11 @@ import com.digero.common.view.ColorTable;
 import com.digero.common.view.LinkButton;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
-import com.digero.maestro.abc.AbcPartListener;
-import com.digero.maestro.abc.AbcPartProperty;
+import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.DrumNoteMap;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.Listener;
 
 @SuppressWarnings("serial")
 public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConstants, ICompileConstants
@@ -93,7 +93,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	private JPanel drumSavePanel;
 	private TrackNoteGraph noteGraph;
 
-	private AbcPartListener abcListener;
+	private Listener<AbcPartEvent> abcListener;
 	private SequencerListener seqListener;
 
 	private boolean showDrumPanels;
@@ -244,9 +244,9 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 
 		updateTitleText();
 
-		abcPart.addAbcListener(abcListener = new AbcPartListener()
+		abcPart.addAbcListener(abcListener = new Listener<AbcPartEvent>()
 		{
-			@Override public void abcPartChanged(AbcPartEvent e)
+			@Override public void onEvent(AbcPartEvent e)
 			{
 				if (e.isNoteGraphRelated())
 				{

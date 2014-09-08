@@ -4,6 +4,42 @@ import java.util.EventObject;
 
 public class AbcPartEvent extends EventObject
 {
+	public enum AbcPartProperty
+	{
+		TITLE(false), //
+		PART_NUMBER(false), //
+		ENABLED, //
+		INSTRUMENT, //
+		BASE_TRANSPOSE, //
+		TRACK_ENABLED, //
+		TRACK_TRANSPOSE, //
+		DRUM_ENABLED, //
+		DRUM_MAPPING, //
+		VOLUME_ADJUST; //
+
+		private final boolean renderRelated;
+
+		private AbcPartProperty()
+		{
+			this.renderRelated = true;
+		}
+
+		private AbcPartProperty(boolean renderRelated)
+		{
+			this.renderRelated = renderRelated;
+		}
+
+		public boolean isNoteGraphRelated()
+		{
+			return renderRelated;
+		}
+
+		public boolean isAbcPreviewRelated()
+		{
+			return renderRelated;
+		}
+	}
+
 	public static final int NO_TRACK_NUMBER = -1;
 
 	private final boolean abcPreviewRelated;
