@@ -16,6 +16,9 @@ import java.util.prefs.Preferences;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.xml.bind.DatatypeConverter;
+
+import org.w3c.dom.Element;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
@@ -32,6 +35,11 @@ public class DrumNoteMap implements IDiscardable
 
 	private byte[] map = null;
 	private List<ChangeListener> listeners = null;
+
+	public boolean isModified()
+	{
+		return map != null;
+	}
 
 	public byte get(int midiNoteId)
 	{
@@ -112,6 +120,19 @@ public class DrumNoteMap implements IDiscardable
 	@Override public void discard()
 	{
 		listeners = null;
+	}
+
+	@Override public boolean equals(Object obj)
+	{
+		if (obj == null || obj.getClass() != this.getClass())
+			return false;
+
+		return Arrays.equals(map, ((DrumNoteMap) obj).map);
+	}
+
+	@Override public int hashCode()
+	{
+		return Arrays.hashCode(map);
 	}
 
 	public void save(Preferences prefs)
@@ -287,6 +308,29 @@ public class DrumNoteMap implements IDiscardable
 		}
 
 		fireChangeEvent();
+	}
+
+	public void saveToXml(Element ele)
+	{
+//		for (byte midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
+//		{
+//			int lotroId = get(midiId);
+//			// Only write non-drum IDs if they actually have a mapping
+//			if ((midiId < MidiConstants.LOWEST_DRUM_ID || midiId > MidiConstants.HIGHEST_DRUM_ID)
+//					&& lotroId == DISABLED_NOTE_ID)
+//			{
+//				continue;
+//			}
+//
+//			Element noteEle = ele.getOwnerDocument().createElement("Note");
+//			ele.appendChild(noteEle);
+//			noteEle.setAttribute("midiId", String.valueOf(midiId));
+//			noteEle.setAttribute("lotroId", String.valueOf(lotroId));
+//		}
+		if (map == null)
+			ele.setAttribute("isModified", String.valueOf(false));
+		else
+			ele.setTextContent(DatatypeConverter.printBase64Binary(map));
 	}
 
 	/**

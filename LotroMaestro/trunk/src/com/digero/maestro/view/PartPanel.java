@@ -285,6 +285,11 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		repaint();
 	}
 
+	public AbcPart getAbcPart()
+	{
+		return abcPart;
+	}
+
 	public void setAbcPreviewMode(boolean isAbcPreviewMode)
 	{
 		if (this.isAbcPreviewMode != isAbcPreviewMode)

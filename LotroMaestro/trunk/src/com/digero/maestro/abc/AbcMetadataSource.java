@@ -12,7 +12,7 @@ public interface AbcMetadataSource
 
 	public long getSongLengthMicros();
 
-	public File getSaveFile();
+	public File getExportFile();
 
 	public String getPartName(AbcPartMetadataSource abcPart);
 }

@@ -1,8 +1,6 @@
 package com.digero.common.midi;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.BitSet;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
@@ -15,37 +13,34 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 {
 	private Receiver receiver = null;
 	private boolean hasAbcPart = false;
-	private Set<Integer>[] notesOn;
-	private Set<Integer> solos = new HashSet<Integer>();
+	private BitSet[] notesOn = new BitSet[CHANNEL_COUNT];
+	private BitSet solos = new BitSet();
 
-	@SuppressWarnings("unchecked")//
 	public void onAbcPartChanged(boolean hasAbcPart)
 	{
 		this.hasAbcPart = hasAbcPart;
-		notesOn = new Set[CHANNEL_COUNT];
+		for (BitSet set : notesOn)
+		{
+			if (set != null)
+				set.clear();
+		}
 	}
 
 	public void setNoteSolo(int drumId, boolean solo)
 	{
+		solos.set(drumId, solo);
 		if (solo)
-		{
-			solos.add(drumId);
 			turnOffInactiveNotes();
-		}
-		else
-		{
-			solos.remove(drumId);
-		}
 	}
 
 	public boolean getNoteSolo(int noteId)
 	{
-		return solos.contains(noteId);
+		return solos.get(noteId);
 	}
 
 	public boolean isNoteActive(int noteId)
 	{
-		return (!solos.isEmpty()) ? solos.contains(noteId) : true;
+		return (!solos.isEmpty()) ? solos.get(noteId) : true;
 	}
 
 	public boolean isAnyNoteSolo()
@@ -73,18 +68,15 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 		if (notesOn[channel] == null)
 			return false;
 
-		return notesOn[channel].contains(noteId);
+		return notesOn[channel].get(noteId);
 	}
 
 	private void setNoteOn(int channel, int noteId, boolean on)
 	{
 		if (notesOn[channel] == null)
-			notesOn[channel] = new HashSet<Integer>();
+			notesOn[channel] = new BitSet();
 
-		if (on)
-			notesOn[channel].add(noteId);
-		else
-			notesOn[channel].remove(noteId);
+		notesOn[channel].set(noteId, on);
 	}
 
 	private void turnOffInactiveNotes()
@@ -94,16 +86,15 @@ public class NoteFilterTransceiver implements Transceiver, IMidiConstants, IComp
 
 		for (int c = 0; c < CHANNEL_COUNT; c++)
 		{
-			if (notesOn[c] == null)
+			BitSet set = notesOn[c];
+			if (set == null)
 				continue;
 
-			Iterator<Integer> iter = notesOn[c].iterator();
-			while (iter.hasNext())
+			for (int noteId = set.nextSetBit(0); noteId >= 0; noteId = set.nextSetBit(noteId + 1))
 			{
-				int noteId = iter.next();
 				if (!isNoteActive(noteId))
 				{
-					iter.remove();
+					set.clear(noteId);
 					MidiEvent evt = MidiFactory.createNoteOffEvent(noteId, c, -1);
 					receiver.send(evt.getMessage(), evt.getTick());
 				}

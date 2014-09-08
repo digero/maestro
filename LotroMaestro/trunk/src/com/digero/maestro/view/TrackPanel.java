@@ -152,7 +152,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 						}
 						else
 						{
-							for (AbcPart part : abcPart.getOwnerProject().getAllParts())
+							for (AbcPart part : abcPart.getOwnerSong().getParts())
 							{
 								if (part.isTrackEnabled(trackNumber))
 								{
@@ -397,7 +397,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			trackSolo = seq.getTrackSolo(trackNumber);
 		}
 
-		for (AbcPart part : abcPart.getOwnerProject().getAllParts())
+		for (AbcPart part : abcPart.getOwnerSong().getParts())
 		{
 			if (part.isTrackEnabled(trackNumber))
 			{

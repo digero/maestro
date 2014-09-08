@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.util.Pair;
 import com.digero.common.util.Util;
+import com.digero.maestro.view.SettingsDialog.MockMetadataSource;
 
 public class PartNameTemplate
 {
@@ -77,16 +78,15 @@ public class PartNameTemplate
 	private Settings settings;
 	private Preferences prefsNode;
 
-	private AbcMetadataSource metadata;
+	private AbcMetadataSource metadata = null;
 	private AbcPartMetadataSource currentAbcPart;
 
 	private SortedMap<String, Variable> variables;
 
-	public PartNameTemplate(Preferences prefsNode, AbcMetadataSource metadata_)
+	public PartNameTemplate(Preferences prefsNode)
 	{
 		this.prefsNode = prefsNode;
 		this.settings = new Settings(prefsNode);
-		this.metadata = metadata_;
 
 		Comparator<String> caseInsensitiveStringComparator = new Comparator<String>()
 		{
@@ -102,28 +102,28 @@ public class PartNameTemplate
 		{
 			@Override public String getValue()
 			{
-				return metadata.getSongTitle();
+				return getMetadataSource().getSongTitle();
 			}
 		});
 		variables.put("$SongLength", new Variable("The playing time of the song in mm:ss format")
 		{
 			@Override public String getValue()
 			{
-				return Util.formatDuration(metadata.getSongLengthMicros());
+				return Util.formatDuration(getMetadataSource().getSongLengthMicros());
 			}
 		});
 		variables.put("$SongComposer", new Variable("The song composer's name, as entered in the \"C:\" field")
 		{
 			@Override public String getValue()
 			{
-				return metadata.getComposer();
+				return getMetadataSource().getComposer();
 			}
 		});
 		variables.put("$SongTranscriber", new Variable("Your name, as entered in the \"Z:\" field")
 		{
 			@Override public String getValue()
 			{
-				return metadata.getTranscriber();
+				return getMetadataSource().getTranscriber();
 			}
 		});
 		variables.put("$PartName", new Variable("The part name for the individual ABC part")
@@ -163,15 +163,16 @@ public class PartNameTemplate
 		{
 			@Override public String getValue()
 			{
-				if (metadata.getSaveFile() == null)
+				if (getMetadataSource().getExportFile() == null)
 					return "";
 
 				File root = Util.getLotroMusicPath(false);
-				String saveFileName = Util.fileNameWithoutExtension(metadata.getSaveFile());
+				String saveFileName = Util.fileNameWithoutExtension(getMetadataSource().getExportFile());
 
 				String path = saveFileName;
 				boolean foundRoot = false;
-				for (File file = metadata.getSaveFile().getParentFile(); file != null; file = file.getParentFile())
+				for (File file = getMetadataSource().getExportFile().getParentFile(); file != null; file = file
+						.getParentFile())
 				{
 					if (root.equals(file))
 					{
@@ -191,10 +192,10 @@ public class PartNameTemplate
 		{
 			@Override public String getValue()
 			{
-				if (metadata.getSaveFile() == null)
+				if (getMetadataSource().getExportFile() == null)
 					return "";
 
-				return Util.fileNameWithoutExtension(metadata.getSaveFile());
+				return Util.fileNameWithoutExtension(getMetadataSource().getExportFile());
 			}
 		});
 	}
@@ -212,6 +213,9 @@ public class PartNameTemplate
 
 	public AbcMetadataSource getMetadataSource()
 	{
+		if (metadata == null)
+			metadata = new MockMetadataSource(null);
+
 		return metadata;
 	}
 

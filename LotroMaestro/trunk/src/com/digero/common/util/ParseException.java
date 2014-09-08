@@ -4,16 +4,34 @@ public class ParseException extends Exception
 {
 	public ParseException(String message, String fileName, int line, int column)
 	{
-		super("Error reading " + fileName + " on line " + line + ", column " + (column + 1) + ":\n" + message);
+		super(formatMessage(message, fileName, line, column));
 	}
 
 	public ParseException(String message, String fileName, int line)
 	{
-		super("Error reading " + fileName + " on line " + line + ":\n" + message);
+		super(formatMessage(message, fileName, line, -1));
 	}
 
 	public ParseException(String message, String fileName)
 	{
-		super("Error reading " + fileName + ":\n" + message);
+		super(formatMessage(message, fileName, -1, -1));
+	}
+
+	private static String formatMessage(String message, String fileName, int line, int column)
+	{
+		String msg = "Error";
+		if (fileName != null && fileName.length() > 0)
+			msg += " reading " + fileName;
+
+		if (line >= 0)
+		{
+			msg += " on line " + line;
+			if (column >= 0)
+				msg += ", column " + (column + 1);
+		}
+
+		msg += ":\n" + message;
+
+		return msg;
 	}
 }

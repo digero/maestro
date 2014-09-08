@@ -387,7 +387,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 		return nameTemplateSettings;
 	}
 
-	private static class MockMetadataSource implements AbcMetadataSource, AbcPartMetadataSource
+	public static class MockMetadataSource implements AbcMetadataSource, AbcPartMetadataSource
 	{
 		private AbcMetadataSource originalSource;
 
@@ -444,11 +444,11 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 			return (length != 0) ? length : 227000000/* 3:47 */;
 		}
 
-		@Override public File getSaveFile()
+		@Override public File getExportFile()
 		{
 			if (originalSource != null)
 			{
-				File saveFile = originalSource.getSaveFile();
+				File saveFile = originalSource.getExportFile();
 				if (saveFile != null)
 					return saveFile;
 			}

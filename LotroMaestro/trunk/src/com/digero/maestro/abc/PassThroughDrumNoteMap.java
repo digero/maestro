@@ -1,5 +1,7 @@
 package com.digero.maestro.abc;
 
+import org.w3c.dom.Element;
+
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
 
@@ -23,5 +25,11 @@ public class PassThroughDrumNoteMap extends DrumNoteMap
 		}
 
 		return failsafe;
+	}
+
+	@Override public void saveToXml(Element ele)
+	{
+		ele.setAttribute("isPassthrough", String.valueOf(true));
+		super.saveToXml(ele);
 	}
 }

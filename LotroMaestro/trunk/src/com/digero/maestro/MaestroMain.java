@@ -96,7 +96,7 @@ public class MaestroMain
 		{
 			File file = new File(args[0]);
 			if (file.exists())
-				mainWindow.openSong(file);
+				mainWindow.openFile(file);
 		}
 	}
 
