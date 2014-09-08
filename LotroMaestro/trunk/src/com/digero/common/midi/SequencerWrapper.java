@@ -15,8 +15,11 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.Timer;
 
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.util.IDiscardable;
 import com.digero.maestro.midi.ITempoCache;
+import com.digero.maestro.util.Listener;
+import com.digero.maestro.util.ListenerList;
 import com.sun.media.sound.MidiUtils;
 
 public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardable
@@ -36,10 +39,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	private long lastUpdateTick = -1;
 	private boolean lastRunning = false;
 
-	private List<SequencerListener> listeners = null;
-	private List<SequencerListener> listenersAddedWhileFiring = null;
-	private List<SequencerListener> listenersRemovedWhileFiring = null;
-	private boolean isFiringEvent = false;
+	private ListenerList<SequencerEvent> listeners = null;
 
 	public SequencerWrapper() throws MidiUnavailableException
 	{
@@ -62,7 +62,8 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 			stop();
 		}
 
-		listeners = null;
+		if (listeners != null)
+			listeners.discard();
 
 		if (updateTimer != null)
 			updateTimer.stop();
@@ -465,73 +466,24 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 		}
 	}
 
-	public void addChangeListener(SequencerListener l)
+	public void addChangeListener(Listener<SequencerEvent> l)
 	{
-		if (isFiringEvent)
-		{
-			if (listenersAddedWhileFiring == null)
-				listenersAddedWhileFiring = new ArrayList<SequencerListener>();
+		if (listeners == null)
+			listeners = new ListenerList<SequencerEvent>();
 
-			listenersAddedWhileFiring.add(l);
-		}
-		else
-		{
-			if (listeners == null)
-				listeners = new ArrayList<SequencerListener>();
-
-			listeners.add(l);
-		}
+		listeners.add(l);
 	}
 
-	public void removeChangeListener(SequencerListener l)
+	public void removeChangeListener(Listener<SequencerEvent> l)
 	{
-		if (isFiringEvent)
-		{
-			if (listenersRemovedWhileFiring == null)
-				listenersRemovedWhileFiring = new ArrayList<SequencerListener>();
-
-			listenersRemovedWhileFiring.add(l);
-		}
-		else
-		{
-			if (listeners != null)
-				listeners.remove(l);
-		}
+		if (listeners != null)
+			listeners.remove(l);
 	}
 
 	protected void fireChangeEvent(SequencerProperty property)
 	{
-		if (listeners != null)
-		{
-			isFiringEvent = true;
-			try
-			{
-				SequencerEvent e = new SequencerEvent(this, property);
-				for (SequencerListener l : listeners)
-				{
-					l.propertyChanged(e);
-				}
-			}
-			finally
-			{
-				isFiringEvent = false;
-
-				if (listenersAddedWhileFiring != null)
-				{
-					for (SequencerListener l : listenersAddedWhileFiring)
-						listeners.add(l);
-
-					listenersAddedWhileFiring = null;
-				}
-				if (listenersRemovedWhileFiring != null)
-				{
-					for (SequencerListener l : listenersRemovedWhileFiring)
-						listeners.remove(l);
-
-					listenersRemovedWhileFiring = null;
-				}
-			}
-		}
+		if (listeners != null && listeners.size() > 0)
+			listeners.fire(new SequencerEvent(this, property));
 	}
 
 	public void setSequence(Sequence sequence) throws InvalidMidiDataException

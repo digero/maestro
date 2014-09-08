@@ -87,8 +87,7 @@ import com.digero.common.icons.IconLoader;
 import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
@@ -103,6 +102,7 @@ import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
+import com.digero.maestro.util.Listener;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants
 {
@@ -440,9 +440,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		controlPanel.add(volumePanel, "8, 3, c, c");
 		controlPanel.add(barNumberLabel, "9, 3, 11, 3, r, t");
 
-		sequencer.addChangeListener(new SequencerListener()
+		sequencer.addChangeListener(new Listener<SequencerEvent>()
 		{
-			@Override public void propertyChanged(SequencerEvent evt)
+			@Override public void onEvent(SequencerEvent evt)
 			{
 				SequencerProperty p = evt.getProperty();
 				if (!p.isInMask(SequencerProperty.THUMB_POSITION_MASK))

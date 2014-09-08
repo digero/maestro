@@ -4,12 +4,12 @@ import javax.swing.JLabel;
 
 import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
+import com.digero.maestro.util.Listener;
 
-public class BarNumberLabel extends JLabel implements SequencerListener, IDiscardable
+public class BarNumberLabel extends JLabel implements Listener<SequencerEvent>, IDiscardable
 {
 	private IBarNumberCache barNumberCache;
 	private SequencerWrapper sequencer;
@@ -57,7 +57,7 @@ public class BarNumberLabel extends JLabel implements SequencerListener, IDiscar
 		}
 	}
 
-	@Override public void propertyChanged(SequencerEvent evt)
+	@Override public void onEvent(SequencerEvent evt)
 	{
 		SequencerProperty p = evt.getProperty();
 		if (p.isInMask(SequencerProperty.THUMB_POSITION_MASK | SequencerProperty.LENGTH.mask

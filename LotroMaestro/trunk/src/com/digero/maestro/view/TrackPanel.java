@@ -37,8 +37,7 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.ICompileConstants;
@@ -94,7 +93,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	private TrackNoteGraph noteGraph;
 
 	private Listener<AbcPartEvent> abcListener;
-	private SequencerListener seqListener;
+	private Listener<SequencerEvent> seqListener;
 
 	private boolean showDrumPanels;
 	private boolean wasDrumPart;
@@ -259,9 +258,9 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			}
 		});
 
-		seq.addChangeListener(seqListener = new SequencerListener()
+		seq.addChangeListener(seqListener = new Listener<SequencerEvent>()
 		{
-			@Override public void propertyChanged(SequencerEvent evt)
+			@Override public void onEvent(SequencerEvent evt)
 			{
 				if (evt.getProperty() == SequencerProperty.TRACK_ACTIVE)
 				{
