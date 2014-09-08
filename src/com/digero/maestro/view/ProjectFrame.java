@@ -64,8 +64,7 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.midi.VolumeTransceiver;
@@ -842,9 +841,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		}
 	}
 
-	private class MainSequencerListener implements SequencerListener
+	private class MainSequencerListener implements Listener<SequencerEvent>
 	{
-		@Override public void propertyChanged(SequencerEvent evt)
+		@Override public void onEvent(SequencerEvent evt)
 		{
 			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING)
@@ -880,9 +879,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		}
 	}
 
-	private class AbcSequencerListener implements SequencerListener
+	private class AbcSequencerListener implements Listener<SequencerEvent>
 	{
-		@Override public void propertyChanged(SequencerEvent evt)
+		@Override public void onEvent(SequencerEvent evt)
 		{
 			updateButtons(false);
 			if (evt.getProperty() == SequencerProperty.IS_RUNNING)

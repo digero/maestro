@@ -28,8 +28,7 @@ import javax.swing.SwingUtilities;
 
 import com.digero.common.abc.Dynamics;
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
@@ -37,8 +36,11 @@ import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.TrackInfo;
+import com.digero.maestro.util.Listener;
 
-public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
+// TODO remove @SuppressWarnings
+@SuppressWarnings("deprecation")
+public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDiscardable
 {
 	protected final SequencerWrapper sequencer;
 	protected TrackInfo trackInfo;
@@ -293,7 +295,7 @@ public class NoteGraph extends JPanel implements SequencerListener, IDiscardable
 		indicatorLine.setBounds((int) pt.x, 0, 1, getHeight());
 	}
 
-	@Override public void propertyChanged(SequencerEvent evt)
+	@Override public void onEvent(SequencerEvent evt)
 	{
 		if (evt.getProperty() == SequencerProperty.LENGTH)
 		{

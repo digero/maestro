@@ -15,12 +15,12 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.JPanel;
 
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.Util;
+import com.digero.maestro.util.Listener;
 
-public class TempoBar extends JPanel implements SequencerListener
+public class TempoBar extends JPanel implements Listener<SequencerEvent>
 {
 	private static final int PTR_WIDTH = 12;
 	private static final int PTR_HEIGHT = 12;
@@ -216,7 +216,7 @@ public class TempoBar extends JPanel implements SequencerListener
 		}
 	}
 
-	@Override public void propertyChanged(SequencerEvent evt)
+	@Override public void onEvent(SequencerEvent evt)
 	{
 		if (evt.getProperty() == SequencerProperty.TEMPO)
 		{

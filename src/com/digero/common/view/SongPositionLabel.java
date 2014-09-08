@@ -3,13 +3,13 @@ package com.digero.common.view;
 import javax.swing.JLabel;
 
 import com.digero.common.midi.SequencerEvent;
-import com.digero.common.midi.SequencerListener;
-import com.digero.common.midi.SequencerProperty;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Util;
+import com.digero.maestro.util.Listener;
 
-public class SongPositionLabel extends JLabel implements SequencerListener, IDiscardable
+public class SongPositionLabel extends JLabel implements Listener<SequencerEvent>, IDiscardable
 {
 	private SequencerWrapper sequencer;
 	private boolean adjustForTempo;
@@ -50,7 +50,7 @@ public class SongPositionLabel extends JLabel implements SequencerListener, IDis
 		}
 	}
 
-	@Override public void propertyChanged(SequencerEvent evt)
+	@Override public void onEvent(SequencerEvent evt)
 	{
 		SequencerProperty p = evt.getProperty();
 		if (p.isInMask(SequencerProperty.THUMB_POSITION_MASK | SequencerProperty.LENGTH.mask
