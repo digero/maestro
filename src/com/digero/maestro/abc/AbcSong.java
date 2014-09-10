@@ -39,7 +39,7 @@ import com.digero.maestro.util.XmlUtil;
 
 public class AbcSong implements IDiscardable, AbcMetadataSource
 {
-	public static final String SONG_FILE_EXTENSION_NO_DOT = "msong";
+	public static final String SONG_FILE_EXTENSION_NO_DOT = "msx";
 	public static final String SONG_FILE_EXTENSION = "." + SONG_FILE_EXTENSION_NO_DOT;
 	public static final Version SONG_FILE_VERSION = new Version(1, 0, 0);
 
@@ -184,10 +184,10 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 			}
 			Version fileVersion = SaveUtil.parseValue(songEle, "@fileVersion", SONG_FILE_VERSION);
 
-			File midiFile = SaveUtil.parseValue(songEle, "sourceFile", (File) null);
-			if (midiFile == null)
+			sourceFile = SaveUtil.parseValue(songEle, "sourceFile", (File) null);
+			if (sourceFile == null)
 			{
-				throw SaveUtil.missingValueException(songEle, "sourceFile");
+				throw SaveUtil.missingValueException(songEle, "<sourceFile>");
 			}
 
 			exportFile = SaveUtil.parseValue(songEle, "exportFile", exportFile);
@@ -195,23 +195,50 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 			sequenceInfo = null;
 			while (sequenceInfo == null)
 			{
-				if (midiFile == null)
-				{
-					throw new ParseException("Failed to load source MIDI or ABC file", sourceFile.getName());
-				}
+				String name = sourceFile.getName().toLowerCase();
+				boolean isAbc = name.endsWith(".abc") || name.endsWith(".txt");
 
 				try
 				{
-					sequenceInfo = SequenceInfo.fromMidi(midiFile);
+					if (isAbc)
+					{
+						AbcInfo abcInfo = new AbcInfo();
+
+						AbcToMidi.Params params = new AbcToMidi.Params(sourceFile);
+						params.abcInfo = abcInfo;
+						params.useLotroInstruments = false;
+						sequenceInfo = SequenceInfo.fromAbc(params);
+
+						tripletTiming = abcInfo.hasTriplets();
+						transcriber = abcInfo.getTranscriber();
+					}
+					else
+					{
+						sequenceInfo = SequenceInfo.fromMidi(sourceFile);
+					}
+
+					title = sequenceInfo.getTitle();
+					composer = sequenceInfo.getComposer();
+					keySignature = (ICompileConstants.SHOW_KEY_FIELD) ? sequenceInfo.getKeySignature()
+							: KeySignature.C_MAJOR;
+					timeSignature = sequenceInfo.getTimeSignature();
+				}
+				catch (FileNotFoundException e)
+				{
+					String msg = "Could not find the file used to create this song:\n"
+							+ sourceFile;
+					sourceFile = fileResolver.locateFile(sourceFile, msg);
 				}
 				catch (InvalidMidiDataException | IOException | ParseException e)
 				{
-					String msg = "Could not load the MIDI/ABC file that was used to create this song:\n" + midiFile
-							+ "\n\nReason:\n" + e.getMessage();
-					midiFile = fileResolver.resolveFile(midiFile, msg);
+					String msg = "Could not load the file used to create this song:\n"
+							+ sourceFile + "\n\n" + e.getMessage();
+					sourceFile = fileResolver.resolveFile(sourceFile, msg);
 				}
+
+				if (sourceFile == null)
+					throw new ParseException("Failed to load file", name);
 			}
-			sourceFile = midiFile;
 
 			title = SaveUtil.parseValue(songEle, "title", sequenceInfo.getTitle());
 			composer = SaveUtil.parseValue(songEle, "composer", sequenceInfo.getComposer());
@@ -559,8 +586,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 				|| timingInfo.getMeter() != getTimeSignature() //
 				|| timingInfo.isTripletTiming() != isTripletTiming())
 		{
-			timingInfo = new QuantizedTimingInfo(sequenceInfo.getDataCache(), getTempoFactor(), getTimeSignature(),
-					isTripletTiming());
+			timingInfo = new QuantizedTimingInfo(sequenceInfo, getTempoFactor(), getTimeSignature(), isTripletTiming());
 		}
 
 		return timingInfo;

@@ -34,6 +34,7 @@ import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
+import com.sun.media.sound.MidiUtils;
 
 public class AbcToMidi
 {
@@ -80,7 +81,7 @@ public class AbcToMidi
 		private Map<Character, String> metadata = new HashMap<Character, String>();
 		private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
 		private Map<Integer, PartInfo> partInfoByIndex = new HashMap<Integer, PartInfo>();
-		private int tempoBPM = 120;
+		private int primaryTempoBPM = 120;
 		private boolean hasTriplets = false;
 
 		private String songTitle = null;
@@ -93,7 +94,7 @@ public class AbcToMidi
 			titlePrefix = null;
 			metadata.clear();
 			bars.clear();
-			tempoBPM = 120;
+			primaryTempoBPM = 120;
 			songTitle = null;
 			songComposer = null;
 			songTranscriber = null;
@@ -144,9 +145,9 @@ public class AbcToMidi
 			return bars.size();
 		}
 
-		public int getTempoBPM()
+		public int getPrimaryTempoBPM()
 		{
-			return tempoBPM;
+			return primaryTempoBPM;
 		}
 
 		public boolean isEmpty()
@@ -225,7 +226,6 @@ public class AbcToMidi
 
 		private void setExtendedMetadata(AbcField field, String value)
 		{
-			// TODO handle tempo
 			switch (field)
 			{
 			case SONG_TITLE:
@@ -241,6 +241,7 @@ public class AbcToMidi
 			case ABC_VERSION:
 			case PART_NAME:
 			case SONG_DURATION:
+			case TEMPO:
 				// Ignore
 				break;
 			}
@@ -291,9 +292,9 @@ public class AbcToMidi
 			}
 		}
 
-		private void setTempoBPM(int tempoBPM)
+		private void setPrimaryTempoBPM(int tempoBPM)
 		{
-			this.tempoBPM = tempoBPM;
+			this.primaryTempoBPM = tempoBPM;
 			this.empty = false;
 		}
 
@@ -341,9 +342,10 @@ public class AbcToMidi
 	private static final int INFO_TYPE = 1;
 	private static final int INFO_VALUE = 2;
 
-	private static final Pattern XINFO_PATTERN = Pattern.compile("^%%([A-Za-z\\-]+)\\s+(.*)\\s*$");
+	private static final Pattern XINFO_PATTERN = Pattern.compile("^\\s*%%([A-Za-z\\-]+)((:?)|\\s)\\s*(.*)\\s*$");
 	private static final int XINFO_FIELD = 1;
-	private static final int XINFO_VALUE = 2;
+	private static final int XINFO_COLON = 3;
+	private static final int XINFO_VALUE = 4;
 
 	private static final Pattern NOTE_PATTERN = Pattern.compile("(_{1,2}|=|\\^{1,2})?" + "([xzA-Ga-g])"
 			+ "(,{1,5}|'{1,5})?" + "(\\d+)?" + "(//?\\d*)?" + "(>{1,3}|<{1,3})?" + "(-)?");
@@ -362,7 +364,7 @@ public class AbcToMidi
 	private static final int[] CHR_NOTE_DELTA = { 9, 11, 0, 2, 4, 5, 7 };
 
 	// Lots of prime factors for divisibility goodness
-	private static final long DEFAULT_NOTE_PULSES = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5 * 7;
+	private static final long DEFAULT_NOTE_TICKS = (2 * 2 * 2 * 2 * 2 * 2) * 3 * 5;
 
 	public static List<String> readLines(File inputFile) throws IOException
 	{
@@ -420,7 +422,6 @@ public class AbcToMidi
 		long chordStartTick = 0;
 		long chordEndTick = 0;
 		long PPQN = 0;
-		long MPQN = 0;
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 
@@ -434,20 +435,25 @@ public class AbcToMidi
 			{
 				lineNumber++;
 
-				// Special handling for extended info
-				boolean isExtendedInfoLine = line.startsWith("%%");
-				int comment = line.indexOf('%', isExtendedInfoLine ? 2 : 0);
-				if (comment >= 0)
-					line = line.substring(0, comment);
-				if (line.trim().length() == 0)
-					continue;
-
 				// Handle extended info
 				Matcher xInfoMatcher = XINFO_PATTERN.matcher(line);
 				if (xInfoMatcher.matches())
 				{
-					AbcField field = AbcField.fromString(xInfoMatcher.group(XINFO_FIELD));
-					if (field != null)
+					AbcField field = AbcField.fromString(xInfoMatcher.group(XINFO_FIELD)
+							+ xInfoMatcher.group(XINFO_COLON));
+
+					if (field == AbcField.TEMPO)
+					{
+						try
+						{
+							info.addTempoEvent(chordStartTick, xInfoMatcher.group(XINFO_VALUE).trim());
+						}
+						catch (IllegalArgumentException e)
+						{
+							// Apparently that wasn't actually a tempo change
+						}
+					}
+					else if (field != null)
 					{
 						String value = xInfoMatcher.group(XINFO_VALUE).trim();
 
@@ -459,9 +465,14 @@ public class AbcToMidi
 							abcInfo.setPartName(trackNumber, value, true);
 						}
 					}
+
+					continue;
 				}
 
-				if (isExtendedInfoLine)
+				int comment = line.indexOf('%');
+				if (comment >= 0)
+					line = line.substring(0, comment);
+				if (line.trim().length() == 0)
 					continue;
 
 				int chordSize = 0;
@@ -524,9 +535,9 @@ public class AbcToMidi
 							break;
 						case 'Q':
 						{
-							int tempo = info.getTempo();
-							info.setTempo(value);
-							if (seq != null && (info.getTempo() != tempo))
+							int tempo = info.getPrimaryTempoBPM();
+							info.setPrimaryTempoBPM(value);
+							if (seq != null && (info.getPrimaryTempoBPM() != tempo))
 							{
 								throw new ParseException("The tempo must be the same for all parts of the song",
 										fileName, lineNumber);
@@ -558,19 +569,17 @@ public class AbcToMidi
 					{
 						try
 						{
-							// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
 							PPQN = info.getPpqn();
-							MPQN = (long) AbcConstants.ONE_MINUTE_MICROS / info.getTempo();
 							seq = new Sequence(Sequence.PPQ, (int) PPQN);
 
-							abcInfo.setTempoBPM(info.getTempo());
+							abcInfo.setPrimaryTempoBPM(info.getPrimaryTempoBPM());
 
-							// Track 0: Title and meta info
-							Track track0 = seq.createTrack();
+							// Create track 0, which will later be filled with the 
+							// tempo events and song metadata (title, etc.)
+							seq.createTrack();
+
 							abcInfo.setPartNumber(0, 0);
 							abcInfo.setPartName(0, info.getTitle(), false);
-
-							track0.add(MidiFactory.createTempoEvent((int) MPQN, 0));
 
 							track = null;
 						}
@@ -830,13 +839,20 @@ public class AbcToMidi
 								tuplet = null;
 						}
 
+						// Convert back to the original tempo
+						int curTempoBPM = info.getCurrentTempoBPM(chordStartTick);
+						int primaryTempoBPM = info.getPrimaryTempoBPM();
+						numerator *= curTempoBPM;
+						denominator *= primaryTempoBPM;
+
 						// Try to guess if this note is using triplet timing
 						if ((denominator % 3 == 0) && (numerator % 3 != 0))
 						{
 							abcInfo.setHasTriplets(true);
 						}
 
-						long noteEndTick = chordStartTick + DEFAULT_NOTE_PULSES * numerator / denominator;
+						long noteEndTick = chordStartTick + DEFAULT_NOTE_TICKS * numerator / denominator;
+
 						// A chord is as long as its shortest note
 						if (chordEndTick == chordStartTick || noteEndTick < chordEndTick)
 							chordEndTick = noteEndTick;
@@ -963,7 +979,9 @@ public class AbcToMidi
 							}
 							else
 							{
-								long lengthMicros = (noteEndTick - chordStartTick) * MPQN / PPQN;
+								double MPQN = MidiUtils.convertTempo(curTempoBPM);
+								double lengthMicros = (noteEndTick - chordStartTick) * MPQN / PPQN;
+
 								if (enableLotroErrors && lengthMicros < AbcConstants.SHORTEST_NOTE_MICROS)
 								{
 									throw new LotroParseException("Note's duration is too short", fileName, lineNumber,
@@ -982,8 +1000,8 @@ public class AbcToMidi
 								long noteEndTickTmp = noteEndTick;
 								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId))
 								{
-									noteEndTickTmp = Math.max(noteEndTick, chordStartTick
-											+ AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN);
+									noteEndTickTmp = Math.max(noteEndTick,
+											chordStartTick + Math.round(AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN));
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
 										.getDynamics().getVol(useLotroInstruments), noteEndTickTmp);
@@ -1025,6 +1043,16 @@ public class AbcToMidi
 			pan = new PanGenerator();
 
 		Track[] tracks = seq.getTracks();
+
+		// Add tempo events
+		for (Map.Entry<Long, Integer> tempoEvent : info.getAllPartsTempoMap().entrySet())
+		{
+			long tick = tempoEvent.getKey();
+			int mpq = (int) MidiUtils.convertTempo(tempoEvent.getValue());
+			tracks[0].add(MidiFactory.createTempoEvent(mpq, tick));
+		}
+
+		// Add name and pan events
 		tracks[0].add(MidiFactory.createTrackNameEvent(abcInfo.getTitle()));
 		for (int i = 1; i <= trackNumber; i++)
 		{
@@ -1131,7 +1159,9 @@ public class AbcToMidi
 		private boolean titleIsFromExtendedInfo;
 		private KeySignature key;
 		private long ppqn;
-		private int tempo;
+		private int primaryTempoBPM;
+		private NavigableMap<Long, Integer> curPartTempoMap = new TreeMap<Long, Integer>(); // Tick -> BPM
+		private NavigableMap<Long, Integer> allPartsTempoMap = new TreeMap<Long, Integer>(); // Tick -> BPM
 		private LotroInstrument instrument;
 		private Dynamics dynamics;
 		private boolean compoundMeter;
@@ -1144,8 +1174,8 @@ public class AbcToMidi
 			titleIsFromExtendedInfo = false;
 			key = KeySignature.C_MAJOR;
 			meterDenominator = 4;
-			ppqn = 8 * DEFAULT_NOTE_PULSES / meterDenominator;
-			tempo = 120;
+			ppqn = 8 * DEFAULT_NOTE_TICKS / meterDenominator;
+			primaryTempoBPM = 120;
 			instrument = LotroInstrument.LUTE;
 			dynamics = Dynamics.mf;
 			compoundMeter = false;
@@ -1158,6 +1188,7 @@ public class AbcToMidi
 			dynamics = Dynamics.mf;
 			title = "";
 			titleIsFromExtendedInfo = false;
+			curPartTempoMap.clear();
 		}
 
 		public void setTitle(String title, boolean fromExtendedInfo)
@@ -1176,7 +1207,7 @@ public class AbcToMidi
 
 		public void setNoteDivisor(String str)
 		{
-			this.ppqn = parseDivisor(str) * DEFAULT_NOTE_PULSES / meterDenominator;
+			this.ppqn = parseDivisor(str) * DEFAULT_NOTE_TICKS / meterDenominator;
 		}
 
 		public void setMeter(String str)
@@ -1205,32 +1236,68 @@ public class AbcToMidi
 				meterDenominator = Integer.parseInt(parts[1]);
 			}
 
-			this.ppqn = ((4 * numerator / meterDenominator) < 3 ? 16 : 8) * DEFAULT_NOTE_PULSES / meterDenominator;
+			this.ppqn = ((4 * numerator / meterDenominator) < 3 ? 16 : 8) * DEFAULT_NOTE_TICKS / meterDenominator;
 			this.compoundMeter = (numerator % 3) == 0;
 		}
 
-		public void setTempo(String str)
+		private int parseTempo(String str)
 		{
 			try
 			{
+				// Apparently LotRO ignores the tempo note length (e.g. Q: 1/4=120)
 				String[] parts = str.split("=");
+				int bpm;
 				if (parts.length == 1)
 				{
-					this.tempo = Integer.parseInt(parts[0]);
+					bpm = Integer.parseInt(parts[0]);
 				}
 				else if (parts.length == 2)
 				{
-					this.tempo = Integer.parseInt(parts[1]);
+					bpm = Integer.parseInt(parts[1]);
 				}
 				else
 				{
 					throw new IllegalArgumentException("Unable to read tempo");
 				}
+
+				if (bpm < 1 || bpm > 10000)
+					throw new IllegalArgumentException("Tempo \"" + bpm + "\" is out of range (expected 1-10000)");
+
+				return bpm;
 			}
 			catch (NumberFormatException nfe)
 			{
 				throw new IllegalArgumentException("Unable to read tempo");
 			}
+		}
+
+		public void setPrimaryTempoBPM(String str)
+		{
+			this.primaryTempoBPM = parseTempo(str);
+			if (!allPartsTempoMap.containsKey(0L))
+				allPartsTempoMap.put(0L, this.primaryTempoBPM);
+			if (!curPartTempoMap.containsKey(0L))
+				curPartTempoMap.put(0L, this.primaryTempoBPM);
+		}
+
+		public void addTempoEvent(long tick, String str)
+		{
+			allPartsTempoMap.put(tick, parseTempo(str));
+			curPartTempoMap.put(tick, parseTempo(str));
+		}
+
+		public int getCurrentTempoBPM(long tick)
+		{
+			Entry<Long, Integer> entry = curPartTempoMap.floorEntry(tick);
+			if (entry == null)
+				return getPrimaryTempoBPM();
+
+			return entry.getValue();
+		}
+
+		public NavigableMap<Long, Integer> getAllPartsTempoMap()
+		{
+			return allPartsTempoMap;
 		}
 
 		private int parseDivisor(String str)
@@ -1339,9 +1406,9 @@ public class AbcToMidi
 			return compoundMeter;
 		}
 
-		public int getTempo()
+		public int getPrimaryTempoBPM()
 		{
-			return tempo;
+			return primaryTempoBPM;
 		}
 
 		public LotroInstrument getInstrument()

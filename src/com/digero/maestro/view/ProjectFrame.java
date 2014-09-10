@@ -737,7 +737,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		saveMenuItem = fileMenu.add(new JMenuItem("Save Song"));
+		saveMenuItem = fileMenu.add(new JMenuItem("Save Maestro Song"));
 		saveMenuItem.setMnemonic('S');
 		saveMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
 		saveMenuItem.addActionListener(new ActionListener()
@@ -748,7 +748,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		saveAsMenuItem = fileMenu.add(new JMenuItem("Save Song As..."));
+		saveAsMenuItem = fileMenu.add(new JMenuItem("Save Maestro Song As..."));
 		saveAsMenuItem.setMnemonic('A');
 		saveAsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK
 				| KeyEvent.SHIFT_DOWN_MASK));
@@ -1295,7 +1295,12 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		if (isAbcSongModified())
 		{
-			String message = "Do you want to save changes to \"" + abcSong.getTitle() + "\"?";
+			String message;
+			if (abcSong.getSaveFile() == null)
+				message = "Do you want to save this new song?";
+			else
+				message = "Do you want to save changes to \"" + abcSong.getSaveFile().getName() + "\"?";
+
 			int result = JOptionPane.showConfirmDialog(this, message, "Save Changes", JOptionPane.YES_NO_CANCEL_OPTION);
 			if (result == JOptionPane.CANCEL_OPTION)
 				return false;
@@ -1438,10 +1443,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	/** Used when the MIDI file in a Maestro song project can't be loaded. */
 	private FileResolver openFileResolver = new FileResolver()
 	{
+		@Override public File locateFile(File original, String message)
+		{
+			message += "\n\nWould you like to try to locate the file?";
+			return resolveHelper(original, message);
+		}
+
 		@Override public File resolveFile(File original, String message)
 		{
-			message += "\n\nWould you like to try to locate a valid file?";
+			message += "\n\nWould you like to pick a different file?";
+			return resolveHelper(original, message);
+		}
 
+		private File resolveHelper(File original, String message)
+		{
 			int result = JOptionPane.showConfirmDialog(ProjectFrame.this, message, "Failed to open file",
 					JOptionPane.OK_CANCEL_OPTION);
 
