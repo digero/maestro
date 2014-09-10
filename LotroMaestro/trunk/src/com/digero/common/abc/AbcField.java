@@ -14,6 +14,8 @@ public enum AbcField
 	ABC_CREATOR, //
 	//
 	PART_NAME, //
+	//
+	TEMPO("Q:"), //
 	;
 
 	private static class MetaData
@@ -21,8 +23,16 @@ public enum AbcField
 		private static Map<String, Integer> longestByPrefix = new HashMap<String, Integer>();
 	}
 
+	private final String formattedName;
+
 	private AbcField()
 	{
+		this(null);
+	}
+
+	private AbcField(String formattedName)
+	{
+		this.formattedName = formattedName;
 		String name = getFormattedName();
 		String prefix = getPrefix(name);
 		Integer maxLength = MetaData.longestByPrefix.get(prefix);
@@ -40,10 +50,9 @@ public enum AbcField
 		if (space > 0)
 			string = string.substring(0, space);
 
-		string = string.toLowerCase();
 		for (AbcField f : values())
 		{
-			if (f.getFormattedName().equals(string))
+			if (f.getFormattedName().equalsIgnoreCase(string))
 				return f;
 		}
 		return null;
@@ -51,6 +60,9 @@ public enum AbcField
 
 	public String getFormattedName()
 	{
+		if (formattedName != null)
+			return formattedName;
+
 		return name().toLowerCase().replace('_', '-');
 	}
 

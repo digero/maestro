@@ -258,7 +258,8 @@ public class AbcExporter
 				// Lengthen Lute, Harp, Drums, etc. to play the entire sound sample
 				if (useLotroInstruments && !part.getInstrument().isSustainable(ne.note.id))
 				{
-					endTick = qtm.microsToTick(qtm.tickToMicros(ne.getStartTick()) + TimingInfo.ONE_SECOND_MICROS);
+					endTick = qtm.microsToTick(qtm.tickToMicros(ne.getStartTick())
+							+ (int) (TimingInfo.ONE_SECOND_MICROS * qtm.getExportTempoFactor()));
 				}
 
 				if (endTick != ne.getEndTick())

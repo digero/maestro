@@ -13,6 +13,7 @@ import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
+import com.digero.maestro.midi.SequenceInfo;
 import com.sun.media.sound.MidiUtils;
 
 // TODO rename: AbcTimingInfo(?)
@@ -31,7 +32,7 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 	private final TimeSignature meter;
 	private final boolean tripletTiming;
 
-	public QuantizedTimingInfo(SequenceDataCache source, float exportTempoFactor, TimeSignature meter,
+	public QuantizedTimingInfo(SequenceInfo source, float exportTempoFactor, TimeSignature meter,
 			boolean useTripletTiming) throws AbcConversionException
 	{
 		double exportPrimaryTempoMPQ = TimingInfo.roundTempoMPQ(source.getPrimaryTempoMPQ() / exportTempoFactor);
@@ -39,9 +40,9 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 		this.exportTempoFactor = exportTempoFactor;
 		this.meter = meter;
 		this.tripletTiming = useTripletTiming;
-		this.tickResolution = source.getTickResolution();
-		this.songLengthTicks = source.getSongLengthTicks();
-		final int resolution = source.getTickResolution();
+		this.tickResolution = source.getDataCache().getTickResolution();
+		this.songLengthTicks = source.getDataCache().getSongLengthTicks();
+		final int resolution = source.getDataCache().getTickResolution();
 
 		TimingInfo defaultTiming = new TimingInfo(source.getPrimaryTempoMPQ(), resolution, exportTempoFactor, meter,
 				useTripletTiming);
@@ -53,7 +54,7 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 		 * an integral multiple of the previous event's MinNoteLengthTicks. This ensures that we can
 		 * split notes at each tempo change without creating a note that is shorter than
 		 * MinNoteLengthTicks. */
-		for (SequenceDataCache.TempoEvent sourceEvent : source.getTempoEvents().values())
+		for (SequenceDataCache.TempoEvent sourceEvent : source.getDataCache().getTempoEvents().values())
 		{
 			long tick = 0;
 			long micros = 0;

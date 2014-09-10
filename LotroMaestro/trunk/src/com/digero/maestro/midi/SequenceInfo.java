@@ -39,6 +39,7 @@ public class SequenceInfo implements IMidiConstants
 	private final String fileName;
 	private String title;
 	private String composer;
+	private int primaryTempoMPQ;
 	private final List<TrackInfo> trackInfoList;
 
 	public static SequenceInfo fromAbc(AbcToMidi.Params params) throws InvalidMidiDataException, ParseException
@@ -48,6 +49,7 @@ public class SequenceInfo implements IMidiConstants
 		SequenceInfo sequenceInfo = new SequenceInfo(params.filesData.get(0).file.getName(), AbcToMidi.convert(params));
 		sequenceInfo.title = params.abcInfo.getTitle();
 		sequenceInfo.composer = params.abcInfo.getComposer();
+		sequenceInfo.primaryTempoMPQ = (int) Math.round(MidiUtils.convertTempo(params.abcInfo.getPrimaryTempoBPM()));
 		return sequenceInfo;
 	}
 
@@ -80,6 +82,7 @@ public class SequenceInfo implements IMidiConstants
 		}
 
 		sequenceCache = new SequenceDataCache(sequence);
+		primaryTempoMPQ = sequenceCache.getPrimaryTempoMPQ();
 
 		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(tracks.length);
 		for (int i = 0; i < tracks.length; i++)
@@ -116,6 +119,7 @@ public class SequenceInfo implements IMidiConstants
 
 		sequence = result.second;
 		sequenceCache = new SequenceDataCache(sequence);
+		primaryTempoMPQ = sequenceCache.getPrimaryTempoMPQ();
 
 		List<TrackInfo> trackInfoList = new ArrayList<TrackInfo>(result.first.size());
 		for (ExportTrackInfo i : result.first)
@@ -162,9 +166,14 @@ public class SequenceInfo implements IMidiConstants
 		return trackInfoList;
 	}
 
+	public int getPrimaryTempoMPQ()
+	{
+		return primaryTempoMPQ;
+	}
+
 	public int getPrimaryTempoBPM()
 	{
-		return sequenceCache.getPrimaryTempoBPM();
+		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
 	public KeySignature getKeySignature()
