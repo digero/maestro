@@ -17,8 +17,8 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.abctomidi.AbcInfo;
 import com.digero.common.abctomidi.AbcToMidi;
-import com.digero.common.abctomidi.AbcToMidi.AbcInfo;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.ICompileConstants;
