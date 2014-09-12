@@ -15,6 +15,7 @@ import javax.sound.midi.Track;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
+import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
@@ -28,6 +29,9 @@ import com.digero.maestro.midi.NoteEvent;
 
 public class AbcExporter
 {
+	// Max parts for MIDI preview
+	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT - 2; // Track 0 is reserved for metadata, and Track 9 is reserved for drums
+
 	private final List<AbcPart> parts;
 	private final AbcMetadataSource metadata;
 	private QuantizedTimingInfo qtm;
@@ -115,26 +119,44 @@ public class AbcExporter
 	public Pair<List<ExportTrackInfo>, Sequence> exportToPreview(boolean useLotroInstruments)
 			throws AbcConversionException, InvalidMidiDataException
 	{
-		Pair<Long, Long> startEndTick = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
-		exportStartTick = startEndTick.first;
-		exportEndTick = startEndTick.second;
-
-		Sequence sequence = new Sequence(Sequence.PPQ, qtm.getMidiResolution());
-
-		// Track 0: Title and meta info
-		Track track0 = sequence.createTrack();
-		track0.add(MidiFactory.createTrackNameEvent(metadata.getSongTitle()));
-		addMidiTempoEvents(track0);
-
-		PanGenerator panner = new PanGenerator();
-		List<ExportTrackInfo> infoList = new ArrayList<ExportTrackInfo>();
-		for (AbcPart part : parts)
+		try
 		{
-			int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
-			infoList.add(exportPartToPreview(part, sequence, exportStartTick, exportEndTick, pan, useLotroInstruments));
-		}
+			if (parts.size() > MAX_PARTS)
+			{
+				throw new AbcConversionException("Songs with more than " + MAX_PARTS + " parts cannot be previewed.\n"
+						+ "This song currently has " + parts.size() + " parts.");
+			}
 
-		return new Pair<List<ExportTrackInfo>, Sequence>(infoList, sequence);
+			Pair<Long, Long> startEndTick = getSongStartEndTick(true /* lengthenToBar */, false /* accountForSustain */);
+			exportStartTick = startEndTick.first;
+			exportEndTick = startEndTick.second;
+
+			Sequence sequence = new Sequence(Sequence.PPQ, qtm.getMidiResolution());
+
+			// Track 0: Title and meta info
+			Track track0 = sequence.createTrack();
+			track0.add(MidiFactory.createTrackNameEvent(metadata.getSongTitle()));
+			addMidiTempoEvents(track0);
+
+			PanGenerator panner = new PanGenerator();
+			List<ExportTrackInfo> infoList = new ArrayList<ExportTrackInfo>();
+			for (AbcPart part : parts)
+			{
+				int pan = (parts.size() > 1) ? panner.get(part.getInstrument(), part.getTitle()) : PanGenerator.CENTER;
+				infoList.add(exportPartToPreview(part, sequence, exportStartTick, exportEndTick, pan,
+						useLotroInstruments));
+			}
+
+			return new Pair<List<ExportTrackInfo>, Sequence>(infoList, sequence);
+		}
+		catch (RuntimeException e)
+		{
+			// Unpack the InvalidMidiDataException if it was the cause
+			if (e.getCause() instanceof InvalidMidiDataException)
+				throw (InvalidMidiDataException) e.getCause();
+
+			throw e;
+		}
 	}
 
 	private void addMidiTempoEvents(Track track0)

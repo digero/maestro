@@ -52,6 +52,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -109,8 +110,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private static final int HGAP = 4, VGAP = 4;
 	private static final double[] LAYOUT_COLS = new double[] { 180, FILL };
 	private static final double[] LAYOUT_ROWS = new double[] { FILL };
-
-	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT - 2; // Track 0 is reserved for metadata, and Track 9 is reserved for drums
 
 	private Preferences prefs = Preferences.userNodeForPackage(MaestroMain.class);
 
@@ -182,6 +181,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		super(MaestroMain.APP_NAME);
 		setMinimumSize(new Dimension(512, 384));
 		Util.initWinBounds(this, prefs.node("window"), 800, 600);
+
+		ToolTipManager.sharedInstance().setDismissDelay(8000);
 
 		String welcomeMessage = formatInfoMessage("Hello Maestro", "Drag and drop a MIDI or ABC file to open it.\n"
 				+ "Or use File > Open.");
@@ -337,7 +338,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		}
 
 		timeSignatureField = new MyFormattedTextField(TimeSignature.FOUR_FOUR, 5);
-		timeSignatureField.setToolTipText("<html>Adjust the time signature of the ABC file. "
+		timeSignatureField.setToolTipText("<html>Adjust the time signature of the ABC file.<br><br>"
 				+ "This only affects the display, not the sound of the exported file.<br>"
 				+ "Examples: 4/4, 3/8, 2/2</html>");
 		timeSignatureField.addPropertyChangeListener("value", new PropertyChangeListener()
@@ -363,7 +364,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		tempoSpinner = new JSpinner(new SpinnerNumberModel(IMidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */,
 				960 /* max */, 1 /* step */));
-		tempoSpinner.setToolTipText("Tempo in beats per minute");
+		tempoSpinner.setToolTipText("<html>Tempo in beats per minute.<br><br>"
+				+ "This number represents the <b>Main Tempo</b>, which is the tempo that covers<br>"
+				+ "the largest portion of the song. If parts of the song play at a different tempo,<br>"
+				+ "they will all be adjusted proportionally.</html>");
 		tempoSpinner.addChangeListener(new ChangeListener()
 		{
 			@Override public void stateChanged(ChangeEvent e)
@@ -426,7 +430,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+E)</center></html>");
+		exportButton = new JButton("<html><b>Export ABC</b></html>");
+		exportButton.setToolTipText("<html><b>Export ABC</b><br>(Ctrl+E)</html>");
 		exportButton.setIcon(IconLoader.getImageIcon("abcfile_32.png"));
 		exportButton.setDisabledIcon(IconLoader.getDisabledIcon("abcfile_32.png"));
 		exportButton.setHorizontalAlignment(SwingConstants.LEFT);
@@ -758,7 +763,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
+		fileMenu.addSeparator();
+
 		saveMenuItem = fileMenu.add(new JMenuItem("Save Maestro Song"));
+		saveMenuItem.setIcon(IconLoader.getImageIcon("msxfile_16.png"));
+		saveMenuItem.setDisabledIcon(IconLoader.getDisabledIcon("msxfile_16.png"));
 		saveMenuItem.setMnemonic('S');
 		saveMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
 		saveMenuItem.addActionListener(new ActionListener()
@@ -781,7 +790,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
+		fileMenu.addSeparator();
+
 		exportMenuItem = fileMenu.add(new JMenuItem("Export ABC"));
+		exportMenuItem.setIcon(IconLoader.getImageIcon("abcfile_16.png"));
+		exportMenuItem.setDisabledIcon(IconLoader.getDisabledIcon("abcfile_16.png"));
 		exportMenuItem.setMnemonic('E');
 		exportMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK));
 		exportMenuItem.addActionListener(new ActionListener()
@@ -825,6 +838,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		toolsMenu.setMnemonic('T');
 
 		JMenuItem settingsItem = toolsMenu.add(new JMenuItem("Options..."));
+		settingsItem.setIcon(IconLoader.getImageIcon("gear_16.png"));
+		settingsItem.setDisabledIcon(IconLoader.getDisabledIcon("gear_16.png"));
 		settingsItem.setMnemonic('O');
 		settingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK));
 		settingsItem.addActionListener(new ActionListener()
@@ -1313,13 +1328,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		return abcSong != null && abcSongModified;
 	}
 
-	// TODO remove
 	public int getTranspose()
 	{
 		return (Integer) transposeSpinner.getValue();
 	}
 
-	// TODO remove
 	public int getTempo()
 	{
 		return (Integer) tempoSpinner.getValue();
@@ -1607,11 +1620,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		try
 		{
-			if (abcSong.getParts().size() > MAX_PARTS)
-			{
-				throw new AbcConversionException("Songs with more than " + MAX_PARTS + " parts cannot be previewed.\n"
-						+ "This song currently has " + abcSong.getParts().size() + " parts.");
-			}
 
 			AbcExporter exporter = abcSong.getAbcExporter();
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(exporter, !failedToLoadLotroInstruments);
@@ -1726,20 +1734,22 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		if (exportFile == null)
 		{
+			String defaultFolder = Util.getLotroMusicPath(false).getAbsolutePath();
+			String folder = prefs.get("exportDialogFolder", defaultFolder);
+			if (!new File(folder).exists())
+				folder = defaultFolder;
+
 			exportFile = abcSong.getSourceFile();
 			if (exportFile == null)
-			{
-				exportFile = new File(Util.getLotroMusicPath(false).getAbsolutePath(), abcSong.getSequenceInfo()
-						.getFileName());
-			}
+				exportFile = new File(folder, abcSong.getSequenceInfo().getFileName());
 
 			String fileName = exportFile.getName();
 			int dot = fileName.lastIndexOf('.');
 			if (dot > 0)
 				fileName = fileName.substring(0, dot);
-			fileName += AbcSong.MSX_FILE_EXTENSION;
+			fileName += ".abc";
 
-			exportFile = new File(exportFile.getParent(), fileName);
+			exportFile = new File(folder, fileName);
 		}
 
 		exportFile = doSaveDialog(exportFile, allowOverwriteFile, ".abc", new ExtensionFileFilter(
@@ -1747,6 +1757,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		if (exportFile == null)
 			return false;
+
+		prefs.put("exportDialogFolder", exportFile.getAbsoluteFile().getParent());
 
 		abcSong.setExportFile(exportFile);
 		allowOverwriteExportFile = true;
@@ -1806,15 +1818,21 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		if (saveFile == null)
 		{
+			String defaultFolder;
+			if (abcSong.getExportFile() != null)
+				defaultFolder = abcSong.getExportFile().getAbsoluteFile().getParent();
+			else
+				defaultFolder = Util.getLotroMusicPath(false).getAbsolutePath();
+
+			String folder = prefs.get("saveDialogFolder", defaultFolder);
+			if (!new File(folder).exists())
+				folder = defaultFolder;
+
 			saveFile = abcSong.getExportFile();
 			if (saveFile == null)
 				saveFile = abcSong.getSourceFile();
-
 			if (saveFile == null)
-			{
-				saveFile = new File(Util.getLotroMusicPath(false).getAbsolutePath(), abcSong.getSequenceInfo()
-						.getFileName());
-			}
+				saveFile = new File(folder, abcSong.getSequenceInfo().getFileName());
 
 			String fileName = saveFile.getName();
 			int dot = fileName.lastIndexOf('.');
@@ -1822,7 +1840,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 				fileName = fileName.substring(0, dot);
 			fileName += AbcSong.MSX_FILE_EXTENSION;
 
-			saveFile = new File(saveFile.getParent(), fileName);
+			saveFile = new File(folder, fileName);
 		}
 
 		saveFile = doSaveDialog(saveFile, allowOverwriteFile, AbcSong.MSX_FILE_EXTENSION, new ExtensionFileFilter(
@@ -1831,6 +1849,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		if (saveFile == null)
 			return false;
 
+		prefs.put("saveDialogFolder", saveFile.getAbsoluteFile().getParent());
 		abcSong.setSaveFile(saveFile);
 		allowOverwriteSaveFile = true;
 		return finishSave();
