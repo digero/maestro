@@ -110,6 +110,7 @@
 						</File>
 						<File Id="maestro.ico" Source="maestro.ico" />
 						<File Id="midifile.ico" Source="midifile.ico" />
+						<File Id="msxfile.ico" Source="msxfile.ico" />
 
 						<!-- Define ProgIds for file types -->
 						<ProgId Id="AbcPlayer.AssocFile.ABC" Description="ABC Song">
@@ -123,6 +124,11 @@
 							</Extension>
 							<Extension Id="midi" ContentType="audio/mid" />
 						</ProgId>
+						<ProgId Id="Maestro.AssocFile.MSX" Description="Maestro Song" Icon="msxfile.ico" IconIndex="0">
+							<Extension Id="msx" ContentType="application/vnd.digero-maestro+xml">
+								<Verb Id="edit" Command="&amp;Edit with $(var.MaestroAppName)" TargetFile="Maestro.exe" Argument='"%1"' />
+							</Extension>
+						</ProgId>
 
 						<!-- Support Set Program Access and Defaults -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities" Type="string" Name="ApplicationName" Value="$(var.MaestroAppName)" />
@@ -132,10 +138,12 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".abc" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".mid" Value="Maestro.AssocFile.MIDI" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".midi" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\FileAssociations" Type="string" Name=".msx" Value="Maestro.AssocFile.MSX" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="text/plain" Value="AbcPlayer.AssocFile.ABC" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/mid" Value="Maestro.AssocFile.MIDI" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="audio/midi" Value="Maestro.AssocFile.MIDI" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="midi/mid" Value="Maestro.AssocFile.MIDI" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\MIMEAssociations" Type="string" Name="application/vnd.digero-maestro+xml" Value="Maestro.AssocFile.MSX" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\edit" Type="string" Value="&amp;Edit with $(var.MaestroAppName)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\[Manufacturer]\Maestro\Capabilities\shell\edit\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Type="string" Name="Digero.Maestro.exe" Value="SOFTWARE\[Manufacturer]\Maestro\Capabilities" />
@@ -149,6 +157,7 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".abc" Value="" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".mid" Value="" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".midi" Value="" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\SupportedTypes" Type="string" Name=".msx" Value="" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\shell\edit" Type="string" Value="&amp;Edit with $(var.MaestroAppName)" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\Maestro.exe\shell\edit\command" Type="string" Value='"[#Maestro.exe]" "%1"' />
 					</Component>

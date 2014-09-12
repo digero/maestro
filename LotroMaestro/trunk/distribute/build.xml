@@ -22,6 +22,7 @@
 		<copy file="../LotroInstruments.sf2" todir="${build}" />
 		<copy file="abcfile.ico" todir="${build}" />
 		<copy file="midifile.ico" todir="${build}" />
+		<copy file="msxfile.ico" todir="${build}" />
 	</target>
 
 	<target name="CommonJar" depends="PreBuild">
@@ -111,6 +112,7 @@
 			<include name="LotroInstruments.sf2" />
 			<include name="midifile.ico" />
 			<include name="abcfile.ico" />
+			<include name="msxfile.ico" />
 		</zip>
 	</target>
 
