@@ -375,4 +375,16 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 		this.sequencer = sequencer;
 		setAbcPart(abcPartTmp);
 	}
+
+	public void commitAllFields()
+	{
+		try
+		{
+			numberSpinner.commitEdit();
+		}
+		catch (java.text.ParseException e)
+		{
+			// Ignore
+		}
+	}
 }

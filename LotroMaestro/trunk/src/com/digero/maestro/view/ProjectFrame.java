@@ -30,7 +30,6 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
@@ -47,9 +46,11 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -59,6 +60,7 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import javax.xml.transform.TransformerException;
 
@@ -139,6 +141,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private JMenuItem saveMenuItem;
 	private JMenuItem saveAsMenuItem;
 	private JMenuItem exportMenuItem;
+	private JMenuItem exportAsMenuItem;
 
 	private JList<AbcPart> partsList;
 	private JButton newPartButton;
@@ -147,8 +150,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private PartPanel partPanel;
 
 	private boolean abcPreviewMode = false;
-	private JRadioButton abcModeRadioButton;
-	private JRadioButton midiModeRadioButton;
+	private JToggleButton abcModeRadioButton;
+	private JToggleButton midiModeRadioButton;
 	private JButton playButton;
 	private JButton stopButton;
 	private NativeVolumeBar volumeBar;
@@ -158,9 +161,13 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private BarNumberLabel abcBarLabel;
 
 	private Icon playIcon;
+	private Icon playIconDisabled;
 	private Icon pauseIcon;
+	private Icon pauseIconDisabled;
 	private Icon abcPlayIcon;
+	private Icon abcPlayIconDisabled;
 	private Icon abcPauseIcon;
+	private Icon abcPauseIconDisabled;
 
 	private long abcPreviewStartTick = 0;
 	private float abcPreviewTempoFactor = 1.0f;
@@ -251,11 +258,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		playIcon = new ImageIcon(IconLoader.class.getResource("play_blue.png"));
-		pauseIcon = new ImageIcon(IconLoader.class.getResource("pause_blue.png"));
-		abcPlayIcon = new ImageIcon(IconLoader.class.getResource("play_yellow.png"));
-		abcPauseIcon = new ImageIcon(IconLoader.class.getResource("pause.png"));
-		Icon stopIcon = new ImageIcon(IconLoader.class.getResource("stop.png"));
+		playIcon = IconLoader.getImageIcon("play_blue.png");
+		playIconDisabled = IconLoader.getDisabledIcon("play_blue.png");
+		pauseIcon = IconLoader.getImageIcon("pause_blue.png");
+		pauseIconDisabled = IconLoader.getDisabledIcon("pause_blue.png");
+		abcPlayIcon = IconLoader.getImageIcon("play_yellow.png");
+		abcPlayIconDisabled = IconLoader.getDisabledIcon("play_yellow.png");
+		abcPauseIcon = IconLoader.getImageIcon("pause.png");
+		abcPauseIconDisabled = IconLoader.getDisabledIcon("pause.png");
+		Icon stopIcon = IconLoader.getImageIcon("stop.png");
+		Icon stopIconDisabled = IconLoader.getDisabledIcon("stop.png");
 
 		partPanel = new PartPanel(sequencer, partAutoNumberer, abcSequencer);
 		partPanel.addSettingsActionListener(new ActionListener()
@@ -415,6 +427,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		});
 
 		exportButton = new JButton("<html><center><b>Export ABC</b><br>(Ctrl+E)</center></html>");
+		exportButton.setIcon(IconLoader.getImageIcon("abcfile_32.png"));
+		exportButton.setDisabledIcon(IconLoader.getDisabledIcon("abcfile_32.png"));
+		exportButton.setHorizontalAlignment(SwingConstants.LEFT);
 		exportButton.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -505,7 +520,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 			row++;
 			settingsLayout.insertRow(row, PREFERRED);
-			settingsPanel.add(new JLabel("Tempo:"), "0, " + row);
+			settingsPanel.add(new JLabel("Main Tempo:"), "0, " + row);
 			settingsPanel.add(tempoSpinner, "1, " + row);
 			settingsPanel.add(resetTempoButton, "2, " + row + ", L, F");
 
@@ -555,11 +570,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		midiModeRadioButton = new JRadioButton("Original");
 		midiModeRadioButton.addActionListener(modeButtonListener);
-		midiModeRadioButton.setMargin(new Insets(0, 0, 0, 0));
+		midiModeRadioButton.setMargin(new Insets(1, 5, 1, 5));
 
 		abcModeRadioButton = new JRadioButton("ABC Preview");
 		abcModeRadioButton.addActionListener(modeButtonListener);
-		abcModeRadioButton.setMargin(new Insets(0, 0, 0, 0));
+		abcModeRadioButton.setMargin(new Insets(1, 5, 1, 5));
 
 		ButtonGroup modeButtonGroup = new ButtonGroup();
 		modeButtonGroup.add(abcModeRadioButton);
@@ -568,7 +583,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		midiModeRadioButton.setSelected(true);
 		abcPreviewMode = abcModeRadioButton.isSelected();
 
+		final Insets playControlButtonMargin = new Insets(5, 20, 5, 20);
+
 		playButton = new JButton(playIcon);
+		playButton.setDisabledIcon(playIconDisabled);
+		playButton.setMargin(playControlButtonMargin);
 		playButton.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -588,7 +607,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		});
 
 		stopButton = new JButton(stopIcon);
+		stopButton.setDisabledIcon(stopIconDisabled);
 		stopButton.setToolTipText("Stop");
+		stopButton.setMargin(playControlButtonMargin);
 		stopButton.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -651,7 +672,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		add(midiPartsAndControls, "1, 0");
 
 		final FileFilterDropListener dropListener = new FileFilterDropListener(false, "mid", "midi", "abc", "txt",
-				AbcSong.SONG_FILE_EXTENSION_NO_DOT);
+				AbcSong.MSX_FILE_EXTENSION_NO_DOT);
 		dropListener.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -725,7 +746,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 					openFileChooser = new JFileChooser(prefs.get("openFileChooser.path", null));
 					openFileChooser.setMultiSelectionEnabled(false);
 					openFileChooser.setFileFilter(new ExtensionFileFilter("MIDI, ABC, and Maestro files", "mid",
-							"midi", "abc", "txt", AbcSong.SONG_FILE_EXTENSION_NO_DOT));
+							"midi", "abc", "txt", AbcSong.MSX_FILE_EXTENSION_NO_DOT));
 				}
 
 				int result = openFileChooser.showOpenDialog(ProjectFrame.this);
@@ -760,7 +781,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		exportMenuItem = fileMenu.add(new JMenuItem("Export ABC..."));
+		exportMenuItem = fileMenu.add(new JMenuItem("Export ABC"));
 		exportMenuItem.setMnemonic('E');
 		exportMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK));
 		exportMenuItem.addActionListener(new ActionListener()
@@ -768,6 +789,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			@Override public void actionPerformed(ActionEvent e)
 			{
 				exportAbc();
+			}
+		});
+
+		exportAsMenuItem = fileMenu.add(new JMenuItem("Export ABC As..."));
+		exportAsMenuItem.setMnemonic('p');
+		exportAsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK
+				| KeyEvent.SHIFT_DOWN_MASK));
+		exportAsMenuItem.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				exportAbcAs();
 			}
 		});
 
@@ -1035,8 +1068,11 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 			SequencerWrapper curSequencer = abcPreviewMode ? abcSequencer : sequencer;
 			Icon curPlayIcon = abcPreviewMode ? abcPlayIcon : playIcon;
+			Icon curPlayIconDisabled = abcPreviewMode ? abcPlayIconDisabled : playIconDisabled;
 			Icon curPauseIcon = abcPreviewMode ? abcPauseIcon : pauseIcon;
+			Icon curPauseIconDisabled = abcPreviewMode ? abcPauseIconDisabled : pauseIconDisabled;
 			playButton.setIcon(curSequencer.isRunning() ? curPauseIcon : curPlayIcon);
+			playButton.setDisabledIcon(curSequencer.isRunning() ? curPauseIconDisabled : curPlayIconDisabled);
 
 			if (!hasAbcNotes)
 			{
@@ -1054,7 +1090,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			newPartButton.setEnabled(abcSong != null);
 			deletePartButton.setEnabled(partsList.getSelectedIndex() != -1);
 			exportButton.setEnabled(hasAbcNotes);
-			exportMenuItem.setEnabled(exportButton.isEnabled());
+			exportMenuItem.setEnabled(hasAbcNotes);
+			exportAsMenuItem.setEnabled(hasAbcNotes);
 			saveMenuItem.setEnabled(abcSong != null);
 			saveAsMenuItem.setEnabled(abcSong != null);
 
@@ -1301,7 +1338,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			else
 				message = "Do you want to save changes to \"" + abcSong.getSaveFile().getName() + "\"?";
 
-			int result = JOptionPane.showConfirmDialog(this, message, "Save Changes", JOptionPane.YES_NO_CANCEL_OPTION);
+			int result = JOptionPane.showConfirmDialog(this, message, "Save Changes", JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.QUESTION_MESSAGE, IconLoader.getImageIcon("msxfile_32.png"));
 			if (result == JOptionPane.CANCEL_OPTION)
 				return false;
 
@@ -1628,6 +1666,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	{
 		try
 		{
+			partPanel.commitAllFields();
 			transposeSpinner.commitEdit();
 			tempoSpinner.commitEdit();
 			timeSignatureField.commitEdit();
@@ -1639,6 +1678,81 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		}
 	}
 
+	private File doSaveDialog(File defaultFile, File allowOverwriteFile, String extension, FileFilter fileFilter)
+	{
+		JFileChooser jfc = new JFileChooser();
+		jfc.setFileFilter(fileFilter);
+		jfc.setSelectedFile(defaultFile);
+
+		while (true)
+		{
+			int result = jfc.showSaveDialog(this);
+			if (result != JFileChooser.APPROVE_OPTION || jfc.getSelectedFile() == null)
+				return null;
+
+			File selectedFile = jfc.getSelectedFile();
+			String fileName = selectedFile.getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot <= 0 || !fileName.substring(dot).equalsIgnoreCase(extension))
+			{
+				fileName += extension;
+				selectedFile = new File(selectedFile.getParent(), fileName);
+			}
+
+			if (selectedFile.exists() && !selectedFile.equals(allowOverwriteFile))
+			{
+				int res = JOptionPane.showConfirmDialog(this, "File \"" + fileName + "\" already exists.\n"
+						+ "Do you want to replace it?", "Confirm Save As", JOptionPane.YES_NO_CANCEL_OPTION);
+				if (res == JOptionPane.CANCEL_OPTION)
+					return null;
+				if (res != JOptionPane.YES_OPTION)
+					continue;
+			}
+
+			return selectedFile;
+		}
+	}
+
+	private boolean exportAbcAs()
+	{
+		if (abcSong == null)
+		{
+			JOptionPane.showMessageDialog(this, "No ABC Song is open", "Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		File exportFile = abcSong.getExportFile();
+		File allowOverwriteFile = allowOverwriteExportFile ? exportFile : null;
+
+		if (exportFile == null)
+		{
+			exportFile = abcSong.getSourceFile();
+			if (exportFile == null)
+			{
+				exportFile = new File(Util.getLotroMusicPath(false).getAbsolutePath(), abcSong.getSequenceInfo()
+						.getFileName());
+			}
+
+			String fileName = exportFile.getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot > 0)
+				fileName = fileName.substring(0, dot);
+			fileName += AbcSong.MSX_FILE_EXTENSION;
+
+			exportFile = new File(exportFile.getParent(), fileName);
+		}
+
+		exportFile = doSaveDialog(exportFile, allowOverwriteFile, ".abc", new ExtensionFileFilter(
+				"ABC files (*.abc, *.txt)", "abc", "txt"));
+
+		if (exportFile == null)
+			return false;
+
+		abcSong.setExportFile(exportFile);
+		allowOverwriteExportFile = true;
+		return finishExportAbc();
+	}
+
 	private boolean exportAbc()
 	{
 		if (abcSong == null)
@@ -1647,55 +1761,24 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			return false;
 		}
 
+		if (!allowOverwriteExportFile || abcSong.getExportFile() == null || !abcSong.getExportFile().exists())
+		{
+			return exportAbcAs();
+		}
+
+		return finishExportAbc();
+	}
+
+	private boolean finishExportAbc()
+	{
 		commitAllFields();
-
-		JFileChooser jfc = new JFileChooser();
-		jfc.setFileFilter(new ExtensionFileFilter("ABC files", "abc", "txt"));
-		String fileName;
-		int dot;
-		File origSaveFile = abcSong.getExportFile();
-
-		if (abcSong.getExportFile() == null)
-		{
-			fileName = abcSong.getSequenceInfo().getFileName();
-			dot = fileName.lastIndexOf('.');
-			if (dot > 0)
-				fileName = fileName.substring(0, dot);
-			fileName = fileName.replace(' ', '_') + ".abc";
-
-			abcSong.setExportFile(new File(Util.getLotroMusicPath(false).getAbsolutePath() + "/" + fileName));
-		}
-		jfc.setSelectedFile(abcSong.getExportFile());
-
-		while (true)
-		{
-			int result = jfc.showSaveDialog(this);
-			if (result != JFileChooser.APPROVE_OPTION || jfc.getSelectedFile() == null)
-				return false;
-
-			fileName = jfc.getSelectedFile().getName();
-			dot = fileName.lastIndexOf('.');
-			if (dot <= 0 || !fileName.substring(dot).equalsIgnoreCase(".abc"))
-				fileName += ".abc";
-
-			File saveFileTmp = new File(jfc.getSelectedFile().getParent(), fileName);
-			if (saveFileTmp.exists() && (!saveFileTmp.equals(origSaveFile) || !allowOverwriteExportFile))
-			{
-				int res = JOptionPane.showConfirmDialog(this, "File \"" + fileName + "\" already exists.\n"
-						+ "Do you want to replace it?", "Confirm Export File", JOptionPane.YES_NO_CANCEL_OPTION);
-				if (res == JOptionPane.CANCEL_OPTION)
-					return false;
-				if (res != JOptionPane.YES_OPTION)
-					continue;
-			}
-			abcSong.setExportFile(saveFileTmp);
-			allowOverwriteExportFile = true;
-			break;
-		}
 
 		try
 		{
 			abcSong.exportAbc(abcSong.getExportFile());
+			JOptionPane.showMessageDialog(this, "Exported as \"" + abcSong.getExportFile().getName() + "\".",
+					"Export Successful", JOptionPane.INFORMATION_MESSAGE, IconLoader.getImageIcon("abcfile_32.png"));
+			return true;
 		}
 		catch (FileNotFoundException e)
 		{
@@ -1708,8 +1791,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-
-		return true;
 	}
 
 	private boolean saveAs()
@@ -1720,51 +1801,38 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			return false;
 		}
 
-		JFileChooser jfc = new JFileChooser();
-		jfc.setFileFilter(new ExtensionFileFilter("Maestro files", AbcSong.SONG_FILE_EXTENSION_NO_DOT));
-		String fileName;
-		int dot;
-		File origSaveFile = abcSong.getSaveFile();
+		File saveFile = abcSong.getSaveFile();
+		File allowOverwriteFile = allowOverwriteSaveFile ? saveFile : null;
 
-		if (abcSong.getSaveFile() == null)
+		if (saveFile == null)
 		{
-			fileName = abcSong.getSequenceInfo().getFileName();
-			dot = fileName.lastIndexOf('.');
-			if (dot > 0)
-				fileName = fileName.substring(0, dot);
-			fileName += AbcSong.SONG_FILE_EXTENSION;
+			saveFile = abcSong.getExportFile();
+			if (saveFile == null)
+				saveFile = abcSong.getSourceFile();
 
-			abcSong.setSaveFile(new File(Util.getLotroMusicPath(false).getAbsolutePath() + "/" + fileName));
-		}
-		jfc.setSelectedFile(abcSong.getSaveFile());
-
-		while (true)
-		{
-			int result = jfc.showSaveDialog(this);
-			if (result != JFileChooser.APPROVE_OPTION || jfc.getSelectedFile() == null)
-				return false;
-
-			fileName = jfc.getSelectedFile().getName();
-			dot = fileName.lastIndexOf('.');
-			if (dot <= 0 || !fileName.substring(dot).equalsIgnoreCase(AbcSong.SONG_FILE_EXTENSION))
-				fileName += AbcSong.SONG_FILE_EXTENSION;
-
-			File saveFileTmp = new File(jfc.getSelectedFile().getParent(), fileName);
-			if (saveFileTmp.exists() && (!saveFileTmp.equals(origSaveFile) || !allowOverwriteSaveFile))
+			if (saveFile == null)
 			{
-				int res = JOptionPane.showConfirmDialog(this, "File \"" + fileName + "\" already exists.\n"
-						+ "Do you want to replace it?", "Confirm Save As", JOptionPane.YES_NO_CANCEL_OPTION);
-				if (res == JOptionPane.CANCEL_OPTION)
-					return false;
-				if (res != JOptionPane.YES_OPTION)
-					continue;
+				saveFile = new File(Util.getLotroMusicPath(false).getAbsolutePath(), abcSong.getSequenceInfo()
+						.getFileName());
 			}
 
-			abcSong.setSaveFile(saveFileTmp);
-			allowOverwriteSaveFile = true;
-			break;
+			String fileName = saveFile.getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot > 0)
+				fileName = fileName.substring(0, dot);
+			fileName += AbcSong.MSX_FILE_EXTENSION;
+
+			saveFile = new File(saveFile.getParent(), fileName);
 		}
 
+		saveFile = doSaveDialog(saveFile, allowOverwriteFile, AbcSong.MSX_FILE_EXTENSION, new ExtensionFileFilter(
+				"Maestro files (*" + AbcSong.MSX_FILE_EXTENSION + ")", AbcSong.MSX_FILE_EXTENSION_NO_DOT));
+
+		if (saveFile == null)
+			return false;
+
+		abcSong.setSaveFile(saveFile);
+		allowOverwriteSaveFile = true;
 		return finishSave();
 	}
 
@@ -1776,7 +1844,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			return false;
 		}
 
-		if (!allowOverwriteSaveFile || abcSong.getSaveFile() == null)
+		if (!allowOverwriteSaveFile || abcSong.getSaveFile() == null || !abcSong.getSaveFile().exists())
 		{
 			return saveAs();
 		}
