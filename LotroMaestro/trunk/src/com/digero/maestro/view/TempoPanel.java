@@ -93,12 +93,15 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 		add(tempoGraph, GRAPH_COLUMN + ", 0");
 
 		sequencer.addChangeListener(sequencerListener);
+		abcSequencer.addChangeListener(sequencerListener);
 	}
 
 	@Override public void discard()
 	{
 		if (sequencer != null)
 			sequencer.removeChangeListener(sequencerListener);
+		if (abcSequencer != null)
+			abcSequencer.removeChangeListener(sequencerListener);
 	}
 
 	public void setAbcPreviewMode(boolean abcPreviewMode)
@@ -140,8 +143,8 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 			if (e.getProperty().isInMask(SequencerProperty.THUMB_POSITION_MASK | SequencerProperty.TEMPO.mask))
 				updateTempoLabel();
 
-			if (e.getProperty() == SequencerProperty.TEMPO)
-				tempoGraph.invalidateTempoEvents();
+			if (e.getProperty() == SequencerProperty.IS_RUNNING)
+				tempoGraph.repaint();
 		}
 	};
 
@@ -176,12 +179,6 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 			setNoteOnColor(ColorTable.NOTE_TEMPO_ON);
 			setNoteOnExtraHeightPix(0);
 			setNoteOnOutlineWidthPix(0);
-		}
-
-		public void invalidateTempoEvents()
-		{
-			events = null;
-			repaint();
 		}
 
 		private void recalcTempoEvents()
