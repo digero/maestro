@@ -39,8 +39,8 @@ import com.digero.maestro.util.XmlUtil;
 
 public class AbcSong implements IDiscardable, AbcMetadataSource
 {
-	public static final String SONG_FILE_EXTENSION_NO_DOT = "msx";
-	public static final String SONG_FILE_EXTENSION = "." + SONG_FILE_EXTENSION_NO_DOT;
+	public static final String MSX_FILE_EXTENSION_NO_DOT = "msx";
+	public static final String MSX_FILE_EXTENSION = "." + MSX_FILE_EXTENSION_NO_DOT;
 	public static final Version SONG_FILE_VERSION = new Version(1, 0, 0);
 
 	private String title = "";
@@ -79,7 +79,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		this.partNameTemplate.setMetadataSource(this);
 
 		String fileName = file.getName().toLowerCase();
-		fromXmlFile = fileName.endsWith(SONG_FILE_EXTENSION);
+		fromXmlFile = fileName.endsWith(MSX_FILE_EXTENSION);
 		fromAbcFile = fileName.endsWith(".abc") || fileName.endsWith(".txt");
 
 		if (fromXmlFile)

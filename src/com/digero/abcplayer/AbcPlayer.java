@@ -209,6 +209,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private VolumeTransceiver volumeTransceiver;
 
 	private ImageIcon playIcon, pauseIcon, stopIcon;
+	private ImageIcon playIconDisabled, pauseIconDisabled, stopIconDisabled;
 	private JButton playButton, stopButton;
 
 	private JCheckBoxMenuItem lotroErrorsMenuItem;
@@ -384,20 +385,15 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		barNumberLabel = new BarNumberLabel(sequencer, null);
 		barNumberLabel.setToolTipText("Bar number");
 
-		try
-		{
-			playIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("play.png")));
-			pauseIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("pause.png")));
-			stopIcon = new ImageIcon(ImageIO.read(IconLoader.class.getResourceAsStream("stop.png")));
-		}
-		catch (IOException e1)
-		{
-			JOptionPane.showMessageDialog(this, "Error loading resources:\n" + e1.getMessage(), "General Error",
-					JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
-		}
+		playIcon = IconLoader.getImageIcon("play.png");
+		playIconDisabled = IconLoader.getDisabledIcon("play.png");
+		pauseIcon = IconLoader.getImageIcon("pause.png");
+		pauseIconDisabled = IconLoader.getDisabledIcon("pause.png");
+		stopIcon = IconLoader.getImageIcon("stop.png");
+		stopIconDisabled = IconLoader.getDisabledIcon("stop.png");
 
 		playButton = new JButton(playIcon);
+		playButton.setDisabledIcon(playIconDisabled);
 		playButton.setEnabled(false);
 		playButton.addActionListener(new ActionListener()
 		{
@@ -408,6 +404,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		});
 
 		stopButton = new JButton(stopIcon);
+		stopButton.setDisabledIcon(stopIconDisabled);
 		stopButton.setEnabled(false);
 		stopButton.addActionListener(new ActionListener()
 		{
@@ -1329,6 +1326,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		boolean loaded = (sequencer.getSequence() != null);
 		playButton.setEnabled(loaded);
 		playButton.setIcon(sequencer.isRunning() ? pauseIcon : playIcon);
+		playButton.setDisabledIcon(sequencer.isRunning() ? pauseIconDisabled : playIconDisabled);
 		stopButton.setEnabled(loaded && (sequencer.isRunning() || sequencer.getPosition() != 0));
 	}
 
