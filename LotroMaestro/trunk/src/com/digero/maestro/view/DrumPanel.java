@@ -44,7 +44,6 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 	// 0 |   |                    | +------+ |  | (note graph) |  |
 	//   |   | Instrument(s)      | +-----v+ |  +--------------+  |
 	//   +---+--------------------+----------+--------------------+
-	private static final int HGAP = 4;
 	private static final int GUTTER_WIDTH = TrackPanel.GUTTER_WIDTH;
 	private static final int COMBO_WIDTH = 122;
 	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH + TrackPanel.CONTROL_WIDTH - COMBO_WIDTH;
@@ -78,7 +77,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		this.trackVolumeBar = trackVolumeBar_;
 
 		TableLayout tableLayout = (TableLayout) getLayout();
-		tableLayout.setHGap(HGAP);
+		tableLayout.setHGap(TrackPanel.HGAP);
 
 		gutter = new JPanel((LayoutManager) null);
 		gutter.setOpaque(false);

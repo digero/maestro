@@ -40,6 +40,8 @@ public enum Note
 	C8, Cs8, Db8(Cs8), D8, Ds8, Eb8(Ds8), E8, F8, Fs8, Gb8(Fs8), G8, Gs8, Ab8(Gs8), A8, As8, Bb8(As8), B8, //
 	C9, Cs9, Db9(Cs9), D9, Ds9, Eb9(Ds9), E9, F9, Fs9, Gb9(Fs9), G9, Gs9, Ab9(Gs9), A9, As9, Bb9(As9), B9;
 
+	public static final Note MIN = CX;
+	public static final Note MAX = B9;
 	public static final Note MIN_PLAYABLE = C2;
 	public static final Note MAX_PLAYABLE = C5;
 

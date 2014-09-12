@@ -72,6 +72,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 	static final int CONTROL_COLUMN = 2;
 	static final int NOTE_COLUMN = 3;
 
+	static final int HGAP = 4;
 	static final int GUTTER_WIDTH = 8;
 	static final int TITLE_WIDTH = 150;
 	static final int CONTROL_WIDTH = 64;
@@ -111,7 +112,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 		this.abcSequencer = abcSequencer_;
 
 		TableLayout tableLayout = (TableLayout) getLayout();
-		tableLayout.setHGap(4);
+		tableLayout.setHGap(HGAP);
 
 		gutter = new JPanel((LayoutManager) null);
 		gutter.setOpaque(false);

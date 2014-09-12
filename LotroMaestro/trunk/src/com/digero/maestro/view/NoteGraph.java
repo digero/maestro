@@ -35,6 +35,7 @@ import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceDataCache;
+import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.Listener;
 
@@ -43,14 +44,15 @@ import com.digero.maestro.util.Listener;
 public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDiscardable
 {
 	protected final SequencerWrapper sequencer;
+	protected SequenceInfo sequenceInfo;
 	protected TrackInfo trackInfo;
 
 	protected final int MIN_RENDERED;
 	protected final int MAX_RENDERED;
 	protected final double NOTE_WIDTH_PX;
 	protected final double NOTE_HEIGHT_PX;
-	private final double NOTE_ON_OUTLINE_WIDTH_PX = 0.5;
-	private final double NOTE_ON_EXTRA_HEIGHT_PX = 0.5;
+	private double noteOnOutlineWidthPix = 0.5;
+	private double noteOnExtraHeightPix = 0.5;
 	private final double NOTE_VELOCITY_MIN_WIDTH_PX = 2;
 	private final double NOTE_VELOCITY_MIN_HEIGHT_PX = 6;
 
@@ -76,11 +78,23 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 	public NoteGraph(SequencerWrapper sequencer, TrackInfo trackInfo, int minRenderedNoteId, int maxRenderedNoteId,
 			double noteWidthPx, double noteHeightPx)
 	{
+		this(sequencer, (trackInfo == null) ? null : trackInfo.getSequenceInfo(), trackInfo, minRenderedNoteId,
+				maxRenderedNoteId, 3, 2);
+	}
 
+	public NoteGraph(SequencerWrapper sequencer, SequenceInfo sequenceInfo, int minRenderedNoteId, int maxRenderedNoteId)
+	{
+		this(sequencer, sequenceInfo, null, minRenderedNoteId, maxRenderedNoteId, 3, 2);
+	}
+
+	private NoteGraph(SequencerWrapper sequencer, SequenceInfo sequenceInfo, TrackInfo trackInfo,
+			int minRenderedNoteId, int maxRenderedNoteId, double noteWidthPx, double noteHeightPx)
+	{
 		super((LayoutManager) null);
 
 		this.sequencer = sequencer;
 		this.trackInfo = trackInfo;
+		this.sequenceInfo = sequenceInfo;
 		this.MIN_RENDERED = minRenderedNoteId;
 		this.MAX_RENDERED = maxRenderedNoteId;
 		this.NOTE_WIDTH_PX = noteWidthPx;
@@ -207,6 +221,36 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 	public boolean isShowingNoteVelocity()
 	{
 		return showingNoteVelocity;
+	}
+
+	public void setNoteOnExtraHeightPix(double noteOnExtraHeightPix)
+	{
+		if (this.noteOnExtraHeightPix != noteOnExtraHeightPix)
+		{
+			this.noteOnExtraHeightPix = noteOnExtraHeightPix;
+			if (isShowingNotesOn())
+				repaint();
+		}
+	}
+
+	public double getNoteOnExtraHeightPix()
+	{
+		return noteOnExtraHeightPix;
+	}
+
+	public void setNoteOnOutlineWidthPix(double noteOnOutlineWidthPix)
+	{
+		if (this.noteOnOutlineWidthPix != noteOnOutlineWidthPix)
+		{
+			this.noteOnOutlineWidthPix = noteOnOutlineWidthPix;
+			if (isShowingNotesOn())
+				repaint();
+		}
+	}
+
+	public double getNoteOnOutlineWidthPix()
+	{
+		return noteOnOutlineWidthPix;
 	}
 
 	protected List<NoteEvent> getEvents()
@@ -354,10 +398,10 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 				// Transform to screen coordinates
 				Point2D.Double pt = new Point2D.Double(left, 0);
 				xform.transform(pt, pt);
-				int x = (int) Math.floor(pt.x - NOTE_ON_OUTLINE_WIDTH_PX) - 2;
+				int x = (int) Math.floor(pt.x - noteOnOutlineWidthPix) - 2;
 				pt.setLocation(right, 0);
 				xform.transform(pt, pt);
-				int width = (int) Math.ceil(pt.x + 2 * NOTE_ON_OUTLINE_WIDTH_PX) - x + 4;
+				int width = (int) Math.ceil(pt.x + 2 * noteOnOutlineWidthPix) - x + 4;
 				repaint(x, 0, width, getHeight());
 			}
 		}
@@ -498,14 +542,14 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 
 		g2.transform(xform);
 
-		if (trackInfo != null)
+		if (sequenceInfo != null)
 		{
 			g2.setColor(ColorTable.BAR_LINE.get());
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
 			double lineWidth = Math.abs(1.0 / xform.getScaleX());
 
-			SequenceDataCache data = trackInfo.getSequenceInfo().getDataCache();
+			SequenceDataCache data = sequenceInfo.getDataCache();
 			long barLengthTicks = data.getBarLengthTicks();
 
 			long firstBarTick = (data.microsToTick(clipPosStart) / barLengthTicks) * barLengthTicks;
@@ -610,9 +654,9 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 
 			if (notesOn != null)
 			{
-				double noteOnOutlineWidthX = NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleX();
-				double noteOnOutlineWidthY = Math.abs(NOTE_ON_OUTLINE_WIDTH_PX / xform.getScaleY());
-				double noteOnExtraHeightY = Math.abs(NOTE_ON_EXTRA_HEIGHT_PX / xform.getScaleY());
+				double noteOnOutlineWidthX = noteOnOutlineWidthPix / xform.getScaleX();
+				double noteOnOutlineWidthY = Math.abs(noteOnOutlineWidthPix / xform.getScaleY());
+				double noteOnExtraHeightY = Math.abs(noteOnExtraHeightPix / xform.getScaleY());
 
 				g2.setColor(noteOnBorder.get());
 				for (int i = notesOn.nextSetBit(0); i >= 0; i = notesOn.nextSetBit(i + 1))
@@ -736,7 +780,7 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 
 		private boolean isDragCanceled(MouseEvent e)
 		{
-			if (trackInfo == null)
+			if (sequenceInfo == null)
 				return true;
 
 			// Allow drag to continue anywhere within the scroll pane
@@ -750,7 +794,7 @@ public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDisc
 
 		@Override public void mousePressed(MouseEvent e)
 		{
-			if (e.getButton() == MouseEvent.BUTTON1 && trackInfo != null)
+			if (e.getButton() == MouseEvent.BUTTON1 && sequenceInfo != null)
 			{
 				sequencer.setDragging(true);
 				sequencer.setDragPosition(positionFromEvent(e));

@@ -251,6 +251,13 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 			clearTrackListPanel();
 
+			TempoPanel tempoPanel = new TempoPanel(abcPart.getSequenceInfo(), sequencer, abcSequencer);
+			tempoPanel.setAbcPreviewMode(isAbcPreviewMode);
+			trackScrollPane.getVerticalScrollBar().setUnitIncrement(tempoPanel.getPreferredSize().height);
+			trackListVGroup.addComponent(tempoPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+					GroupLayout.PREFERRED_SIZE);
+			trackListHGroup.addComponent(tempoPanel);
+
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList())
 			{
 				int trackNumber = track.getTrackNumber();
@@ -304,6 +311,10 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 				else if (child instanceof DrumPanel)
 				{
 					((DrumPanel) child).setAbcPreviewMode(isAbcPreviewMode);
+				}
+				else if (child instanceof TempoPanel)
+				{
+					((TempoPanel) child).setAbcPreviewMode(isAbcPreviewMode);
 				}
 			}
 		}

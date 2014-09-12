@@ -27,6 +27,9 @@ public enum ColorTable
 	NOTE_ABC_DISABLED(Color.getHSBColor(0.12f, 0.60f, 0.75f)),
 	NOTE_ABC_OFF     (Color.getHSBColor(0.12f, 0.00f, 0.50f)),
 
+	NOTE_TEMPO       (new Color(0x999999)),
+	NOTE_TEMPO_ON    (new Color(0xF2F2F2)),
+
 	NOTE_DRUM_ENABLED(NOTE_ENABLED),
 	NOTE_DRUM_DISABLED(NOTE_DISABLED),
 	NOTE_DRUM_OFF(NOTE_OFF),
