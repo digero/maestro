@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WixLocalization xmlns="http://schemas.microsoft.com/wix/2006/localization"
+	Culture="en-us">
+
+	<String Id="WelcomeDlgDescription">
+		This Setup Wizard will install:
+		[MaestroAppName] v[MaestroVersion]
+		[AbcPlayerAppName] v[AbcPlayerVersion]
+
+		Click Next to continue or Cancel to exit the Setup Wizard.
+	</String>
+
+	<String Id="ExitDialogDescription">
+		Installation was successful! You can find [MaestroAppName] and [AbcPlayerAppName] in the Start menu.
+
+
+		Click the Finish button to exit the Setup Wizard.
+	</String>
+
+</WixLocalization>
