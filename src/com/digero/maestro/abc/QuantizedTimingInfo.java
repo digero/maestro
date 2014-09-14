@@ -9,9 +9,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.digero.common.midi.IBarNumberCache;
+import com.digero.common.midi.ITempoCache;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
-import com.digero.maestro.midi.ITempoCache;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.SequenceInfo;
 import com.sun.media.sound.MidiUtils;

@@ -1,10 +1,8 @@
-package com.digero.maestro.util;
+package com.digero.common.util;
 
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.List;
-
-import com.digero.common.util.IDiscardable;
 
 public class ListenerList<E extends EventObject> implements IDiscardable
 {

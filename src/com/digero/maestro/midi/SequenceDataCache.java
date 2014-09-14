@@ -16,6 +16,7 @@ import javax.sound.midi.Track;
 
 import com.digero.common.midi.IBarNumberCache;
 import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.ITempoCache;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.TimingInfo;

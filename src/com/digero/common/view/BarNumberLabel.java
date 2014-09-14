@@ -7,7 +7,7 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
-import com.digero.maestro.util.Listener;
+import com.digero.common.util.Listener;
 
 public class BarNumberLabel extends JLabel implements Listener<SequencerEvent>, IDiscardable
 {

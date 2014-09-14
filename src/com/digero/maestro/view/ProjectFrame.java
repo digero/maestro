@@ -83,6 +83,7 @@ import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Listener;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
 import com.digero.common.view.AboutDialog;
@@ -102,7 +103,6 @@ import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.util.FileResolver;
-import com.digero.maestro.util.Listener;
 import com.digero.maestro.util.XmlUtil;
 
 @SuppressWarnings("serial")

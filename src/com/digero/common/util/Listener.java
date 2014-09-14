@@ -1,4 +1,4 @@
-package com.digero.maestro.util;
+package com.digero.common.util;
 
 import java.util.EventListener;
 import java.util.EventObject;

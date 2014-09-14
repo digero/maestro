@@ -31,13 +31,13 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Listener;
 import com.digero.common.util.Util;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
-import com.digero.maestro.util.Listener;
 
 public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDiscardable
 {

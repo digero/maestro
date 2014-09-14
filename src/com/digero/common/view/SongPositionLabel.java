@@ -6,8 +6,8 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Listener;
 import com.digero.common.util.Util;
-import com.digero.maestro.util.Listener;
 
 public class SongPositionLabel extends JLabel implements Listener<SequencerEvent>, IDiscardable
 {

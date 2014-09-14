@@ -28,6 +28,7 @@ import java.util.List;
 
 import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.Dynamics;
+import com.digero.common.midi.ITempoCache;
 import com.digero.common.midi.Note;
 
 public class Chord implements AbcConstants
