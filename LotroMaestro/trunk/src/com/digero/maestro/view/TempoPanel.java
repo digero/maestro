@@ -16,12 +16,12 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Listener;
 import com.digero.common.view.ColorTable;
 import com.digero.maestro.midi.NoteEvent;
 import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.SequenceDataCache.TempoEvent;
 import com.digero.maestro.midi.SequenceInfo;
-import com.digero.maestro.util.Listener;
 import com.sun.media.sound.MidiUtils;
 
 public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConstants

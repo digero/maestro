@@ -1,4 +1,4 @@
-package com.digero.maestro.midi;
+package com.digero.common.midi;
 
 public interface ITempoCache
 {

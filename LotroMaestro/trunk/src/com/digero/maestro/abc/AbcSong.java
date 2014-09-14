@@ -23,6 +23,8 @@ import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
+import com.digero.common.util.Listener;
+import com.digero.common.util.ListenerList;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Version;
@@ -33,8 +35,6 @@ import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.FileResolver;
 import com.digero.maestro.util.ListModelWrapper;
-import com.digero.maestro.util.Listener;
-import com.digero.maestro.util.ListenerList;
 import com.digero.maestro.util.SaveUtil;
 import com.digero.maestro.util.XmlUtil;
 

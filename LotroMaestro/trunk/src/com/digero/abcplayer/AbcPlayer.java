@@ -92,6 +92,7 @@ import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.midi.VolumeTransceiver;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.FileFilterDropListener;
+import com.digero.common.util.Listener;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Util;
@@ -102,7 +103,6 @@ import com.digero.common.view.NativeVolumeBar;
 import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
-import com.digero.maestro.util.Listener;
 
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants
 {
