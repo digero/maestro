@@ -85,7 +85,7 @@ public class NoteEvent implements Comparable<NoteEvent>
 		return endTick - startTick;
 	}
 
-	@Deprecated public long getStartMicros()
+	public long getStartMicros()
 	{
 		if (startMicrosCached == -1)
 			startMicrosCached = tempoCache.tickToMicros(startTick);
@@ -93,7 +93,7 @@ public class NoteEvent implements Comparable<NoteEvent>
 		return startMicrosCached;
 	}
 
-	@Deprecated public long getEndMicros()
+	public long getEndMicros()
 	{
 		if (endMicrosCached == -1)
 			endMicrosCached = tempoCache.tickToMicros(endTick);
@@ -101,7 +101,7 @@ public class NoteEvent implements Comparable<NoteEvent>
 		return endMicrosCached;
 	}
 
-	@Deprecated public long getLengthMicros()
+	public long getLengthMicros()
 	{
 		return getEndMicros() - getStartMicros();
 	}

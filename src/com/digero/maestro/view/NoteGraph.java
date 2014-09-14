@@ -39,8 +39,6 @@ import com.digero.maestro.midi.SequenceInfo;
 import com.digero.maestro.midi.TrackInfo;
 import com.digero.maestro.util.Listener;
 
-// TODO remove @SuppressWarnings
-@SuppressWarnings("deprecation")
 public class NoteGraph extends JPanel implements Listener<SequencerEvent>, IDiscardable
 {
 	protected final SequencerWrapper sequencer;

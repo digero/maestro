@@ -56,12 +56,12 @@ public class Chord implements AbcConstants
 		return endTick;
 	}
 
-	@Deprecated public long getStartMicros()
+	public long getStartMicros()
 	{
 		return tempoCache.tickToMicros(startTick);
 	}
 
-	@Deprecated public long getEndMicros()
+	public long getEndMicros()
 	{
 		return tempoCache.tickToMicros(endTick);
 	}
