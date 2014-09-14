@@ -8,6 +8,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
@@ -111,36 +112,45 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				BitSet enabledSet = (enabledSetByTrack == null) ? null : enabledSetByTrack[t];
 				if (enabledSet != null)
 				{
-					Element drumsEnabledEle = ele.getOwnerDocument().createElement("drumsEnabled");
-					trackEle.appendChild(drumsEnabledEle);
-
-					if (isCowbellPart())
+					if (AbcSong.SONG_FILE_VERSION.compareTo(new Version(1, 0, 0)) <= 0)
 					{
-						drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(false));
-
-						// Only store the drums that are enabled
-						for (int i = enabledSet.nextSetBit(0); i >= 0; i = enabledSet.nextSetBit(i + 1))
-						{
-							Element drumEle = ele.getOwnerDocument().createElement("note");
-							drumsEnabledEle.appendChild(drumEle);
-							drumEle.setAttribute("id", String.valueOf(i));
-							drumEle.setAttribute("isEnabled", String.valueOf(true));
-						}
+						// TODO remove
+						SaveUtil.appendChildTextElement(trackEle, "drumsEnabled",
+								DatatypeConverter.printBase64Binary(enabledSet.toByteArray()));
 					}
 					else
 					{
-						drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(true));
+						Element drumsEnabledEle = ele.getOwnerDocument().createElement("drumsEnabled");
+						trackEle.appendChild(drumsEnabledEle);
 
-						// Only store the drums that are disabled
-						for (int i = enabledSet.nextClearBit(0); i >= 0; i = enabledSet.nextClearBit(i + 1))
+						if (isCowbellPart())
 						{
-							if (i >= MidiConstants.NOTE_COUNT)
-								break;
+							drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(false));
 
-							Element drumEle = ele.getOwnerDocument().createElement("note");
-							drumsEnabledEle.appendChild(drumEle);
-							drumEle.setAttribute("id", String.valueOf(i));
-							drumEle.setAttribute("isEnabled", String.valueOf(false));
+							// Only store the drums that are enabled
+							for (int i = enabledSet.nextSetBit(0); i >= 0; i = enabledSet.nextSetBit(i + 1))
+							{
+								Element drumEle = ele.getOwnerDocument().createElement("note");
+								drumsEnabledEle.appendChild(drumEle);
+								drumEle.setAttribute("id", String.valueOf(i));
+								drumEle.setAttribute("isEnabled", String.valueOf(true));
+							}
+						}
+						else
+						{
+							drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(true));
+
+							// Only store the drums that are disabled
+							for (int i = enabledSet.nextClearBit(0); i >= 0; i = enabledSet.nextClearBit(i + 1))
+							{
+								if (i >= MidiConstants.NOTE_COUNT)
+									break;
+
+								Element drumEle = ele.getOwnerDocument().createElement("note");
+								drumsEnabledEle.appendChild(drumEle);
+								drumEle.setAttribute("id", String.valueOf(i));
+								drumEle.setAttribute("isEnabled", String.valueOf(false));
+							}
 						}
 					}
 				}
