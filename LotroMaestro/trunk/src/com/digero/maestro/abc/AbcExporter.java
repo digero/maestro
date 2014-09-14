@@ -92,12 +92,12 @@ public class AbcExporter
 		return exportEndTick;
 	}
 
-	@Deprecated public long getExportStartMicros()
+	public long getExportStartMicros()
 	{
 		return qtm.tickToMicros(getExportStartTick());
 	}
 
-	@Deprecated public long getExportEndMicros()
+	public long getExportEndMicros()
 	{
 		return qtm.tickToMicros(getExportEndTick());
 	}

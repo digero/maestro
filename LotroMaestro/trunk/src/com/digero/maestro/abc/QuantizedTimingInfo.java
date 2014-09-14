@@ -16,7 +16,6 @@ import com.digero.maestro.midi.SequenceDataCache;
 import com.digero.maestro.midi.SequenceInfo;
 import com.sun.media.sound.MidiUtils;
 
-// TODO rename: AbcTimingInfo(?)
 public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 {
 	// Tick => TimingInfoEvent
