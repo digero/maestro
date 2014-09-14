@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry excluding="com/digero/common/icons/unused/" kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="TableLayout.jar" sourcepath="TableLayout-src.jar"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>
