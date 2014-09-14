@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -36,6 +37,7 @@ import com.digero.common.abc.LotroInstrument;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.AbcMetadataSource;
 import com.digero.maestro.abc.AbcPartMetadataSource;
+import com.digero.maestro.abc.AbcSong;
 import com.digero.maestro.abc.PartAutoNumberer;
 import com.digero.maestro.abc.PartNameTemplate;
 
@@ -43,6 +45,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 {
 	public static final int NUMBERING_TAB = 0;
 	public static final int NAME_TEMPLATE_TAB = 1;
+	public static final int SAVE_EXPORT_TAB = 2;
 
 	private static final int PAD = 4;
 
@@ -57,7 +60,10 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 	private PartNameTemplate nameTemplate;
 	private JLabel nameTemplateExampleLabel;
 
-	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings, PartNameTemplate nameTemplate)
+	private SaveAndExportSettings saveSettings;
+
+	public SettingsDialog(JFrame owner, PartAutoNumberer.Settings numbererSettings, PartNameTemplate nameTemplate,
+			SaveAndExportSettings saveSettings)
 	{
 		super(owner, "Options", true);
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
@@ -66,6 +72,8 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 
 		this.nameTemplate = nameTemplate;
 		this.nameTemplateSettings = nameTemplate.getSettingsCopy();
+
+		this.saveSettings = saveSettings;
 
 		JButton okButton = new JButton("OK");
 		getRootPane().setDefaultButton(okButton);
@@ -113,6 +121,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 		tabPanel = new JTabbedPane();
 		tabPanel.addTab("ABC Part Numbering", createNumberingPanel()); // NUMBERING_TAB
 		tabPanel.addTab("ABC Part Naming", createNameTemplatePanel()); // NAME_TEMPLATE_TAB
+		tabPanel.addTab("Save & Export", createSaveAndExportSettingsPanel()); // SAVE_EXPORT_TAB
 
 		JPanel mainPanel = new JPanel(new BorderLayout(PAD, PAD));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
@@ -356,6 +365,57 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 		nameTemplate.setMetadataSource(originalMetadataSource);
 	}
 
+	private JPanel createSaveAndExportSettingsPanel()
+	{
+		JLabel titleLabel = new JLabel("<html><u><b>Save &amp; Export</b></u></html>");
+
+		final JCheckBox promptSaveCheckBox = new JCheckBox("Prompt to save new " + AbcSong.MSX_FILE_DESCRIPTION_PLURAL);
+		promptSaveCheckBox.setToolTipText("<html>Select to be prompted to save new "
+				+ AbcSong.MSX_FILE_DESCRIPTION_PLURAL + "<br>"
+				+ "when opening a new file or closing the application.</html>");
+		promptSaveCheckBox.setSelected(saveSettings.promptSaveNewSong);
+		promptSaveCheckBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				saveSettings.promptSaveNewSong = promptSaveCheckBox.isSelected();
+			}
+		});
+
+		final JCheckBox showExportFileChooserCheckBox = new JCheckBox(
+				"Always prompt for the ABC file name when exporting");
+		showExportFileChooserCheckBox.setToolTipText("<html>Select to have the <b>Export ABC</b> button always<br>"
+				+ "prompt for the name of the file.</html>");
+		showExportFileChooserCheckBox.setSelected(saveSettings.showExportFileChooser);
+		showExportFileChooserCheckBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				saveSettings.showExportFileChooser = showExportFileChooserCheckBox.isSelected();
+			}
+		});
+
+		TableLayout layout = new TableLayout();
+		layout.insertColumn(0, FILL);
+		layout.setVGap(PAD);
+
+		JPanel panel = new JPanel(layout);
+		panel.setBorder(BorderFactory.createEmptyBorder(PAD, PAD, PAD, PAD));
+
+		int row = -1;
+
+		layout.insertRow(++row, PREFERRED);
+		panel.add(titleLabel, "0, " + row);
+
+		layout.insertRow(++row, PREFERRED);
+		panel.add(promptSaveCheckBox, "0, " + row);
+
+		layout.insertRow(++row, PREFERRED);
+		panel.add(showExportFileChooserCheckBox, "0, " + row);
+
+		return panel;
+	}
+
 	public void setActiveTab(int tab)
 	{
 		if (tab >= 0 && tab < tabPanel.getComponentCount())
@@ -385,6 +445,11 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 	public PartNameTemplate.Settings getNameTemplateSettings()
 	{
 		return nameTemplateSettings;
+	}
+
+	public SaveAndExportSettings getSaveAndExportSettings()
+	{
+		return saveSettings;
 	}
 
 	public static class MockMetadataSource implements AbcMetadataSource, AbcPartMetadataSource

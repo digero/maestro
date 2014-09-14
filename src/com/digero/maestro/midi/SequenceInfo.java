@@ -176,6 +176,11 @@ public class SequenceInfo implements IMidiConstants
 		return (int) Math.round(MidiUtils.convertTempo(getPrimaryTempoMPQ()));
 	}
 
+	public boolean hasTempoChanges()
+	{
+		return sequenceCache.getTempoEvents().size() > 1;
+	}
+
 	public KeySignature getKeySignature()
 	{
 		for (TrackInfo track : trackInfoList)

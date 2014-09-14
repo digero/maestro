@@ -251,12 +251,16 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 			clearTrackListPanel();
 
-			TempoPanel tempoPanel = new TempoPanel(abcPart.getSequenceInfo(), sequencer, abcSequencer);
-			tempoPanel.setAbcPreviewMode(isAbcPreviewMode);
-			trackScrollPane.getVerticalScrollBar().setUnitIncrement(tempoPanel.getPreferredSize().height);
-			trackListVGroup.addComponent(tempoPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-					GroupLayout.PREFERRED_SIZE);
-			trackListHGroup.addComponent(tempoPanel);
+			// Add the tempo panel if this song contains tempo changes
+			if (abcPart.getSequenceInfo().hasTempoChanges())
+			{
+				TempoPanel tempoPanel = new TempoPanel(abcPart.getSequenceInfo(), sequencer, abcSequencer);
+				tempoPanel.setAbcPreviewMode(isAbcPreviewMode);
+				trackScrollPane.getVerticalScrollBar().setUnitIncrement(tempoPanel.getPreferredSize().height);
+				trackListVGroup.addComponent(tempoPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+						GroupLayout.PREFERRED_SIZE);
+				trackListHGroup.addComponent(tempoPanel);
+			}
 
 			for (TrackInfo track : abcPart.getSequenceInfo().getTrackList())
 			{
