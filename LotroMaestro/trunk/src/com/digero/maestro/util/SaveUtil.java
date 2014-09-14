@@ -53,6 +53,23 @@ public class SaveUtil
 		}
 	}
 
+	public static byte parseValue(Node parent, String xpath, byte defaultValue) throws ParseException,
+			XPathExpressionException
+	{
+		Node node = XmlUtil.selectSingleNode(parent, xpath);
+		if (node == null)
+			return defaultValue;
+
+		try
+		{
+			return Byte.parseByte(node.getTextContent());
+		}
+		catch (NumberFormatException e)
+		{
+			throw invalidValueException(node, e.getMessage());
+		}
+	}
+
 	public static float parseValue(Node parent, String xpath, float defaultValue) throws ParseException,
 			XPathExpressionException
 	{

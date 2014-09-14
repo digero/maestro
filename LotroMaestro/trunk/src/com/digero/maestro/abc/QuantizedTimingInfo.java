@@ -72,7 +72,7 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 				long gridUnitTicks = prev.info.getMinNoteLengthTicks();
 
 				// Quantize the tick length to the floor multiple of gridUnitTicks
-				long lengthTicks = ((sourceEvent.tick - prev.tick) / gridUnitTicks) * gridUnitTicks;
+				long lengthTicks = Util.floorGrid(sourceEvent.tick - prev.tick, gridUnitTicks);
 
 				/* If the new event has a coarser timing grid than prev, then it's possible that the
 				 * bar splits will not align to the grid. To avoid this, adjust the length so that
@@ -91,7 +91,7 @@ public class QuantizedTimingInfo implements ITempoCache, IBarNumberCache
 					lengthTicks -= gridUnitTicks;
 				}
 
-				if (lengthTicks == 0)
+				if (lengthTicks <= 0)
 				{
 					// The prev tempo event was quantized to zero-length; remove it
 					reverseIterator.remove();
