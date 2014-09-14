@@ -29,7 +29,7 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 	//     0           1              2               3
 	//   +---+-------------------+-----------+---------------------+
 	//   |   |                   |           |  +---------------+  |
-	// 0 |   | Tempo             | cur tempo |  | (tempo graph) |  |
+	// 0 |   | Tempo             |   120 BPM |  | (tempo graph) |  |
 	//   |   |                   |           |  +---------------+  |
 	//   +---+-------------------+-----------+---------------------+
 
@@ -38,8 +38,8 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 	static final int TEMPO_COLUMN = 2;
 	static final int GRAPH_COLUMN = 3;
 
-	private static final int GUTTER_WIDTH = TrackPanel.GUTTER_WIDTH + 20;
-	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH - 20;
+	private static final int GUTTER_WIDTH = TrackPanel.GUTTER_WIDTH;
+	private static final int TITLE_WIDTH = TrackPanel.TITLE_WIDTH;
 	private static final int TEMPO_WIDTH = TrackPanel.CONTROL_WIDTH;
 
 	private static final double[] LAYOUT_COLS = new double[] { GUTTER_WIDTH, TITLE_WIDTH, TEMPO_WIDTH, FILL };
@@ -77,10 +77,15 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 				maxBPM = bpm;
 		}
 
+		JPanel gutter = new JPanel();
+		gutter.setOpaque(true);
+		gutter.setBackground(ColorTable.PANEL_HIGHLIGHT_OTHER_PART.get());
+
 		this.tempoGraph = new TempoNoteGraph(sequenceInfo, sequencer, minBPM, maxBPM);
 		setBackground(ColorTable.GRAPH_BACKGROUND_DISABLED.get());
 
 		JLabel titleLabel = new JLabel("Tempo");
+		titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
 		titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD));
 		titleLabel.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
 
@@ -88,6 +93,7 @@ public class TempoPanel extends JPanel implements IDiscardable, TableLayoutConst
 		currentTempoLabel.setForeground(ColorTable.PANEL_TEXT_DISABLED.get());
 		updateTempoLabel();
 
+		add(gutter, GUTTER_COLUMN + ", 0");
 		add(titleLabel, TITLE_COLUMN + ", 0");
 		add(currentTempoLabel, TEMPO_COLUMN + ", 0, R, C");
 		add(tempoGraph, GRAPH_COLUMN + ", 0");

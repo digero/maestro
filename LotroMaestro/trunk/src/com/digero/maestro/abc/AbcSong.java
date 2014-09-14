@@ -26,6 +26,7 @@ import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Version;
+import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
 import com.digero.maestro.abc.AbcSongEvent.AbcSongProperty;
 import com.digero.maestro.midi.SequenceInfo;
@@ -39,6 +40,8 @@ import com.digero.maestro.util.XmlUtil;
 
 public class AbcSong implements IDiscardable, AbcMetadataSource
 {
+	public static final String MSX_FILE_DESCRIPTION = MaestroMain.APP_NAME + " Song";
+	public static final String MSX_FILE_DESCRIPTION_PLURAL = MaestroMain.APP_NAME + " Songs";
 	public static final String MSX_FILE_EXTENSION_NO_DOT = "msx";
 	public static final String MSX_FILE_EXTENSION = "." + MSX_FILE_EXTENSION_NO_DOT;
 	public static final Version SONG_FILE_VERSION = new Version(1, 0, 0);
@@ -225,14 +228,13 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 				}
 				catch (FileNotFoundException e)
 				{
-					String msg = "Could not find the file used to create this song:\n"
-							+ sourceFile;
+					String msg = "Could not find the file used to create this song:\n" + sourceFile;
 					sourceFile = fileResolver.locateFile(sourceFile, msg);
 				}
 				catch (InvalidMidiDataException | IOException | ParseException e)
 				{
-					String msg = "Could not load the file used to create this song:\n"
-							+ sourceFile + "\n\n" + e.getMessage();
+					String msg = "Could not load the file used to create this song:\n" + sourceFile + "\n\n"
+							+ e.getMessage();
 					sourceFile = fileResolver.resolveFile(sourceFile, msg);
 				}
 
