@@ -29,6 +29,7 @@ import com.digero.common.util.ParseException;
 import com.digero.common.util.Version;
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.util.SaveUtil;
+import com.digero.maestro.util.XmlUtil;
 
 public class DrumNoteMap implements IDiscardable
 {
@@ -316,48 +317,71 @@ public class DrumNoteMap implements IDiscardable
 
 	public void saveToXml(Element ele)
 	{
-//		for (int midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
-//		{
-//			int lotroId = get(midiId);
-//			if (lotroId == DISABLED_NOTE_ID)
-//				continue;
-//
-//			Element noteEle = ele.getOwnerDocument().createElement("Note");
-//			ele.appendChild(noteEle);
-//			noteEle.setAttribute("midiId", String.valueOf(midiId));
-//			noteEle.setAttribute("lotroId", String.valueOf(lotroId));
-//		}
+		if (map == null)
+			return;
 
-		if (map != null)
-			ele.setTextContent(DatatypeConverter.printBase64Binary(map));
+		if (AbcSong.SONG_FILE_VERSION.compareTo(new Version(1, 0, 0)) <= 0)
+		{
+			// TODO remove
+			if (map != null)
+				ele.setTextContent(DatatypeConverter.printBase64Binary(map));
+		}
+		else
+		{
+			for (int midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
+			{
+				int lotroId = get(midiId);
+				if (lotroId == DISABLED_NOTE_ID)
+					continue;
+
+				Element noteEle = ele.getOwnerDocument().createElement("note");
+				ele.appendChild(noteEle);
+				noteEle.setAttribute("id", String.valueOf(midiId));
+				noteEle.setAttribute("lotroId", String.valueOf(lotroId));
+			}
+		}
 	}
 
 	public static DrumNoteMap loadFromXml(Element ele, Version fileVersion) throws ParseException
 	{
-		boolean isPassthrough;
 		try
 		{
-			isPassthrough = SaveUtil.parseValue(ele, "@isPassthrough", false);
+			boolean isPassthrough = SaveUtil.parseValue(ele, "@isPassthrough", false);
+			DrumNoteMap retVal = isPassthrough ? new PassThroughDrumNoteMap() : new DrumNoteMap();
+
+			if (fileVersion.compareTo(new Version(1, 0, 0)) <= 0)
+			{
+				// TODO remove
+				retVal.setLoadedByteArray(SaveUtil.parseValue(ele, "text()", (byte[]) null));
+			}
+			else
+			{
+				retVal.loadFromXmlInternal(ele, fileVersion);
+			}
+
+			return retVal;
 		}
 		catch (XPathExpressionException e)
 		{
-			e.printStackTrace();
-			assert false;
-			isPassthrough = false;
+			throw new RuntimeException(e);
 		}
+	}
 
-		DrumNoteMap retVal = isPassthrough ? new PassThroughDrumNoteMap() : new DrumNoteMap();
-		try
-		{
-			retVal.setLoadedByteArray(SaveUtil.parseValue(ele, "text()", (byte[]) null));
-		}
-		catch (XPathExpressionException e)
-		{
-			e.printStackTrace();
-			assert false;
-		}
+	protected void loadFromXmlInternal(Element ele, Version fileVersion) throws ParseException,
+			XPathExpressionException
+	{
+		if (map == null)
+			map = new byte[MidiConstants.NOTE_COUNT];
 
-		return retVal;
+		Arrays.fill(map, DISABLED_NOTE_ID);
+
+		for (Element noteEle : XmlUtil.selectElements(ele, "note"))
+		{
+			int midiId = SaveUtil.parseValue(noteEle, "@id", DISABLED_NOTE_ID);
+			byte lotroId = SaveUtil.parseValue(noteEle, "@lotroId", DISABLED_NOTE_ID);
+			if (midiId >= 0 && midiId < map.length && LotroInstrument.DRUMS.isPlayable(lotroId))
+				map[midiId] = lotroId;
+		}
 	}
 
 	/**

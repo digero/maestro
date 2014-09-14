@@ -140,6 +140,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private JCheckBox tripletCheckBox;
 	private JButton exportButton;
 	private JLabel exportSuccessfulLabel;
+	private Timer exportLabelHideTimer;
 	private JMenuItem saveMenuItem;
 	private JMenuItem saveAsMenuItem;
 	private JMenuItem exportMenuItem;
@@ -439,6 +440,20 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		exportButton.setIcon(IconLoader.getImageIcon("abcfile_32.png"));
 		exportButton.setDisabledIcon(IconLoader.getDisabledIcon("abcfile_32.png"));
 		exportButton.setHorizontalAlignment(SwingConstants.LEFT);
+		exportButton.getModel().addChangeListener(new ChangeListener()
+		{
+			private boolean pressed = false;
+
+			@Override public void stateChanged(ChangeEvent e)
+			{
+				if (exportButton.getModel().isPressed() != pressed)
+				{
+					pressed = exportButton.getModel().isPressed();
+					if (pressed)
+						exportSuccessfulLabel.setVisible(false);
+				}
+			}
+		});
 		exportButton.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -793,7 +808,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		saveAsMenuItem = fileMenu.add(new JMenuItem("Save " + AbcSong.MSX_FILE_DESCRIPTION + " as..."));
+		saveAsMenuItem = fileMenu.add(new JMenuItem("Save " + AbcSong.MSX_FILE_DESCRIPTION + " As..."));
 		saveAsMenuItem.setMnemonic('A');
 		saveAsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK
 				| KeyEvent.SHIFT_DOWN_MASK));
@@ -820,7 +835,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		exportAsMenuItem = fileMenu.add(new JMenuItem("Export ABC as..."));
+		exportAsMenuItem = fileMenu.add(new JMenuItem("Export ABC As..."));
 		exportAsMenuItem.setMnemonic('p');
 		exportAsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK
 				| KeyEvent.SHIFT_DOWN_MASK));
@@ -916,15 +931,18 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		if (saveSettings.showExportFileChooser)
 		{
 			exportAsMenuItem.setVisible(false);
-			exportMenuItem.setText("Export ABC as...");
-			exportButton.setText("Export ABC as...");
+			exportMenuItem.setText("Export ABC As...");
 		}
 		else
 		{
 			exportAsMenuItem.setVisible(true);
 			exportMenuItem.setText("Export ABC");
-			exportButton.setText("Export ABC");
 		}
+
+		if (shouldExportAbcAs())
+			exportButton.setText("Export ABC As...");
+		else
+			exportButton.setText("Export ABC");
 	}
 
 	public void onVolumeChanged()
@@ -1144,6 +1162,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			exportAsMenuItem.setEnabled(hasAbcNotes);
 			saveMenuItem.setEnabled(abcSong != null);
 			saveAsMenuItem.setEnabled(abcSong != null);
+			onSaveAndExportSettingsChanged();
 
 			songTitleField.setEnabled(midiLoaded);
 			composerField.setEnabled(midiLoaded);
@@ -1480,8 +1499,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			if (abcSong.isFromXmlFile())
 			{
 				allowOverwriteSaveFile = true;
-				if (abcSong.getExportFile() != null)
-					allowOverwriteExportFile = true;
+//				if (abcSong.getExportFile() != null && abcSong.getExportFile().exists())
+//					allowOverwriteExportFile = true;
 			}
 
 			if (abcSong.isFromAbcFile() || abcSong.isFromXmlFile())
@@ -1761,9 +1780,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 	private boolean exportAbcAs()
 	{
+		exportSuccessfulLabel.setVisible(false);
+
 		if (abcSong == null)
 		{
-			exportSuccessfulLabel.setVisible(false);
 			JOptionPane.showMessageDialog(this, "No ABC Song is open", "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
@@ -1796,7 +1816,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		if (exportFile == null)
 		{
-			exportSuccessfulLabel.setVisible(false);
 			return false;
 		}
 
@@ -1807,55 +1826,68 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		return finishExportAbc();
 	}
 
+	private boolean shouldExportAbcAs()
+	{
+		return saveSettings.showExportFileChooser || !allowOverwriteExportFile || abcSong.getExportFile() == null
+				|| !abcSong.getExportFile().exists();
+	}
+
 	private boolean exportAbc()
 	{
+		exportSuccessfulLabel.setVisible(false);
 		if (abcSong == null)
 		{
-			exportSuccessfulLabel.setVisible(false);
 			JOptionPane.showMessageDialog(this, "No ABC Song is open", "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 
-		if (saveSettings.showExportFileChooser || !allowOverwriteExportFile || abcSong.getExportFile() == null
-				|| !abcSong.getExportFile().exists())
-		{
+		if (shouldExportAbcAs())
 			return exportAbcAs();
-		}
 
 		return finishExportAbc();
 	}
 
 	private boolean finishExportAbc()
 	{
+		exportSuccessfulLabel.setVisible(false);
 		commitAllFields();
 
 		try
 		{
 			abcSong.exportAbc(abcSong.getExportFile());
-			exportSuccessfulLabel.setText("Exported " + abcSong.getExportFile().getName());
-			exportSuccessfulLabel.setToolTipText("Exported " + abcSong.getExportFile().getName());
-			exportSuccessfulLabel.setVisible(true);
-			Timer hideTimer = new Timer(10000, new ActionListener()
+
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				@Override public void actionPerformed(ActionEvent e)
+				@Override public void run()
 				{
-					exportSuccessfulLabel.setVisible(false);
+					exportSuccessfulLabel.setText(abcSong.getExportFile().getName());
+					exportSuccessfulLabel.setToolTipText("Exported " + abcSong.getExportFile().getName());
+					exportSuccessfulLabel.setVisible(true);
+					if (exportLabelHideTimer == null)
+					{
+						exportLabelHideTimer = new Timer(8000, new ActionListener()
+						{
+							@Override public void actionPerformed(ActionEvent e)
+							{
+								exportSuccessfulLabel.setVisible(false);
+							}
+						});
+						exportLabelHideTimer.setRepeats(false);
+					}
+					exportLabelHideTimer.stop();
+					exportLabelHideTimer.start();
 				}
 			});
-			hideTimer.setRepeats(false);
-			hideTimer.start();
 			return true;
 		}
 		catch (FileNotFoundException e)
 		{
-			exportSuccessfulLabel.setVisible(false);
 			JOptionPane.showMessageDialog(this, "Failed to create file!\n" + e.getMessage(), "Failed to create file",
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		catch (IOException | AbcConversionException e)
 		{
-			exportSuccessfulLabel.setVisible(false);
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
