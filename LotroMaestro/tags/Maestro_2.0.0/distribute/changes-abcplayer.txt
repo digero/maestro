@@ -1,0 +1,112 @@
+Todo:
+  - Separate LotroInstruments.sf2 from the installer. Make it a download.
+  - ABC visualization.
+ 
+ Version 1.3.1
+ NEW FEATURES
+   - Added an option to show the full name of each part in the track list, without 
+     trimming off the song name from the start.
+   - The volume now goes to eleven! The maximum volume is a bit louder than it 
+     used to be.
+ 
+ Version 1.3.0
+ NEW FEATURES
+  - Added support for the Pibgorn instrument. There are several notes that play 
+    at the wrong pitch to match the broken behavior of the Pibgorn in the game.
+  - Added a Solo button [S] to let you easily listen to a single part solo without 
+    having to mute the rest of the tracks.
+  - The instrument dropdown is now sorted by name.
+
+BUG FIXES
+  - The +pppp+ and +ffff+ dynamics specifiers should no longer cause errors.
+
+Version 1.2.2
+BUG FIXES
+  - ABC Player now works with Java 6 Update 30+.
+  - ABC Player's play speed should match LOTRO's play speed if a song has both 
+    the M: and L: header fields specified.
+  - The song position bar now lets you drag past 35:47 on long songs.
+
+Version 1.2.0
+  - You can now export songs directly to MP3! Requires the (free) LAME mp3 
+    converter.
+  - The volume slider is back. If you're using Windows Vista or Windows 7, 
+    it will use the system's per-application volume (kept in sync with the 
+    volume set for ABC Player in the system volume mixer).
+  - When a long note is held on a woodwind instrument while stringed 
+    instruments are playing many fast notes, the note on the woodwind should 
+    no longer be cut off before it actually ends.
+  - If the same note is repeated quickly on a woodwind instrument, the 
+    difference between notes is sharper, and sounds more like it does in LOTRO.
+  - Staccato (short) notes on woodwind instruments are more... staccato, to 
+    sound more like they do in LOTRO.
+  - Bagpipe drone notes (C, through B,) now sustain forever rather than fading 
+    out after ~8 seconds, to match how they sound in LOTRO.
+  - Changed the stereo effect to be less dependent on the order of the parts
+    in the file, and more on the instrument used for the part. For example, 
+    flute will always be panned to the left. If the same instrument is used in 
+    multiple parts, the second part will be be panned to opposite speaker, 
+    and the third part will be panned to the center.
+  - If a part name includes the word "Left", it will always be panned to the
+    left speaker. Likewise for the words "Right, and "Center" or "Middle".
+
+Version 1.1.0
+  - ABC Parse "warnings" for notes too low/high/short/long, chords with too 
+    many notes, volume +dynamics+ inside chords.
+  - Now in Stereo! In songs with multiple parts, the second and subsequent 
+    parts are panned slightly to the right or left.
+  - Added a tempo slider to adjust the tempo of playback. Right-click on 
+    the slider to quickly toggle between 0% and 100%.
+  - Removed the volume slider to reduce clutter, as it didn't seem very 
+    useful.
+  - You can now append additional parts to a song once it's already open, 
+    including the same song multiple times.  Do one of the following:
+    + Choose "Append ABC file(s)..." from the File menu
+    + Choose "Append from clipboard" from the File menu if the file is on the 
+      clipboard.
+    + Hold down Ctrl and drag/drop the file onto ABC Player
+  - You can now paste songs from the clipboard to open them. Use Ctrl+V to 
+    create a new song using the text from the clipboard. Use Ctrl+Shift+V to 
+    add the text from the clipboard to the current song (useful if pasting a 
+    multi-part song from thefatlute.com, for example).
+    You can also use Ctrl+V and Ctrl+Shift+V with actual .abc files, as an  
+    alternative to dragging and dropping the files.
+  - Added support for the following key signature modes in addition to 
+    major and minor: 
+    Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Ionian, and Locrian.
+  
+  - ABC Player handles notes with incorrect octave markers (like c,, or A') 
+    the same way that LOTRO does, rather than giving an error.  The comma 
+    always lowers the octave and the apostrophe always raises the octave, 
+    regardless of whether the note letter is upper or lower case.
+  - Tuplets that contain chords should be the right length now.
+  - Fixed an issue when determining the speed to play songs that have a meter 
+    with a denominator that's not 4 (e.g. 6/8). Hopefully all songs should 
+    play at the correct speed now.
+  - Reduced the volmue difference between +ppp+ and +fff+. ABC Player's 
+    volume dynamics should now more closely match LOTRO's.
+  - Fixed the harp's ^a and b notes so they don't sound like clicks.
+  - Occasionally when changing instruments, you'd hear the instruments 
+    playing at full volume for a few seconds. This should no longer happen.
+  - Removed the power of two restriction on the meter's denominator.
+  - You can now change the instrument and see bar numbers even if the abc 
+    file is missing the (required) "X:" line at the beginning.
+  - ABC Player now ignores slurs () without generating errors, to mimic 
+    LOTRO's behavior.
+  - Playing a part that has note ties on the cowbell should no longer generate 
+    erroneous note tie errors.
+
+Version 1.0.0
+  - Initial release
+
+
+== VERSION LOCATIONS ==
+src/com/digero/abcplayer/version.txt
+
+AbcPlayerInstaller.vdproj
+	"ProductVersion" = "8:1.1.0"
+	"ProductCode" = "8:{29E777C0-042C-418F-9B68-4DE5EA2CE6EA}"
+	"OutputFilename" = "8:output\\installer\\AbcPlayer_1.1.0.msi"
+
+index.php
+	$cur_ver = "1.2.2";
