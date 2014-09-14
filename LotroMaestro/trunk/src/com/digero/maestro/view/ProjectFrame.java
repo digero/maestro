@@ -1162,7 +1162,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			exportAsMenuItem.setEnabled(hasAbcNotes);
 			saveMenuItem.setEnabled(abcSong != null);
 			saveAsMenuItem.setEnabled(abcSong != null);
-			onSaveAndExportSettingsChanged();
 
 			songTitleField.setEnabled(midiLoaded);
 			composerField.setEnabled(midiLoaded);
@@ -1207,18 +1206,19 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 					String title = MaestroMain.APP_NAME;
 					if (abcSong != null)
 					{
-						File file = null;
 						if (abcSong.getSaveFile() != null)
-							file = abcSong.getSaveFile();
-						else if (abcSong.getSourceFile() != null)
-							file = abcSong.getSourceFile();
-
-						if (file != null)
 						{
-							title += " - " + file.getName();
-							if (isAbcSongModified())
-								title += "*";
+							title += " - " + abcSong.getSaveFile().getName();
+							if (abcSong.getSourceFile() != null)
+								title += " [" + abcSong.getSourceFile().getName() + "]";
 						}
+						else if (abcSong.getSourceFile() != null)
+						{
+							title += " - " + abcSong.getSourceFile().getName();
+						}
+
+						if (isAbcSongModified())
+							title += "*";
 					}
 					setTitle(title);
 				}
@@ -1876,6 +1876,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 					}
 					exportLabelHideTimer.stop();
 					exportLabelHideTimer.start();
+					onSaveAndExportSettingsChanged();
 				}
 			});
 			return true;

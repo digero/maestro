@@ -16,7 +16,6 @@ import java.util.prefs.Preferences;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Element;
@@ -320,25 +319,16 @@ public class DrumNoteMap implements IDiscardable
 		if (map == null)
 			return;
 
-		if (AbcSong.SONG_FILE_VERSION.compareTo(new Version(1, 0, 0)) <= 0)
+		for (int midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
 		{
-			// TODO remove
-			if (map != null)
-				ele.setTextContent(DatatypeConverter.printBase64Binary(map));
-		}
-		else
-		{
-			for (int midiId = 0; midiId < MidiConstants.NOTE_COUNT; midiId++)
-			{
-				int lotroId = get(midiId);
-				if (lotroId == DISABLED_NOTE_ID)
-					continue;
+			int lotroId = get(midiId);
+			if (lotroId == DISABLED_NOTE_ID)
+				continue;
 
-				Element noteEle = ele.getOwnerDocument().createElement("note");
-				ele.appendChild(noteEle);
-				noteEle.setAttribute("id", String.valueOf(midiId));
-				noteEle.setAttribute("lotroId", String.valueOf(lotroId));
-			}
+			Element noteEle = ele.getOwnerDocument().createElement("note");
+			ele.appendChild(noteEle);
+			noteEle.setAttribute("id", String.valueOf(midiId));
+			noteEle.setAttribute("lotroId", String.valueOf(lotroId));
 		}
 	}
 
@@ -348,17 +338,7 @@ public class DrumNoteMap implements IDiscardable
 		{
 			boolean isPassthrough = SaveUtil.parseValue(ele, "@isPassthrough", false);
 			DrumNoteMap retVal = isPassthrough ? new PassThroughDrumNoteMap() : new DrumNoteMap();
-
-			if (fileVersion.compareTo(new Version(1, 0, 0)) <= 0)
-			{
-				// TODO remove
-				retVal.setLoadedByteArray(SaveUtil.parseValue(ele, "text()", (byte[]) null));
-			}
-			else
-			{
-				retVal.loadFromXmlInternal(ele, fileVersion);
-			}
-
+			retVal.loadFromXmlInternal(ele, fileVersion);
 			return retVal;
 		}
 		catch (XPathExpressionException e)
@@ -367,8 +347,7 @@ public class DrumNoteMap implements IDiscardable
 		}
 	}
 
-	protected void loadFromXmlInternal(Element ele, Version fileVersion) throws ParseException,
-			XPathExpressionException
+	private void loadFromXmlInternal(Element ele, Version fileVersion) throws ParseException, XPathExpressionException
 	{
 		if (map == null)
 			map = new byte[MidiConstants.NOTE_COUNT];

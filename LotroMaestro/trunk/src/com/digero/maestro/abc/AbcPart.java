@@ -8,7 +8,6 @@ import java.util.prefs.Preferences;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
@@ -112,45 +111,36 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				BitSet enabledSet = (enabledSetByTrack == null) ? null : enabledSetByTrack[t];
 				if (enabledSet != null)
 				{
-					if (AbcSong.SONG_FILE_VERSION.compareTo(new Version(1, 0, 0)) <= 0)
+					Element drumsEnabledEle = ele.getOwnerDocument().createElement("drumsEnabled");
+					trackEle.appendChild(drumsEnabledEle);
+
+					if (isCowbellPart())
 					{
-						// TODO remove
-						SaveUtil.appendChildTextElement(trackEle, "drumsEnabled",
-								DatatypeConverter.printBase64Binary(enabledSet.toByteArray()));
+						drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(false));
+
+						// Only store the drums that are enabled
+						for (int i = enabledSet.nextSetBit(0); i >= 0; i = enabledSet.nextSetBit(i + 1))
+						{
+							Element drumEle = ele.getOwnerDocument().createElement("note");
+							drumsEnabledEle.appendChild(drumEle);
+							drumEle.setAttribute("id", String.valueOf(i));
+							drumEle.setAttribute("isEnabled", String.valueOf(true));
+						}
 					}
 					else
 					{
-						Element drumsEnabledEle = ele.getOwnerDocument().createElement("drumsEnabled");
-						trackEle.appendChild(drumsEnabledEle);
+						drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(true));
 
-						if (isCowbellPart())
+						// Only store the drums that are disabled
+						for (int i = enabledSet.nextClearBit(0); i >= 0; i = enabledSet.nextClearBit(i + 1))
 						{
-							drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(false));
+							if (i >= MidiConstants.NOTE_COUNT)
+								break;
 
-							// Only store the drums that are enabled
-							for (int i = enabledSet.nextSetBit(0); i >= 0; i = enabledSet.nextSetBit(i + 1))
-							{
-								Element drumEle = ele.getOwnerDocument().createElement("note");
-								drumsEnabledEle.appendChild(drumEle);
-								drumEle.setAttribute("id", String.valueOf(i));
-								drumEle.setAttribute("isEnabled", String.valueOf(true));
-							}
-						}
-						else
-						{
-							drumsEnabledEle.setAttribute("defaultEnabled", String.valueOf(true));
-
-							// Only store the drums that are disabled
-							for (int i = enabledSet.nextClearBit(0); i >= 0; i = enabledSet.nextClearBit(i + 1))
-							{
-								if (i >= MidiConstants.NOTE_COUNT)
-									break;
-
-								Element drumEle = ele.getOwnerDocument().createElement("note");
-								drumsEnabledEle.appendChild(drumEle);
-								drumEle.setAttribute("id", String.valueOf(i));
-								drumEle.setAttribute("isEnabled", String.valueOf(false));
-							}
+							Element drumEle = ele.getOwnerDocument().createElement("note");
+							drumsEnabledEle.appendChild(drumEle);
+							drumEle.setAttribute("id", String.valueOf(i));
+							drumEle.setAttribute("isEnabled", String.valueOf(false));
 						}
 					}
 				}
@@ -200,52 +190,34 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 				if (instrument.isPercussion)
 				{
-					if (fileVersion.compareTo(new Version(1, 0, 0)) <= 0)
+					Element drumsEle = XmlUtil.selectSingleElement(trackEle, "drumsEnabled");
+					if (drumsEle != null)
 					{
-						// TODO remove
-						byte[] drumsEnabledByteArray = SaveUtil.parseValue(trackEle, "drumsEnabled", (byte[]) null);
-						if (drumsEnabledByteArray != null)
+						boolean defaultEnabled = SaveUtil.parseValue(drumsEle, "@defaultEnabled", !isCowbellPart());
+
+						BitSet[] enabledSet;
+						if (isCowbellPart())
+						{
+							if (cowbellsEnabled == null)
+								cowbellsEnabled = new BitSet[getTrackCount()];
+							enabledSet = cowbellsEnabled;
+						}
+						else
 						{
 							if (drumsEnabled == null)
 								drumsEnabled = new BitSet[getTrackCount()];
-							if (cowbellsEnabled == null)
-								cowbellsEnabled = new BitSet[getTrackCount()];
-
-							BitSet[] enabledSetByTrack = isCowbellPart() ? cowbellsEnabled : drumsEnabled;
-							enabledSetByTrack[t] = BitSet.valueOf(drumsEnabledByteArray);
+							enabledSet = drumsEnabled;
 						}
-					}
-					else
-					{
-						Element drumsEle = XmlUtil.selectSingleElement(trackEle, "drumsEnabled");
-						if (drumsEle != null)
+
+						enabledSet[t] = new BitSet(MidiConstants.NOTE_COUNT);
+						if (defaultEnabled)
+							enabledSet[t].set(0, MidiConstants.NOTE_COUNT, true);
+
+						for (Element drumEle : XmlUtil.selectElements(drumsEle, "note"))
 						{
-							boolean defaultEnabled = SaveUtil.parseValue(drumsEle, "@defaultEnabled", !isCowbellPart());
-
-							BitSet[] enabledSet;
-							if (isCowbellPart())
-							{
-								if (cowbellsEnabled == null)
-									cowbellsEnabled = new BitSet[getTrackCount()];
-								enabledSet = cowbellsEnabled;
-							}
-							else
-							{
-								if (drumsEnabled == null)
-									drumsEnabled = new BitSet[getTrackCount()];
-								enabledSet = drumsEnabled;
-							}
-
-							enabledSet[t] = new BitSet(MidiConstants.NOTE_COUNT);
-							if (defaultEnabled)
-								enabledSet[t].set(0, MidiConstants.NOTE_COUNT, true);
-
-							for (Element drumEle : XmlUtil.selectElements(drumsEle, "note"))
-							{
-								int id = SaveUtil.parseValue(drumEle, "@id", -1);
-								if (id >= 0 && id < MidiConstants.NOTE_COUNT)
-									enabledSet[t].set(id, SaveUtil.parseValue(drumEle, "@isEnabled", !defaultEnabled));
-							}
+							int id = SaveUtil.parseValue(drumEle, "@id", -1);
+							if (id >= 0 && id < MidiConstants.NOTE_COUNT)
+								enabledSet[t].set(id, SaveUtil.parseValue(drumEle, "@isEnabled", !defaultEnabled));
 						}
 					}
 
