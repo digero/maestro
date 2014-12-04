@@ -36,6 +36,18 @@
         FineTune=0
         Type=1
 
+    SampleName=clarinet_36x
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_37x
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
     SampleName=clarinet_40
         SampleRate=44100
         Key=40
@@ -78,75 +90,285 @@
         FineTune=0
         Type=1
 
-    SampleName=clarinet_36x
+    SampleName=cowbell
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=drums_36
         SampleRate=44100
         Key=36
         FineTune=0
         Type=1
 
-    SampleName=clarinet_37x
+    SampleName=drums_37
         SampleRate=44100
         Key=37
         FineTune=0
         Type=1
 
-    SampleName=theorbo_72
+    SampleName=drums_38
         SampleRate=44100
-        Key=72
+        Key=38
         FineTune=0
         Type=1
 
-    SampleName=theorbo_70
+    SampleName=drums_39
         SampleRate=44100
-        Key=70
+        Key=39
         FineTune=0
         Type=1
 
-    SampleName=theorbo_68
+    SampleName=drums_40
         SampleRate=44100
-        Key=68
+        Key=40
         FineTune=0
         Type=1
 
-    SampleName=theorbo_66
+    SampleName=drums_41
         SampleRate=44100
-        Key=66
+        Key=41
         FineTune=0
         Type=1
 
-    SampleName=theorbo_64
+    SampleName=drums_42
         SampleRate=44100
-        Key=64
+        Key=42
         FineTune=0
         Type=1
 
-    SampleName=theorbo_62
+    SampleName=drums_43
         SampleRate=44100
-        Key=62
+        Key=43
         FineTune=0
         Type=1
 
-    SampleName=theorbo_60
+    SampleName=drums_44
         SampleRate=44100
-        Key=60
+        Key=44
         FineTune=0
         Type=1
 
-    SampleName=theorbo_58
+    SampleName=drums_45
         SampleRate=44100
-        Key=58
+        Key=45
         FineTune=0
         Type=1
 
-    SampleName=theorbo_56
+    SampleName=drums_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=drums_47
+        SampleRate=44100
+        Key=47
+        FineTune=0
+        Type=1
+
+    SampleName=drums_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=drums_49
+        SampleRate=44100
+        Key=49
+        FineTune=0
+        Type=1
+
+    SampleName=drums_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=drums_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=drums_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=drums_53
+        SampleRate=44100
+        Key=53
+        FineTune=0
+        Type=1
+
+    SampleName=drums_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=drums_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=drums_56
         SampleRate=44100
         Key=56
         FineTune=0
         Type=1
 
-    SampleName=theorbo_54
+    SampleName=drums_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=drums_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=drums_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=drums_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=drums_61
+        SampleRate=44100
+        Key=61
+        FineTune=0
+        Type=1
+
+    SampleName=drums_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=drums_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=drums_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=drums_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=drums_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=drums_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=drums_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=drums_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=drums_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=drums_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=drums_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=flute_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=flute_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=flute_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=flute_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=flute_54
         SampleRate=44100
         Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=flute_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=flute_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=flute_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=flute_70
+        SampleRate=44100
+        Key=70
         FineTune=0
         Type=1
 
@@ -307,114 +529,6 @@
         Type=1
 
     SampleName=horn_70
-        SampleRate=44100
-        Key=70
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_36
-        SampleRate=44100
-        Key=36
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_38
-        SampleRate=44100
-        Key=38
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_40
-        SampleRate=44100
-        Key=40
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_42
-        SampleRate=44100
-        Key=42
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_44
-        SampleRate=44100
-        Key=44
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_46
-        SampleRate=44100
-        Key=46
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_48
-        SampleRate=44100
-        Key=48
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_50
-        SampleRate=44100
-        Key=50
-        FineTune=0
-        Type=1
-
-    SampleName=theorbo_52
-        SampleRate=44100
-        Key=52
-        FineTune=0
-        Type=1
-
-    SampleName=flute_38
-        SampleRate=44100
-        Key=38
-        FineTune=0
-        Type=1
-
-    SampleName=flute_42
-        SampleRate=44100
-        Key=42
-        FineTune=0
-        Type=1
-
-    SampleName=flute_46
-        SampleRate=44100
-        Key=46
-        FineTune=0
-        Type=1
-
-    SampleName=flute_50
-        SampleRate=44100
-        Key=50
-        FineTune=0
-        Type=1
-
-    SampleName=flute_54
-        SampleRate=44100
-        Key=54
-        FineTune=0
-        Type=1
-
-    SampleName=flute_58
-        SampleRate=44100
-        Key=58
-        FineTune=0
-        Type=1
-
-    SampleName=flute_62
-        SampleRate=44100
-        Key=62
-        FineTune=0
-        Type=1
-
-    SampleName=flute_66
-        SampleRate=44100
-        Key=66
-        FineTune=0
-        Type=1
-
-    SampleName=flute_70
         SampleRate=44100
         Key=70
         FineTune=0
@@ -642,234 +756,6 @@
         FineTune=0
         Type=1
 
-    SampleName=drums_36
-        SampleRate=44100
-        Key=36
-        FineTune=0
-        Type=1
-
-    SampleName=drums_37
-        SampleRate=44100
-        Key=37
-        FineTune=0
-        Type=1
-
-    SampleName=drums_38
-        SampleRate=44100
-        Key=38
-        FineTune=0
-        Type=1
-
-    SampleName=drums_39
-        SampleRate=44100
-        Key=39
-        FineTune=0
-        Type=1
-
-    SampleName=drums_40
-        SampleRate=44100
-        Key=40
-        FineTune=0
-        Type=1
-
-    SampleName=drums_41
-        SampleRate=44100
-        Key=41
-        FineTune=0
-        Type=1
-
-    SampleName=drums_42
-        SampleRate=44100
-        Key=42
-        FineTune=0
-        Type=1
-
-    SampleName=drums_43
-        SampleRate=44100
-        Key=43
-        FineTune=0
-        Type=1
-
-    SampleName=drums_44
-        SampleRate=44100
-        Key=44
-        FineTune=0
-        Type=1
-
-    SampleName=drums_45
-        SampleRate=44100
-        Key=45
-        FineTune=0
-        Type=1
-
-    SampleName=drums_46
-        SampleRate=44100
-        Key=46
-        FineTune=0
-        Type=1
-
-    SampleName=drums_47
-        SampleRate=44100
-        Key=47
-        FineTune=0
-        Type=1
-
-    SampleName=drums_48
-        SampleRate=44100
-        Key=48
-        FineTune=0
-        Type=1
-
-    SampleName=drums_49
-        SampleRate=44100
-        Key=49
-        FineTune=0
-        Type=1
-
-    SampleName=drums_50
-        SampleRate=44100
-        Key=50
-        FineTune=0
-        Type=1
-
-    SampleName=drums_51
-        SampleRate=44100
-        Key=51
-        FineTune=0
-        Type=1
-
-    SampleName=drums_52
-        SampleRate=44100
-        Key=52
-        FineTune=0
-        Type=1
-
-    SampleName=drums_53
-        SampleRate=44100
-        Key=53
-        FineTune=0
-        Type=1
-
-    SampleName=drums_54
-        SampleRate=44100
-        Key=54
-        FineTune=0
-        Type=1
-
-    SampleName=drums_55
-        SampleRate=44100
-        Key=55
-        FineTune=0
-        Type=1
-
-    SampleName=drums_56
-        SampleRate=44100
-        Key=56
-        FineTune=0
-        Type=1
-
-    SampleName=drums_57
-        SampleRate=44100
-        Key=57
-        FineTune=0
-        Type=1
-
-    SampleName=drums_58
-        SampleRate=44100
-        Key=58
-        FineTune=0
-        Type=1
-
-    SampleName=drums_59
-        SampleRate=44100
-        Key=59
-        FineTune=0
-        Type=1
-
-    SampleName=drums_60
-        SampleRate=44100
-        Key=60
-        FineTune=0
-        Type=1
-
-    SampleName=drums_61
-        SampleRate=44100
-        Key=61
-        FineTune=0
-        Type=1
-
-    SampleName=drums_62
-        SampleRate=44100
-        Key=62
-        FineTune=0
-        Type=1
-
-    SampleName=drums_63
-        SampleRate=44100
-        Key=63
-        FineTune=0
-        Type=1
-
-    SampleName=drums_64
-        SampleRate=44100
-        Key=64
-        FineTune=0
-        Type=1
-
-    SampleName=drums_65
-        SampleRate=44100
-        Key=65
-        FineTune=0
-        Type=1
-
-    SampleName=drums_66
-        SampleRate=44100
-        Key=66
-        FineTune=0
-        Type=1
-
-    SampleName=drums_67
-        SampleRate=44100
-        Key=67
-        FineTune=0
-        Type=1
-
-    SampleName=drums_68
-        SampleRate=44100
-        Key=68
-        FineTune=0
-        Type=1
-
-    SampleName=drums_69
-        SampleRate=44100
-        Key=69
-        FineTune=0
-        Type=1
-
-    SampleName=drums_70
-        SampleRate=44100
-        Key=70
-        FineTune=0
-        Type=1
-
-    SampleName=drums_71
-        SampleRate=44100
-        Key=71
-        FineTune=0
-        Type=1
-
-    SampleName=drums_72
-        SampleRate=44100
-        Key=72
-        FineTune=0
-        Type=1
-
-    SampleName=cowbell
-        SampleRate=44100
-        Key=71
-        FineTune=0
-        Type=1
-
     SampleName=moor_cowbell
         SampleRate=44100
         Key=71
@@ -891,6 +777,12 @@
     SampleName=pibgorn_50
         SampleRate=32000
         Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_55
+        SampleRate=32000
+        Key=55
         FineTune=0
         Type=1
 
@@ -936,9 +828,117 @@
         FineTune=0
         Type=1
 
-    SampleName=pibgorn_55
-        SampleRate=32000
-        Key=55
+    SampleName=theorbo_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_72
+        SampleRate=44100
+        Key=72
         FineTune=0
         Type=1
 
@@ -2457,6 +2457,12 @@
             Z_LowVelocity=0
             Z_HighVelocity=127
 
+        Sample=pibgorn_55
+            Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
         Sample=pibgorn_58
             Z_LowKey=57
             Z_HighKey=62
@@ -2496,12 +2502,6 @@
         Sample=pibgorn_71
             Z_LowKey=71
             Z_HighKey=72
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=pibgorn_55
-            Z_LowKey=54
-            Z_HighKey=56
             Z_LowVelocity=0
             Z_HighVelocity=127
 

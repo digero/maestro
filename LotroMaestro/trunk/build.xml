@@ -14,7 +14,7 @@
 		</uptodate>
 	</target>
 	
-	<target name="LotroInstruments" depends="LotroInstruments.CheckUpToDate" unless="LotroInstruments.uptodate">
+	<target name="LotroInstrumentsBuild" depends="LotroInstruments.CheckUpToDate" unless="LotroInstruments.uptodate">
 		<exec executable="${tools}/sf2comp.exe" failonerror="true">
 			<arg value="c" />
 			<arg value="-m" />
@@ -23,6 +23,8 @@
 			<arg value="LotroInstruments.sf2" />
 		</exec>
 	</target>
+	
+	<target name="LotroInstruments" depends="LotroInstruments.CheckUpToDate,LotroInstrumentsBuild" unless="LotroInstruments.uptodate" />
 	
 	<target name="LotroInstruments.Clean">
 		<delete file="LotroInstruments.sf2" />
