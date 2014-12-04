@@ -2,6 +2,8 @@
 <project default="Executables" name="Build and Distribute Maestro and ABC Player">
 	<property name="src" value="../src" />
 	<property name="bin" value="../bin" />
+	<property name="audio" value="../audio" />
+	<property name="audio_backslash" value="..\audio" />
 	<property name="output" value="output" />
 	<property name="build" value="build" />
 	<property name="tools" location="tools" />
@@ -19,7 +21,6 @@
 		<mkdir dir="${build}" />
 		<delete file="${build}/*.log" />
 		<copy file="../TableLayout.jar" todir="${build}" />
-		<copy file="../LotroInstruments.sf2" todir="${build}" />
 		<copy file="abcfile.ico" todir="${build}" />
 		<copy file="midifile.ico" todir="${build}" />
 		<copy file="msxfile.ico" todir="${build}" />
@@ -75,8 +76,24 @@
 			<arg value="AbcPlayer.rcedit.ini" />
 		</exec>
 	</target>
+
+	<target name="LotroInstruments.CheckUpToDate">
+		<uptodate property="LotroInstruments.uptodate" targetfile="${build}/LotroInstruments.sf2">
+			<srcfiles dir="${basedir}" includes="${audio}/LotroInstruments/*,${tools}/sf2comp.exe,${tools}/sfedt32.dll" />
+		</uptodate>
+	</target>
 	
-	<target name="Executables" depends="MaestroExe,AbcPlayerExe" />
+	<target name="LotroInstruments" depends="LotroInstruments.CheckUpToDate" unless="LotroInstruments.uptodate">
+		<exec executable="${tools}/sf2comp.exe" failonerror="true">
+			<arg value="c" />
+			<arg value="-m" />
+			<arg value="-i" />
+			<arg value="${audio_backslash}\LotroInstruments\LotroInstruments.txt" />
+			<arg value="${build}\LotroInstruments.sf2" />
+		</exec>
+	</target>
+	
+	<target name="Executables" depends="MaestroExe,AbcPlayerExe,LotroInstruments" />
 
 	<target name="Installer" depends="Executables">
 		<mkdir dir="${output}" />
