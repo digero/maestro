@@ -1,0 +1,735 @@
+**********************
+  SF2Comp v0.91 help
+**********************
+                               
+
+
+Contents
+
+======= Description and purpose
+======= Requirements
+======= Usage        
+	//////// Stage 1: DECOMPILING
+	//////// Stage 2: EDITING
+		**** Section I
+		**** Section II
+		**** Section III
+		**** Section IV
+		**** Generators and modulators
+		**** Notes about changing text file
+	//////// Stage 3: COMPILING
+	//////// RESAMPLING
+======= About
+
+
+
+======= Description and purpose
+
+
+SF2Comp is a SoundFont compiler/decompiler program.
+
+If you new to SoundFonts you're better to become familiar with Vienna or 
+some other SoundFont editor prior to use of this program.
+
+For description of terminology one should refer to SoundFont specifications 
+or to Vienna help. The only difference is that in SF2Comp preset-level zones 
+are called "Layers".
+
+Current SoundFont specifications should be available at http://www.soundfont.com
+Also information can be obtained at http://www.emu.com, for example
+
+http://www.emu.com/download/sfspec21.pdf (SoundFont 2.1 Technical Specification)
+http://www.emu.com/download/sfapp21.pdf (SoundFont 2.1 Application Note)
+http://www.emu.com/support/aps/aps_tut1.htm (Explanation about modulators)
+
+When decompiling SF2Comp will generate from a given SoundFont file (.sf2) a 
+set of .wav files and a text file describing the rest of the source font 
+(the part that can't be saved in .wav format: zones, etc). When compiling it 
+will assemble those .wav's and text file back to the SoundFont file.
+
+Before compiling back: 
+a) .wav files could be batch-processed (for example in Sound Forge) or 
+changed in any way. 
+b) text file describing zones, generators, etc could be edited in any text 
+editor, using common Search/Replace features.
+
+Thus one can change multiple parameters and waveforms in SoundFont without 
+making monotonous mouse moves and clicks in zombie-style. Such as killing 
+all generators to a default state or removing too high reverb level.
+
+The additional feature is automatic resampling of SoundFont samples if they
+are pitched too high to be properly played by the EMU10K1 chip. See the 
+RESAMPLING section for more.
+
+One more additional feature is automatic extending of layers and zones to 
+cover all of the key range. See -xl and -xz switches.
+
+This program is not intended to replace any SoundFont editor, moreover it's 
+more useful for _modifying_ fonts, not for creating them.
+
+SF2Comp is a command-line driven program, i.e. there is no any GUI here but 
+only switches and parameters. Despite of this SF2Comp can be used only in 
+Win32 environment. If you don't know how to work with command-line programs 
+you should read some additional sources :)         
+
+SF2Comp was inspired by "MIDI File DisAssembler" by Jeff Glatt avaliable at 
+http://www.borg.com/~jglatt.
+                                              
+
+
+======= Requirements
+
+
+Windows (95,98,NT4/2000) and SFEDT32.DLL file which commonly resides in 
+Vienna dir but can also be downloaded separately from SF2Comp web site. If 
+you have Vienna installed then SF2Comp most likely will automatically find 
+this file, otherwise user should locate it.
+
+
+
+======= Usage
+
+
+//////// Stage 1: DECOMPILING
+
+
+To decompile some font one should enter approximately the following:
+
+  sf2comp d -agl d:\sblive\banks\gmgs220mb.sf2 c:\temp\sf
+
+Here
+
+  "sf2comp" this is program name
+
+  "d" 
+this is a command. There must be at least one command in sf2comp call. 
+"d" means "Decompile".
+
+  "-agl" 
+this is a switch. There can be no switches at all, one of them or many. 
+Switches are used to describe some details of what you want to get 
+running this command.
+
+  "d:\sblive\banks\gmgs220mb.sf2" 
+this is a name of source SoundFont. This is an obligatory parameter when 
+using "d" command. Extension (.sf2) can be 
+omitted.
+
+  "c:\temp\sf" 
+this is a path to place decompiled files to. This parameter 
+is optional. If folder isn't exists it will be created.
+
+After executing this command there will be an appearance of some .wav and 
+one gmgs220mb.txt file in "c:\temp\sf\" folder.
+
+Decompile switches:
+
+  -slg   Skip Layer-affecting Generators 
+Disables saving of information about preset-level generators. There are no 
+generators data for non-global layers will be placed in text file.
+
+  -szg   Skip Zone-affecting Generators 
+Disables saving of information about instrument-level generators. There are 
+no generators data for non-global zones will be placed in text file.
+
+  -slm   Skip Layer-affecting Modulators 
+Disables saving of information about preset-level modulators. There are no 
+modulators data for non-global layers will be placed in text file.
+
+  -szm   Skip Zone-affecting Modulators 
+Disables saving of information about instrument-level modulators. There are 
+no modulators data for non-global zones will be placed in text file.
+
+  -sglg  Skip Global-Layer-affecting 
+Generators Disables saving of information about preset-level generators. 
+There are no generators data for global layers will be placed in text file.
+
+  -sgzg  Skip Global-Zone-affecting Generators 
+Disables saving of information about instrument-level generators. There are 
+no generators data for global zones will be placed in text file.
+
+  -sglm  Skip Global-Layer-affecting Modulators 
+Disables saving of information about preset-level modulators. There are no 
+modulators data for global layers will be placed in text file.
+
+  -sgzm  Skip Global-Zone-affecting Modulators 
+Disables saving of information about instrument-level modulators. There are 
+no modulators data for global zones will be placed in text file.
+
+  -m     Mute progress output 
+Suppresses displaying of decompiling progress information.
+
+  -ulg   list Unused Layer-affecting Generators 
+Creates in a text file a full list of generators for every non-global layer. 
+Without this switch there will be only those generators listed which have a 
+non-default value. Could be used to quickly change values for 
+"default-value" generators.
+
+  -uzg   list Unused Zone-affecting Generators 
+Creates in a text file a full list of generators for every non-global zone. 
+Without this switch there will be only those generators listed which have a 
+non-default value. Could be used to quickly change values for 
+"default-value" generators.
+
+  -uglg  list Unused Global-Layer-affecting Generators 
+Creates in a text file a full list of generators for all global layers. 
+Without this switch there will be only those generators listed which have a 
+non-default value. Could be used to quickly change values for 
+"default-value" generators.
+
+  -ugzg  list Unused Global-Zone-affecting Generators 
+Creates in a text file a full list of generators for all global zones. 
+Without this switch there will be only those generators listed which have a 
+non-default value. Could be used to quickly change values for 
+"default-value" generators.
+
+  -agl   Add Global Layer to every preset 
+Creates in a text file a GlobalLayer entry with full set of generator 
+entries for every preset even if this preset have no such layer in source 
+file.
+
+  -agz   Add Global Zone to every instrument 
+Creates in a text file a GlobalZone entry with full set of generator entries 
+for every instrument even if this instrument have no such zone in source 
+file.
+
+  -nw    doN't write Waveforms 
+Disables saving of contained in source font waveforms to disk. Useful if 
+they already was saved and were not changed.
+
+  -r     also Resample
+When this option is used the SoundFont will be resampled before decompiling.
+The source .sf2 file will not be changed, but the resulting .txt file and the
+set of waveforms will be generated as the source was resampled. See the 
+RESAMPLE section for more info. 
+
+  -pXX   allow Pitch rising (Portamento) by XX halftones
+Used with the -r switch. See the RESAMPLE section for description.
+
+  -xz    eXpand Zones
+Expanding zones means that if some instrument have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any zone, the 
+nearest (leftmost or rightmost accordingly) zone will be extended to the edge
+of the keyboard. When using this switch the source .sf2 file will not be 
+changed, but the resulting .txt file will be generated as the source was 
+expanded. (Usually this is useful with resampling or another transformation 
+since if the author of SoundFont have restricted the key range, it seems 
+that there was a _reason_).
+
+  -xl    eXpand Layers
+Expanding layers means that if some preset have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any layer, 
+the nearest (leftmost or rightmost accordingly) layer will be extended to the 
+edge of the keyboard. When using this switch the source .sf2 file will not be 
+changed, but the resulting .txt file will be generated as the source was 
+expanded. (Usually this is useful with resampling or another transformation 
+since if the author of SoundFont have restricted the key range, it seems 
+that there was a _reason_).
+
+
+Wildcards are not supported. If you need to process many files at once use 
+some program allowing to apply one command to a few selected files, such as 
+Windows Commander 32, FAR, etc.
+
+
+//////// Stage 2: EDITING
+
+
+Generated on decompiling stage waveforms could be changed in any wave 
+editor. The loop points and sample rate on compiling will be taken from 
+waveforms, not from the text file, so these parameters also could be edited.
+
+Generated text file is something less common then .wav files. Text file 
+consists from four sections (the order of sections is essential).
+
+
+**** Section I  -  Samples description section. It begins with "[Samples]" 
+header. There can be a number of subsections in this section. Every 
+subsection begins with "SampleName" field and corresponds to a single sample 
+in a source font. Subsection consists of the following fields:
+
+SampleName - _unique_ name of a sample.
+
+SampleRate - waveform sample rate in Hz. This field is for reference only 
+and not used during compiling process. The sample rate of .wav file is used 
+instead.
+
+Key - MIDI key number of the recorded pitch of the sample. Overrides the 
+same info from .wav file during compiling. Middle C (261.62 Hz) corresponds 
+to a value of 60. Value of 255 corresponds to an unpitched sound.
+
+FineTune - a pitch correction in cents which should be applied to the sample 
+on playback.
+
+Link - the name of linked sample (for stereo pair). This field is for 
+reference only and not used during compiling process. Stereo pairs are 
+compiled if the .wav file is stereo.
+
+Type - mono = 1, right = 2, left = 4, linked = 8, ROM mono = 32769, ROM 
+right = 32770, ROM left = 32772, ROM linked = 32776.
+
+
+**** Section II  -  Instruments description section. It begins with 
+"[Instruments]" header. There can be a number of subsections in this 
+section. Every subsection begins with "InstrumentName" field and corresponds 
+to a single instrument in a source font. Subsection consists of the 
+following fields:
+
+InstrumentName - _unique_ name of an instrument.
+
+Sample - every such field corresponds to a zone of the instrument. The value 
+of this field is a name of a sample used in zone, the same as used in its 
+SampleName fileld. Every of the following fields before another "Sample" 
+field, beginning of the another instrument subsection or end of 
+"[Instruments]" section affects this zone. Next to the "Sample" field is a 
+list of generators and modulators, each with a "Z_" ("Zone") prefix (Refer 
+to the "**** Generators and modulators" section of manual for description).
+
+GlobalZone - have the same meaning as a "Sample" field but corresponds to an 
+instrument's Global Zone, and therefore have no value (no sample assigned). 
+Also there never could be key range or velocity range generators. The prefix 
+for generators here not a "Z_" but "GZ_" ("Global Zone"). GlobalZone field 
+should be placed _after_ at least one "Sample" field, i.e. it can't be the 
+first described zone in subsection.
+
+
+**** Section III  -  Presets description section. It begins with "[Presets]" 
+header. There can be a number of subsections in this section. Every 
+subsection begins with "PresetName" field and corresponds to a single preset 
+in a source font. Subsection consists of the following fields:
+
+PresetName - name of a preset.
+
+Bank - bank number for a preset. This is an obligatory field and it should 
+be placed _before_ any "Instrument" field.
+
+Program - program number for a preset. This is an obligatory field and it 
+should be placed _before_ any "Instrument" field.
+
+Instrument - every such field corresponds to a layer of the preset. The 
+value of this field is a name of an instrument used in layer, the same as 
+used in its InstrumentName fileld. Every of the following fields before 
+another "Instrument" field, beginning of the another preset subsection or 
+end of "[Presets]" section affects this zone. Next to the "Instrument" field 
+is a list of generators and modulators, each with a "L_" ("Layer") prefix 
+(Refer to the "**** Generators and modulators" section of manual for 
+description). Note that some generators have no meaning in preset-level 
+context.
+
+GlobalLayer - have the same meaning as an "Instrument" field but corresponds 
+to a preset's Global Layer, and therefore have no value (no instrument 
+assigned). Also there never could be key range or velocity range generators. 
+The prefix for generators here not an "L_" but "GL_" ("Global Layer"). 
+GlobalLayer field should be placed _after_ at least one "Instrument" field, 
+i.e. it can't be the first described layer in subsection.
+
+
+**** Section IV  -  Information section. It begins with "[Info]" header. 
+Section consists of the following fields (all of them are for reference 
+only, i.e. they are not used in compiling process unless the "-i" or "-v" 
+switch specified):
+
+Version - SoundFont version. This is not used unless "-v" switch is used. 
+Valid values now are "2.1" or "2.0". When specified "2.0" some of the 
+features may not be saved.
+
+Engine - identifies the wavetable sound engine for which the file was 
+optimized.
+
+Name - name of the bank.
+
+ROMName - identifies a particular wavetable sound data ROM to which any ROM 
+samples refer.
+
+ROMVersion - identifies the particular wavetable sound data ROM revision to 
+which any ROM samples refer. Should look as "xx.yy" where "xx" is a major 
+version and "yy" is a minor version number.
+
+Date - creation date of the bank. Conventionally, the format of the string 
+is "Month Day, Year" where Month is initially capitalized and is the 
+conventional full English spelling of the month, Day is the date in decimal 
+followed by a comma, and Year is the full decimal year.
+
+Designer - identifies the names of any sound designers or engineers 
+responsible for the this bank.
+
+Product - identifies specific product for this bank is intended.
+
+Copyright - contains copyright assertion string associated with this bank. 
+
+Editor - identifies the tools used to create and most recently modify the 
+bank.
+
+Comments - contains comments associated with this bank. It's always a last 
+field in file and therefore it might contain a few strings. All information 
+from "Comments" to an end of file assumed to be a "Comments" field value.
+
+                                             
+**** Generators and modulators
+
+Names of generators from the following table are used in decompiled text 
+except for:
+'keynum'    Available as "HighKey" and "LowKey" fields 
+'velocity'  Available as "HighVelocity" and "LowVelocity" fields
+
+This table is taken from "SoundFont (r) Technical Specification v2.01"
+
+<<<<<<<<<<<<<< cut here
+
+The following tables give the ranges and default values for all SoundFont 2.x defined generators.
+                            
+                              #     Unit      Abs      Min     Min     Max     Max     Default  Def
+                                              Zero             Useful          Useful           Value
+                                      
+startAddrsOffset +            0     smpls     0        0       None    *       *        0       None
+endAddrsOffset +              1     smpls     0        *       *       0       None     0       None
+startloopAddrsOffset +        2     smpls     0        *       *       *       *        0       None
+endloopAddrsOffset +          3     smpls     0        *       *       *       *        0       None
+startAddrsCoarseOffset        4     32ksmp    0        0       None    *       *        0       None
+modLfoToPitch                 5     cent fs   0       -12000  -10 oct  12000   10 oct   0       None
+vibLfoToPitch                 6     cent fs   0       -12000  -10 oct  12000   10 oct   0       None
+modEnvToPitch                 7     cent fs   0       -12000  -10 oct  12000   10 oct   0       None
+initialFilterFc               8     cent      8.176Hz  1500    20 Hz   13500   20 kHz   13500   Open
+initialFilterQ                9     cB        0        0       None    960     96 dB    0       None
+modLfoToFilterFc              10    cent fs   0       -12000  -10 oct  12000   10 oct   0       None
+modEnvToFilterFc              11    cent fs   0       -12000  -10 oct  12000   10 oct   0       None
+endAddrsCoarseOffset +        12    32k smp   0        *       *       0       None     0       None
+modLfoToVolume                13    cB fs     0       -960    -96 dB   960     96 dB    0       None
+chorusEffectsSend             15    0.1%      0        0       None    1000    100%     0       None
+reverbEffectsSend             16    0.1%      0        0       None    1000    100%     0       None
+pan                           17    0.1%      Cntr    -500     Left   +500     Right    0       Center
+delayModLFO                   21    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+freqModLFO                    22    cent      8.176Hz -16000   1 mHz   4500    100 Hz   0       8.176 Hz
+delayVibLFO                   23    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+freqVibLFO                    24    cent      8.176Hz -16000   1 mHz   4500    100 Hz   0       8.176 Hz
+delayModEnv                   25    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+attackModEnv                  26    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+holdModEnv                    27    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+decayModEnv                   28    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+sustainModEnv                 29   -0.1%      atkpeak  0       100%    1000    0%       0       attk pk
+releaseModEnv                 30    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+keynumToModEnvHold            31    tcnt/ky   0       -1200   -oct/ky  1200    oct/ky   0       None
+keynumToModEnvDecay           32    tcnt/ky   0       -1200   -oct/ky  1200    oct/ky   0       None
+delayVolEnv                   33    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+attackVolEnv                  34    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+holdVolEnv                    35    timecnt   1 sec   -12000   1 msec  5000    20 sec  -12000  <1 msec
+decayVolEnv                   36    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+sustainVolEnv                 37    cB attn   atkpeak  0       0 dB    1440    144dB    0       attk pk
+releaseVolEnv                 38    timecnt   1 sec   -12000   1 msec  8000    100sec  -12000  <1 msec
+keynumToVolEnvHold            39    tcnt/ky   0       -1200   -oct/ky  1200    oct/ky   0       None
+keynumToVolEnvDecay           40    tcnt/ky   0       -1200   -oct/ky  1200    oct/ky   0       None
+keyRange @                    43    MIDIky#   key# 0   0       lo key  127     hi key   0-127   full kbd
+velRange @                    44    MIDIvel   0        0       min vel 127     max vel  0-127   all vels
+startloopAddrsCoarseOffset +  45    smpls     0        *       *       *       *        0       None
+keynum +   @                  46    MIDIky#   key# 0   0       lo key  127     hi key  -1       None
+velocity +    @               47    MIDIvel   0        1       min vel 127     max vel -1       None
+initialAttenuation            48    cB        0        0       0 dB    1440    144dB    0       None
+endloopAddrsCoarseOffset +    50    smpls     0        *       *       *       *        0       None
+coarseTune                    51    semtone   0       -120    -10 oct  120     10 oct   0       None
+fineTune                      52    cent      0       -99     -99cent  99      99cent   0       None
+sampleModes + @               54    BitFlgs   Flags    **      **      **      **       0       No Loop
+scaleTuning @                 56    cnt/key   0        0       none    1200    oct/ky   100     semi-tone
+exclusiveClass + @            57    arbtrry   0        1       --      127     --       0       None
+overridingRootKey + @         58    MIDIky#   key# 0   0       lo key  127     hi key  -1       None
+
+*   Range depends on values of start, loop, and end points in sample header. 
+**  Range has discrete values based on bit flags.
++   This generator is only valid at the instrument level.
+@   This generator is designated as a non-real-time parameter.
+
+<<<<<<<<<<<< cut here                            
+
+                                                                            
+Modulators are treated as generator with name "Modulator" and complex value 
+part.
+
+Format of the modulator field:
+
+Modulator=<Source>,<destination>,<amount>,<AmountSource>,<transform>
+
+Format of <Source> and <AmountSource>:
+(<controller_name>,<direction>,<polarity>,<type>)
+
+<controller_name> is a number, MIDI controller number in the form of 
+"MIDIxxx", for example "MIDI1" for modulation controller, or one of the 
+following identifiers:
+"NoController"
+"NoteOnVelocity"
+"NoteOnKeyNumber"
+"PolyPressure"
+"ChannelPressure"
+"PitchWheel"
+"PitchWheelSensivity"                                   
+
+<direction> is "NormalDirection" or "ReverseDirection"
+
+<polarity> is "Unipolar" or "Bipolar"
+                                          
+<type> is a number or one of the following identifiers:
+"Linear"
+"Concave"
+"Convex"
+"Switch"
+
+<destination> is any generator name
+
+<amount> and <transform> are numeric values
+
+Example:
+GL_Modulator=(NoteOnVelocity,ReverseDirection,Unipolar,Linear),initialFilterFc,202,(MIDI96,NormalDirection,Unipolar,Linear),0
+
+For explanation of generators and modulators meaning one should refer to the 
+SoundFont related documentation.
+
+                                                                  
+Some additional notes about SF2Comp generator and modulator-related 
+features:
+
+- Every generator field name have a prefix to recognize the part of font to 
+which it belongs, such as prefix "GL_" means that it is 
+Global-Layer-related. Generator names used in "Modulator" fields have no 
+prefix.
+
+- Generators having no value assigned (such as "L_pan=") assumed to be in 
+default state. They are not placed in text file unless the "-u..." or 
+"-a..." switches are used. Default modulators are not supported (i.e. they 
+can't be controlled by SF2Comp and there couldn't be such fields as 
+"GL_Modulator=<nothing>", such are never formed when decompiling and will 
+lead to compiling errors).
+
+
+**** Notes about changing text file
+
+- The spaces count before field name and empty strings are unessential. The 
+spaces before and after "=" sign are essential only if this is a text-value 
+field, such as sample name. The spaces in "Modulator" field are also 
+unessential.
+
+- To comment any field just add any character before its name (such as 
+"    ;  GZ_decayVolEnv=100"). Note that if some subsection-start-denoting 
+field (such as "InstrumentName" or "Sample") is commented then the following 
+fields will overwrite the values for the previous subsection (zone, layer).
+
+- To replace field' values using Search/Replace in text editor one should 
+search for "<field_name>" and replace to "<field_name>=<desired_value>". 
+Resulted strings will look quite strange as 
+"<field_name>=<desired_value>=<nothing>" or 
+"<field_name>=<desired_value>=<old_value>" but the part of the field after 
+second "=" always discarded by compiler. Example: search for 
+"Z_reverbEffectsSend" and replace to "Z_reverbEffectsSend=0".
+
+- To reset generator field to a default state one should replace its value 
+with any non-numeric character as or to comment the whole string.
+
+- It's possible to organize new samples/instruments/presets by editing text 
+file, but sometimes it seems to be easier to do in Vienna.
+
+- Case of characters used in field names and in identifiers in "Modulator" 
+field is essential.
+
+
+//////// Stage 3: COMPILING
+
+
+To compile SoundFont back one should enter approximately the following:
+
+  sf2comp c -i c:\temp\sf\gmgs220mb.txt d:\sblive\banks\gmgs220mb_new.sf2
+
+Here
+
+  "sf2comp" 
+this is program name
+
+  "c" 
+this is a command. There must be at least one command in sf2comp call. "c" 
+means "Compile".
+
+  "-i" 
+this is a switch. There can be no switches at all, one of them or many. 
+Switches are used to describe some details of what you want to get running 
+this command.
+
+  "c:\temp\sf\gmgs220mb.txt" 
+this is a name of source text file. This is an obligatory parameter when 
+using "c" command. Extension (.txt) can be omitted. Note that all related 
+.wav files should be in the same folder with this file.
+
+  "d:\sblive\banks\gmgs220mb_new.sf2" 
+this is a name and path for resulting SoundFont file. Extension (.sf2) can 
+be omitted. This parameter is optional. When not used font will be placed in 
+the same folder with source text file.
+
+After executing this command there will be new 
+"d:\sblive\banks\gmgs220mb_new.sf2" SoundFont file.
+
+Compile switches:
+
+  -slg   Skip Layer-affecting Generators 
+Disables using of information about preset-level generators. All generators 
+for non-global layers will be reset to default.
+
+  -szg   Skip Zone-affecting Generators 
+Disables using of information about instrument-level generators. All 
+generators for non-global zones will be reset to default.
+
+  -slm   Skip Layer-affecting Modulators 
+Disables using of information about preset-level modulators. All modulators 
+for non-global layers will be removed.
+
+  -szm   Skip Zone-affecting Modulators 
+Disables using of information about instrument-level modulators. All 
+modulators for non-global zones will be removed.
+
+  -sglg  Skip Global-Layer-affecting Generators 
+Disables using of information about preset-level generators. All generators 
+for global layers will be reset to default.
+
+  -sgzg  Skip Global-Zone-affecting Generators 
+Disables uisng of information about instrument-level generators. All 
+generators for global zones will be reset to default.
+
+  -sglm  Skip Global-Layer-affecting Modulators 
+Disables using of information about preset-level modulators. All modulators 
+for global layers will be removed.
+
+  -sgzm  Skip Global-Zone-affecting Modulators 
+Disables using of information about instrument-level modulators. All 
+modulators for global zones will be removed.
+
+  -m     Mute progress output 
+Suppresses displaying of compiling progress information.
+
+  -i     compile using [Info] part (except for "Version" field) 
+Places information from the "[Info]" section into target font. The only 
+field that is not used is "Version".
+
+  -v     force output version to [Info]-Version value 
+Saves target SoundFont as the version stated in "Version" field of the 
+"[Info]" section. Valid values for "Version" field now are "2.1" or "2.0". 
+When specified "2.0" some of the features may not be saved.
+
+  -r     also Resample
+When this option is used the SoundFont file will be resampled after
+compiling. The source .txt file and waveforms set will not be changed, but 
+the resulting .sf2 file will be resampled. See the RESAMPLE section for more 
+info. 
+
+  -pXX   allow Pitch rising (Portamento) by XX halftones
+Used with the -r switch. See the RESAMPLE section for description.
+
+  -xz    eXpand Zones
+Expanding zones means that if some instrument have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any zone, the 
+nearest (leftmost or rightmost accordingly) zone will be extended to the edge
+of the keyboard. When using this switch the source .txt file will not be 
+changed, but the resulting .sf2 file will be expanded. (Usually this is 
+useful with resampling or another transformation since if the author of 
+SoundFont have restricted the key range, it seems that there was a _reason_).
+
+  -xl    eXpand Layers
+Expanding layers means that if some preset have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any layer, 
+the nearest (leftmost or rightmost accordingly) layer will be extended to the 
+edge of the keyboard. When using this switch the source .txt file will not 
+be changed, but the resulting .sf2 file will be expanded. (Usually this 
+is useful with resampling or another transformation since if the author of 
+SoundFont have restricted the key range, it seems that there was a _reason_).
+
+
+Wildcards are not supported. If you need to process many files at once use 
+some program allowing to apply one command to a few selected files, such as 
+Windows Commander 32, FAR, etc.
+
+
+//////// RESAMPLING
+
+
+The EMU10K1 chip which is used in SBLive! and EMU APS cards to playback 
+samples can't correctly process samples which are played with pitch two 
+octaves or more higher than 48 kHz (192 kHz). This mean that if sample in the
+SoundFont file is recorded at the 48 kHz and its root note assigned is C3 and 
+it is extended on the full keyboard range, then it will sound correctly only
+up to the C5 note, at C#5 it will be detuned and on all of the higher notes 
+it will sound like something near C#5. If the sample will be switched with
+one sampled at 24 kHz it will be valid up to C6, etc. So sometimes if one want
+to hear the high quality sample at the full keyboard, this sample should be
+downsampled.
+
+SF2Comp can automatically detect invalid sample ranges, add downsampled 
+versions of the original samples to the SoundFont and remap instruments so
+the samples at any key would be played correctly. The original sample remains
+in file and is used in its valid range.
+
+To check and resample SoundFont file one should enter approximately the 
+following:
+
+  sf2comp r -p5 c:\temp\sf\gmgs220mb.sf2 r220mb.sf2 
+
+Here
+
+  "sf2comp" 
+this is program name
+
+  "r" 
+this is a command. There must be at least one command in sf2comp call. "r" 
+means "Resample".
+
+  "-p5" 
+this is a switch. There can be no switches at all, one of them or many. 
+Switches are used to describe some details of what you want to get running 
+this command.
+
+  "c:\temp\sf\gmgs220mb.sf2" 
+this is a name of the source SoundFont file. This is an obligatory parameter 
+when using "r" command. Extension (.sf2) can be omitted.
+
+  "r220mb.sf2" 
+this is a name for the resulting SoundFont file. Extension (.sf2) can 
+be omitted. This parameter is optional. When this parameter is not used 
+the resampled SoundFont will overwrite the source file. In this case the 
+backup copy of the original file (file with .bak extension) will be placed 
+in the font will be placed in the same folder.
+        
+Resample switches:
+
+  -pXX   allow Pitch rising (Portamento) by XX halftones (3 is by default)
+When this switch is used the new zone for the sample will be created XX 
+halftones before its "critical point". When not used this range is set to 3
+halftones. The reason to do this is that even pitch wheel or portamento 
+emulation on the EMU10K1 chip can't raise the pitch of sample higher than is 
+described. So the instrument resampled with the -p0 switch will fail to 
+raise pitch by 2 halftones (default pitch wheel range) at the edge of zone. The
+spare range set by this switch allows to use pitch wheel or limited range 
+portamentos at every key.
+
+  -nb    doN't make Backup copies
+When this switch is used the backup copy of the source file will not be made. 
+
+  -xz    eXpand Zones
+Expanding zones means that if some instrument have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any zone, the 
+nearest (leftmost or rightmost accordingly) zone will be extended to the edge
+of the keyboard. When using this switch the SoundFont will be expanded before
+resampling. The source .sf2 file will not be changed if the different name for
+the resulting file is used.
+
+  -xl    eXpand Layers
+Expanding layers means that if some preset have a range of notes in the 
+beginning or in the end of the keyboard which are not covered by any layer, 
+the nearest (leftmost or rightmost accordingly) layer will be extended to the 
+edge of the keyboard. When using this switch the SoundFont will be expanded 
+before resampling. The source .sf2 file will not be changed if the different 
+name for the resulting file is used.
+
+In addition to the separate usage the resample command can be used together 
+with compile and decompile commands (the -r switch).
+
+
+======= About
+
+
+SF2Comp is (c) 2000 by LasT NighT.
+
+E-Mail: lastnight@mtu-net.ru
+WWW:	http://www.chat.ru/~last_night/index.htm
+	http://lastnight.newmail.ru/
