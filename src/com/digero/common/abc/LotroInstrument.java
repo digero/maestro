@@ -24,19 +24,24 @@ package com.digero.common.abc;
 
 import com.digero.common.midi.Note;
 
+// @formatter:off
 public enum LotroInstrument
 {
-	LUTE(Note.C2, Note.C5, false, 24, 0, false), //
-	HARP(Note.C2, Note.C5, false, 46, 0, false), //
-	THEORBO(Note.C2, Note.C5, false, 32, -1, false), //
-	FLUTE(Note.C2, Note.C5, true, 73, 2, false), //
-	CLARINET(Note.D2, Note.C5, true, 71, 1, false), //
-	HORN(Note.Cs2, Note.C5, true, 69, 0, false), //
-	BAGPIPE(Note.C2, Note.C5, true, 109, 1, false), //
-	PIBGORN(Note.D2, Note.C5, true, 84, 2, false), //
-	DRUMS(Note.C2, Note.C5, false, 118, 0, true), //
-	COWBELL(Note.C2, Note.C5, false, 115, 0, true), //
-	MOOR_COWBELL(Note.C2, Note.C5, false, 114, 0, true);
+	//           low       high      sustainable   midiProgramId   octaveDelta   isPercussion
+	LUTE        (Note.C2,  Note.C5,  false,         24,             0,           false       ),
+	HARP        (Note.C2,  Note.C5,  false,         46,             0,           false       ),
+	THEORBO     (Note.C2,  Note.C5,  false,         32,            -1,           false       ),
+	FLUTE       (Note.C2,  Note.C5,  true,          73,             2,           false       ),
+	CLARINET    (Note.C2,  Note.C5,  true,          71,             1,           false       ),
+	HORN        (Note.C2,  Note.C5,  true,          69,             0,           false       ),
+	BAGPIPE     (Note.C2,  Note.C5,  true,         109,             1,           false       ),
+	PIBGORN     (Note.C2,  Note.C5,  true,          84,             2,           false       ),
+	DRUMS       (Note.C2,  Note.C5,  false,        118,             0,           true        ),
+	COWBELL     (Note.C2,  Note.C5,  false,        115,             0,           true        ),
+	MOOR_COWBELL(Note.C2,  Note.C5,  false,        114,             0,           true        ),
+	MYSTERY     (Note.C3,  Note.C5,  false,         99,             1,           false       );
+
+// @formatter:on
 
 	public final Note lowestPlayable;
 	public final Note highestPlayable;
@@ -64,17 +69,6 @@ public enum LotroInstrument
 	public boolean isPlayable(int noteId)
 	{
 		return noteId >= lowestPlayable.id && noteId <= highestPlayable.id;
-	}
-
-	public boolean isBadNote(int noteId)
-	{
-		if (this == PIBGORN)
-		{
-			return noteId == Note.C2.id || noteId == Note.Cs2.id || noteId == Note.As2.id || noteId == Note.Gs4.id
-					|| noteId == Note.As4.id;
-		}
-
-		return false;
 	}
 
 	@Override public String toString()

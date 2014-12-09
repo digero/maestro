@@ -722,7 +722,7 @@ public class TrackPanel extends JPanel implements IDiscardable, TableLayoutConst
 			if (trackInfo.isDrumTrack() && !abcPart.isTrackEnabled(trackInfo.getTrackNumber()))
 				return true;
 
-			return abcPart.getInstrument().isPlayable(noteId) && !abcPart.getInstrument().isBadNote(noteId);
+			return abcPart.getInstrument().isPlayable(noteId);
 		}
 
 		@Override protected boolean isShowingNotesOn()
