@@ -38,8 +38,7 @@ public enum LotroInstrument
 	PIBGORN     (Note.C2,  Note.C5,  true,          84,             2,           false       ),
 	DRUMS       (Note.C2,  Note.C5,  false,        118,             0,           true        ),
 	COWBELL     (Note.C2,  Note.C5,  false,        115,             0,           true        ),
-	MOOR_COWBELL(Note.C2,  Note.C5,  false,        114,             0,           true        ),
-	MYSTERY     (Note.C3,  Note.C5,  false,         99,             1,           false       );
+	MOOR_COWBELL(Note.C2,  Note.C5,  false,        114,             0,           true        );
 
 // @formatter:on
 
