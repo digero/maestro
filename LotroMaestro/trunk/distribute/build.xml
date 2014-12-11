@@ -79,7 +79,7 @@
 
 	<target name="LotroInstruments.CheckUpToDate">
 		<uptodate property="LotroInstruments.uptodate" targetfile="${build}/LotroInstruments.sf2">
-			<srcfiles dir="${basedir}" includes="${audio}/LotroInstruments/*,${tools}/sf2comp.exe,${tools}/sfedt32.dll" />
+			<srcfiles dir="${basedir}/${audio}/LotroInstruments" />
 		</uptodate>
 	</target>
 	
