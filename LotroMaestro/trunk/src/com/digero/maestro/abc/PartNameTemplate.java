@@ -102,7 +102,7 @@ public class PartNameTemplate
 		{
 			@Override public String getValue()
 			{
-				return getMetadataSource().getSongTitle();
+				return getMetadataSource().getSongTitle().trim();
 			}
 		});
 		variables.put("$SongLength", new Variable("The playing time of the song in mm:ss format")
@@ -116,14 +116,14 @@ public class PartNameTemplate
 		{
 			@Override public String getValue()
 			{
-				return getMetadataSource().getComposer();
+				return getMetadataSource().getComposer().trim();
 			}
 		});
 		variables.put("$SongTranscriber", new Variable("Your name, as entered in the \"Z:\" field")
 		{
 			@Override public String getValue()
 			{
-				return getMetadataSource().getTranscriber();
+				return getMetadataSource().getTranscriber().trim();
 			}
 		});
 		variables.put("$PartName", new Variable("The part name for the individual ABC part")
@@ -133,7 +133,7 @@ public class PartNameTemplate
 				if (currentAbcPart == null)
 					return "";
 
-				return currentAbcPart.getTitle();
+				return currentAbcPart.getTitle().trim();
 			}
 		});
 		variables.put("$PartNumber", new Variable("The part number for the individual ABC part")
