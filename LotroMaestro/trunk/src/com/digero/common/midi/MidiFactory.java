@@ -135,4 +135,19 @@ public class MidiFactory implements IMidiConstants
 			throw new RuntimeException(e);
 		}
 	}
+
+	public static MidiEvent createTimeSignatureEvent(TimeSignature meter, long ticks)
+	{
+		return new MidiEvent(meter.toMidiMessage(), ticks);
+	}
+
+	public static boolean isSupportedMidiKeyMode(KeyMode mode)
+	{
+		return mode == KeyMode.MAJOR || mode == KeyMode.MINOR;
+	}
+
+	public static MidiEvent createKeySignatureEvent(KeySignature key, long ticks)
+	{
+		return new MidiEvent(key.toMidiMessage(), ticks);
+	}
 }

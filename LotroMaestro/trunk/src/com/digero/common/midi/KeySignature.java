@@ -1,5 +1,6 @@
 package com.digero.common.midi;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 
 import com.digero.common.abc.Accidental;
@@ -41,7 +42,24 @@ public class KeySignature implements IMidiConstants
 		}
 
 		this.sharpsFlats = data[0];
-		this.mode = (data[1] == 0) ? KeyMode.MAJOR : KeyMode.MINOR;
+		this.mode = (data[1] == 1) ? KeyMode.MINOR : KeyMode.MAJOR;
+	}
+
+	public MetaMessage toMidiMessage()
+	{
+		try
+		{
+			MetaMessage midiMessage = new MetaMessage();
+			byte[] data = new byte[2];
+			data[0] = sharpsFlats;
+			data[1] = (byte) (mode == KeyMode.MINOR ? 1 : 0);
+			midiMessage.setMessage(META_KEY_SIGNATURE, data, data.length);
+			return midiMessage;
+		}
+		catch (InvalidMidiDataException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
 	public KeySignature(String str)
