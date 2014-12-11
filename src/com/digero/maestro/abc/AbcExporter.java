@@ -311,15 +311,15 @@ public class AbcExporter
 		if (!parts.isEmpty())
 		{
 			out.println("%abc-2.1");
-			out.println(AbcField.SONG_TITLE + metadata.getSongTitle());
+			out.println(AbcField.SONG_TITLE + metadata.getSongTitle().trim());
 			if (metadata.getComposer().length() > 0)
 			{
-				out.println(AbcField.SONG_COMPOSER + metadata.getComposer());
+				out.println(AbcField.SONG_COMPOSER + metadata.getComposer().trim());
 			}
 			out.println(AbcField.SONG_DURATION + Util.formatDuration(metadata.getSongLengthMicros()));
 			if (metadata.getTranscriber().length() > 0)
 			{
-				out.println(AbcField.SONG_TRANSCRIBER + metadata.getTranscriber());
+				out.println(AbcField.SONG_TRANSCRIBER + metadata.getTranscriber().trim());
 			}
 			out.println(AbcField.ABC_CREATOR + MaestroMain.APP_NAME + " v" + MaestroMain.APP_VERSION);
 			out.println(AbcField.ABC_VERSION + "2.1");
@@ -339,7 +339,7 @@ public class AbcExporter
 		out.println();
 		out.println("X: " + part.getPartNumber());
 		if (metadata != null)
-			out.println("T: " + metadata.getPartName(part));
+			out.println("T: " + metadata.getPartName(part).trim());
 		else
 			out.println("T: " + part.getTitle().trim());
 
@@ -348,10 +348,10 @@ public class AbcExporter
 		if (metadata != null)
 		{
 			if (metadata.getComposer().length() > 0)
-				out.println("C: " + metadata.getComposer());
+				out.println("C: " + metadata.getComposer().trim());
 
 			if (metadata.getTranscriber().length() > 0)
-				out.println("Z: " + metadata.getTranscriber());
+				out.println("Z: " + metadata.getTranscriber().trim());
 		}
 
 		out.println("M: " + qtm.getMeter());
