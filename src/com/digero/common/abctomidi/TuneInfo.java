@@ -2,15 +2,16 @@ package com.digero.common.abctomidi;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.KeySignature;
+import com.digero.common.midi.TimeSignature;
 
 class TuneInfo
 {
@@ -25,6 +26,7 @@ class TuneInfo
 	private LotroInstrument instrument;
 	private Dynamics dynamics;
 	private boolean compoundMeter;
+	private int meterNumerator;
 	private int meterDenominator;
 
 	public TuneInfo()
@@ -73,15 +75,14 @@ class TuneInfo
 	public void setMeter(String str)
 	{
 		str = str.trim();
-		int numerator;
 		if (str.equals("C"))
 		{
-			numerator = 4;
+			meterNumerator = 4;
 			meterDenominator = 4;
 		}
 		else if (str.equals("C|"))
 		{
-			numerator = 2;
+			meterNumerator = 2;
 			meterDenominator = 2;
 		}
 		else
@@ -92,12 +93,25 @@ class TuneInfo
 				throw new IllegalArgumentException("The string: \"" + str
 						+ "\" is not a valid time signature (expected format: 4/4)");
 			}
-			numerator = Integer.parseInt(parts[0]);
+			meterNumerator = Integer.parseInt(parts[0]);
 			meterDenominator = Integer.parseInt(parts[1]);
 		}
 
-		this.ppqn = ((4 * numerator / meterDenominator) < 3 ? 16 : 8) * AbcToMidi.DEFAULT_NOTE_TICKS / meterDenominator;
-		this.compoundMeter = (numerator % 3) == 0;
+		this.ppqn = ((4 * meterNumerator / meterDenominator) < 3 ? 16 : 8) * AbcToMidi.DEFAULT_NOTE_TICKS
+				/ meterDenominator;
+		this.compoundMeter = (meterNumerator % 3) == 0;
+	}
+
+	public TimeSignature getMeter()
+	{
+		try
+		{
+			return new TimeSignature(meterNumerator, meterDenominator);
+		}
+		catch (IllegalArgumentException e)
+		{
+			return TimeSignature.FOUR_FOUR;
+		}
 	}
 
 	private int parseTempo(String str)

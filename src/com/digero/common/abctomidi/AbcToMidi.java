@@ -301,6 +301,8 @@ public class AbcToMidi
 
 							abcInfo.setPartNumber(0, 0);
 							abcInfo.setPartName(0, info.getTitle(), false);
+							abcInfo.setTimeSignature(info.getMeter());
+							abcInfo.setKeySignature(info.getKey());
 
 							track = null;
 						}
@@ -784,6 +786,11 @@ public class AbcToMidi
 				panAmount = pan.get(abcInfo.getPartInstrument(i), abcInfo.getPartName(i));
 			tracks[i].add(MidiFactory.createPanEvent(panAmount, getTrackChannel(i)));
 		}
+
+		// Add time and key signature events
+		tracks[0].add(MidiFactory.createTimeSignatureEvent(abcInfo.getTimeSignature(), 0));
+		if (MidiFactory.isSupportedMidiKeyMode(abcInfo.getKeySignature().mode))
+			tracks[0].add(MidiFactory.createKeySignatureEvent(abcInfo.getKeySignature(), 0));
 
 		return seq;
 	}

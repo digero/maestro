@@ -11,6 +11,8 @@ import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.IBarNumberCache;
+import com.digero.common.midi.KeySignature;
+import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 
 public class AbcInfo implements AbcConstants, IBarNumberCache
@@ -35,6 +37,8 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	private String songTitle = null;
 	private String songComposer = null;
 	private String songTranscriber = null;
+	private TimeSignature timeSignature = TimeSignature.FOUR_FOUR;
+	private KeySignature keySignature = KeySignature.C_MAJOR;
 
 	void reset()
 	{
@@ -47,6 +51,8 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		songComposer = null;
 		songTranscriber = null;
 		hasTriplets = false;
+		timeSignature = TimeSignature.FOUR_FOUR;
+		keySignature = KeySignature.C_MAJOR;
 	}
 
 	public String getComposer()
@@ -175,6 +181,16 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		return info.rawName;
 	}
 
+	public TimeSignature getTimeSignature()
+	{
+		return timeSignature;
+	}
+
+	public KeySignature getKeySignature()
+	{
+		return keySignature;
+	}
+
 	private String getMetadata_MaybeNull(char key)
 	{
 		return metadata.get(Character.toUpperCase(key));
@@ -274,6 +290,16 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	void setHasTriplets(boolean hasTriplets)
 	{
 		this.hasTriplets = hasTriplets;
+	}
+
+	void setTimeSignature(TimeSignature timeSignature)
+	{
+		this.timeSignature = timeSignature;
+	}
+
+	void setKeySignature(KeySignature keySignature)
+	{
+		this.keySignature = keySignature;
 	}
 
 	private static final String openPunct = "[-:;\\(\\[\\{\\s]*";

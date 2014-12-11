@@ -133,8 +133,8 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 		title = sequenceInfo.getTitle();
 		composer = sequenceInfo.getComposer();
-		keySignature = (ICompileConstants.SHOW_KEY_FIELD) ? sequenceInfo.getKeySignature() : KeySignature.C_MAJOR;
-		timeSignature = sequenceInfo.getTimeSignature();
+		keySignature = (ICompileConstants.SHOW_KEY_FIELD) ? abcInfo.getKeySignature() : KeySignature.C_MAJOR;
+		timeSignature = abcInfo.getTimeSignature();
 
 		int t = 0;
 		for (TrackInfo trackInfo : sequenceInfo.getTrackList())
