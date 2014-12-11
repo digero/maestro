@@ -403,6 +403,11 @@ public final class Util
 		return s.toString();
 	}
 
+	public static String emptyIfNull(String in)
+	{
+		return (in != null) ? in : "";
+	}
+
 	public static String quote(String in)
 	{
 		return "\"" + in.replace("\"", "\\\"") + "\"";
