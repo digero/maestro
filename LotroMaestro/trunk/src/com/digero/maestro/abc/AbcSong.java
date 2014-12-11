@@ -27,6 +27,7 @@ import com.digero.common.util.Listener;
 import com.digero.common.util.ListenerList;
 import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
+import com.digero.common.util.Util;
 import com.digero.common.util.Version;
 import com.digero.maestro.MaestroMain;
 import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
@@ -358,6 +359,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	public void setTitle(String title)
 	{
+		title = Util.emptyIfNull(title);
 		if (!this.title.equals(title))
 		{
 			this.title = title;
@@ -372,6 +374,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	public void setComposer(String composer)
 	{
+		composer = Util.emptyIfNull(composer);
 		if (!this.composer.equals(composer))
 		{
 			this.composer = composer;
@@ -386,6 +389,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 	public void setTranscriber(String transcriber)
 	{
+		transcriber = Util.emptyIfNull(transcriber);
 		if (!this.transcriber.equals(transcriber))
 		{
 			this.transcriber = transcriber;

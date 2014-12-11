@@ -467,7 +467,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private void updateTitleLabel()
 	{
 		String title = abcInfo.getTitle();
-		String artist = abcInfo.getComposer();
+		String artist = abcInfo.getComposer_MaybeNull();
 
 		if (artist != null)
 		{

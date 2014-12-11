@@ -2,15 +2,16 @@ package com.digero.common.abctomidi;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.IBarNumberCache;
+import com.digero.common.util.Util;
 
 public class AbcInfo implements AbcConstants, IBarNumberCache
 {
@@ -50,20 +51,35 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 
 	public String getComposer()
 	{
-		return (songComposer != null) ? songComposer : getMetadata('C');
+		return Util.emptyIfNull(getComposer_MaybeNull());
+	}
+
+	public String getComposer_MaybeNull()
+	{
+		return (songComposer != null) ? songComposer : getMetadata_MaybeNull('C');
 	}
 
 	public String getTitle()
+	{
+		return Util.emptyIfNull(getTitle_MaybeNull());
+	}
+
+	public String getTitle_MaybeNull()
 	{
 		return (songTitle != null) ? songTitle : getTitlePrefix();
 	}
 
 	public String getTranscriber()
 	{
+		return Util.emptyIfNull(getTranscriber_MaybeNull());
+	}
+
+	public String getTranscriber_MaybeNull()
+	{
 		if (songTranscriber != null)
 			return songTranscriber;
 
-		String z = getMetadata('Z');
+		String z = getMetadata_MaybeNull('Z');
 		if (z != null)
 		{
 			String lcase = z.toLowerCase();
@@ -125,6 +141,11 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 
 	public String getPartName(int trackIndex)
 	{
+		return Util.emptyIfNull(getPartName_MaybeNull(trackIndex));
+	}
+
+	public String getPartName_MaybeNull(int trackIndex)
+	{
 		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
 		if (info == null || info.name == null)
 			return "Track " + trackIndex;
@@ -138,6 +159,11 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 
 	public String getPartFullName(int trackIndex)
 	{
+		return Util.emptyIfNull(getPartFullName_MaybeNull(trackIndex));
+	}
+
+	public String getPartFullName_MaybeNull(int trackIndex)
+	{
 		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
 		if (info == null || info.rawName == null)
 		{
@@ -149,7 +175,7 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		return info.rawName;
 	}
 
-	private String getMetadata(char key)
+	private String getMetadata_MaybeNull(char key)
 	{
 		return metadata.get(Character.toUpperCase(key));
 	}
@@ -251,8 +277,8 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	}
 
 	private static final String openPunct = "[-:;\\(\\[\\{\\s]*";
-	private static final Pattern trailingPunct = Pattern.compile(openPunct
-			+ "([\\(\\[\\{]\\d{1,2}:\\d{2}[\\)\\]\\}])?" + openPunct + "$");
+	private static final Pattern trailingPunct = Pattern.compile(openPunct + "([\\(\\[\\{]\\d{1,2}:\\d{2}[\\)\\]\\}])?"
+			+ openPunct + "$");
 
 	private String getTitlePrefix()
 	{
