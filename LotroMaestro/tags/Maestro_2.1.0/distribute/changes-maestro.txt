@@ -1,0 +1,13 @@
+
+Version 1.0.1
+  * Added ability to adjust the volume of a track in the exported ABC file
+  * Remove unnecessary gervill.jar from installer
+
+
+Version 1.0.0
+  * Initial release
+
+
+== VERSION LOCATIONS ==
+src/com/digero/maestro/version.txt
+src/com/digero/abcplayer/version.txt
