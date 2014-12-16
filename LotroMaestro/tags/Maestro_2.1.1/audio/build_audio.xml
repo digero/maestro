@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="Build" name="Custom build steps for building the Eclipse workspace">
+	<property name="audio" value="." />
+	<property name="audio_backslash" value="." />
+	<property name="tools" location="../distribute/tools" />
+	<property name="build" location=".." />
+
+	<target name="Build" depends="LotroInstruments" />
+	
+	<target name="Clean" depends="LotroInstruments.Clean" />
+
+	<target name="LotroInstruments.CheckUpToDate">
+		<uptodate property="LotroInstruments.uptodate" targetfile="${build}/LotroInstruments.sf2">
+			<srcfiles dir="${basedir}/${audio}/LotroInstruments" />
+		</uptodate>
+	</target>
+	
+	<target name="LotroInstruments" depends="LotroInstruments.CheckUpToDate" unless="LotroInstruments.uptodate">
+		<exec executable="${tools}/sf2comp.exe" failonerror="true">
+			<arg value="c" />
+			<arg value="-m" />
+			<arg value="-i" />
+			<arg value="${audio_backslash}\LotroInstruments\LotroInstruments.txt" />
+			<arg value="${build}\LotroInstruments.sf2" />
+		</exec>
+	</target>
+	
+	<target name="LotroInstruments.Clean">
+		<delete file="${build}\LotroInstruments.sf2" />
+	</target>
+
+	<extension-point name="AntTest" description="Run any targets that are labeled as extensionOf='AntTest'" />
+</project>

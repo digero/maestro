@@ -1,0 +1,2666 @@
+[Samples]
+
+    SampleName=bagpipe_39
+        SampleRate=44100
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_36x
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_37x
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=cowbell
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=drums_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=drums_37
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=drums_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=drums_39
+        SampleRate=44100
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=drums_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=drums_41
+        SampleRate=44100
+        Key=41
+        FineTune=0
+        Type=1
+
+    SampleName=drums_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=drums_43
+        SampleRate=44100
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=drums_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=drums_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=drums_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=drums_47
+        SampleRate=44100
+        Key=47
+        FineTune=0
+        Type=1
+
+    SampleName=drums_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=drums_49
+        SampleRate=44100
+        Key=49
+        FineTune=0
+        Type=1
+
+    SampleName=drums_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=drums_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=drums_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=drums_53
+        SampleRate=44100
+        Key=53
+        FineTune=0
+        Type=1
+
+    SampleName=drums_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=drums_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=drums_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=drums_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=drums_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=drums_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=drums_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=drums_61
+        SampleRate=44100
+        Key=61
+        FineTune=0
+        Type=1
+
+    SampleName=drums_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=drums_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=drums_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=drums_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=drums_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=drums_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=drums_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=drums_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=drums_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=drums_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=drums_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=flute_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=flute_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=flute_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=flute_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=flute_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=flute_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=flute_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=flute_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=flute_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=harp_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=harp_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=harp_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=harp_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=harp_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=harp_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=harp_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=harp_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=harp_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=harp_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=harp_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=harp_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=harp_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=harp_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=harp_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=harp_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=harp_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=harp_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=harp_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=horn_36x
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=horn_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=horn_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=horn_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=horn_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=horn_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=horn_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=horn_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=lute_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=lute_37
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=lute_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=lute_39
+        SampleRate=44100
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=lute_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=lute_41
+        SampleRate=44100
+        Key=41
+        FineTune=0
+        Type=1
+
+    SampleName=lute_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=lute_43
+        SampleRate=44100
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=lute_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=lute_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=lute_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=lute_47
+        SampleRate=44100
+        Key=47
+        FineTune=0
+        Type=1
+
+    SampleName=lute_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=lute_49
+        SampleRate=44100
+        Key=49
+        FineTune=0
+        Type=1
+
+    SampleName=lute_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=lute_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=lute_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=lute_53
+        SampleRate=44100
+        Key=53
+        FineTune=0
+        Type=1
+
+    SampleName=lute_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=lute_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=lute_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=lute_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=lute_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=lute_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=lute_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=lute_61
+        SampleRate=44100
+        Key=61
+        FineTune=0
+        Type=1
+
+    SampleName=lute_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=lute_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=lute_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=lute_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=lute_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=lute_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=lute_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=lute_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=lute_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=lute_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=lute_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=moor_cowbell
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_41
+        SampleRate=32000
+        Key=41
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_50
+        SampleRate=32000
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_55
+        SampleRate=32000
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=pibgorn_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=theorbo_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+
+[Instruments]
+
+    InstrumentName=Bagpipe
+
+        Sample=bagpipe_39
+            Z_LowKey=36
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_sampleModes=1
+
+        Sample=bagpipe_45
+            Z_LowKey=42
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_sampleModes=1
+
+        Sample=bagpipe_51
+            Z_LowKey=48
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_57
+            Z_LowKey=55
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_63
+            Z_LowKey=61
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_69
+            Z_LowKey=67
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Clarinet
+
+        Sample=clarinet_40
+            Z_LowKey=38
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_45
+            Z_LowKey=43
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_50
+            Z_LowKey=48
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_55
+            Z_LowKey=53
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_60
+            Z_LowKey=58
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_65
+            Z_LowKey=63
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_70
+            Z_LowKey=68
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Clarinet Breath
+
+        Sample=clarinet_36x
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_37x
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Theorbo
+
+        Sample=theorbo_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_54
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_56
+            Z_LowKey=55
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_58
+            Z_LowKey=57
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_60
+            Z_LowKey=59
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_62
+            Z_LowKey=61
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_64
+            Z_LowKey=63
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_66
+            Z_LowKey=65
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_68
+            Z_LowKey=67
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_70
+            Z_LowKey=69
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=theorbo_72
+            Z_LowKey=71
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Harp
+
+        Sample=harp_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_54
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_56
+            Z_LowKey=55
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_58
+            Z_LowKey=57
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_60
+            Z_LowKey=59
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_62
+            Z_LowKey=61
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_64
+            Z_LowKey=63
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_66
+            Z_LowKey=65
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_68
+            Z_LowKey=67
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_70
+            Z_LowKey=69
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=harp_72
+            Z_LowKey=71
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Horn Breath
+
+        Sample=horn_36x
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Horn
+
+        Sample=horn_40
+            Z_LowKey=37
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_45
+            Z_LowKey=42
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_50
+            Z_LowKey=47
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_55
+            Z_LowKey=52
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_60
+            Z_LowKey=58
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_65
+            Z_LowKey=63
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_70
+            Z_LowKey=68
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Flute
+
+        Sample=flute_38
+            Z_LowKey=36
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_42
+            Z_LowKey=40
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_46
+            Z_LowKey=44
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_50
+            Z_LowKey=48
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_54
+            Z_LowKey=52
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_58
+            Z_LowKey=57
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_62
+            Z_LowKey=61
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_66
+            Z_LowKey=65
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_70
+            Z_LowKey=69
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Lute
+
+        Sample=lute_36
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_37
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_38
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_39
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_40
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_41
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_42
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_43
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_44
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_45
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_46
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_47
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_48
+            Z_LowKey=48
+            Z_HighKey=48
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_49
+            Z_LowKey=49
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_50
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_51
+            Z_LowKey=51
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_52
+            Z_LowKey=52
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_53
+            Z_LowKey=53
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_54
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_55
+            Z_LowKey=55
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_56
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_57
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_58
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_59
+            Z_LowKey=59
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_60
+            Z_LowKey=60
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_61
+            Z_LowKey=61
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_62
+            Z_LowKey=62
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_63
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_64
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_65
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_66
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_67
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_68
+            Z_LowKey=68
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_69
+            Z_LowKey=69
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_70
+            Z_LowKey=70
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_71
+            Z_LowKey=71
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lute_72
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Drums
+
+        Sample=drums_36
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_37
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_38
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_39
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_40
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_41
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_42
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_43
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_44
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_45
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_46
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_47
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_48
+            Z_LowKey=48
+            Z_HighKey=48
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_49
+            Z_LowKey=49
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_50
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_51
+            Z_LowKey=51
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_52
+            Z_LowKey=52
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_53
+            Z_LowKey=53
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_54
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_55
+            Z_LowKey=55
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_56
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_57
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_58
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_59
+            Z_LowKey=59
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_60
+            Z_LowKey=60
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_61
+            Z_LowKey=61
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_62
+            Z_LowKey=62
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_63
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_64
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_65
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_66
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_67
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_68
+            Z_LowKey=68
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_69
+            Z_LowKey=69
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_70
+            Z_LowKey=70
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_71
+            Z_LowKey=71
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=drums_72
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Cowbell
+
+        Sample=cowbell
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=13
+            Z_overridingRootKey=36
+
+        Sample=cowbell
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65493
+            Z_overridingRootKey=37
+
+        Sample=cowbell
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65496
+            Z_overridingRootKey=38
+
+        Sample=cowbell
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65503
+            Z_overridingRootKey=39
+
+        Sample=cowbell
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65517
+            Z_overridingRootKey=40
+
+        Sample=cowbell
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=11
+            Z_overridingRootKey=41
+
+        Sample=cowbell
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65496
+            Z_overridingRootKey=42
+
+        Sample=cowbell
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=13
+            Z_overridingRootKey=43
+
+        Sample=cowbell
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=20
+            Z_overridingRootKey=44
+
+        Sample=cowbell
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65529
+            Z_overridingRootKey=45
+
+        Sample=cowbell
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=10
+            Z_overridingRootKey=46
+
+        Sample=cowbell
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65516
+            Z_overridingRootKey=47
+
+        Sample=cowbell
+            Z_LowKey=48
+            Z_HighKey=48
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65511
+            Z_overridingRootKey=48
+
+        Sample=cowbell
+            Z_LowKey=49
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65527
+            Z_overridingRootKey=49
+
+        Sample=cowbell
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=22
+            Z_overridingRootKey=50
+
+        Sample=cowbell
+            Z_LowKey=51
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=19
+            Z_overridingRootKey=51
+
+        Sample=cowbell
+            Z_LowKey=52
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65515
+            Z_overridingRootKey=52
+
+        Sample=cowbell
+            Z_LowKey=53
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=44
+            Z_overridingRootKey=53
+
+        Sample=cowbell
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=18
+            Z_overridingRootKey=54
+
+        Sample=cowbell
+            Z_LowKey=55
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65532
+            Z_overridingRootKey=55
+
+        Sample=cowbell
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=27
+            Z_overridingRootKey=56
+
+        Sample=cowbell
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65494
+            Z_overridingRootKey=57
+
+        Sample=cowbell
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65530
+            Z_overridingRootKey=58
+
+        Sample=cowbell
+            Z_LowKey=59
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65523
+            Z_overridingRootKey=59
+
+        Sample=cowbell
+            Z_LowKey=60
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65495
+            Z_overridingRootKey=60
+
+        Sample=cowbell
+            Z_LowKey=61
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65509
+            Z_overridingRootKey=61
+
+        Sample=cowbell
+            Z_LowKey=62
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65508
+            Z_overridingRootKey=62
+
+        Sample=cowbell
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65503
+            Z_overridingRootKey=63
+
+        Sample=cowbell
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65511
+            Z_overridingRootKey=64
+
+        Sample=cowbell
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=29
+            Z_overridingRootKey=65
+
+        Sample=cowbell
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=26
+            Z_overridingRootKey=66
+
+        Sample=cowbell
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=26
+            Z_overridingRootKey=67
+
+        Sample=cowbell
+            Z_LowKey=68
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_overridingRootKey=68
+
+        Sample=cowbell
+            Z_LowKey=69
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65532
+            Z_overridingRootKey=69
+
+        Sample=cowbell
+            Z_LowKey=70
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65502
+            Z_overridingRootKey=70
+
+        Sample=cowbell
+            Z_LowKey=71
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65494
+            Z_overridingRootKey=71
+
+        Sample=cowbell
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=18
+            Z_overridingRootKey=72
+
+
+    InstrumentName=Moor Cowbell
+
+        Sample=moor_cowbell
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=17
+            Z_overridingRootKey=36
+
+        Sample=moor_cowbell
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65498
+            Z_overridingRootKey=37
+
+        Sample=moor_cowbell
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=16
+            Z_overridingRootKey=38
+
+        Sample=moor_cowbell
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65525
+            Z_overridingRootKey=39
+
+        Sample=moor_cowbell
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_overridingRootKey=40
+
+        Sample=moor_cowbell
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=18
+            Z_overridingRootKey=41
+
+        Sample=moor_cowbell
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=30
+            Z_overridingRootKey=42
+
+        Sample=moor_cowbell
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=23
+            Z_overridingRootKey=43
+
+        Sample=moor_cowbell
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=10
+            Z_overridingRootKey=44
+
+        Sample=moor_cowbell
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=8
+            Z_overridingRootKey=45
+
+        Sample=moor_cowbell
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=34
+            Z_overridingRootKey=46
+
+        Sample=moor_cowbell
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65489
+            Z_overridingRootKey=47
+
+        Sample=moor_cowbell
+            Z_LowKey=48
+            Z_HighKey=48
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=19
+            Z_overridingRootKey=48
+
+        Sample=moor_cowbell
+            Z_LowKey=49
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=37
+            Z_overridingRootKey=49
+
+        Sample=moor_cowbell
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65513
+            Z_overridingRootKey=50
+
+        Sample=moor_cowbell
+            Z_LowKey=51
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65508
+            Z_overridingRootKey=51
+
+        Sample=moor_cowbell
+            Z_LowKey=52
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=34
+            Z_overridingRootKey=52
+
+        Sample=moor_cowbell
+            Z_LowKey=53
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=29
+            Z_overridingRootKey=53
+
+        Sample=moor_cowbell
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65501
+            Z_overridingRootKey=54
+
+        Sample=moor_cowbell
+            Z_LowKey=55
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65512
+            Z_overridingRootKey=55
+
+        Sample=moor_cowbell
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=32
+            Z_overridingRootKey=56
+
+        Sample=moor_cowbell
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65496
+            Z_overridingRootKey=57
+
+        Sample=moor_cowbell
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=23
+            Z_overridingRootKey=58
+
+        Sample=moor_cowbell
+            Z_LowKey=59
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65491
+            Z_overridingRootKey=59
+
+        Sample=moor_cowbell
+            Z_LowKey=60
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65532
+            Z_overridingRootKey=60
+
+        Sample=moor_cowbell
+            Z_LowKey=61
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=40
+            Z_overridingRootKey=61
+
+        Sample=moor_cowbell
+            Z_LowKey=62
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65508
+            Z_overridingRootKey=62
+
+        Sample=moor_cowbell
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65486
+            Z_overridingRootKey=63
+
+        Sample=moor_cowbell
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65517
+            Z_overridingRootKey=64
+
+        Sample=moor_cowbell
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=25
+            Z_overridingRootKey=65
+
+        Sample=moor_cowbell
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65498
+            Z_overridingRootKey=66
+
+        Sample=moor_cowbell
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=18
+            Z_overridingRootKey=67
+
+        Sample=moor_cowbell
+            Z_LowKey=68
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65488
+            Z_overridingRootKey=68
+
+        Sample=moor_cowbell
+            Z_LowKey=69
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=65488
+            Z_overridingRootKey=69
+
+        Sample=moor_cowbell
+            Z_LowKey=70
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=13
+            Z_overridingRootKey=70
+
+        Sample=moor_cowbell
+            Z_LowKey=71
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=31
+            Z_overridingRootKey=71
+
+        Sample=moor_cowbell
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_fineTune=23
+            Z_overridingRootKey=72
+
+
+    InstrumentName=Pibgorn
+
+        Sample=pibgorn_41
+            Z_LowKey=36
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_45
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_50
+            Z_LowKey=46
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_55
+            Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_58
+            Z_LowKey=57
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_63
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_65
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_66
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_67
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_69
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=pibgorn_71
+            Z_LowKey=70
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+[Presets]
+
+    PresetName=Bagpipe
+        Bank=0
+        Program=109
+
+        Instrument=Bagpipe
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Clarinet
+        Bank=0
+        Program=71
+
+        Instrument=Clarinet
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+        Instrument=Clarinet Breath
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Theorbo
+        Bank=0
+        Program=32
+
+        Instrument=Theorbo
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Harp
+        Bank=0
+        Program=46
+
+        Instrument=Harp
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Horn
+        Bank=0
+        Program=69
+
+        Instrument=Horn
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+        Instrument=Horn Breath
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Flute
+        Bank=0
+        Program=73
+
+        Instrument=Flute
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Lute
+        Bank=0
+        Program=24
+
+        Instrument=Lute
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Lute1
+        Bank=0
+        Program=0
+
+        Instrument=Lute
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Drums
+        Bank=0
+        Program=118
+
+        Instrument=Drums
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Cowbell
+        Bank=0
+        Program=115
+
+        Instrument=Cowbell
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Moor Cowbell
+        Bank=0
+        Program=114
+
+        Instrument=Moor Cowbell
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Pibgorn
+        Bank=0
+        Program=84
+
+        Instrument=Pibgorn
+            L_LowKey=0
+            L_HighKey=127
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+[Info]
+Version=2.1
+Engine=E-mu 10K1 
+Name=LotroInstruments.sf2  
+ROMName=
+ROMVersion=0.0
+Date=1/24/2010 2:22:37 AM  
+Designer=SynthFont Viena 
+Product=SynthFont Viena 
+Copyright=SynthFont Viena 
+Editor=SynthFont Viena 
+Comments=
