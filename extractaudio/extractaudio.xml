@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="Done" name="Custom build steps for building the Eclipse workspace">
+	<property name="bin" location="../bin" />
+	<property name="tools" location="../distribute/tools" />
+
+	<property name="hashlist_dir" location="F:/Games/LOTRO/u15/hashes" />
+	
+	<property name="exclude_reference_dir" location="F:/Games/LOTRO/production" />
+	<property name="instrument_reference_dir" location="F:/Games/LOTRO/production/found" />
+	<property name="exclude_hashes_file" location="${hashlist_dir}/exclude_hashes.txt" />
+	<property name="instrument_hashes_file" location="${hashlist_dir}/instrument_hashes.txt" />
+	
+	<property name="exclude_wavreference_dir" location="F:/Games/LOTRO/prod_wav" />
+	<property name="instrument_wavreference_dir" location="C:/Users/Ben/workspace/maestro/audio/LotroInstruments" />
+	<property name="exclude_wavhashes_file" location="${hashlist_dir}/exclude_wavhashes.txt" />
+	<property name="instrument_wavhashes_file" location="${hashlist_dir}/instrument_wavhashes.txt" />
+
+	<property name="source_dat" location="C:/Games/Turbine/The Lord of the Rings Online/client_sound.dat" />
+	<property name="target_dir" location="F:/Games/LOTRO/u15" />
+	
+	<property name="audiorip_dirname" value="AUDIORIP_000_[client_sound.dat]" />
+
+	<target name="Extract">
+		<mkdir dir="${target_dir}" />
+		<!--exec executable="${tools}/AudioRipWin.exe" failonerror="true">
+			<arg value='"${source_dat}"' />
+			<arg value="-ogg" />
+			<arg value="-o" /> <arg value='"${target_dir}"' />
+		</exec-->
+		
+	</target>
+	
+	<target name="GenerateHashes">
+		<mkdir dir="${hashlist_dir}" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="GENERATE_HASHES" />
+			<arg value="${exclude_reference_dir}" />
+			<arg value="${exclude_hashes_file}" />
+		</java>
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="GENERATE_HASHES" />
+			<arg value="${instrument_reference_dir}" />
+			<arg value="${instrument_hashes_file}" />
+		</java>
+	</target>
+	
+	<target name="MoveFiles"> <!-- depends="GenerateHashes" -->
+		<mkdir dir="${target_dir}/excluded" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="MOVE_INCLUDE" />
+			<arg value="${target_dir}/${audiorip_dirname}" />
+			<arg value="${target_dir}/excluded" />
+			<arg value="${exclude_hashes_file}" />
+		</java>
+		<mkdir dir="${target_dir}/alreadyKnown" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="MOVE_INCLUDE" />
+			<arg value="${target_dir}/${audiorip_dirname}" />
+			<arg value="${target_dir}/alreadyKnown" />
+			<arg value="${instrument_hashes_file}" />
+		</java>
+	</target>
+
+	<target name="ListMatches"> <!-- depends="GenerateHashes" -->
+		<echo>Excluded matches:</echo>
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="LIST_INCLUDE" />
+			<arg value="${target_dir}/${audiorip_dirname}" />
+			<arg value="${exclude_hashes_file}" />
+		</java>
+		<echo>Already known matches:</echo>
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="LIST_INCLUDE" />
+			<arg value="${target_dir}/${audiorip_dirname}" />
+			<arg value="${instrument_hashes_file}" />
+		</java>
+	</target>
+
+	<target name="GenerateHashesWav">
+		<mkdir dir="${hashlist_dir}" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="GENERATE_HASHES" />
+			<arg value="${exclude_wavreference_dir}" />
+			<arg value="${exclude_wavhashes_file}" />
+		</java>
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="GENERATE_HASHES" />
+			<arg value="${instrument_wavreference_dir}" />
+			<arg value="${instrument_wavhashes_file}" />
+		</java>
+	</target>
+	
+	<target name="MoveFilesWav" depends="GenerateHashesWav"> <!--  -->
+		<mkdir dir="${target_dir}/wav/excluded" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="MOVE_INCLUDE" />
+			<arg value="${target_dir}/wav" />
+			<arg value="${target_dir}/wav/excluded" />
+			<arg value="${exclude_hashes_file}" />
+		</java>
+		<mkdir dir="${target_dir}/wav/alreadyKnown" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="MOVE_INCLUDE" />
+			<arg value="${target_dir}/wav" />
+			<arg value="${target_dir}/wav/alreadyKnown" />
+			<arg value="${instrument_hashes_file}" />
+		</java>
+	</target>
+
+	<target name="Done" depends="MoveFiles" />
+
+	<extension-point name="AntTest" description="Run any targets that are labeled as extensionOf='AntTest'" />
+</project>

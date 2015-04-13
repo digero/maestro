@@ -1,5 +1,7 @@
 package com.digero.common.abc;
 
+import com.digero.common.midi.Note;
+
 public interface AbcConstants
 {
 	// Chord
@@ -14,4 +16,10 @@ public interface AbcConstants
 			* (LONGEST_NOTE_MICROS / (2 * SHORTEST_NOTE_MICROS - 1));
 	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
 	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
+
+	/** Note ID used in ABC files for Cowbells. Somewhat arbitrary */
+	public static final int COWBELL_NOTE_ID = 71;
+
+	/** The highest Note ID for bagpipe drones */
+	public static final int BAGPIPE_LAST_DRONE_NOTE_ID = Note.B2.id;
 }

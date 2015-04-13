@@ -12,6 +12,7 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Track;
 
+import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
@@ -827,8 +828,9 @@ public class AbcExporter
 
 			// Make a hard break for notes that are longer than LotRO can play
 			// Bagpipe notes up to B2 can sustain indefinitey; don't break them
-			if (ne.getEndTick() > maxNoteEndTick && ne.note != Note.REST
-					&& !(part.getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= Note.B2.id))
+			if (ne.getEndTick() > maxNoteEndTick
+					&& ne.note != Note.REST
+					&& !(part.getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID))
 			{
 				// Align with a bar boundary if it extends across 1 or more full bars.
 				long endBarTick = qtm.tickToBarStartTick(maxNoteEndTick);

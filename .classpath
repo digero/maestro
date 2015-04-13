@@ -3,5 +3,14 @@
 	<classpathentry excluding="com/digero/common/icons/unused/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="TableLayout.jar" sourcepath="TableLayout-src.jar"/>
+	<classpathentry kind="lib" path="commons-math3-3.4.1.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/maestro/commons-math3-3.4.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="vorbisspi1.0.3.jar"/>
+	<classpathentry kind="lib" path="jogg-0.0.7.jar"/>
+	<classpathentry kind="lib" path="jorbis-0.0.15.jar"/>
+	<classpathentry kind="lib" path="tritonus_share.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

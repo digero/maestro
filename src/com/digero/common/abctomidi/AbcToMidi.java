@@ -657,7 +657,7 @@ public class AbcToMidi
 								else
 								{
 									noteId = (info.getInstrument() == LotroInstrument.COWBELL) ? 76 : 71;
-									lotroNoteId = 71;
+									lotroNoteId = AbcConstants.COWBELL_NOTE_ID;
 								}
 							}
 

@@ -27,7 +27,7 @@
 	</target>
 
 	<target name="CommonJar" depends="PreBuild">
-		<jar destfile="${build}/${basename.Common}.jar" basedir="${bin}" excludes="com/digero/abcplayer/**,com/digero/maestro/**" />
+		<jar destfile="${build}/${basename.Common}.jar" basedir="${bin}" includes="com/digero/common/**" />
 	</target>
 
 	<target name="MaestroJar" depends="CommonJar">
