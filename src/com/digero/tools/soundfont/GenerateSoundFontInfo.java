@@ -30,18 +30,22 @@ public class GenerateSoundFontInfo
 	{
 		switch (lotroInstrument)
 		{
-		case LUTE:
-		case HARP:
-		case THEORBO:
 		case DRUMS:
 			return 1;
 
-		case CLARINET:
-		case FLUTE:
-		case HORN:
-			return 4;
+		case LUTE:
+		case HARP:
+		case THEORBO:
+			return 1;
 
+		case CLARINET:
+			return 2;
+
+		case FLUTE:
 		case BAGPIPE:
+		case HORN:
+			return 3;
+
 		case PIBGORN:
 			return 6;
 

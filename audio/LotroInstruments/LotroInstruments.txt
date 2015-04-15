@@ -1,92 +1,188 @@
 [Samples]
 
-    SampleName=bagpipe_38
-        SampleRate=44100
-        Key=38
-        FineTune=0
-        Type=1
-
-    SampleName=bagpipe_44
-        SampleRate=44100
-        Key=44
-        FineTune=0
-        Type=1
-
-    SampleName=bagpipe_50
-        SampleRate=44100
-        Key=50
-        FineTune=0
-        Type=1
-
-    SampleName=bagpipe_56
-        SampleRate=44100
-        Key=56
-        FineTune=0
-        Type=1
-
-    SampleName=bagpipe_62
-        SampleRate=44100
-        Key=62
-        FineTune=0
-        Type=1
-
-    SampleName=bagpipe_68
-        SampleRate=44100
-        Key=68
-        FineTune=0
-        Type=1
-
-    SampleName=clarinet_37
+    SampleName=bagpipe_37
         SampleRate=44100
         Key=37
         FineTune=0
         Type=1
 
-    SampleName=clarinet_41
+    SampleName=bagpipe_40
         SampleRate=44100
-        Key=41
+        Key=40
         FineTune=0
         Type=1
 
-    SampleName=clarinet_45
+    SampleName=bagpipe_43
         SampleRate=44100
-        Key=45
+        Key=43
         FineTune=0
         Type=1
 
-    SampleName=clarinet_49
+    SampleName=bagpipe_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_49
         SampleRate=44100
         Key=49
         FineTune=0
         Type=1
 
-    SampleName=clarinet_53
+    SampleName=bagpipe_52
         SampleRate=44100
-        Key=53
+        Key=52
         FineTune=0
         Type=1
 
-    SampleName=clarinet_57
+    SampleName=bagpipe_55
         SampleRate=44100
-        Key=57
+        Key=55
         FineTune=0
         Type=1
 
-    SampleName=clarinet_61
+    SampleName=bagpipe_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_61
         SampleRate=44100
         Key=61
         FineTune=0
         Type=1
 
-    SampleName=clarinet_65
+    SampleName=bagpipe_64
         SampleRate=44100
-        Key=65
+        Key=64
         FineTune=0
         Type=1
 
-    SampleName=clarinet_69
+    SampleName=bagpipe_67
         SampleRate=44100
-        Key=69
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=bagpipe_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=clarinet_72
+        SampleRate=44100
+        Key=72
         FineTune=0
         Type=1
 
@@ -324,15 +420,21 @@
         FineTune=0
         Type=1
 
-    SampleName=flute_41
+    SampleName=flute_40
         SampleRate=44100
-        Key=41
+        Key=40
         FineTune=0
         Type=1
 
-    SampleName=flute_45
+    SampleName=flute_43
         SampleRate=44100
-        Key=45
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=flute_46
+        SampleRate=44100
+        Key=46
         FineTune=0
         Type=1
 
@@ -342,15 +444,21 @@
         FineTune=0
         Type=1
 
-    SampleName=flute_53
+    SampleName=flute_52
         SampleRate=44100
-        Key=53
+        Key=52
         FineTune=0
         Type=1
 
-    SampleName=flute_57
+    SampleName=flute_55
         SampleRate=44100
-        Key=57
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=flute_58
+        SampleRate=44100
+        Key=58
         FineTune=0
         Type=1
 
@@ -360,15 +468,21 @@
         FineTune=0
         Type=1
 
-    SampleName=flute_65
+    SampleName=flute_64
         SampleRate=44100
-        Key=65
+        Key=64
         FineTune=0
         Type=1
 
-    SampleName=flute_69
+    SampleName=flute_67
         SampleRate=44100
-        Key=69
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=flute_70
+        SampleRate=44100
+        Key=70
         FineTune=0
         Type=1
 
@@ -600,15 +714,21 @@
         FineTune=0
         Type=1
 
-    SampleName=horn_41
+    SampleName=horn_40
         SampleRate=44100
-        Key=41
+        Key=40
         FineTune=0
         Type=1
 
-    SampleName=horn_45
+    SampleName=horn_43
         SampleRate=44100
-        Key=45
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=horn_46
+        SampleRate=44100
+        Key=46
         FineTune=0
         Type=1
 
@@ -618,15 +738,21 @@
         FineTune=0
         Type=1
 
-    SampleName=horn_53
+    SampleName=horn_52
         SampleRate=44100
-        Key=53
+        Key=52
         FineTune=0
         Type=1
 
-    SampleName=horn_57
+    SampleName=horn_55
         SampleRate=44100
-        Key=57
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=horn_58
+        SampleRate=44100
+        Key=58
         FineTune=0
         Type=1
 
@@ -636,15 +762,21 @@
         FineTune=0
         Type=1
 
-    SampleName=horn_65
+    SampleName=horn_64
         SampleRate=44100
-        Key=65
+        Key=64
         FineTune=0
         Type=1
 
-    SampleName=horn_69
+    SampleName=horn_67
         SampleRate=44100
-        Key=69
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=horn_70
+        SampleRate=44100
+        Key=70
         FineTune=0
         Type=1
 
@@ -1139,15 +1271,29 @@
 
     InstrumentName=Bagpipe Drones
 
-        Sample=bagpipe_38
+        Sample=bagpipe_37
             Z_LowKey=36
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_sampleModes=1
+
+        Sample=bagpipe_40
+            Z_LowKey=39
             Z_HighKey=41
             Z_LowVelocity=0
             Z_HighVelocity=127
             Z_sampleModes=1
 
-        Sample=bagpipe_44
+        Sample=bagpipe_43
             Z_LowKey=42
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_sampleModes=1
+
+        Sample=bagpipe_46
+            Z_LowKey=45
             Z_HighKey=47
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -1156,26 +1302,50 @@
 
     InstrumentName=Bagpipe
 
-        Sample=bagpipe_50
+        Sample=bagpipe_49
             Z_LowKey=48
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_52
+            Z_LowKey=51
             Z_HighKey=53
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=bagpipe_56
+        Sample=bagpipe_55
             Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_58
+            Z_LowKey=57
             Z_HighKey=59
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=bagpipe_62
+        Sample=bagpipe_61
             Z_LowKey=60
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_64
+            Z_LowKey=63
             Z_HighKey=65
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=bagpipe_68
+        Sample=bagpipe_67
             Z_LowKey=66
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=bagpipe_70
+            Z_LowKey=69
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -1183,56 +1353,116 @@
 
     InstrumentName=Clarinet
 
-        Sample=clarinet_37
+        Sample=clarinet_36
             Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_38
+            Z_LowKey=38
             Z_HighKey=39
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_41
+        Sample=clarinet_40
             Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_42
+            Z_LowKey=42
             Z_HighKey=43
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_45
+        Sample=clarinet_44
             Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_46
+            Z_LowKey=46
             Z_HighKey=47
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_49
+        Sample=clarinet_48
             Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_50
+            Z_LowKey=50
             Z_HighKey=51
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_53
+        Sample=clarinet_52
             Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_54
+            Z_LowKey=54
             Z_HighKey=55
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_57
+        Sample=clarinet_56
             Z_LowKey=56
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_58
+            Z_LowKey=58
             Z_HighKey=59
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_61
+        Sample=clarinet_60
             Z_LowKey=60
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_62
+            Z_LowKey=62
             Z_HighKey=63
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_65
+        Sample=clarinet_64
             Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_66
+            Z_LowKey=66
             Z_HighKey=67
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=clarinet_69
+        Sample=clarinet_68
             Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_70
+            Z_LowKey=70
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=clarinet_72
+            Z_LowKey=72
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -1764,54 +1994,72 @@
 
         Sample=flute_37
             Z_LowKey=36
-            Z_HighKey=39
+            Z_HighKey=38
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_41
-            Z_LowKey=40
-            Z_HighKey=43
+        Sample=flute_40
+            Z_LowKey=39
+            Z_HighKey=41
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_45
-            Z_LowKey=44
+        Sample=flute_43
+            Z_LowKey=42
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_46
+            Z_LowKey=45
             Z_HighKey=47
             Z_LowVelocity=0
             Z_HighVelocity=127
 
         Sample=flute_49
             Z_LowKey=48
-            Z_HighKey=51
+            Z_HighKey=50
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_53
-            Z_LowKey=52
-            Z_HighKey=55
+        Sample=flute_52
+            Z_LowKey=51
+            Z_HighKey=53
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_57
-            Z_LowKey=56
+        Sample=flute_55
+            Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_58
+            Z_LowKey=57
             Z_HighKey=59
             Z_LowVelocity=0
             Z_HighVelocity=127
 
         Sample=flute_61
             Z_LowKey=60
-            Z_HighKey=63
+            Z_HighKey=62
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_65
-            Z_LowKey=64
-            Z_HighKey=67
+        Sample=flute_64
+            Z_LowKey=63
+            Z_HighKey=65
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=flute_69
-            Z_LowKey=68
+        Sample=flute_67
+            Z_LowKey=66
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=flute_70
+            Z_LowKey=69
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -2046,54 +2294,72 @@
 
         Sample=horn_37
             Z_LowKey=36
-            Z_HighKey=39
+            Z_HighKey=38
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_41
-            Z_LowKey=40
-            Z_HighKey=43
+        Sample=horn_40
+            Z_LowKey=39
+            Z_HighKey=41
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_45
-            Z_LowKey=44
+        Sample=horn_43
+            Z_LowKey=42
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_46
+            Z_LowKey=45
             Z_HighKey=47
             Z_LowVelocity=0
             Z_HighVelocity=127
 
         Sample=horn_49
             Z_LowKey=48
-            Z_HighKey=51
+            Z_HighKey=50
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_53
-            Z_LowKey=52
-            Z_HighKey=55
+        Sample=horn_52
+            Z_LowKey=51
+            Z_HighKey=53
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_57
-            Z_LowKey=56
+        Sample=horn_55
+            Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_58
+            Z_LowKey=57
             Z_HighKey=59
             Z_LowVelocity=0
             Z_HighVelocity=127
 
         Sample=horn_61
             Z_LowKey=60
-            Z_HighKey=63
+            Z_HighKey=62
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_65
-            Z_LowKey=64
-            Z_HighKey=67
+        Sample=horn_64
+            Z_LowKey=63
+            Z_HighKey=65
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=horn_69
-            Z_LowKey=68
+        Sample=horn_67
+            Z_LowKey=66
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=horn_70
+            Z_LowKey=69
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
