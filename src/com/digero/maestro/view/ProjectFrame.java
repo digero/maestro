@@ -132,6 +132,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	private JTextField songTitleField;
 	private JTextField composerField;
 	private JTextField transcriberField;
+	private PrefsDocumentListener transcriberFieldListener;
 	private JSpinner transposeSpinner;
 	private JSpinner tempoSpinner;
 	private JButton resetTempoButton;
@@ -315,7 +316,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		transcriberField = new JTextField(prefs.get("transcriber", ""));
 		transcriberField.setToolTipText("Song Transcriber (your name)");
-		transcriberField.getDocument().addDocumentListener(new PrefsDocumentListener(prefs, "transcriber"));
+		transcriberFieldListener = new PrefsDocumentListener(prefs, "transcriber");
+		transcriberField.getDocument().addDocumentListener(transcriberFieldListener);
 		transcriberField.getDocument().addDocumentListener(new SimpleDocumentListener()
 		{
 			@Override public void changedUpdate(DocumentEvent e)
@@ -1077,6 +1079,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 	{
 		private Preferences prefs;
 		private String prefName;
+		private boolean ignoreChanges = false;
 
 		public PrefsDocumentListener(Preferences prefs, String prefName)
 		{
@@ -1084,8 +1087,16 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			this.prefName = prefName;
 		}
 
+		public void setIgnoreChanges(boolean ignoringChanges)
+		{
+			this.ignoreChanges = ignoringChanges;
+		}
+
 		private void updatePrefs(javax.swing.text.Document doc)
 		{
+			if (ignoreChanges)
+				return;
+
 			String txt;
 			try
 			{
@@ -1270,8 +1281,10 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			case TRANSCRIBER:
 				if (!transcriberField.getText().equals(abcSong.getTranscriber()))
 				{
+					transcriberFieldListener.setIgnoreChanges(true);
 					transcriberField.setText(abcSong.getTranscriber());
 					transcriberField.select(0, 0);
+					transcriberFieldListener.setIgnoreChanges(false);
 				}
 				break;
 
@@ -1479,8 +1492,17 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			composerField.setText(abcSong.getComposer());
 			composerField.select(0, 0);
 
-			// TODO handler transcriber better
-			abcSong.setTranscriber(transcriberField.getText());
+			if (abcSong.isFromAbcFile() || abcSong.isFromXmlFile())
+			{
+				transcriberFieldListener.setIgnoreChanges(true);
+				transcriberField.setText(abcSong.getTranscriber());
+				transcriberField.select(0, 0);
+				transcriberFieldListener.setIgnoreChanges(false);
+			}
+			else
+			{
+				abcSong.setTranscriber(transcriberField.getText());
+			}
 
 			transposeSpinner.setValue(abcSong.getTranspose());
 			tempoSpinner.setValue(abcSong.getTempoBPM());
