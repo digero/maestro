@@ -55,6 +55,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 	private KeySignature keySignature = KeySignature.C_MAJOR;
 	private TimeSignature timeSignature = TimeSignature.FOUR_FOUR;
 	private boolean tripletTiming = false;
+	private boolean skipSilenceAtStart = true;
 
 	private final boolean fromAbcFile;
 	private final boolean fromXmlFile;
@@ -483,6 +484,20 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 		}
 	}
 
+	public boolean isSkipSilenceAtStart()
+	{
+		return skipSilenceAtStart;
+	}
+
+	public void setSkipSilenceAtStart(boolean skipSilenceAtStart)
+	{
+		if (this.skipSilenceAtStart != skipSilenceAtStart)
+		{
+			this.skipSilenceAtStart = skipSilenceAtStart;
+			fireChangeEvent(AbcSongProperty.SKIP_SILENCE_AT_START);
+		}
+	}
+
 	public SequenceInfo getSequenceInfo()
 	{
 		return sequenceInfo;
@@ -614,6 +629,9 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 
 			if (abcExporter.getKeySignature() != key)
 				abcExporter.setKeySignature(key);
+
+			if (abcExporter.isSkipSilenceAtStart() != skipSilenceAtStart)
+				abcExporter.setSkipSilenceAtStart(skipSilenceAtStart);
 		}
 
 		return abcExporter;

@@ -38,6 +38,7 @@ public class AbcExporter
 	private QuantizedTimingInfo qtm;
 	private KeySignature keySignature;
 
+	private boolean skipSilenceAtStart;
 	private long exportStartTick;
 	private long exportEndTick;
 
@@ -76,6 +77,16 @@ public class AbcExporter
 			throw new AbcConversionException("Only C major and A minor are currently supported");
 
 		this.keySignature = keySignature;
+	}
+
+	public boolean isSkipSilenceAtStart()
+	{
+		return skipSilenceAtStart;
+	}
+
+	public void setSkipSilenceAtStart(boolean skipSilenceAtStart)
+	{
+		this.skipSilenceAtStart = skipSilenceAtStart;
 	}
 
 	public AbcMetadataSource getMetadataSource()
@@ -946,16 +957,20 @@ public class AbcExporter
 	public Pair<Long, Long> getSongStartEndTick(boolean lengthenToBar, boolean accountForSustain)
 	{
 		// Remove silent bars before the song starts
-		long startTick = Long.MAX_VALUE;
+		long startTick = skipSilenceAtStart ? Long.MAX_VALUE : 0;
 		long endTick = Long.MIN_VALUE;
 		for (AbcPart part : parts)
 		{
-			long firstNoteStart = part.firstNoteStartTick();
-			if (firstNoteStart < startTick)
+			if (skipSilenceAtStart)
 			{
-				// Remove integral number of bars
-				startTick = qtm.tickToBarStartTick(firstNoteStart);
+				long firstNoteStart = part.firstNoteStartTick();
+				if (firstNoteStart < startTick)
+				{
+					// Remove integral number of bars
+					startTick = qtm.tickToBarStartTick(firstNoteStart);
+				}
 			}
+
 			long lastNoteEnd = part.lastNoteEndTick(accountForSustain);
 			if (lastNoteEnd > endTick)
 			{

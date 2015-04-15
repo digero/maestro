@@ -15,6 +15,7 @@ public class AbcSongEvent extends EventObject
 		KEY_SIGNATURE, //
 		TIME_SIGNATURE, //
 		TRIPLET_TIMING, //
+		SKIP_SILENCE_AT_START, //
 		//
 		PART_ADDED, //
 		BEFORE_PART_REMOVED, //

@@ -945,6 +945,9 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			exportButton.setText("Export ABC As...");
 		else
 			exportButton.setText("Export ABC");
+
+		if (abcSong != null)
+			abcSong.setSkipSilenceAtStart(saveSettings.skipSilenceAtStart);
 	}
 
 	public void onVolumeChanged()
@@ -1351,6 +1354,14 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 				updateButtons(false);
 				break;
 
+			case SKIP_SILENCE_AT_START:
+				if (saveSettings.skipSilenceAtStart != abcSong.isSkipSilenceAtStart())
+				{
+					saveSettings.skipSilenceAtStart = abcSong.isSkipSilenceAtStart();
+					saveSettings.saveToPrefs();
+				}
+				break;
+
 			case EXPORT_FILE:
 				// Don't care
 				break;
@@ -1521,8 +1532,6 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			if (abcSong.isFromXmlFile())
 			{
 				allowOverwriteSaveFile = true;
-//				if (abcSong.getExportFile() != null && abcSong.getExportFile().exists())
-//					allowOverwriteExportFile = true;
 			}
 
 			if (abcSong.isFromAbcFile() || abcSong.isFromXmlFile())
@@ -1548,6 +1557,8 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 				}
 				sequencer.start();
 			}
+
+			abcSong.setSkipSilenceAtStart(saveSettings.skipSilenceAtStart);
 
 			setAbcSongModified(false);
 			updateTitle();
@@ -1699,7 +1710,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 
 		try
 		{
-
+			abcSong.setSkipSilenceAtStart(saveSettings.skipSilenceAtStart);
 			AbcExporter exporter = abcSong.getAbcExporter();
 			SequenceInfo previewSequenceInfo = SequenceInfo.fromAbcParts(exporter, !failedToLoadLotroInstruments);
 

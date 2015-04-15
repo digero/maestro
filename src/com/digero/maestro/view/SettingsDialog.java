@@ -395,6 +395,23 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 			}
 		});
 
+		final JCheckBox skipSilenceAtStartCheckBox = new JCheckBox("Remove silence from start of exported ABC");
+		skipSilenceAtStartCheckBox.setToolTipText("<html>" //
+				+ "Exported ABC files will not include silent measures from the<br>" //
+				+ "beginning of the song.<br>" //
+				+ "<br>" //
+				+ "Uncheck if you want to export multiple ABC files from the same<br>" //
+				+ "MIDI file that will be played together and need to line up." //
+				+ "</html>");
+		skipSilenceAtStartCheckBox.setSelected(saveSettings.skipSilenceAtStart);
+		skipSilenceAtStartCheckBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				saveSettings.skipSilenceAtStart = skipSilenceAtStartCheckBox.isSelected();
+			}
+		});
+
 		TableLayout layout = new TableLayout();
 		layout.insertColumn(0, FILL);
 		layout.setVGap(PAD);
@@ -412,6 +429,9 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 
 		layout.insertRow(++row, PREFERRED);
 		panel.add(showExportFileChooserCheckBox, "0, " + row);
+
+		layout.insertRow(++row, PREFERRED);
+		panel.add(skipSilenceAtStartCheckBox, "0, " + row);
 
 		return panel;
 	}
