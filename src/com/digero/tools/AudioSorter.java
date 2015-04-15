@@ -230,9 +230,9 @@ public class AudioSorter
 
 				double[] fft = calculateWavFft(wavFile, compressionFactor);
 
-//				fft = calcWindow(fft);
-//				fft = calcBuckets(calcWindow(fft));
-				fft = calcWindow(calcBuckets(calcWindow(fft)));
+				fft = calcWindow(fft);
+				fft = calcWindow(calcBuckets(fft));
+//				fft = calcWindow(calcBuckets(fft));
 
 				makeGraph(fft, outputRoot, instrument, noteId);
 
@@ -361,6 +361,19 @@ public class AudioSorter
 		return fftWindow;
 	}
 
+	private static double findMax(double[] arr, int index1, int index2)
+	{
+		int lowerBound = Math.min(index1, index2);
+		int upperBound = Math.max(index1, index2);
+		double max = arr[lowerBound];
+		for (int i = lowerBound + 1; i <= upperBound; i++)
+		{
+			if (arr[i] > max)
+				max = arr[i];
+		}
+		return max;
+	}
+
 	private static double[] calcBuckets(double[] fft)
 	{
 		int maxIndex = getNumber(fft);
@@ -371,14 +384,14 @@ public class AudioSorter
 			int c = 0;
 			for (int j = maxIndex - delta; j > IGNORE_DC_FREQ_SAMPLES; j -= delta)
 			{
-				buckets[delta] += fft[j];
+				buckets[delta] += fft[j] - findMax(fft, j + delta / 4, j + delta * 3 / 4);
 				c++;
 				if (c == SAMPLES_PER_BUCKET / 2)
 					break;
 			}
 			for (int j = maxIndex + delta; j < fft.length; j += delta)
 			{
-				buckets[delta] += fft[j];
+				buckets[delta] += fft[j] - findMax(fft, j - delta * 3 / 4, j - delta / 4);
 				c++;
 				if (c == SAMPLES_PER_BUCKET)
 					break;
@@ -395,21 +408,17 @@ public class AudioSorter
 
 	private static int getNumber(double[] fft)
 	{
-		double maxValue = 0;
 		int maxIndex = 0;
 		for (int i = IGNORE_DC_FREQ_SAMPLES; i < fft.length; i++)
 		{
-			if (fft[i] > maxValue * 1.1)
-			{
+			if (fft[i] > fft[maxIndex] * 1.1)
 				maxIndex = i;
-				maxValue = fft[i];
-			}
 		}
 
 		return maxIndex;
 	}
 
-	static final double MAX_Y = 2000;
+	static final double MAX_Y = 1200;
 	static final int MAX_X = 1024;// FFT_WIDTH / 8;
 
 	private static void makeGraph(double[] fft, File folder, String instrument, int noteId) throws IOException
