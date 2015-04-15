@@ -35,6 +35,7 @@ class TuneInfo
 		title = "";
 		titleIsFromExtendedInfo = false;
 		key = KeySignature.C_MAJOR;
+		meterNumerator = 4;
 		meterDenominator = 4;
 		ppqn = 8 * AbcToMidi.DEFAULT_NOTE_TICKS / meterDenominator;
 		primaryTempoBPM = 120;
