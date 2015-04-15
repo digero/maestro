@@ -30,7 +30,7 @@ public class HashGenerator
 		System.exit(run(args));
 	}
 
-	private static void listMatchesInDirectories(File dirA, File dirB)
+	@SuppressWarnings("unused") private static void listMatchesInDirectories(File dirA, File dirB)
 	{
 		try
 		{

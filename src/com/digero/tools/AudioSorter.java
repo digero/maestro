@@ -36,9 +36,9 @@ import com.digero.common.midi.Note;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.view.ColorTable;
 
+@SuppressWarnings("unused")
 public class AudioSorter
 {
-
 	public static void main(String[] args) throws Exception
 	{
 		printMain();
@@ -46,8 +46,8 @@ public class AudioSorter
 
 	public static void sortMain() throws Exception
 	{
-		String sourceRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
-		String targetRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
+//		String sourceRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
+//		String targetRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
 
 //		copyToFinalNames(sourceRoot, targetRoot, "theorbo", false);
 //		copyToFinalNames(sourceRoot, targetRoot, "harp", false);
@@ -122,35 +122,6 @@ public class AudioSorter
 				return FileVisitResult.SKIP_SUBTREE;
 			}
 		});
-	}
-
-	private static void resortClarinet() throws IOException
-	{
-		String source = "F:\\Games\\LOTRO\\u15\\instruments_wav\\clarinet";
-		String target = "F:\\Games\\LOTRO\\u15\\instruments_wav_sort_done\\clarinet";
-		String[] files = new String[] { "00001108.wav", "00001076.wav", "00004281.wav", "00002402.wav", "00001968.wav",
-			"00000057.wav", "00004288.wav", "00004268.wav", "00004670.wav", "00004264.wav", "00003949.wav",
-			"00007134.wav", "00004267.wav", "00000061.wav", "00004387.wav", "00004298.wav", "00004263.wav",
-			"00003947.wav", "00004255.wav", "00001449.wav", "00002096.wav", "00007240.wav", "00001448.wav",
-			"00002403.wav", "00001764.wav", "00004299.wav", "00005024.wav", "00001453.wav", "00000855.wav",
-			"00007130.wav", "00004289.wav", "00000054.wav", "00004291.wav", "00004388.wav", "00003945.wav",
-			"00001455.wav", "00000386.wav", "00002503.wav", "00004398.wav", "00000496.wav", "00007642.wav",
-			"00000058.wav", "00004304.wav", "00004122.wav", "00001098.wav", "00005686.wav", "00004301.wav",
-			"00004356.wav", "00004804.wav", "00007639.wav", "00001062.wav", "00004674.wav", "00004393.wav",
-			"00005010.wav", };
-
-		File targetDir = new File(target);
-		if (!targetDir.exists())
-			targetDir.mkdirs();
-
-		for (int i = 0; i < files.length; i++)
-		{
-			String targetName = String.format("%02d0 - %s", i + 1, files[i]);
-			Path from = Paths.get(source, files[i]);
-			Path to = Paths.get(target, targetName);
-			System.out.println(from + " => " + to);
-			Files.copy(from, to);
-		}
 	}
 
 	private static void sortFolder(String instrument, File sourceRoot, File targetRoot) throws IOException
