@@ -13,6 +13,7 @@
 	<target name="GenerateSoundFontInfo.CheckUpToDate">
 		<uptodate property="GenerateSoundFontInfo.uptodate" targetfile="${basedir}/${audio}/LotroInstruments/LotroInstruments.txt">
 			<srcfiles dir="${bin}/com/digero/tools/soundfont/" />
+			<srcfiles file="${bin}/com/digero/common/abc/LotroInstrument.class" />
 		</uptodate>
 	</target>
 

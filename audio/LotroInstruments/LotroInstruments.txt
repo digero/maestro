@@ -3162,12 +3162,14 @@
             L_HighKey=47
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=10
 
         Instrument=Bagpipe
             L_LowKey=48
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=10
 
 
     PresetName=Clarinet
@@ -3179,6 +3181,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65516
 
 
     PresetName=Cowbell
@@ -3212,6 +3215,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65496
 
 
     PresetName=Harp
@@ -3223,6 +3227,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=10
 
 
     PresetName=Horn
@@ -3245,6 +3250,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=50
 
 
     PresetName=Lute1
@@ -3256,6 +3262,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=50
 
 
     PresetName=Moor Cowbell
@@ -3278,6 +3285,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65526
 
 
     PresetName=Theorbo
@@ -3289,6 +3297,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=40
 
 
 [Info]

@@ -20,6 +20,15 @@ public class PresetInfo implements Comparable<PresetInfo>
 		this.instruments = Collections.unmodifiableSortedSet(new TreeSet<InstrumentInfo>(Arrays.asList(instruments)));
 	}
 
+	public static int dBToAttenuationValue(float db)
+	{
+		int attenuation = (int) Math.round(-db * 10);
+		if (attenuation < 0)
+			attenuation += 65536;
+
+		return attenuation;
+	}
+
 	public void print(PrintStream out)
 	{
 		print(out, lotroInstrument.toString(), lotroInstrument.midiProgramId);
@@ -40,6 +49,9 @@ public class PresetInfo implements Comparable<PresetInfo>
 			out.println("            L_HighKey=" + instrument.highestNoteId);
 			out.println("            L_LowVelocity=0");
 			out.println("            L_HighVelocity=127");
+			int attenuation = dBToAttenuationValue(instrument.lotroInstrument.dbVolumeAdjust);
+			if (attenuation != 0)
+				out.println("            L_initialAttenuation=" + attenuation);
 			out.println();
 		}
 	}

@@ -1,1 +1,1 @@
-version.Maestro=2.2.1
+version.Maestro=2.2.2
