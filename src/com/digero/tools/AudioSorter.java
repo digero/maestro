@@ -41,13 +41,39 @@ public class AudioSorter
 {
 	public static void main(String[] args) throws Exception
 	{
-		printMain();
+//		sortMain();
+		copyToFinalNamesMain();
+//		printMain();
 	}
 
 	public static void sortMain() throws Exception
 	{
-//		String sourceRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
-//		String targetRoot = "F:\\Games\\LOTRO\\u15\\instruments_wav_sorted";
+//		File source = new File("F:\\Games\\LOTRO\\u16\\wav\\instruments");
+//		File target = new File("F:\\Games\\LOTRO\\u16\\wav\\instruments_sorted");
+//		sortFolder("lute", source, target);
+//		sortFolder("lute_of_ages", source, target);
+//		sortFolder("misty_mountain_harp", source, target);
+//		sortFolder("flute", source, target);
+//		sortFolder("clarinet", source, target);
+//		sortFolder("horn", source, target);
+
+//		sortFolder("bagpipe", source, target);
+//		sortFolder("theorbo", source, target);
+//		sortFolder("pibgorn", source, target);
+//		sortFolder("harp", source, target);
+	}
+
+	public static void copyToFinalNamesMain() throws Exception
+	{
+		String sourceRoot = "F:\\Games\\LOTRO\\u16\\wav\\instruments_sorted";
+		String targetRoot = sourceRoot;
+
+		copyToFinalNames(sourceRoot, targetRoot, "clarinet", false);
+		copyToFinalNames(sourceRoot, targetRoot, "flute", false);
+		copyToFinalNames(sourceRoot, targetRoot, "horn", false);
+		copyToFinalNames(sourceRoot, targetRoot, "lute", false);
+//		copyToFinalNames(sourceRoot, targetRoot, "lute_of_ages", false);
+//		copyToFinalNames(sourceRoot, targetRoot, "misty_mountain_harp", false);
 
 //		copyToFinalNames(sourceRoot, targetRoot, "theorbo", false);
 //		copyToFinalNames(sourceRoot, targetRoot, "harp", false);
@@ -58,21 +84,6 @@ public class AudioSorter
 //		copyToFinalNames(sourceRoot, targetRoot, "clarinet", true);
 //		copyToFinalNames(sourceRoot, targetRoot, "flute", true);
 //		copyToFinalNames(sourceRoot, targetRoot, "horn", true);
-
-		//
-		//
-		//
-
-//		File source = new File("F:\\Games\\LOTRO\\u15\\instruments_wav");
-//		File target = new File("F:\\Games\\LOTRO\\u15\\instruments_wav_sorting");
-//		sortFolder("flute", source, target);
-//		sortFolder("bagpipe", source, target);
-//		sortFolder("clarinet", source, target);
-//		sortFolder("theorbo", source, target);
-//		sortFolder("pibgorn", source, target);
-//		sortFolder("lute", source, target);
-//		sortFolder("harp", source, target);
-//		sortFolder("horn", source, target);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,
@@ -182,7 +193,7 @@ public class AudioSorter
 
 	private static void print(File directory, String instrument) throws IOException
 	{
-		File outputRoot = new File("F:\\Games\\fft-new");
+		File outputRoot = new File("F:\\Games\\LOTRO\\u16\\fft");
 		if (!outputRoot.exists())
 			outputRoot.mkdirs();
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputRoot, instrument + ".txt"))))
