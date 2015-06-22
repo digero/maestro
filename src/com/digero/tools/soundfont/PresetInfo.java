@@ -49,7 +49,7 @@ public class PresetInfo implements Comparable<PresetInfo>
 			out.println("            L_HighKey=" + instrument.highestNoteId);
 			out.println("            L_LowVelocity=0");
 			out.println("            L_HighVelocity=127");
-			int attenuation = dBToAttenuationValue(instrument.lotroInstrument.dbVolumeAdjust);
+			int attenuation = dBToAttenuationValue(instrument.lotroInstrument.dBVolumeAdjust);
 			if (attenuation != 0)
 				out.println("            L_initialAttenuation=" + attenuation);
 			out.println();

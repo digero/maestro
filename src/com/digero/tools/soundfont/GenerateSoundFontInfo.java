@@ -35,11 +35,11 @@ public class GenerateSoundFontInfo
 
 		case LUTE:
 		case LUTE_OF_AGES:
+			return 1;
+
 		case HARP:
 		case MISTY_MOUNTAIN_HARP:
 		case THEORBO:
-			return 1;
-
 		case CLARINET:
 			return 2;
 
@@ -149,8 +149,8 @@ public class GenerateSoundFontInfo
 			for (PresetInfo preset : presets)
 			{
 				preset.print(out);
-				// Also add Lute as the default instrument (program 0)
-				if (preset.lotroInstrument == LotroInstrument.LUTE)
+				// Also add Lute of Ages as the default instrument (program 0)
+				if (preset.lotroInstrument == LotroInstrument.LUTE_OF_AGES)
 					preset.print(out, preset.lotroInstrument + "1", 0);
 			}
 
