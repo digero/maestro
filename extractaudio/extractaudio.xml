@@ -6,14 +6,14 @@
 	<property name="source_dat" location="C:/Games/Turbine/The Lord of the Rings Online/client_sound.dat" />
 
 	<property name="cur_version_folder" value="u16/lute_test" />
-	<property name="exclude_reference_dir" location="${audio_root}/u15/hashes" /> <!-- Foo -->
-	<property name="instrument_reference_dir" location="${audio_root}/prod/found" /> <!-- Foo -->
+	<property name="exclude_reference_dir" location="${audio_root}/u15/excluded" />
+	<property name="instrument_reference_dir" location="${audio_root}/u15/instruments" />
 	<property name="exclude_wavreference_dir" location="${audio_root}/prod_wav" />
 	<property name="instrument_wavreference_dir" location="C:/Users/Ben/workspace/maestro/audio/LotroInstruments" />
 
 	<property name="hashlist_dir" location="${audio_root}/${cur_version_folder}/hashes" />
 
-	<property name="target_dir" location="${audio_root}/u16/ogg/instruments" />
+	<property name="target_dir" location="${audio_root}/${cur_version_folder}/ogg" />
 	<property name="exclude_hashes_file" location="${hashlist_dir}/exclude_hashes.txt" />
 	<property name="instrument_hashes_file" location="${hashlist_dir}/instrument_hashes.txt" />
 	<property name="excluded_dir" location="${target_dir}/known_not_instruments" />
