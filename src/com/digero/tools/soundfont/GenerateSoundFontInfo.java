@@ -34,7 +34,9 @@ public class GenerateSoundFontInfo
 			return 1;
 
 		case LUTE:
+		case LUTE_OF_AGES:
 		case HARP:
+		case MISTY_MOUNTAIN_HARP:
 		case THEORBO:
 			return 1;
 

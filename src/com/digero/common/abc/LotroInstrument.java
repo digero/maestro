@@ -27,19 +27,20 @@ import com.digero.common.midi.Note;
 // @formatter:off
 public enum LotroInstrument
 {
-	//           low       high      sustainable   midiProgramId   octaveDelta   isPercussion   dBVolumeAdjust
-	LUTE        (Note.C2,  Note.C5,  false,         24,             0,           false,         -5.0f         ),
-	HARP        (Note.C2,  Note.C5,  false,         46,             0,           false,         -1.0f         ),
-	THEORBO     (Note.C2,  Note.C5,  false,         32,            -1,           false,         -4.0f         ),
-	FLUTE       (Note.C2,  Note.C5,   true,         73,             2,           false,          4.0f         ),
-	CLARINET    (Note.C2,  Note.C5,   true,         71,             1,           false,          2.0f         ),
-	HORN        (Note.C2,  Note.C5,   true,         69,             0,           false,          0.0f         ),
-	BAGPIPE     (Note.C2,  Note.C5,   true,        109,             1,           false,         -1.0f         ),
-	PIBGORN     (Note.C2,  Note.C5,   true,         84,             2,           false,          1.0f         ),
-	DRUMS       (Note.C2,  Note.C5,  false,        118,             0,            true,          0.0f         ),
-	COWBELL     (Note.C2,  Note.C5,  false,        115,             0,            true,          0.0f         ),
-	MOOR_COWBELL(Note.C2,  Note.C5,  false,        114,             0,            true,          0.0f         );
-
+	//                  low       high      sustainable   midiProgramId   octaveDelta   isPercussion   dBVolumeAdjust
+	LUTE               (Note.C2,  Note.C5,  false,         25,             0,           false,         -5.0f         ),
+	LUTE_OF_AGES       (Note.C2,  Note.C5,  false,         24,             0,           false,          0.0f         ),
+	HARP               (Note.C2,  Note.C5,  false,         46,             0,           false,         -1.0f         ),
+	MISTY_MOUNTAIN_HARP(Note.C2,  Note.C5,  false,         27,             0,           false,          0.0f         ),
+	THEORBO            (Note.C2,  Note.C5,  false,         32,            -1,           false,         -4.0f         ),
+	FLUTE              (Note.C2,  Note.C5,   true,         73,             2,           false,          4.0f         ),
+	CLARINET           (Note.C2,  Note.C5,   true,         71,             1,           false,          2.0f         ),
+	HORN               (Note.C2,  Note.C5,   true,         69,             0,           false,          0.0f         ),
+	BAGPIPE            (Note.C2,  Note.C5,   true,        109,             1,           false,         -1.0f         ),
+	PIBGORN            (Note.C2,  Note.C5,   true,         84,             2,           false,          1.0f         ),
+	DRUMS              (Note.C2,  Note.C5,  false,        118,             0,            true,          0.0f         ),
+	COWBELL            (Note.C2,  Note.C5,  false,        115,             0,            true,          0.0f         ),
+	MOOR_COWBELL       (Note.C2,  Note.C5,  false,        114,             0,            true,          0.0f         );
 // @formatter:on
 
 	public final Note lowestPlayable;
@@ -76,6 +77,10 @@ public enum LotroInstrument
 	{
 		if (this == MOOR_COWBELL)
 			return "Moor Cowbell";
+		else if (this == LUTE_OF_AGES)
+			return "Lute of Ages";
+		else if (this == MISTY_MOUNTAIN_HARP)
+			return "Misty Mountain Harp";
 
 		String name = super.toString();
 		return name.substring(0, 1) + name.substring(1).toLowerCase();

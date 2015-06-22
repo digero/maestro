@@ -204,6 +204,12 @@ class TuneInfo
 
 	public static LotroInstrument findInstrumentName(String str, LotroInstrument defaultInstrument)
 	{
+		String strUpper = str.toUpperCase();
+		if (strUpper.contains("LUTE OF AGES"))
+			return LotroInstrument.LUTE_OF_AGES;
+		else if (strUpper.contains("MISTY MOUNTAIN HARP") || strUpper.contains("MM HARP"))
+			return LotroInstrument.MISTY_MOUNTAIN_HARP;
+
 		if (instrNicknames == null)
 		{
 			instrNicknames = new HashMap<String, LotroInstrument>();
@@ -224,6 +230,9 @@ class TuneInfo
 			String regex = "";
 			for (LotroInstrument instr : LotroInstrument.values())
 			{
+				if (instr == LotroInstrument.LUTE_OF_AGES || instr == LotroInstrument.MISTY_MOUNTAIN_HARP)
+					continue;
+
 				regex += "|" + instr;
 			}
 			for (String nick : instrNicknames.keySet())

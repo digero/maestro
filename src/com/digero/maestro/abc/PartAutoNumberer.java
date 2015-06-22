@@ -25,12 +25,27 @@ public class PartAutoNumberer
 			int i = 0;
 			for (LotroInstrument instrument : LotroInstrument.values())
 			{
-				if (instrument != LotroInstrument.MOOR_COWBELL && instrument != LotroInstrument.PIBGORN)
+				if (instrument != LotroInstrument.LUTE_OF_AGES && instrument != LotroInstrument.MISTY_MOUNTAIN_HARP
+						&& instrument != LotroInstrument.PIBGORN && instrument != LotroInstrument.MOOR_COWBELL)
+				{
 					firstNumber.put(instrument, prefs.getInt(instrument.toString(), ++i));
+				}
 			}
+
+			// Lute of Ages defaults to the Lute number
+			firstNumber.put(LotroInstrument.LUTE_OF_AGES,
+					prefs.getInt(LotroInstrument.LUTE_OF_AGES.toString(), firstNumber.get(LotroInstrument.LUTE)));
+
+			// Misty Mountain Harp defaults to the Harp number
+			firstNumber
+					.put(LotroInstrument.MISTY_MOUNTAIN_HARP,
+							prefs.getInt(LotroInstrument.MISTY_MOUNTAIN_HARP.toString(),
+									firstNumber.get(LotroInstrument.HARP)));
+
 			// Pibgorn defaults to the bagpipe number
 			firstNumber.put(LotroInstrument.PIBGORN,
 					prefs.getInt(LotroInstrument.PIBGORN.toString(), firstNumber.get(LotroInstrument.BAGPIPE)));
+
 			// Moor cowbell defaults to the cowbell number
 			firstNumber.put(LotroInstrument.MOOR_COWBELL,
 					prefs.getInt(LotroInstrument.MOOR_COWBELL.toString(), firstNumber.get(LotroInstrument.COWBELL)));
