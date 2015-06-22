@@ -11,54 +11,94 @@ public class InstrumentPicker
 {
 	@SuppressWarnings("resource") public static void main(String[] args)
 	{
-		File root = new File("F:\\Games\\LOTRO\\u15\\instruments");
+		File root = new File("F:\\Games\\LOTRO\\u16\\ogg");
+		File sourceRoot = root;
+		File instrumentsRoot = new File(root, "instruments");
+		File notInstruments = new File(root, "not_instruments");
+		File maybe = new File(root, "maybe_instruments");
 
 		Map<LotroInstrument, File> dirs = new HashMap<LotroInstrument, File>();
 
 		String pickString = "[0] Replay";
+		final int REPLAY = 0;
 		int i = 0;
 		LotroInstrument[] instruments = LotroInstrument.values();
 		for (LotroInstrument instrument : instruments)
 		{
-			File dir = new File(root, instrument.name().toLowerCase());
-			if (!dir.exists())
-				dir.mkdir();
+			File dir = new File(instrumentsRoot, instrument.name().toLowerCase());
 
 			dirs.put(instrument, dir);
 
 			i++;
-			pickString += ", [" + i + "] " + instrument.toString();
+			pickString += ", ";
+			if (i == 8)
+				pickString += "\n";
+			pickString += "[" + i + "] " + instrument.toString();
 		}
 
-		for (File file : root.listFiles())
+		i++;
+		pickString += ", [" + i + "] Nothing";
+		final int NOT_INSTRUMENT = i;
+
+		i++;
+		pickString += ", [" + i + "] Maybe";
+		final int MAYBE_INSTRUMENT = i;
+
+		for (File file : sourceRoot.listFiles())
 		{
 			if (file.isDirectory())
 				continue;
 
+			int playCount = 0;
 			while (true)
 			{
+				playCount++;
 				System.out.print(pickString + ": ");
-				AudioPlayer.playAudioFile(file, 1000);
+				int duration = 400;
+				if (playCount == 2)
+					duration = 1000;
+				else if (playCount > 2)
+					duration = 5000;
+				AudioPlayer.playAudioFile(file, duration);
 				String input = new Scanner(System.in).nextLine();
+
 				int val;
-				try
+				if (input.length() == 0)
 				{
-					val = Integer.parseInt(input);
+					val = NOT_INSTRUMENT;
 				}
-				catch (NumberFormatException e)
+				else
 				{
-					continue;
+					try
+					{
+						val = Integer.parseInt(input);
+					}
+					catch (NumberFormatException e)
+					{
+						continue;
+					}
 				}
 
-				if (val == 0 || val > instruments.length)
+				File targetDir = null;
+
+				if (val == REPLAY)
 					continue;
+				else if (val == NOT_INSTRUMENT)
+					targetDir = notInstruments;
+				else if (val == MAYBE_INSTRUMENT)
+					targetDir = maybe;
+				else if (val > 0 && val <= instruments.length)
+					targetDir = dirs.get(instruments[val - 1]);
 
-				LotroInstrument instrument = instruments[val - 1];
-
-				File destFile = new File(dirs.get(instrument), file.getName());
-				file.renameTo(destFile);
-				System.out.println(destFile);
-				break;
+				if (targetDir != null)
+				{
+					if (!targetDir.exists())
+						targetDir.mkdirs();
+					File destFile = new File(targetDir, file.getName());
+					file.renameTo(destFile);
+					System.out.println(destFile);
+					break;
+				}
 			}
 		}
 	}

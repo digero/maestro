@@ -157,14 +157,23 @@ public class HashGenerator
 	public static Map<FileHash, File> generateHashes(File directory) throws IOException
 	{
 		Map<FileHash, File> hashes = new HashMap<FileHash, File>();
-		ExtensionFileFilter filter = new ExtensionFileFilter("", true, "wav", "ogg");
-		List<File> files = new ArrayList<File>(Arrays.asList(directory.listFiles(filter)));
+		ExtensionFileFilter filter = new ExtensionFileFilter("", /* matchDirectories = */true, "wav", "ogg");
+		File[] fileList = directory.listFiles(filter);
+		if (fileList == null)
+		{
+			System.err.println("Directory does not contain any files: " + directory);
+			return hashes;
+		}
+
+		List<File> files = new ArrayList<File>(Arrays.asList(fileList));
 		int i = 0, lastPct = 0;
 		for (int j = 0; j < files.size(); j++)
 		{
 			if (files.get(j).isDirectory())
 			{
-				files.addAll(Arrays.asList(files.get(j).listFiles(filter)));
+				File[] fileList2 = files.get(j).listFiles(filter);
+				if (fileList2 != null)
+					files.addAll(Arrays.asList(fileList2));
 				continue;
 			}
 
