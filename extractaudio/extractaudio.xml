@@ -5,7 +5,7 @@
 	<property name="audio_root" location="F:/Games/LOTRO" />
 	<property name="source_dat" location="C:/Games/Turbine/The Lord of the Rings Online/client_sound.dat" />
 
-	<property name="cur_version_folder" value="u16/lute_test" />
+	<property name="cur_version_folder" value="u16" />
 	<property name="exclude_reference_dir" location="${audio_root}/u15/excluded" />
 	<property name="instrument_reference_dir" location="${audio_root}/u15/instruments" />
 	<property name="exclude_wavreference_dir" location="${audio_root}/prod_wav" />
