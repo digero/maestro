@@ -43,6 +43,8 @@ public enum LotroInstrument
 	MOOR_COWBELL        ( false,        114,             0,            true,          0.0f         );
 // @formatter:on
 
+	public static final LotroInstrument DEFAULT = LUTE_OF_AGES;
+
 	public final Note lowestPlayable;
 	public final Note highestPlayable;
 	public final boolean sustainable;

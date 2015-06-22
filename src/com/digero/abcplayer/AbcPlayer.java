@@ -1797,7 +1797,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 				// Only show tracks with at least one note
 				boolean hasNotes = false;
-				LotroInstrument instrument = LotroInstrument.LUTE;
+				LotroInstrument instrument = LotroInstrument.DEFAULT;
 				for (int j = 0; j < track.size(); j++)
 				{
 					MidiEvent evt = track.get(j);

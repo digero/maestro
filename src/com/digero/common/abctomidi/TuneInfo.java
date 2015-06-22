@@ -39,7 +39,7 @@ class TuneInfo
 		meterDenominator = 4;
 		ppqn = 8 * AbcToMidi.DEFAULT_NOTE_TICKS / meterDenominator;
 		primaryTempoBPM = 120;
-		instrument = LotroInstrument.LUTE;
+		instrument = LotroInstrument.DEFAULT;
 		dynamics = Dynamics.mf;
 		compoundMeter = false;
 	}
@@ -47,7 +47,7 @@ class TuneInfo
 	public void newPart(int partNumber)
 	{
 		this.partNumber = partNumber;
-		instrument = LotroInstrument.LUTE;
+		instrument = LotroInstrument.DEFAULT;
 		dynamics = Dynamics.mf;
 		title = "";
 		titleIsFromExtendedInfo = false;
