@@ -72,6 +72,228 @@
         FineTune=0
         Type=1
 
+    SampleName=basic_lute_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_37
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_39
+        SampleRate=44100
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_41
+        SampleRate=44100
+        Key=41
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_43
+        SampleRate=44100
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_47
+        SampleRate=44100
+        Key=47
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_49
+        SampleRate=44100
+        Key=49
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_53
+        SampleRate=44100
+        Key=53
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_61
+        SampleRate=44100
+        Key=61
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_63
+        SampleRate=44100
+        Key=63
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
+    SampleName=basic_lute_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
     SampleName=clarinet_36
         SampleRate=44100
         Key=36
@@ -672,228 +894,6 @@
         FineTune=0
         Type=1
 
-    SampleName=lute_36
-        SampleRate=44100
-        Key=36
-        FineTune=0
-        Type=1
-
-    SampleName=lute_37
-        SampleRate=44100
-        Key=37
-        FineTune=0
-        Type=1
-
-    SampleName=lute_38
-        SampleRate=44100
-        Key=38
-        FineTune=0
-        Type=1
-
-    SampleName=lute_39
-        SampleRate=44100
-        Key=39
-        FineTune=0
-        Type=1
-
-    SampleName=lute_40
-        SampleRate=44100
-        Key=40
-        FineTune=0
-        Type=1
-
-    SampleName=lute_41
-        SampleRate=44100
-        Key=41
-        FineTune=0
-        Type=1
-
-    SampleName=lute_42
-        SampleRate=44100
-        Key=42
-        FineTune=0
-        Type=1
-
-    SampleName=lute_43
-        SampleRate=44100
-        Key=43
-        FineTune=0
-        Type=1
-
-    SampleName=lute_44
-        SampleRate=44100
-        Key=44
-        FineTune=0
-        Type=1
-
-    SampleName=lute_45
-        SampleRate=44100
-        Key=45
-        FineTune=0
-        Type=1
-
-    SampleName=lute_46
-        SampleRate=44100
-        Key=46
-        FineTune=0
-        Type=1
-
-    SampleName=lute_47
-        SampleRate=44100
-        Key=47
-        FineTune=0
-        Type=1
-
-    SampleName=lute_48
-        SampleRate=44100
-        Key=48
-        FineTune=0
-        Type=1
-
-    SampleName=lute_49
-        SampleRate=44100
-        Key=49
-        FineTune=0
-        Type=1
-
-    SampleName=lute_50
-        SampleRate=44100
-        Key=50
-        FineTune=0
-        Type=1
-
-    SampleName=lute_51
-        SampleRate=44100
-        Key=51
-        FineTune=0
-        Type=1
-
-    SampleName=lute_52
-        SampleRate=44100
-        Key=52
-        FineTune=0
-        Type=1
-
-    SampleName=lute_53
-        SampleRate=44100
-        Key=53
-        FineTune=0
-        Type=1
-
-    SampleName=lute_54
-        SampleRate=44100
-        Key=54
-        FineTune=0
-        Type=1
-
-    SampleName=lute_55
-        SampleRate=44100
-        Key=55
-        FineTune=0
-        Type=1
-
-    SampleName=lute_56
-        SampleRate=44100
-        Key=56
-        FineTune=0
-        Type=1
-
-    SampleName=lute_57
-        SampleRate=44100
-        Key=57
-        FineTune=0
-        Type=1
-
-    SampleName=lute_58
-        SampleRate=44100
-        Key=58
-        FineTune=0
-        Type=1
-
-    SampleName=lute_59
-        SampleRate=44100
-        Key=59
-        FineTune=0
-        Type=1
-
-    SampleName=lute_60
-        SampleRate=44100
-        Key=60
-        FineTune=0
-        Type=1
-
-    SampleName=lute_61
-        SampleRate=44100
-        Key=61
-        FineTune=0
-        Type=1
-
-    SampleName=lute_62
-        SampleRate=44100
-        Key=62
-        FineTune=0
-        Type=1
-
-    SampleName=lute_63
-        SampleRate=44100
-        Key=63
-        FineTune=0
-        Type=1
-
-    SampleName=lute_64
-        SampleRate=44100
-        Key=64
-        FineTune=0
-        Type=1
-
-    SampleName=lute_65
-        SampleRate=44100
-        Key=65
-        FineTune=0
-        Type=1
-
-    SampleName=lute_66
-        SampleRate=44100
-        Key=66
-        FineTune=0
-        Type=1
-
-    SampleName=lute_67
-        SampleRate=44100
-        Key=67
-        FineTune=0
-        Type=1
-
-    SampleName=lute_68
-        SampleRate=44100
-        Key=68
-        FineTune=0
-        Type=1
-
-    SampleName=lute_69
-        SampleRate=44100
-        Key=69
-        FineTune=0
-        Type=1
-
-    SampleName=lute_70
-        SampleRate=44100
-        Key=70
-        FineTune=0
-        Type=1
-
-    SampleName=lute_71
-        SampleRate=44100
-        Key=71
-        FineTune=0
-        Type=1
-
-    SampleName=lute_72
-        SampleRate=44100
-        Key=72
-        FineTune=0
-        Type=1
-
     SampleName=lute_of_ages_36
         SampleRate=44100
         Key=36
@@ -1116,115 +1116,115 @@
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_36
+    SampleName=misty_harp_36
         SampleRate=44100
         Key=36
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_38
+    SampleName=misty_harp_38
         SampleRate=44100
         Key=38
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_40
+    SampleName=misty_harp_40
         SampleRate=44100
         Key=40
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_42
+    SampleName=misty_harp_42
         SampleRate=44100
         Key=42
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_44
+    SampleName=misty_harp_44
         SampleRate=44100
         Key=44
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_46
+    SampleName=misty_harp_46
         SampleRate=44100
         Key=46
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_48
+    SampleName=misty_harp_48
         SampleRate=44100
         Key=48
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_50
+    SampleName=misty_harp_50
         SampleRate=44100
         Key=50
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_52
+    SampleName=misty_harp_52
         SampleRate=44100
         Key=52
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_54
+    SampleName=misty_harp_54
         SampleRate=44100
         Key=54
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_56
+    SampleName=misty_harp_56
         SampleRate=44100
         Key=56
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_58
+    SampleName=misty_harp_58
         SampleRate=44100
         Key=58
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_60
+    SampleName=misty_harp_60
         SampleRate=44100
         Key=60
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_62
+    SampleName=misty_harp_62
         SampleRate=44100
         Key=62
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_64
+    SampleName=misty_harp_64
         SampleRate=44100
         Key=64
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_66
+    SampleName=misty_harp_66
         SampleRate=44100
         Key=66
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_68
+    SampleName=misty_harp_68
         SampleRate=44100
         Key=68
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_70
+    SampleName=misty_harp_70
         SampleRate=44100
         Key=70
         FineTune=0
         Type=1
 
-    SampleName=mm_harp_72
+    SampleName=misty_harp_72
         SampleRate=44100
         Key=72
         FineTune=0
@@ -1466,6 +1466,231 @@
 
         Sample=bagpipe_70
             Z_LowKey=69
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Basic Lute
+
+        Sample=basic_lute_36
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_37
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_38
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_39
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_40
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_41
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_42
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_43
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_44
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_45
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_46
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_47
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_48
+            Z_LowKey=48
+            Z_HighKey=48
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_49
+            Z_LowKey=49
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_50
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_51
+            Z_LowKey=51
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_52
+            Z_LowKey=52
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_53
+            Z_LowKey=53
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_54
+            Z_LowKey=54
+            Z_HighKey=54
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_55
+            Z_LowKey=55
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_56
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_57
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_58
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_59
+            Z_LowKey=59
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_60
+            Z_LowKey=60
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_61
+            Z_LowKey=61
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_62
+            Z_LowKey=62
+            Z_HighKey=62
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_63
+            Z_LowKey=63
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_64
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_65
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_66
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_67
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_68
+            Z_LowKey=68
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_69
+            Z_LowKey=69
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_70
+            Z_LowKey=70
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_71
+            Z_LowKey=71
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_lute_72
+            Z_LowKey=72
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -2377,231 +2602,6 @@
             Z_HighVelocity=127
 
 
-    InstrumentName=Lute
-
-        Sample=lute_36
-            Z_LowKey=36
-            Z_HighKey=36
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_37
-            Z_LowKey=37
-            Z_HighKey=37
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_38
-            Z_LowKey=38
-            Z_HighKey=38
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_39
-            Z_LowKey=39
-            Z_HighKey=39
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_40
-            Z_LowKey=40
-            Z_HighKey=40
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_41
-            Z_LowKey=41
-            Z_HighKey=41
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_42
-            Z_LowKey=42
-            Z_HighKey=42
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_43
-            Z_LowKey=43
-            Z_HighKey=43
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_44
-            Z_LowKey=44
-            Z_HighKey=44
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_45
-            Z_LowKey=45
-            Z_HighKey=45
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_46
-            Z_LowKey=46
-            Z_HighKey=46
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_47
-            Z_LowKey=47
-            Z_HighKey=47
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_48
-            Z_LowKey=48
-            Z_HighKey=48
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_49
-            Z_LowKey=49
-            Z_HighKey=49
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_50
-            Z_LowKey=50
-            Z_HighKey=50
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_51
-            Z_LowKey=51
-            Z_HighKey=51
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_52
-            Z_LowKey=52
-            Z_HighKey=52
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_53
-            Z_LowKey=53
-            Z_HighKey=53
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_54
-            Z_LowKey=54
-            Z_HighKey=54
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_55
-            Z_LowKey=55
-            Z_HighKey=55
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_56
-            Z_LowKey=56
-            Z_HighKey=56
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_57
-            Z_LowKey=57
-            Z_HighKey=57
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_58
-            Z_LowKey=58
-            Z_HighKey=58
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_59
-            Z_LowKey=59
-            Z_HighKey=59
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_60
-            Z_LowKey=60
-            Z_HighKey=60
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_61
-            Z_LowKey=61
-            Z_HighKey=61
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_62
-            Z_LowKey=62
-            Z_HighKey=62
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_63
-            Z_LowKey=63
-            Z_HighKey=63
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_64
-            Z_LowKey=64
-            Z_HighKey=64
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_65
-            Z_LowKey=65
-            Z_HighKey=65
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_66
-            Z_LowKey=66
-            Z_HighKey=66
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_67
-            Z_LowKey=67
-            Z_HighKey=67
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_68
-            Z_LowKey=68
-            Z_HighKey=68
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_69
-            Z_LowKey=69
-            Z_HighKey=69
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_70
-            Z_LowKey=70
-            Z_HighKey=70
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_71
-            Z_LowKey=71
-            Z_HighKey=71
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-        Sample=lute_72
-            Z_LowKey=72
-            Z_HighKey=72
-            Z_LowVelocity=0
-            Z_HighVelocity=127
-
-
     InstrumentName=Lute of Ages
 
         Sample=lute_of_ages_36
@@ -2829,115 +2829,115 @@
 
     InstrumentName=Misty Mountain Harp
 
-        Sample=mm_harp_36
+        Sample=misty_harp_36
             Z_LowKey=36
             Z_HighKey=37
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_38
+        Sample=misty_harp_38
             Z_LowKey=38
             Z_HighKey=39
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_40
+        Sample=misty_harp_40
             Z_LowKey=40
             Z_HighKey=41
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_42
+        Sample=misty_harp_42
             Z_LowKey=42
             Z_HighKey=43
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_44
+        Sample=misty_harp_44
             Z_LowKey=44
             Z_HighKey=45
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_46
+        Sample=misty_harp_46
             Z_LowKey=46
             Z_HighKey=47
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_48
+        Sample=misty_harp_48
             Z_LowKey=48
             Z_HighKey=49
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_50
+        Sample=misty_harp_50
             Z_LowKey=50
             Z_HighKey=51
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_52
+        Sample=misty_harp_52
             Z_LowKey=52
             Z_HighKey=53
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_54
+        Sample=misty_harp_54
             Z_LowKey=54
             Z_HighKey=55
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_56
+        Sample=misty_harp_56
             Z_LowKey=56
             Z_HighKey=57
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_58
+        Sample=misty_harp_58
             Z_LowKey=58
             Z_HighKey=59
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_60
+        Sample=misty_harp_60
             Z_LowKey=60
             Z_HighKey=61
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_62
+        Sample=misty_harp_62
             Z_LowKey=62
             Z_HighKey=63
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_64
+        Sample=misty_harp_64
             Z_LowKey=64
             Z_HighKey=65
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_66
+        Sample=misty_harp_66
             Z_LowKey=66
             Z_HighKey=67
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_68
+        Sample=misty_harp_68
             Z_LowKey=68
             Z_HighKey=69
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_70
+        Sample=misty_harp_70
             Z_LowKey=70
             Z_HighKey=71
             Z_LowVelocity=0
             Z_HighVelocity=127
 
-        Sample=mm_harp_72
+        Sample=misty_harp_72
             Z_LowKey=72
             Z_HighKey=72
             Z_LowVelocity=0
@@ -3408,14 +3408,26 @@
             L_HighKey=47
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=10
+            L_initialAttenuation=65526
 
         Instrument=Bagpipe
             L_LowKey=48
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=10
+            L_initialAttenuation=65526
+
+
+    PresetName=Basic Lute
+        Bank=0
+        Program=25
+
+        Instrument=Basic Lute
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+            L_initialAttenuation=150
 
 
     PresetName=Clarinet
@@ -3427,7 +3439,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65516
+            L_initialAttenuation=65506
 
 
     PresetName=Cowbell
@@ -3473,6 +3485,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65416
 
 
     PresetName=Horn
@@ -3484,18 +3497,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-
-
-    PresetName=Lute
-        Bank=0
-        Program=25
-
-        Instrument=Lute
-            L_LowKey=36
-            L_HighKey=72
-            L_LowVelocity=0
-            L_HighVelocity=127
-            L_initialAttenuation=60
+            L_initialAttenuation=65476
 
 
     PresetName=Lute of Ages
@@ -3529,7 +3531,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=10
+            L_initialAttenuation=100
 
 
     PresetName=Moor Cowbell
@@ -3564,7 +3566,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=40
+            L_initialAttenuation=65
 
 
 [Info]
