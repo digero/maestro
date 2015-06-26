@@ -42,8 +42,8 @@ public class PanGenerator
 
 	public int get(LotroInstrument instrument)
 	{
-		if (instrument == LotroInstrument.LUTE_OF_AGES)
-			instrument = LotroInstrument.LUTE;
+		if (instrument == LotroInstrument.BASIC_LUTE)
+			instrument = LotroInstrument.LUTE_OF_AGES;
 		else if (instrument == LotroInstrument.MISTY_MOUNTAIN_HARP)
 			instrument = LotroInstrument.HARP;
 		else if (instrument == LotroInstrument.MOOR_COWBELL)
@@ -85,7 +85,7 @@ public class PanGenerator
 			return CENTER + sign * 20;
 		case HORN:
 			return CENTER + sign * 25;
-		case LUTE:
+		case BASIC_LUTE:
 		case LUTE_OF_AGES:
 			return CENTER + sign * 35;
 		case CLARINET:

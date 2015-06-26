@@ -1,12 +1,8 @@
 package com.digero.common.abctomidi;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
@@ -39,7 +35,7 @@ class TuneInfo
 		meterDenominator = 4;
 		ppqn = 8 * AbcToMidi.DEFAULT_NOTE_TICKS / meterDenominator;
 		primaryTempoBPM = 120;
-		instrument = LotroInstrument.DEFAULT;
+		instrument = LotroInstrument.DEFAULT_INSTRUMENT;
 		dynamics = Dynamics.mf;
 		compoundMeter = false;
 	}
@@ -47,7 +43,7 @@ class TuneInfo
 	public void newPart(int partNumber)
 	{
 		this.partNumber = partNumber;
-		instrument = LotroInstrument.DEFAULT;
+		instrument = LotroInstrument.DEFAULT_INSTRUMENT;
 		dynamics = Dynamics.mf;
 		title = "";
 		titleIsFromExtendedInfo = false;
@@ -197,62 +193,6 @@ class TuneInfo
 		}
 
 		return denominator;
-	}
-
-	private static Map<String, LotroInstrument> instrNicknames = null;
-	private static Pattern instrRegex = null;
-
-	public static LotroInstrument findInstrumentName(String str, LotroInstrument defaultInstrument)
-	{
-		String strUpper = str.toUpperCase();
-		if (strUpper.contains("LUTE OF AGES"))
-			return LotroInstrument.LUTE_OF_AGES;
-		else if (strUpper.contains("MISTY MOUNTAIN HARP") || strUpper.contains("MM HARP"))
-			return LotroInstrument.MISTY_MOUNTAIN_HARP;
-
-		if (instrNicknames == null)
-		{
-			instrNicknames = new HashMap<String, LotroInstrument>();
-			// Must be all-caps
-			instrNicknames.put("BANJO", LotroInstrument.LUTE);
-			instrNicknames.put("GUITAR", LotroInstrument.LUTE);
-			instrNicknames.put("DRUM", LotroInstrument.DRUMS);
-			instrNicknames.put("BASS", LotroInstrument.THEORBO);
-			instrNicknames.put("THEO", LotroInstrument.THEORBO);
-			instrNicknames.put("BAGPIPES", LotroInstrument.BAGPIPE);
-			instrNicknames.put("MOORCOWBELL", LotroInstrument.MOOR_COWBELL);
-			instrNicknames.put("MOOR COWBELL", LotroInstrument.MOOR_COWBELL);
-			instrNicknames.put("MORE COWBELL", LotroInstrument.MOOR_COWBELL);
-		}
-
-		if (instrRegex == null)
-		{
-			String regex = "";
-			for (LotroInstrument instr : LotroInstrument.values())
-			{
-				if (instr == LotroInstrument.LUTE_OF_AGES || instr == LotroInstrument.MISTY_MOUNTAIN_HARP)
-					continue;
-
-				regex += "|" + instr;
-			}
-			for (String nick : instrNicknames.keySet())
-			{
-				regex += "|" + nick;
-			}
-			regex = "\\b(" + regex.substring(1) + ")\\b";
-			instrRegex = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		}
-
-		Matcher m = instrRegex.matcher(str);
-		if (m.find())
-		{
-			String name = m.group(1).toUpperCase();
-			if (instrNicknames.containsKey(name))
-				return instrNicknames.get(name);
-
-			return LotroInstrument.valueOf(name);
-		}
-		return defaultInstrument;
 	}
 
 	public void setInstrument(LotroInstrument instrument)

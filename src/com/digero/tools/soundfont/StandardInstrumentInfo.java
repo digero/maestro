@@ -16,8 +16,7 @@ public class StandardInstrumentInfo extends InstrumentInfo
 	private final int notesBelowSample;
 	private final int notesAboveSample;
 
-	public StandardInstrumentInfo(LotroInstrument lotroInstrument, int notesPerSample,
-			Map<Key, SampleInfo> samples)
+	public StandardInstrumentInfo(LotroInstrument lotroInstrument, int notesPerSample, Map<Key, SampleInfo> samples)
 	{
 		this(lotroInstrument, lotroInstrument.toString(), lotroInstrument.lowestPlayable.id,
 				lotroInstrument.highestPlayable.id, notesPerSample, samples);

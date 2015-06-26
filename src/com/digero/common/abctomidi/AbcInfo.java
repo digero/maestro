@@ -20,7 +20,7 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	private static class PartInfo
 	{
 		private int number = 1;
-		private LotroInstrument instrument = LotroInstrument.DEFAULT;
+		private LotroInstrument instrument = LotroInstrument.DEFAULT_INSTRUMENT;
 		private String name = null;
 		private String rawName = null;
 		private boolean nameIsFromExtendedInfo = false;
@@ -141,7 +141,7 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	{
 		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
 		if (info == null)
-			return LotroInstrument.DEFAULT;
+			return LotroInstrument.DEFAULT_INSTRUMENT;
 		return info.instrument;
 	}
 

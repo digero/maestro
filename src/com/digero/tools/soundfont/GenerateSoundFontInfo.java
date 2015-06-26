@@ -33,7 +33,7 @@ public class GenerateSoundFontInfo
 		case DRUMS:
 			return 1;
 
-		case LUTE:
+		case BASIC_LUTE:
 		case LUTE_OF_AGES:
 			return 1;
 

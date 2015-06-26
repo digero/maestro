@@ -240,7 +240,7 @@ public class AbcToMidi
 							abcInfo.setPartName(trackNumber, value, false);
 							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber))
 							{
-								info.setInstrument(TuneInfo.findInstrumentName(value, info.getInstrument()));
+								info.setInstrument(LotroInstrument.findInstrumentName(value, info.getInstrument()));
 							}
 							break;
 						case 'K':

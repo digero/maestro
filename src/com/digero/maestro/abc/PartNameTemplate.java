@@ -151,7 +151,7 @@ public class PartNameTemplate
 			@Override public String getValue()
 			{
 				if (currentAbcPart == null)
-					return LotroInstrument.DEFAULT.toString();
+					return LotroInstrument.DEFAULT_INSTRUMENT.toString();
 
 				return currentAbcPart.getInstrument().toString();
 			}
