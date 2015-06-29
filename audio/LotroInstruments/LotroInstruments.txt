@@ -3408,14 +3408,14 @@
             L_HighKey=47
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65526
+            L_initialAttenuation=32
 
         Instrument=Bagpipe
             L_LowKey=48
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65526
+            L_initialAttenuation=32
 
 
     PresetName=Basic Lute
@@ -3427,7 +3427,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=150
+            L_initialAttenuation=190
 
 
     PresetName=Clarinet
@@ -3439,7 +3439,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65506
+            L_initialAttenuation=25
 
 
     PresetName=Cowbell
@@ -3473,7 +3473,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65486
+            L_initialAttenuation=5
 
 
     PresetName=Harp
@@ -3485,7 +3485,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65416
+            L_initialAttenuation=65476
 
 
     PresetName=Horn
@@ -3497,7 +3497,6 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65476
 
 
     PresetName=Lute of Ages
@@ -3531,7 +3530,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=100
+            L_initialAttenuation=125
 
 
     PresetName=Moor Cowbell
@@ -3554,7 +3553,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65526
+            L_initialAttenuation=35
 
 
     PresetName=Theorbo
@@ -3566,7 +3565,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=65
+            L_initialAttenuation=120
 
 
 [Info]
