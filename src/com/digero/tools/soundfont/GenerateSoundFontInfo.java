@@ -33,20 +33,20 @@ public class GenerateSoundFontInfo
 		case DRUMS:
 			return 1;
 
-		case BASIC_LUTE:
 		case LUTE_OF_AGES:
+		case BASIC_LUTE:
+		case HARP:
 			return 1;
 
-		case HARP:
 		case MISTY_MOUNTAIN_HARP:
 		case THEORBO:
+		case FLUTE:
 		case CLARINET:
+		case HORN:
 			return 2;
 
-		case FLUTE:
 		case BAGPIPE:
-		case HORN:
-			return 3;
+			return 4;
 
 		case PIBGORN:
 			return 6;
