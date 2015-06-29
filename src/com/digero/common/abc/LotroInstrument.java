@@ -129,8 +129,8 @@ public enum LotroInstrument
 	{
 		if (instrumentNicknames.size() == 0)
 		{
-			addNicknames(LotroInstrument.BASIC_LUTE, "Basic Lute", "New Lute", "Banjo");
-			addNicknames(LotroInstrument.LUTE_OF_AGES, "Lute of Ages", "Age Lute", "Guitar");
+			addNicknames(LotroInstrument.BASIC_LUTE, "Basic Lute", "New Lute", "LuteB", "Banjo");
+			addNicknames(LotroInstrument.LUTE_OF_AGES, "Lute of Ages", "Age Lute", "LuteA", "Guitar");
 			addNicknames(LotroInstrument.DEFAULT_LUTE, "Lute");
 			addNicknames(LotroInstrument.MISTY_MOUNTAIN_HARP, "Misty Mountain Harp", "Misty Harp", "MM Harp");
 			addNicknames(LotroInstrument.HARP, "Basic Harp");
