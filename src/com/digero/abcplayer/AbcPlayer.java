@@ -1841,7 +1841,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					soloButton.addActionListener(trackSoloListener);
 
 					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(sortedInstruments);
-					comboBox.setMaximumRowCount(12);
+					comboBox.setMaximumRowCount(sortedInstruments.length);
 					comboBox.putClientProperty(trackIndexKey, i);
 					comboBox.setBackground(getBackground());
 					comboBox.setSelectedItem(instrument);
