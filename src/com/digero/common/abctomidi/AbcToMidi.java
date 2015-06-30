@@ -85,7 +85,7 @@ public class AbcToMidi
 	private static final int[] CHR_NOTE_DELTA = { 9, 11, 0, 2, 4, 5, 7 };
 
 	// Lots of prime factors for divisibility goodness
-	static final long DEFAULT_NOTE_TICKS = (2 * 2 * 2 * 2 * 2 * 2) * 3 * 5;
+	static final long DEFAULT_NOTE_TICKS = (2 * 2 * 2 * 2 * 2 * 2) * (3 * 3) * 5;
 
 	public static List<String> readLines(File inputFile) throws IOException
 	{
@@ -140,8 +140,8 @@ public class AbcToMidi
 		int trackNumber = 0;
 		int noteDivisorChangeLine = 0;
 
-		long chordStartTick = 0;
-		long chordEndTick = 0;
+		double chordStartTick = 0;
+		double chordEndTick = 0;
 		long PPQN = 0;
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
@@ -167,7 +167,7 @@ public class AbcToMidi
 					{
 						try
 						{
-							info.addTempoEvent(chordStartTick, xInfoMatcher.group(XINFO_VALUE).trim());
+							info.addTempoEvent(Math.round(chordStartTick), xInfoMatcher.group(XINFO_VALUE).trim());
 						}
 						catch (IllegalArgumentException e)
 						{
@@ -233,8 +233,10 @@ public class AbcToMidi
 							break;
 						case 'T':
 							if (track != null)
+							{
 								throw new ParseException("Can't specify the title in the middle of a part", fileName,
 										lineNumber, 0);
+							}
 
 							info.setTitle(value, false);
 							abcInfo.setPartName(trackNumber, value, false);
@@ -316,9 +318,11 @@ public class AbcToMidi
 					{
 						channel = getTrackChannel(seq.getTracks().length);
 						if (channel > MidiConstants.CHANNEL_COUNT - 1)
+						{
 							throw new ParseException(
 									"Too many parts (max = " + (MidiConstants.CHANNEL_COUNT - 1) + ")", fileName,
 									partStartLine);
+						}
 						track = seq.createTrack();
 						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
 						if (useLotroInstruments)
@@ -343,8 +347,10 @@ public class AbcToMidi
 							if (Character.isWhitespace(ch))
 							{
 								if (inChord)
+								{
 									throw new ParseException("Unexpected whitespace inside a chord", fileName,
 											lineNumber, i);
+								}
 								continue;
 							}
 
@@ -384,7 +390,7 @@ public class AbcToMidi
 								}
 
 								if (trackNumber == 1)
-									abcInfo.addBar(chordStartTick);
+									abcInfo.addBar(Math.round(chordStartTick));
 
 								accidentals.clear();
 								if (i + 1 < line.length() && line.charAt(i + 1) == ']')
@@ -393,7 +399,7 @@ public class AbcToMidi
 								}
 								else if (trackNumber == 1)
 								{
-									abcInfo.addBar(chordStartTick);
+									abcInfo.addBar(Math.round(chordStartTick));
 								}
 								break;
 
@@ -429,8 +435,10 @@ public class AbcToMidi
 								{
 									// If it has a digit following it, it's a tuplet
 									if (tuplet != null)
+									{
 										throw new ParseException("Unexpected '" + ch + "' before end of tuplet",
 												fileName, lineNumber, i);
+									}
 
 									try
 									{
@@ -563,7 +571,7 @@ public class AbcToMidi
 						}
 
 						// Convert back to the original tempo
-						int curTempoBPM = info.getCurrentTempoBPM(chordStartTick);
+						int curTempoBPM = info.getCurrentTempoBPM(Math.round(chordStartTick));
 						int primaryTempoBPM = info.getPrimaryTempoBPM();
 						numerator *= curTempoBPM;
 						denominator *= primaryTempoBPM;
@@ -574,7 +582,8 @@ public class AbcToMidi
 							abcInfo.setHasTriplets(true);
 						}
 
-						long noteEndTick = chordStartTick + DEFAULT_NOTE_TICKS * numerator / denominator;
+						double noteEndTick = chordStartTick + DEFAULT_NOTE_TICKS * (double) numerator
+								/ (double) denominator;
 
 						// A chord is as long as its shortest note
 						if (chordEndTick == chordStartTick || noteEndTick < chordEndTick)
@@ -676,7 +685,7 @@ public class AbcToMidi
 								if (noteOffId == noteId)
 								{
 									track.remove(evt);
-									evt.setTick(chordStartTick);
+									evt.setTick(Math.round(chordStartTick));
 									track.add(evt);
 									noteOffIter.remove();
 									break;
@@ -692,7 +701,7 @@ public class AbcToMidi
 											fileName, noteDivisorChangeLine);
 								}
 								track.add(MidiFactory.createNoteOnEventEx(noteId, channel,
-										info.getDynamics().getVol(useLotroInstruments), chordStartTick));
+										info.getDynamics().getVol(useLotroInstruments), Math.round(chordStartTick)));
 							}
 
 							if (m.group(NOTE_TIE) != null)
@@ -720,14 +729,14 @@ public class AbcToMidi
 								// sound sample in its entirety. Since Gervill doesn't support the SoundFont 
 								// extension that specifies this, we have to increase the note length.
 								// One second should do the trick.
-								long noteEndTickTmp = noteEndTick;
+								double noteEndTickTmp = noteEndTick;
 								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId))
 								{
-									noteEndTickTmp = Math.max(noteEndTick,
-											chordStartTick + Math.round(AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN));
+									noteEndTickTmp = Math.max(noteEndTick, chordStartTick
+											+ AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN);
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
-										.getDynamics().getVol(useLotroInstruments), noteEndTickTmp);
+										.getDynamics().getVol(useLotroInstruments), Math.round(noteEndTickTmp));
 								track.add(noteOff);
 								noteOffEvents.add(noteOff);
 
