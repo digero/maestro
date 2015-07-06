@@ -107,27 +107,38 @@ public class MidiFactory implements IMidiConstants
 
 	public static MidiEvent createPanEvent(int value, int channel)
 	{
-		try
-		{
-			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, PAN_CONTROL, value);
-			return new MidiEvent(msg, 0);
-		}
-		catch (InvalidMidiDataException e)
-		{
-			throw new RuntimeException(e);
-		}
+		return createPanEvent(value, channel, 0);
+	}
+
+	public static MidiEvent createPanEvent(int value, int channel, long ticks)
+	{
+		return createControllerEvent(PAN_CONTROL, value, channel, ticks);
+	}
+
+	public static MidiEvent createReverbControlEvent(int value, int channel, long ticks)
+	{
+		return createControllerEvent(REVERB_CONTROL, value, channel, ticks);
+	}
+
+	public static MidiEvent createChorusControlEvent(int value, int channel, long ticks)
+	{
+		return createControllerEvent(CHORUS_CONTROL, value, channel, ticks);
 	}
 
 	public static MidiEvent createChannelVolumeEvent(int volume, int channel, long ticks)
 	{
+		if (volume < 0 || volume > Byte.MAX_VALUE)
+			throw new IllegalArgumentException();
+
+		return createControllerEvent(CHANNEL_VOLUME_CONTROLLER_COARSE, volume, channel, ticks);
+	}
+
+	public static MidiEvent createControllerEvent(byte controller, int value, int channel, long ticks)
+	{
 		try
 		{
-			if (volume < 0 || volume > Byte.MAX_VALUE)
-				throw new IllegalArgumentException();
-
 			ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, CHANNEL_VOLUME_CONTROLLER_COARSE, volume);
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, controller, value);
 			return new MidiEvent(msg, ticks);
 		}
 		catch (InvalidMidiDataException e)
