@@ -44,7 +44,7 @@ public class MidiToWav
 			double total = send(sequence, synth.getReceiver());
 
 			// Calculate how long the WAVE file needs to be.
-			long len = (long) (stream.getFormat().getFrameRate() * (total + 4));
+			long len = (long) (stream.getFormat().getFrameRate() * (total + 1));
 			stream = new AudioInputStream(stream, stream.getFormat(), len);
 
 			// Write WAVE file to disk.
