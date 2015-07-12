@@ -3,6 +3,7 @@ package com.digero.common.midi;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -33,6 +34,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	private long dragPosition;
 	private boolean isDragging;
 	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
+	private Boolean[] trackActiveCache = null;
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
 	private long lastUpdateTick = -1;
@@ -82,6 +84,8 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 
 		if (sequencer != null)
 			sequencer.close();
+
+		trackActiveCache = null;
 	}
 
 	public void addTransceiver(Transceiver transceiver)
@@ -140,6 +144,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	{
 		stop();
 		setPosition(0);
+		trackActiveCache = null;
 
 		if (fullReset)
 		{
@@ -356,6 +361,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	{
 		if (mute != this.getTrackMute(track))
 		{
+			trackActiveCache = null;
 			sequencer.setTrackMute(track, mute);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
@@ -370,6 +376,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	{
 		if (solo != this.getTrackSolo(track))
 		{
+			trackActiveCache = null;
 			sequencer.setTrackSolo(track, solo);
 			fireChangeEvent(SequencerProperty.TRACK_ACTIVE);
 		}
@@ -380,21 +387,30 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	 */
 	public boolean isTrackActive(int track)
 	{
-		Sequence song = sequencer.getSequence();
+		if (trackActiveCache != null && trackActiveCache.length > track && trackActiveCache[track] != null)
+			return trackActiveCache[track];
 
+		Sequence song = sequencer.getSequence();
 		if (song == null)
 			return true;
 
-		if (sequencer.getTrackSolo(track))
-			return true;
+		int trackCount = song.getTracks().length;
 
-		for (int i = song.getTracks().length - 1; i >= 0; --i)
+		if (trackActiveCache == null)
+			trackActiveCache = new Boolean[Math.max(track, trackCount)];
+		else if (trackActiveCache.length <= track)
+			trackActiveCache = Arrays.copyOf(trackActiveCache, Math.max(track, trackCount));
+
+		if (sequencer.getTrackSolo(track))
+			return trackActiveCache[track] = true;
+
+		for (int i = trackCount - 1; i >= 0; --i)
 		{
 			if (i != track && sequencer.getTrackSolo(i))
-				return false;
+				return trackActiveCache[track] = false;
 		}
 
-		return !sequencer.getTrackMute(track);
+		return trackActiveCache[track] = !sequencer.getTrackMute(track);
 	}
 
 	/**
@@ -489,6 +505,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	{
 		if (sequencer.getSequence() != sequence)
 		{
+			trackActiveCache = null;
 			boolean preLoaded = isLoaded();
 			sequencer.setSequence(sequence);
 			if (sequence != null)
