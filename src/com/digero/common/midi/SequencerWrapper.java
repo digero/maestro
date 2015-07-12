@@ -3,7 +3,6 @@ package com.digero.common.midi;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -34,7 +33,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	private long dragPosition;
 	private boolean isDragging;
 	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
-	private Boolean[] trackActiveCache = null;
+	private boolean[] trackActiveCache = null;
 
 	private Timer updateTimer = new Timer(UPDATE_FREQUENCY_MILLIS, new TimerActionListener());
 	private long lastUpdateTick = -1;
@@ -387,7 +386,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	 */
 	public boolean isTrackActive(int track)
 	{
-		if (trackActiveCache != null && trackActiveCache.length > track && trackActiveCache[track] != null)
+		if (trackActiveCache != null && track < trackActiveCache.length)
 			return trackActiveCache[track];
 
 		Sequence song = sequencer.getSequence();
@@ -395,22 +394,32 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 			return true;
 
 		int trackCount = song.getTracks().length;
+		if (track >= trackCount)
+			return false;
 
-		if (trackActiveCache == null)
-			trackActiveCache = new Boolean[Math.max(track, trackCount)];
-		else if (trackActiveCache.length <= track)
-			trackActiveCache = Arrays.copyOf(trackActiveCache, Math.max(track, trackCount));
+		if (trackActiveCache == null || trackActiveCache.length != trackCount)
+			trackActiveCache = new boolean[trackCount];
 
-		if (sequencer.getTrackSolo(track))
-			return trackActiveCache[track] = true;
-
-		for (int i = trackCount - 1; i >= 0; --i)
+		boolean foundSoloPart = false;
+		for (int i = 0; i < trackCount; i++)
 		{
-			if (i != track && sequencer.getTrackSolo(i))
-				return trackActiveCache[track] = false;
+			if (sequencer.getTrackSolo(i))
+			{
+				trackActiveCache[i] = true;
+				if (!foundSoloPart)
+				{
+					foundSoloPart = true;
+					for (int j = 0; j < i; j++)
+						trackActiveCache[j] = false;
+				}
+			}
+			else
+			{
+				trackActiveCache[i] = !foundSoloPart && !sequencer.getTrackMute(i);
+			}
 		}
 
-		return trackActiveCache[track] = !sequencer.getTrackMute(track);
+		return trackActiveCache[track];
 	}
 
 	/**
