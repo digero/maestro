@@ -54,6 +54,120 @@
         FineTune=0
         Type=1
 
+    SampleName=basic_fiddle_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=basic_fiddle_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
     SampleName=basic_lute_36
         SampleRate=44100
         Key=36
@@ -1068,6 +1182,120 @@
         FineTune=0
         Type=1
 
+    SampleName=lonely_fiddle_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_fiddle_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
     SampleName=lute_of_ages_36
         SampleRate=44100
         Key=36
@@ -1446,6 +1674,162 @@
         FineTune=0
         Type=1
 
+    SampleName=sprightly_fiddle_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_70
+        SampleRate=44100
+        Key=70
+        FineTune=0
+        Type=1
+
+    SampleName=sprightly_fiddle_72
+        SampleRate=44100
+        Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_37
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_39
+        SampleRate=16000
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_40
+        SampleRate=16000
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_41
+        SampleRate=16000
+        Key=41
+        FineTune=0
+        Type=1
+
+    SampleName=student_fiddle_42
+        SampleRate=16000
+        Key=42
+        FineTune=0
+        Type=1
+
     SampleName=theorbo_36
         SampleRate=44100
         Key=36
@@ -1621,6 +2005,123 @@
 
         Sample=bagpipe_69
             Z_LowKey=68
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Basic Fiddle
+
+        Sample=basic_fiddle_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_54
+            Z_LowKey=54
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_56
+            Z_LowKey=56
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_58
+            Z_LowKey=58
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_60
+            Z_LowKey=60
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_62
+            Z_LowKey=62
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_64
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_66
+            Z_LowKey=66
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_68
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_70
+            Z_LowKey=70
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=basic_fiddle_72
+            Z_LowKey=72
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -2949,6 +3450,123 @@
             Z_HighVelocity=127
 
 
+    InstrumentName=Lonely Mountain Fiddle
+
+        Sample=lonely_fiddle_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_54
+            Z_LowKey=54
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_56
+            Z_LowKey=56
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_58
+            Z_LowKey=58
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_60
+            Z_LowKey=60
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_62
+            Z_LowKey=62
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_64
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_66
+            Z_LowKey=66
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_68
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_70
+            Z_LowKey=70
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=lonely_fiddle_72
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
     InstrumentName=Lute of Ages
 
         Sample=lute_of_ages_36
@@ -3627,6 +4245,168 @@
             Z_HighVelocity=127
 
 
+    InstrumentName=Sprightly Fiddle
+
+        Sample=sprightly_fiddle_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_54
+            Z_LowKey=54
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_56
+            Z_LowKey=56
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_58
+            Z_LowKey=58
+            Z_HighKey=59
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_60
+            Z_LowKey=60
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_62
+            Z_LowKey=62
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_64
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_66
+            Z_LowKey=66
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_68
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_70
+            Z_LowKey=70
+            Z_HighKey=71
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=sprightly_fiddle_72
+            Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
+    InstrumentName=Student's Fiddle Flubs
+
+        Sample=student_fiddle_36
+            Z_LowKey=36
+            Z_HighKey=36
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_37
+            Z_LowKey=37
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_38
+            Z_LowKey=38
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_39
+            Z_LowKey=39
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_40
+            Z_LowKey=40
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_41
+            Z_LowKey=41
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+        Sample=student_fiddle_42
+            Z_LowKey=42
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+
+
     InstrumentName=Theorbo
 
         Sample=theorbo_36
@@ -3765,6 +4545,17 @@
             L_initialAttenuation=32
 
 
+    PresetName=Basic Fiddle
+        Bank=0
+        Program=110
+
+        Instrument=Basic Fiddle
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
     PresetName=Basic Lute
         Bank=0
         Program=25
@@ -3846,6 +4637,17 @@
             L_HighVelocity=127
 
 
+    PresetName=Lonely Mountain Fiddle
+        Bank=0
+        Program=40
+
+        Instrument=Lonely Mountain Fiddle
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
     PresetName=Lute of Ages
         Bank=0
         Program=24
@@ -3901,6 +4703,34 @@
             L_LowVelocity=0
             L_HighVelocity=127
             L_initialAttenuation=35
+
+
+    PresetName=Sprightly Fiddle
+        Bank=0
+        Program=45
+
+        Instrument=Sprightly Fiddle
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Student's Fiddle
+        Bank=0
+        Program=120
+
+        Instrument=Student's Fiddle Flubs
+            L_LowKey=36
+            L_HighKey=42
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+        Instrument=Basic Fiddle
+            L_LowKey=43
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
 
 
     PresetName=Theorbo
