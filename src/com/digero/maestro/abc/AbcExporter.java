@@ -222,18 +222,6 @@ public class AbcExporter
 		return new ExportTrackInfo(trackNumber, part, noteEvents);
 	}
 
-//	private void exportPartToMidi(AbcPart part, Sequence out, long songStartMicros, long songEndMicros, int pan,
-//			boolean useLotroInstruments) throws AbcConversionException
-//	{
-//		if (out.getDivisionType() != Sequence.PPQ || out.getResolution() != qtm.getMidiResolution())
-//		{
-//			throw new AbcConversionException("Sequence has incorrect timing data");
-//		}
-//
-//		List<Chord> chords = combineAndQuantize(part, false, songStartMicros, songEndMicros);
-//		exportPartToMidi(part, out, chords, pan, useLotroInstruments);
-//	}
-
 	private int exportPartToMidi(AbcPart part, Sequence out, List<Chord> chords, int pan, boolean useLotroInstruments)
 	{
 		int trackNumber = out.getTracks().length;
@@ -247,7 +235,11 @@ public class AbcExporter
 		track.add(MidiFactory.createTrackNameEvent(part.getTitle()));
 		track.add(MidiFactory.createProgramChangeEvent(part.getInstrument().midiProgramId, channel, 0));
 		if (useLotroInstruments)
+		{
 			track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
+			track.add(MidiFactory.createReverbControlEvent(AbcConstants.MIDI_REVERB, channel, 1));
+			track.add(MidiFactory.createChorusControlEvent(AbcConstants.MIDI_CHORUS, channel, 1));
+		}
 		track.add(MidiFactory.createPanEvent(pan, channel));
 
 		List<NoteEvent> notesOn = new ArrayList<NoteEvent>();

@@ -338,8 +338,8 @@ public class AbcToMidi
 						if (useLotroInstruments)
 						{
 							track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
-							track.add(MidiFactory.createReverbControlEvent(3, channel, 1));
-							track.add(MidiFactory.createChorusControlEvent(0, channel, 1));
+							track.add(MidiFactory.createReverbControlEvent(AbcConstants.MIDI_REVERB, channel, 1));
+							track.add(MidiFactory.createChorusControlEvent(AbcConstants.MIDI_CHORUS, channel, 1));
 						}
 
 						abcInfo.setPartInstrument(trackNumber, info.getInstrument());

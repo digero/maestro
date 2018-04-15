@@ -17,6 +17,10 @@ public interface AbcConstants
 	public static final int MAX_TEMPO = ONE_MINUTE_MICROS / SHORTEST_NOTE_MICROS;
 	public static final int MIN_TEMPO = (ONE_MINUTE_MICROS + LONGEST_NOTE_MICROS / 2) / LONGEST_NOTE_MICROS; // Round up
 
+	// MIDI Preview controller values
+	public static final int MIDI_REVERB = 3;
+	public static final int MIDI_CHORUS = 0;
+
 	/** Note ID used in ABC files for Cowbells. Somewhat arbitrary */
 	public static final int COWBELL_NOTE_ID = 71;
 
