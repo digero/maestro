@@ -28,6 +28,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.io.BufferedReader;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -79,8 +81,10 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.filechooser.FileFilter;
 
+import com.digero.abcplayer.view.HighlightAbcNotesFrame;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcInfo;
+import com.digero.common.abctomidi.AbcRegion;
 import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.icons.IconLoader;
@@ -107,7 +111,7 @@ import com.digero.common.view.TempoBar;
 public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants
 {
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
-	static final String APP_NAME = "ABC Player";
+	public static final String APP_NAME = "ABC Player";
 	private static final String APP_NAME_LONG = APP_NAME + " for The Lord of the Rings Online";
 	private static final String APP_URL = "https://github.com/digero/maestro/";
 	private static final String LAME_URL = "http://lame.sourceforge.net/";
@@ -194,6 +198,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private SequencerWrapper sequencer;
 	private boolean useLotroInstruments = true;
 
+	private FileFilterDropListener dropListener;
+
 	private JPanel content;
 
 	private JLabel titleLabel;
@@ -215,10 +221,13 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private JCheckBoxMenuItem lotroErrorsMenuItem;
 	private JCheckBoxMenuItem stereoMenuItem;
 	private JCheckBoxMenuItem showFullPartNameMenuItem;
+	private JCheckBoxMenuItem showAbcViewMenuItem;
 
 	private JFileChooser openFileDialog;
 	private JFileChooser saveFileDialog;
 	private JFileChooser exportFileDialog;
+
+	private HighlightAbcNotesFrame abcViewFrame;
 
 	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
 	private List<FileAndData> abcData;
@@ -254,7 +263,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			// Ignore
 		}
 
-		FileFilterDropListener dropListener = new FileFilterDropListener(true, "abc", "txt");
+		dropListener = new FileFilterDropListener(true, "abc", "txt");
 		dropListener.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -464,6 +473,62 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		initializeWindowBounds();
 	}
 
+	private void updateAbcView(boolean showIfHidden, boolean retainScrollPosition)
+	{
+		boolean hasAbcData = (abcData != null && abcInfo != null);
+
+		if (showAbcViewMenuItem != null)
+			showAbcViewMenuItem.setEnabled(hasAbcData);
+
+		boolean isVisible = (abcViewFrame != null && abcViewFrame.isVisible());
+		if (!isVisible && !showIfHidden)
+			return;
+
+		if (abcViewFrame == null)
+		{
+			abcViewFrame = new HighlightAbcNotesFrame(sequencer);
+			abcViewFrame.setTitle(getTitle());
+			abcViewFrame.setIconImages(getIconImages());
+			abcViewFrame.addDropListener(dropListener);
+			abcViewFrame.addWindowListener(new WindowAdapter()
+			{
+				@Override public void windowOpened(WindowEvent e)
+				{
+					if (showAbcViewMenuItem != null)
+					{
+						showAbcViewMenuItem.setSelected(true);
+						prefs.putBoolean("showAbcViewMenuItem", true);
+					}
+				}
+
+				@Override public void windowClosed(WindowEvent e)
+				{
+					if (showAbcViewMenuItem != null)
+					{
+						showAbcViewMenuItem.setSelected(false);
+						prefs.putBoolean("showAbcViewMenuItem", false);
+					}
+				}
+			});
+		}
+
+		if (!hasAbcData)
+		{
+			abcViewFrame.setLinesAndRegions(new ArrayList<String>(), new TreeSet<AbcRegion>(), false);
+		}
+		else
+		{
+			List<String> lines = new ArrayList<String>();
+			for (FileAndData entry : abcData)
+				lines.addAll(entry.lines);
+
+			abcViewFrame.setLinesAndRegions(lines, abcInfo.getRegions(), retainScrollPosition);
+		}
+
+		if (!isVisible && showIfHidden)
+			abcViewFrame.setVisible(true);
+	}
+
 	private void updateTitleLabel()
 	{
 		String title = abcInfo.getTitle();
@@ -489,7 +554,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	{
 		float tempo = sequencer.getTempoFactor();
 		int t = Math.round(tempo * 100);
-//		int bpm = (int) Math.round(tempo * (abcInfo.isEmpty() ? 120 : abcInfo.getTempoBPM()));
 		tempoLabel.setText("Tempo: " + t + "%");
 	}
 
@@ -799,6 +863,28 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				AboutDialog.show(AbcPlayer.this, APP_NAME_LONG, APP_VERSION, APP_URL, "abcplayer_64.png");
 			}
 		});
+
+		JMenu abcViewMenu = mainMenu.add(new JMenu(" ABC View "));
+		abcViewMenu.setMnemonic(KeyEvent.VK_A);
+
+		abcViewMenu.add(showAbcViewMenuItem = new JCheckBoxMenuItem("Show ABC text"));
+		showAbcViewMenuItem.setSelected(prefs.getBoolean("showAbcViewMenuItem", false));
+		showAbcViewMenuItem.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				prefs.putBoolean("showAbcViewMenuItem", showAbcViewMenuItem.isSelected());
+				if (showAbcViewMenuItem.isSelected())
+				{
+					updateAbcView(/* showIfHidden = */true, /* retainScrollPosition = */false);
+				}
+				else if (abcViewFrame != null)
+				{
+					abcViewFrame.setVisible(false);
+				}
+			}
+		});
+		updateAbcView(/* showIfHidden = */showAbcViewMenuItem.isSelected(), /* retainScrollPosition = */false);
 	}
 
 	private boolean getAbcDataFromClipboard(ArrayList<String> data, boolean checkContents)
@@ -1083,6 +1169,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private boolean openSong(List<FileAndData> data)
 	{
+		boolean isSameFile = false;
+		if (abcData != null && abcData.size() == data.size())
+		{
+			isSameFile = true;
+			for (int i = 0; i < abcData.size(); i++)
+			{
+				if (!abcData.get(i).file.equals(data.get(i).file))
+				{
+					isSameFile = false;
+					break;
+				}
+			}
+		}
+
 		sequencer.stop(); // pause
 		updateButtonStates();
 
@@ -1099,6 +1199,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				params.abcInfo = info;
 				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
 				params.stereo = stereoMenuItem.isSelected();
+				params.generateRegions = true;
 				song = AbcToMidi.convert(params);
 			}
 			catch (LotroParseException e)
@@ -1151,6 +1252,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		barNumberLabel.setBarNumberCache(abcInfo);
 		barNumberLabel.setVisible(abcInfo.getBarCount() > 0);
 
+		updateAbcView(/* showIfHidden = */false, /* retainScrollPosition = */isSameFile);
+
 		sequencer.start();
 
 		return true;
@@ -1184,6 +1287,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				params.abcInfo = info;
 				params.enableLotroErrors = !lotroErrorsMenuItem.isSelected();
 				params.stereo = stereoMenuItem.isSelected();
+				params.generateRegions = true;
 				song = AbcToMidi.convert(params);
 			}
 			catch (LotroParseException e)
@@ -1250,6 +1354,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		barNumberLabel.setBarNumberCache(abcInfo);
 		barNumberLabel.setVisible(abcInfo.getBarCount() > 0);
 
+		updateAbcView(/* showIfHidden = */false, /* retainScrollPosition = */true);
+
 		return true;
 	}
 
@@ -1271,10 +1377,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 			fileNames += f.getName();
 		}
-		if (fileNames == "")
-			setTitle(APP_NAME);
-		else
-			setTitle(APP_NAME + " - " + fileNames);
+
+		String title = APP_NAME;
+		if (fileNames != "")
+			title += " - " + fileNames;
+
+		setTitle(title);
+		if (abcViewFrame != null)
+			abcViewFrame.setTitle(title);
 	}
 
 	private boolean saveSong(File file)

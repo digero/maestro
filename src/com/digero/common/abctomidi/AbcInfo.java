@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import com.digero.common.abc.AbcConstants;
@@ -31,6 +33,7 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	private Map<Character, String> metadata = new HashMap<Character, String>();
 	private NavigableMap<Long, Integer> bars = new TreeMap<Long, Integer>();
 	private Map<Integer, AbcInfo.PartInfo> partInfoByIndex = new HashMap<Integer, AbcInfo.PartInfo>();
+	private NavigableSet<AbcRegion> regions;
 	private int primaryTempoBPM = 120;
 	private boolean hasTriplets = false;
 
@@ -217,22 +220,22 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	{
 		switch (field)
 		{
-		case SONG_TITLE:
-			songTitle = value.trim();
-			break;
-		case SONG_COMPOSER:
-			songComposer = value.trim();
-			break;
-		case SONG_TRANSCRIBER:
-			songTranscriber = value.trim();
-			break;
-		case ABC_CREATOR:
-		case ABC_VERSION:
-		case PART_NAME:
-		case SONG_DURATION:
-		case TEMPO:
-			// Ignore
-			break;
+			case SONG_TITLE:
+				songTitle = value.trim();
+				break;
+			case SONG_COMPOSER:
+				songComposer = value.trim();
+				break;
+			case SONG_TRANSCRIBER:
+				songTranscriber = value.trim();
+				break;
+			case ABC_CREATOR:
+			case ABC_VERSION:
+			case PART_NAME:
+			case SONG_DURATION:
+			case TEMPO:
+				// Ignore
+				break;
 		}
 	}
 
@@ -300,6 +303,22 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 	void setKeySignature(KeySignature keySignature)
 	{
 		this.keySignature = keySignature;
+	}
+
+	void addRegion(AbcRegion region)
+	{
+		if (regions == null)
+			regions = new TreeSet<AbcRegion>();
+
+		regions.add(region);
+	}
+
+	public NavigableSet<AbcRegion> getRegions()
+	{
+		if (regions == null)
+			return regions;
+
+		return regions;
 	}
 
 	private static final String openPunct = "[-:;\\(\\[\\{\\s]*";

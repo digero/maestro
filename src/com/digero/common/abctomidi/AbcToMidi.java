@@ -45,6 +45,7 @@ public class AbcToMidi
 		public Map<Integer, LotroInstrument> instrumentOverrideMap = null;
 		public boolean enableLotroErrors = false;
 		public boolean stereo = true;
+		public boolean generateRegions = false;
 		public AbcInfo abcInfo = null;
 
 		public Params(File file) throws IOException
@@ -120,12 +121,12 @@ public class AbcToMidi
 	public static Sequence convert(Params params) throws ParseException
 	{
 		return convert(params.filesData, params.useLotroInstruments, params.instrumentOverrideMap, params.abcInfo,
-				params.enableLotroErrors, params.stereo);
+				params.enableLotroErrors, params.stereo, params.generateRegions);
 	}
 
 	private static Sequence convert(List<FileAndData> filesData, boolean useLotroInstruments,
 			Map<Integer, LotroInstrument> instrumentOverrideMap, AbcInfo abcInfo, final boolean enableLotroErrors,
-			final boolean stereo) throws ParseException
+			final boolean stereo, final boolean generateRegions) throws ParseException
 	{
 		if (abcInfo == null)
 			abcInfo = new AbcInfo();
@@ -138,22 +139,29 @@ public class AbcToMidi
 
 		int channel = 0;
 		int trackNumber = 0;
+		int trackIndex = 0;
 		int noteDivisorChangeLine = 0;
 
+		int chordStartIndex = 0;
 		double chordStartTick = 0;
 		double chordEndTick = 0;
 		long PPQN = 0;
+		Map<Integer, AbcRegion> tiedRegions = new HashMap<Integer, AbcRegion>();
+
 		Map<Integer, Integer> tiedNotes = new HashMap<Integer, Integer>(); // noteId => (line << 16) | column
 		Map<Integer, Integer> accidentals = new HashMap<Integer, Integer>(); // noteId => deltaNoteId
 
 		List<MidiEvent> noteOffEvents = new ArrayList<MidiEvent>();
+		int lineNumberForRegions = -1;
 		for (FileAndData fileAndData : filesData)
 		{
+			track = null;
 			String fileName = fileAndData.file.getName();
 			int lineNumber = 0;
 			int partStartLine = 0;
 			for (String line : fileAndData.lines)
 			{
+				lineNumberForRegions++;
 				lineNumber++;
 
 				// Handle extended info
@@ -210,63 +218,63 @@ public class AbcToMidi
 					{
 						switch (type)
 						{
-						case 'X':
-							for (int lineAndColumn : tiedNotes.values())
-							{
-								throw new ParseException("Tied note does not connect to another note", fileName,
-										lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
-							}
+							case 'X':
+								for (int lineAndColumn : tiedNotes.values())
+								{
+									throw new ParseException("Tied note does not connect to another note", fileName,
+											lineAndColumn >>> 16, lineAndColumn & 0xFFFF);
+								}
 
-							accidentals.clear();
-							noteOffEvents.clear();
+								accidentals.clear();
+								noteOffEvents.clear();
 
-							info.newPart(Integer.parseInt(value));
-							trackNumber++;
-							partStartLine = lineNumber;
-							chordStartTick = 0;
-							abcInfo.setPartNumber(trackNumber, info.getPartNumber());
-							track = null; // Will create a new track after the header is done
-							if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber))
-							{
-								info.setInstrument(instrumentOverrideMap.get(trackNumber));
-							}
-							break;
-						case 'T':
-							if (track != null)
-							{
-								throw new ParseException("Can't specify the title in the middle of a part", fileName,
-										lineNumber, 0);
-							}
+								info.newPart(Integer.parseInt(value));
+								trackNumber++;
+								partStartLine = lineNumber;
+								chordStartTick = 0;
+								abcInfo.setPartNumber(trackNumber, info.getPartNumber());
+								track = null; // Will create a new track after the header is done
+								if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber))
+								{
+									info.setInstrument(instrumentOverrideMap.get(trackNumber));
+								}
+								break;
+							case 'T':
+								if (track != null)
+								{
+									throw new ParseException("Can't specify the title in the middle of a part",
+											fileName, lineNumber, 0);
+								}
 
-							info.setTitle(value, false);
-							abcInfo.setPartName(trackNumber, value, false);
-							if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber))
+								info.setTitle(value, false);
+								abcInfo.setPartName(trackNumber, value, false);
+								if (instrumentOverrideMap == null || !instrumentOverrideMap.containsKey(trackNumber))
+								{
+									info.setInstrument(LotroInstrument.findInstrumentName(value, info.getInstrument()));
+								}
+								break;
+							case 'K':
+								info.setKey(value);
+								break;
+							case 'L':
+								info.setNoteDivisor(value);
+								noteDivisorChangeLine = lineNumber;
+								break;
+							case 'M':
+								info.setMeter(value);
+								noteDivisorChangeLine = lineNumber;
+								break;
+							case 'Q':
 							{
-								info.setInstrument(LotroInstrument.findInstrumentName(value, info.getInstrument()));
+								int tempo = info.getPrimaryTempoBPM();
+								info.setPrimaryTempoBPM(value);
+								if (seq != null && (info.getPrimaryTempoBPM() != tempo))
+								{
+									throw new ParseException("The tempo must be the same for all parts of the song",
+											fileName, lineNumber);
+								}
+								break;
 							}
-							break;
-						case 'K':
-							info.setKey(value);
-							break;
-						case 'L':
-							info.setNoteDivisor(value);
-							noteDivisorChangeLine = lineNumber;
-							break;
-						case 'M':
-							info.setMeter(value);
-							noteDivisorChangeLine = lineNumber;
-							break;
-						case 'Q':
-						{
-							int tempo = info.getPrimaryTempoBPM();
-							info.setPrimaryTempoBPM(value);
-							if (seq != null && (info.getPrimaryTempoBPM() != tempo))
-							{
-								throw new ParseException("The tempo must be the same for all parts of the song",
-										fileName, lineNumber);
-							}
-							break;
-						}
 						}
 					}
 					catch (IllegalArgumentException e)
@@ -299,6 +307,7 @@ public class AbcToMidi
 
 							// Create track 0, which will later be filled with the 
 							// tempo events and song metadata (title, etc.)
+							trackIndex = 0;
 							seq.createTrack();
 
 							abcInfo.setPartNumber(0, 0);
@@ -316,7 +325,8 @@ public class AbcToMidi
 
 					if (track == null)
 					{
-						channel = getTrackChannel(seq.getTracks().length);
+						trackIndex = seq.getTracks().length;
+						channel = getTrackChannel(trackIndex);
 						if (channel > MidiConstants.CHANNEL_COUNT - 1)
 						{
 							throw new ParseException(
@@ -328,7 +338,7 @@ public class AbcToMidi
 						if (useLotroInstruments)
 						{
 							track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
-							track.add(MidiFactory.createReverbControlEvent(0, channel, 1));
+							track.add(MidiFactory.createReverbControlEvent(3, channel, 1));
 							track.add(MidiFactory.createChorusControlEvent(0, channel, 1));
 						}
 
@@ -361,135 +371,143 @@ public class AbcToMidi
 
 							switch (ch)
 							{
-							case '[': // Chord start
-								if (inChord)
-								{
-									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
-											lineNumber, i);
-								}
-
-								if (brokenRhythmDenominator != 1 || brokenRhythmNumerator != 1)
-								{
-									throw new ParseException("Can't have broken rhythm (< or >) within a chord",
-											fileName, lineNumber, i);
-								}
-
-								chordSize = 0;
-								inChord = true;
-								break;
-
-							case ']': // Chord end
-								if (!inChord)
-								{
-									throw new ParseException("Unexpected '" + ch + "'", fileName, lineNumber, i);
-								}
-								inChord = false;
-								chordStartTick = chordEndTick;
-								break;
-
-							case '|': // Bar line
-								if (inChord)
-								{
-									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
-											lineNumber, i);
-								}
-
-								if (trackNumber == 1)
-									abcInfo.addBar(Math.round(chordStartTick));
-
-								accidentals.clear();
-								if (i + 1 < line.length() && line.charAt(i + 1) == ']')
-								{
-									i++; // Skip |]
-								}
-								else if (trackNumber == 1)
-								{
-									abcInfo.addBar(Math.round(chordStartTick));
-								}
-								break;
-
-							case '+':
-							{
-								int j = line.indexOf('+', i + 1);
-								if (j < 0)
-								{
-									throw new ParseException("There is no matching '+'", fileName, lineNumber, i);
-								}
-								try
-								{
-									info.setDynamics(line.substring(i + 1, j));
-								}
-								catch (IllegalArgumentException iae)
-								{
-									throw new ParseException("Unsupported +decoration+", fileName, lineNumber, i);
-								}
-
-								if (enableLotroErrors && inChord)
-								{
-									throw new LotroParseException("Can't include a +decoration+ inside a chord",
-											fileName, lineNumber, i);
-								}
-
-								i = j;
-								break;
-							}
-
-							case '(':
-								// Tuplet or slur start
-								if (i + 1 < line.length() && Character.isDigit(line.charAt(i + 1)))
-								{
-									// If it has a digit following it, it's a tuplet
-									if (tuplet != null)
-									{
-										throw new ParseException("Unexpected '" + ch + "' before end of tuplet",
-												fileName, lineNumber, i);
-									}
-
-									try
-									{
-										for (int j = i + 1; j < line.length(); j++)
-										{
-											if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i)))
-											{
-												tuplet = new Tuplet(line.substring(i + 1, j + 1),
-														info.isCompoundMeter());
-												i = j;
-												break;
-											}
-										}
-									}
-									catch (IllegalArgumentException e)
-									{
-										throw new ParseException("Invalid tuplet", fileName, lineNumber, i);
-									}
-								}
-								else
-								{
-									// Otherwise it's a slur, which LotRO conveniently ignores
+								case '[': // Chord start
 									if (inChord)
 									{
 										throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
 												lineNumber, i);
 									}
-								}
-								break;
 
-							case ')':
-								// End of a slur, ignore
-								if (inChord)
+									if (brokenRhythmDenominator != 1 || brokenRhythmNumerator != 1)
+									{
+										throw new ParseException("Can't have broken rhythm (< or >) within a chord",
+												fileName, lineNumber, i);
+									}
+
+									chordSize = 0;
+									inChord = true;
+									chordStartIndex = i;
+									break;
+
+								case ']': // Chord end
+									if (!inChord)
+									{
+										throw new ParseException("Unexpected '" + ch + "'", fileName, lineNumber, i);
+									}
+									inChord = false;
+
+									if (generateRegions)
+									{
+										abcInfo.addRegion(new AbcRegion(lineNumberForRegions, chordStartIndex, i + 1,
+												Math.round(chordStartTick), Math.round(chordEndTick), null, trackIndex));
+									}
+
+									chordStartTick = chordEndTick;
+									break;
+
+								case '|': // Bar line
+									if (inChord)
+									{
+										throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+												lineNumber, i);
+									}
+
+									if (trackNumber == 1)
+										abcInfo.addBar(Math.round(chordStartTick));
+
+									accidentals.clear();
+									if (i + 1 < line.length() && line.charAt(i + 1) == ']')
+									{
+										i++; // Skip |]
+									}
+									else if (trackNumber == 1)
+									{
+										abcInfo.addBar(Math.round(chordStartTick));
+									}
+									break;
+
+								case '+':
 								{
-									throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
-											lineNumber, i);
+									int j = line.indexOf('+', i + 1);
+									if (j < 0)
+									{
+										throw new ParseException("There is no matching '+'", fileName, lineNumber, i);
+									}
+									try
+									{
+										info.setDynamics(line.substring(i + 1, j));
+									}
+									catch (IllegalArgumentException iae)
+									{
+										throw new ParseException("Unsupported +decoration+", fileName, lineNumber, i);
+									}
+
+									if (enableLotroErrors && inChord)
+									{
+										throw new LotroParseException("Can't include a +decoration+ inside a chord",
+												fileName, lineNumber, i);
+									}
+
+									i = j;
+									break;
 								}
-								break;
 
-							case '\\':
-								// Ignore backslashes
-								break;
+								case '(':
+									// Tuplet or slur start
+									if (i + 1 < line.length() && Character.isDigit(line.charAt(i + 1)))
+									{
+										// If it has a digit following it, it's a tuplet
+										if (tuplet != null)
+										{
+											throw new ParseException("Unexpected '" + ch + "' before end of tuplet",
+													fileName, lineNumber, i);
+										}
 
-							default:
-								throw new ParseException("Unknown/unexpected character '" + ch + "'", fileName,
-										lineNumber, i);
+										try
+										{
+											for (int j = i + 1; j < line.length(); j++)
+											{
+												if (line.charAt(i) != ':' && !Character.isDigit(line.charAt(i)))
+												{
+													tuplet = new Tuplet(line.substring(i + 1, j + 1),
+															info.isCompoundMeter());
+													i = j;
+													break;
+												}
+											}
+										}
+										catch (IllegalArgumentException e)
+										{
+											throw new ParseException("Invalid tuplet", fileName, lineNumber, i);
+										}
+									}
+									else
+									{
+										// Otherwise it's a slur, which LotRO conveniently ignores
+										if (inChord)
+										{
+											throw new ParseException("Unexpected '" + ch + "' inside a chord",
+													fileName, lineNumber, i);
+										}
+									}
+									break;
+
+								case ')':
+									// End of a slur, ignore
+									if (inChord)
+									{
+										throw new ParseException("Unexpected '" + ch + "' inside a chord", fileName,
+												lineNumber, i);
+									}
+									break;
+
+								case '\\':
+									// Ignore backslashes
+									break;
+
+								default:
+									throw new ParseException("Unknown/unexpected character '" + ch + "'", fileName,
+											lineNumber, i);
 							}
 						}
 
@@ -610,6 +628,12 @@ public class AbcToMidi
 								throw new ParseException("Unexpected octave indicator on a rest", fileName, lineNumber,
 										m.start(NOTE_OCTAVE));
 							}
+
+							if (generateRegions)
+							{
+								abcInfo.addRegion(new AbcRegion(lineNumberForRegions, m.start(), m.end(), Math
+										.round(chordStartTick), Math.round(noteEndTick), Note.REST, trackIndex));
+							}
 						}
 						else
 						{
@@ -695,6 +719,27 @@ public class AbcToMidi
 									noteOffIter.remove();
 									break;
 								}
+							}
+
+							if (generateRegions)
+							{
+								AbcRegion region = new AbcRegion(lineNumberForRegions, m.start(), m.end(),
+										Math.round(chordStartTick), Math.round(noteEndTick), Note.fromId(noteId),
+										trackIndex);
+
+								abcInfo.addRegion(region);
+
+								AbcRegion tiesFrom = tiedRegions.get(noteId);
+								if (tiesFrom != null)
+								{
+									region.setTiesFrom(tiesFrom);
+									tiesFrom.setTiesTo(region);
+								}
+
+								if (m.group(NOTE_TIE) != null)
+									tiedRegions.put(noteId, region);
+								else
+									tiedRegions.remove(noteId);
 							}
 
 							if (!tiedNotes.containsKey(noteId))

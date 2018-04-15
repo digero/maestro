@@ -30,7 +30,7 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	private Receiver receiver;
 	private Transmitter transmitter;
 	private List<Transceiver> transceivers = new ArrayList<Transceiver>();
-	private long dragPosition;
+	private long dragTick;
 	private boolean isDragging;
 	private MidiUtils.TempoCache tempoCache = new MidiUtils.TempoCache();
 	private boolean[] trackActiveCache = null;
@@ -278,18 +278,20 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 
 	@Override public long microsToTick(long micros)
 	{
-		if (getSequence() == null)
+		Sequence sequence = getSequence();
+		if (sequence == null)
 			return 0;
 
-		return MidiUtils.microsecond2tick(getSequence(), micros, tempoCache);
+		return MidiUtils.microsecond2tick(sequence, micros, tempoCache);
 	}
 
 	@Override public long tickToMicros(long tick)
 	{
-		if (getSequence() == null)
+		Sequence sequence = getSequence();
+		if (sequence == null)
 			return 0;
 
-		return MidiUtils.tick2microsecond(getSequence(), tick, tempoCache);
+		return MidiUtils.tick2microsecond(sequence, tick, tempoCache);
 	}
 
 	public long getLength()
@@ -448,32 +450,26 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 
 	public long getDragPosition()
 	{
-		return dragPosition;
+		return tickToMicros(dragTick);
 	}
 
 	public long getDragTick()
 	{
-		if (getSequence() == null)
-			return 0;
-
-		return MidiUtils.microsecond2tick(getSequence(), getDragPosition(), tempoCache);
+		return dragTick;
 	}
 
-	public void setDragTick(long tick)
+	public void setDragTick(long dragTick)
 	{
-		if (getSequence() == null)
-			return;
-
-		setDragPosition(MidiUtils.tick2microsecond(getSequence(), tick, tempoCache));
+		if (this.dragTick != dragTick)
+		{
+			this.dragTick = dragTick;
+			fireChangeEvent(SequencerProperty.DRAG_POSITION);
+		}
 	}
 
 	public void setDragPosition(long dragPosition)
 	{
-		if (this.dragPosition != dragPosition)
-		{
-			this.dragPosition = dragPosition;
-			fireChangeEvent(SequencerProperty.DRAG_POSITION);
-		}
+		setDragTick(microsToTick(dragPosition));
 	}
 
 	public boolean isDragging()
