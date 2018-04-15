@@ -25,8 +25,13 @@ public class PartAutoNumberer
 			int i = 0;
 			for (LotroInstrument instrument : LotroInstrument.values())
 			{
-				if (instrument != LotroInstrument.BASIC_LUTE && instrument != LotroInstrument.MISTY_MOUNTAIN_HARP
-						&& instrument != LotroInstrument.PIBGORN && instrument != LotroInstrument.MOOR_COWBELL)
+				if (instrument != LotroInstrument.BASIC_LUTE //
+						&& instrument != LotroInstrument.MISTY_MOUNTAIN_HARP //
+						&& instrument != LotroInstrument.LONELY_MOUNTAIN_FIDDLE //
+						&& instrument != LotroInstrument.SPRIGHTLY_FIDDLE //
+						&& instrument != LotroInstrument.STUDENT_FIDDLE //
+						&& instrument != LotroInstrument.PIBGORN //
+						&& instrument != LotroInstrument.MOOR_COWBELL)
 				{
 					i++;
 					int defaultValue = i;
@@ -42,10 +47,18 @@ public class PartAutoNumberer
 					prefs.getInt(LotroInstrument.BASIC_LUTE.toString(), firstNumber.get(LotroInstrument.LUTE_OF_AGES)));
 
 			// Misty Mountain Harp defaults to the Harp number
-			firstNumber
-					.put(LotroInstrument.MISTY_MOUNTAIN_HARP,
-							prefs.getInt(LotroInstrument.MISTY_MOUNTAIN_HARP.toString(),
-									firstNumber.get(LotroInstrument.HARP)));
+			int harpFirstNumber = firstNumber.get(LotroInstrument.HARP);
+			firstNumber.put(LotroInstrument.MISTY_MOUNTAIN_HARP,
+					prefs.getInt(LotroInstrument.MISTY_MOUNTAIN_HARP.toString(), harpFirstNumber));
+
+			// Fiddles all default to the Basic Fiddle number
+			int fiddleFirstNumber = firstNumber.get(LotroInstrument.BASIC_FIDDLE);
+			firstNumber.put(LotroInstrument.LONELY_MOUNTAIN_FIDDLE,
+					prefs.getInt(LotroInstrument.LONELY_MOUNTAIN_FIDDLE.toString(), fiddleFirstNumber));
+			firstNumber.put(LotroInstrument.SPRIGHTLY_FIDDLE,
+					prefs.getInt(LotroInstrument.SPRIGHTLY_FIDDLE.toString(), fiddleFirstNumber));
+			firstNumber.put(LotroInstrument.STUDENT_FIDDLE,
+					prefs.getInt(LotroInstrument.STUDENT_FIDDLE.toString(), fiddleFirstNumber));
 
 			// Pibgorn defaults to the Bagpipe number
 			firstNumber.put(LotroInstrument.PIBGORN,

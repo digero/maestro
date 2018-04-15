@@ -42,56 +42,75 @@ public class PanGenerator
 
 	public int get(LotroInstrument instrument)
 	{
-		if (instrument == LotroInstrument.BASIC_LUTE)
-			instrument = LotroInstrument.LUTE_OF_AGES;
-		else if (instrument == LotroInstrument.MISTY_MOUNTAIN_HARP)
-			instrument = LotroInstrument.HARP;
-		else if (instrument == LotroInstrument.MOOR_COWBELL)
-			instrument = LotroInstrument.COWBELL;
+		switch (instrument)
+		{
+			case BASIC_LUTE:
+				instrument = LotroInstrument.LUTE_OF_AGES;
+				break;
+			case SPRIGHTLY_FIDDLE:
+			case MISTY_MOUNTAIN_HARP:
+				instrument = LotroInstrument.HARP;
+				break;
+			case MOOR_COWBELL:
+				instrument = LotroInstrument.COWBELL;
+				break;
+			case STUDENT_FIDDLE:
+			case LONELY_MOUNTAIN_FIDDLE:
+				instrument = LotroInstrument.BASIC_FIDDLE;
+				break;
+			//$CASES-OMITTED$
+			default:
+				break;
+		}
 
 		int sign;
 		int c = count[instrument.ordinal()]++;
 
 		switch (c % 3)
 		{
-		case 0:
-			sign = 1;
-			break;
-		case 1:
-			sign = -1;
-			break;
-		default:
-			sign = 0;
-			break;
+			case 0:
+				sign = 1;
+				break;
+			case 1:
+				sign = -1;
+				break;
+			default:
+				sign = 0;
+				break;
 		}
 
 		switch (instrument)
 		{
-		case HARP:
-		case MISTY_MOUNTAIN_HARP:
-			return CENTER + sign * -45;
-		case FLUTE:
-			return CENTER + sign * -40;
-		case BAGPIPE:
-			return CENTER + sign * -30;
-		case THEORBO:
-			return CENTER + sign * -25;
-		case COWBELL:
-		case MOOR_COWBELL:
-			return CENTER + sign * -15;
-		case DRUMS:
-			return CENTER + sign * 15;
-		case PIBGORN:
-			return CENTER + sign * 20;
-		case HORN:
-			return CENTER + sign * 25;
-		case BASIC_LUTE:
-		case LUTE_OF_AGES:
-			return CENTER + sign * 35;
-		case CLARINET:
-			return CENTER + sign * 45;
-		default:
-			return CENTER;
+			case BASIC_FIDDLE:
+			case LONELY_MOUNTAIN_FIDDLE:
+			case STUDENT_FIDDLE:
+				return CENTER + sign * -50;
+			case HARP:
+			case MISTY_MOUNTAIN_HARP:
+			case SPRIGHTLY_FIDDLE:
+				return CENTER + sign * -45;
+			case FLUTE:
+				return CENTER + sign * -40;
+			case BAGPIPE:
+				return CENTER + sign * -30;
+			case THEORBO:
+				return CENTER + sign * -25;
+			case COWBELL:
+			case MOOR_COWBELL:
+				return CENTER + sign * -15;
+			case DRUMS:
+				return CENTER + sign * 15;
+			case PIBGORN:
+				return CENTER + sign * 20;
+			case HORN:
+				return CENTER + sign * 25;
+			case BASIC_LUTE:
+			case LUTE_OF_AGES:
+				return CENTER + sign * 35;
+			case CLARINET:
+				return CENTER + sign * 45;
 		}
+
+		return CENTER;
 	}
 }

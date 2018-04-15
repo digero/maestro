@@ -30,31 +30,35 @@ public class GenerateSoundFontInfo
 	{
 		switch (lotroInstrument)
 		{
-		case DRUMS:
-			return 1;
+			case DRUMS:
+				return 1;
 
-		case LUTE_OF_AGES:
-		case BASIC_LUTE:
-		case HARP:
-			return 1;
+			case LUTE_OF_AGES:
+			case BASIC_LUTE:
+			case HARP:
+				return 1;
 
-		case MISTY_MOUNTAIN_HARP:
-		case THEORBO:
-		case FLUTE:
-		case CLARINET:
-		case HORN:
-			return 2;
+			case MISTY_MOUNTAIN_HARP:
+			case THEORBO:
+			case BASIC_FIDDLE:
+			case LONELY_MOUNTAIN_FIDDLE:
+			case SPRIGHTLY_FIDDLE:
+			case FLUTE:
+			case CLARINET:
+			case HORN:
+				return 2;
 
-		case BAGPIPE:
-			return 4;
+			case BAGPIPE:
+				return 4;
 
-		case PIBGORN:
-			return 6;
+			case PIBGORN:
+				return 6;
 
-		case COWBELL:
-		case MOOR_COWBELL:
-		default:
-			throw new RuntimeException();
+			case STUDENT_FIDDLE:
+			case COWBELL:
+			case MOOR_COWBELL:
+			default:
+				throw new RuntimeException();
 		}
 	}
 
@@ -75,7 +79,6 @@ public class GenerateSoundFontInfo
 				continue;
 
 			SampleInfo sample = new SampleInfo(file);
-//			if (!samples.containsKey(sample.key))
 			samples.put(sample.key, sample);
 
 			if (cowbellSample == null || sample.key.lotroInstrument == LotroInstrument.COWBELL)
@@ -88,6 +91,8 @@ public class GenerateSoundFontInfo
 		SortedSet<SampleInfo> usedSamples = new TreeSet<SampleInfo>();
 		SortedSet<InstrumentInfo> instruments = new TreeSet<InstrumentInfo>();
 		SortedSet<PresetInfo> presets = new TreeSet<PresetInfo>();
+		InstrumentInfo basicFiddleInfo = null;
+
 		for (LotroInstrument li : LotroInstrument.values())
 		{
 			if (li == LotroInstrument.COWBELL || li == LotroInstrument.MOOR_COWBELL)
@@ -114,6 +119,19 @@ public class GenerateSoundFontInfo
 
 				presets.add(new PresetInfo(drones, bagpipe));
 			}
+			else if (li == LotroInstrument.STUDENT_FIDDLE)
+			{
+				StandardInstrumentInfo flubs = new StandardInstrumentInfo(li, li + " Flubs", li.lowestPlayable.id,
+						AbcConstants.STUDENT_FIDDLE_LAST_FLUB_NOTE_ID, 1, samples);
+				instruments.add(flubs);
+				usedSamples.addAll(flubs.usedSamples);
+
+				// Share the part of the Basic Fiddle instrument that's playable on the Student's Fiddle
+				InstrumentInfoSubrange basicFiddleSubrange = new InstrumentInfoSubrange(li, basicFiddleInfo,
+						AbcConstants.STUDENT_FIDDLE_LAST_FLUB_NOTE_ID + 1, li.highestPlayable.id);
+
+				presets.add(new PresetInfo(flubs, basicFiddleSubrange));
+			}
 			else
 			{
 				StandardInstrumentInfo info = new StandardInstrumentInfo(li, getNotesPerSample(li), samples);
@@ -121,6 +139,9 @@ public class GenerateSoundFontInfo
 				usedSamples.addAll(info.usedSamples);
 
 				presets.add(new PresetInfo(info));
+
+				if (li == LotroInstrument.BASIC_FIDDLE)
+					basicFiddleInfo = info;
 			}
 		}
 
