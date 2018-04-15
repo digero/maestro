@@ -388,6 +388,9 @@ public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardab
 	 */
 	public boolean isTrackActive(int track)
 	{
+		if (track < 0)
+			return false;
+
 		if (trackActiveCache != null && track < trackActiveCache.length)
 			return trackActiveCache[track];
 
