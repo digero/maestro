@@ -48,42 +48,24 @@ public class AudioSorter
 
 	public static void sortMain() throws Exception
 	{
-//		File source = new File("F:\\Games\\LOTRO\\u16\\wav\\instruments");
-//		File target = new File("F:\\Games\\LOTRO\\u16\\wav\\instruments_sorted");
-//		sortFolder("lute", source, target);
-//		sortFolder("lute_of_ages", source, target);
-//		sortFolder("misty_mountain_harp", source, target);
-//		sortFolder("flute", source, target);
-//		sortFolder("clarinet", source, target);
-//		sortFolder("horn", source, target);
+		File source = new File("F:\\Games\\LOTRO\\u22\\wav\\found");
+		File target = new File("F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted");
 
-//		sortFolder("bagpipe", source, target);
-//		sortFolder("theorbo", source, target);
-//		sortFolder("pibgorn", source, target);
-//		sortFolder("harp", source, target);
+		sortFolder("basic_fiddles_combined", source, target);
+//		sortFolder("basic_fiddle", source, target);
+//		sortFolder("basic_fiddle2", source, target);
+//		sortFolder("lonely_mountain_fiddle", source, target);
+//		sortFolder("misty_mountain_harp", source, target);
+//		sortFolder("pluck", source, target);
+//		sortFolder("sprightly_fiddle", source, target);
 	}
 
 	public static void copyToFinalNamesMain() throws Exception
 	{
-		String sourceRoot = "F:\\Games\\LOTRO\\u16\\wav\\instruments_sorted";
+		String sourceRoot = "F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted";
 		String targetRoot = sourceRoot;
 
-		copyToFinalNames(sourceRoot, targetRoot, "clarinet", false);
-		copyToFinalNames(sourceRoot, targetRoot, "flute", false);
-		copyToFinalNames(sourceRoot, targetRoot, "horn", false);
-		copyToFinalNames(sourceRoot, targetRoot, "lute", false);
-//		copyToFinalNames(sourceRoot, targetRoot, "lute_of_ages", false);
-//		copyToFinalNames(sourceRoot, targetRoot, "misty_mountain_harp", false);
-
-//		copyToFinalNames(sourceRoot, targetRoot, "theorbo", false);
-//		copyToFinalNames(sourceRoot, targetRoot, "harp", false);
-//		copyToFinalNames(sourceRoot, targetRoot, "lute", false);
-//		copyToFinalNames(sourceRoot, targetRoot, "pibgorn", false);
-
-//		copyToFinalNames(sourceRoot, targetRoot, "bagpipe", true);
-//		copyToFinalNames(sourceRoot, targetRoot, "clarinet", true);
-//		copyToFinalNames(sourceRoot, targetRoot, "flute", true);
-//		copyToFinalNames(sourceRoot, targetRoot, "horn", true);
+		copyToFinalNames(sourceRoot, targetRoot, "lonely_fiddle", false);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,

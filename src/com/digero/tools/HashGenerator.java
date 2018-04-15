@@ -12,10 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -28,27 +26,26 @@ public class HashGenerator
 	public static void main(String[] args)
 	{
 		System.exit(run(args));
-	}
 
-	@SuppressWarnings("unused") private static void listMatchesInDirectories(File dirA, File dirB)
-	{
-		try
-		{
-			Map<FileHash, File> hashesA = generateHashes(dirA);
-			Map<FileHash, File> hashesB = generateHashes(dirB);
-
-			for (Map.Entry<FileHash, File> entryA : hashesA.entrySet())
-			{
-				if (hashesB.containsKey(entryA.getKey()))
-				{
-					System.out.println("\"" + entryA.getValue() + "\"\t\"" + hashesB.get(entryA.getKey()) + "\"");
-				}
-			}
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+//		String[] args_movedir_u16_instruments = new String[] { "MOVE_INCLUDE_DIR",
+//			"F:\\Games\\LOTRO\\u16\\ogg\\instruments", "F:\\Games\\LOTRO\\u22\\ogg",
+//			"F:\\Games\\LOTRO\\u22\\instruments" };
+//
+//		String[] args_movedir_u15_instruments = new String[] { "MOVE_INCLUDE_DIR",
+//			"F:\\Games\\LOTRO\\u15\\instruments", "F:\\Games\\LOTRO\\u22\\ogg", "F:\\Games\\LOTRO\\u22\\instruments" };
+//
+//		String[] args_movedir_u16_known_not_instruments = new String[] { "MOVE_INCLUDE_DIR",
+//			"F:\\Games\\LOTRO\\u16\\ogg\\known_not_instruments", "F:\\Games\\LOTRO\\u22\\ogg",
+//			"F:\\Games\\LOTRO\\u22\\known_not_instruments\\u16" };
+//
+//		String[] args_movedir_u15_known_not_instruments = new String[] { "MOVE_INCLUDE_DIR",
+//			"F:\\Games\\LOTRO\\u15\\known_not_instruments", "F:\\Games\\LOTRO\\u22\\ogg",
+//			"F:\\Games\\LOTRO\\u22\\known_not_instruments\\u15" };
+//
+//		run(args_movedir_u15_known_not_instruments);
+//		run(args_movedir_u16_known_not_instruments);
+//
+//		System.out.println("Done");
 	}
 
 	public static int run(String[] args)
@@ -71,7 +68,50 @@ public class HashGenerator
 
 				File sourceDirectory = new File(args[1]);
 				File outputHashFile = new File(args[2]);
-				outputHashListToFile(generateHashes(sourceDirectory).keySet(), outputHashFile);
+				outputHashListToFile(generateHashes(sourceDirectory, true), outputHashFile);
+			}
+			else if (args[0].equalsIgnoreCase("MOVE_EXCLUDE_DIR") || args[0].equalsIgnoreCase("MOVE_INCLUDE_DIR"))
+			{
+				if (args.length != 4)
+				{
+					System.err.println("Incorrect number of args to " + args[0]);
+					return -1;
+				}
+
+				boolean include = args[0].equalsIgnoreCase("MOVE_INCLUDE_DIR");
+				File truthDirectory = new File(args[1]);
+				File sourceDirectory = new File(args[2]);
+				File targetDirectory = new File(args[3]);
+
+				if (!targetDirectory.exists())
+					targetDirectory.mkdirs();
+
+				Map<FileHash, File> truthHashes = generateHashes(truthDirectory, /* recursive = */true);
+				Map<FileHash, File> sourceHashes = generateHashes(sourceDirectory, /* recursive = */false);
+
+				System.out.println("Moving files " + (include ? "in" : "not in") + " in directory: "
+						+ sourceDirectory.getAbsolutePath());
+				int movedCount = 0;
+				for (Map.Entry<FileHash, File> entry : sourceHashes.entrySet())
+				{
+					File truthFile = truthHashes.get(entry.getKey());
+					boolean isInList = (truthFile != null);
+					if (include == isInList)
+					{
+						File subDirectory = new File(targetDirectory, truthFile.getParentFile().getAbsolutePath()
+								.substring(truthDirectory.getAbsolutePath().length()));
+
+						if (!subDirectory.exists())
+							subDirectory.mkdirs();
+
+						File sourceFile = entry.getValue();
+						File targetFile = new File(subDirectory, sourceFile.getName());
+
+						sourceFile.renameTo(targetFile);
+						movedCount++;
+					}
+				}
+				System.out.println("Moved " + movedCount + " files");
 			}
 			else if (args[0].equalsIgnoreCase("MOVE_EXCLUDE") || args[0].equalsIgnoreCase("MOVE_INCLUDE"))
 			{
@@ -86,12 +126,12 @@ public class HashGenerator
 				File targetDirectory = new File(args[2]);
 				File existingHashFile = new File(args[3]);
 
-				Set<FileHash> existingHashes = inputHashListFromFile(existingHashFile);
-				Map<FileHash, File> sourceHashes = generateHashes(sourceDirectory);
+				Map<FileHash, File> existingHashes = inputHashListFromFile(existingHashFile);
+				Map<FileHash, File> sourceHashes = generateHashes(sourceDirectory, false);
 
 				for (Map.Entry<FileHash, File> entry : sourceHashes.entrySet())
 				{
-					boolean isInList = existingHashes.contains(entry.getKey());
+					boolean isInList = existingHashes.containsKey(entry.getKey());
 					if (include == isInList)
 					{
 						File sourceFile = entry.getValue();
@@ -112,13 +152,13 @@ public class HashGenerator
 				File sourceDirectory = new File(args[1]);
 				File existingHashFile = new File(args[2]);
 
-				Set<FileHash> existingHashes = inputHashListFromFile(existingHashFile);
-				Map<FileHash, File> sourceHashes = generateHashes(sourceDirectory);
+				Map<FileHash, File> existingHashes = inputHashListFromFile(existingHashFile);
+				Map<FileHash, File> sourceHashes = generateHashes(sourceDirectory, false);
 
 				System.out.println("Listing files " + (include ? "included" : "not included") + " in hash file: ");
 				for (Map.Entry<FileHash, File> entry : sourceHashes.entrySet())
 				{
-					boolean isInList = existingHashes.contains(entry.getKey());
+					boolean isInList = existingHashes.containsKey(entry.getKey());
 					if (include == isInList)
 					{
 						System.out.println(entry.getValue().getAbsolutePath());
@@ -152,10 +192,26 @@ public class HashGenerator
 		System.out.println("");
 		System.out.println("MOVE_INCLUDE <sourceDirectory> <targetDirectory> <includeHashFile>");
 		System.out.println("    Moves any file from the source to target ONLY IF it is in the include hash list");
+		System.out.println("");
+		System.out.println("MOVE_EXCLUDE_DIR <truthDir> <sourceDirectory> <targetDirectory>");
+		System.out.println("    Moves any file from the source to target UNLESS it is in <truthDir>");
+		System.out.println("");
+		System.out.println("MOVE_INCLUDE_DIR <truthDir> <sourceDirectory> <targetDirectory>");
+		System.out.println("    Moves any file from the source to target ONLY IF it is in <truthDir>");
 	}
 
-	public static Map<FileHash, File> generateHashes(File directory) throws IOException
+	public static Map<FileHash, File> generateHashes(File directory, boolean recursive) throws IOException
 	{
+		Map<File, FileHash> cachedHashes = new HashMap<File, FileHash>();
+		File cachedHashesFile = new File(directory, "_hashes.txt");
+		if (cachedHashesFile.exists())
+		{
+			for (Map.Entry<FileHash, File> entry : inputHashListFromFile(cachedHashesFile).entrySet())
+			{
+				cachedHashes.put(entry.getValue(), entry.getKey());
+			}
+		}
+
 		Map<FileHash, File> hashes = new HashMap<FileHash, File>();
 		ExtensionFileFilter filter = new ExtensionFileFilter("", /* matchDirectories = */true, "wav", "ogg");
 		File[] fileList = directory.listFiles(filter);
@@ -171,9 +227,12 @@ public class HashGenerator
 		{
 			if (files.get(j).isDirectory())
 			{
-				File[] fileList2 = files.get(j).listFiles(filter);
-				if (fileList2 != null)
-					files.addAll(Arrays.asList(fileList2));
+				if (recursive)
+				{
+					File[] fileList2 = files.get(j).listFiles(filter);
+					if (fileList2 != null)
+						files.addAll(Arrays.asList(fileList2));
+				}
 				continue;
 			}
 
@@ -189,39 +248,68 @@ public class HashGenerator
 							files.size());
 				}
 			}
-			hashes.put(new FileHash(hashFile(wavFile)), wavFile);
+
+			FileHash cachedHash = cachedHashes.get(wavFile);
+			if (cachedHash != null)
+				hashes.put(cachedHash, wavFile);
+			else
+				hashes.put(new FileHash(hashFile(wavFile)), wavFile);
 		}
+
+		Map<FileHash, File> cachedHashesOutput = new HashMap<FileHash, File>(hashes);
+		for (Map.Entry<File, FileHash> entry : cachedHashes.entrySet())
+		{
+			if (!cachedHashesOutput.containsKey(entry.getValue()))
+				cachedHashesOutput.put(entry.getValue(), entry.getKey());
+		}
+		outputHashListToFile(cachedHashesOutput, cachedHashesFile);
+
 		return hashes;
 	}
 
-	private static void outputHashListToFile(Set<FileHash> hashes, File outputFile) throws IOException
+	private static void outputHashListToFile(Map<FileHash, File> hashes, File outputFile) throws IOException
 	{
 		if (verbose)
 			System.out.println("Writing hashes to: " + outputFile.getAbsolutePath());
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile)))
 		{
-			for (FileHash hash : hashes)
+			for (Map.Entry<FileHash, File> entry : hashes.entrySet())
 			{
-				writer.write(hash + "\r\n");
+				writer.write(entry.getKey() + "\t" + entry.getValue().getAbsolutePath() + "\r\n");
 			}
 		}
+
+		if (verbose)
+			System.out.println("Done writing hashes");
 	}
 
-	private static Set<FileHash> inputHashListFromFile(File hashListFile) throws IOException
+	private static Map<FileHash, File> inputHashListFromFile(File hashListFile) throws IOException
 	{
 		if (verbose)
 			System.out.println("Reading hashes from: " + hashListFile.getAbsolutePath());
 
-		Set<FileHash> hashes = new HashSet<FileHash>();
+		Map<FileHash, File> hashes = new HashMap<FileHash, File>();
 		try (BufferedReader reader = new BufferedReader(new FileReader(hashListFile)))
 		{
 			String line;
 			while ((line = reader.readLine()) != null)
 			{
-				hashes.add(new FileHash(line));
+				int tab = line.indexOf('\t');
+				if (tab <= 0)
+					continue;
+
+				File file = new File(line.substring(tab + 1));
+				if (!file.exists())
+					continue;
+
+				hashes.put(new FileHash(line.substring(0, tab)), file);
 			}
 		}
+
+		if (verbose)
+			System.out.println("Done reading hashes");
+
 		return hashes;
 	}
 
