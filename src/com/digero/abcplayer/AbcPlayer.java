@@ -8,10 +8,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -20,15 +17,12 @@ import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -226,7 +220,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	private AbcInfo abcInfo = new AbcInfo();
 
 	private Preferences prefs = Preferences.userNodeForPackage(AbcPlayer.class);
-	private Preferences windowPrefs = prefs.node("window");
 
 	private boolean isExporting = false;
 
@@ -466,7 +459,9 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		initMenu();
 
 		updateButtonStates();
-		initializeWindowBounds();
+
+		setMinimumSize(new Dimension(320, 168));
+		Util.initWinBounds(this, prefs.node("window"), 450, 282);
 	}
 
 	private void updateAbcView(boolean showIfHidden, boolean retainScrollPosition)
@@ -551,82 +546,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		float tempo = sequencer.getTempoFactor();
 		int t = Math.round(tempo * 100);
 		tempoLabel.setText("Tempo: " + t + "%");
-	}
-
-	private void initializeWindowBounds()
-	{
-		setMinimumSize(new Dimension(320, 168));
-
-		Dimension mainScreen = Toolkit.getDefaultToolkit().getScreenSize();
-
-		int width = windowPrefs.getInt("width", 450);
-		int height = windowPrefs.getInt("height", 282);
-		int x = windowPrefs.getInt("x", (mainScreen.width - width) / 2);
-		int y = windowPrefs.getInt("y", (mainScreen.height - height) / 2);
-
-		// Handle the case where the window was last saved on
-		// a screen that is no longer connected
-		Rectangle onScreen = null;
-		for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices())
-		{
-			Rectangle monitorBounds = device.getDefaultConfiguration().getBounds();
-			if (monitorBounds.intersects(x, y, width, height))
-			{
-				onScreen = monitorBounds;
-				break;
-			}
-		}
-		if (onScreen == null)
-		{
-			x = (mainScreen.width - width) / 2;
-			y = (mainScreen.height - height) / 2;
-		}
-		else
-		{
-			if (x < onScreen.x)
-				x = onScreen.x;
-			else if (x + width > onScreen.x + onScreen.width)
-				x = onScreen.x + onScreen.width - width;
-
-			if (y < onScreen.y)
-				y = onScreen.y;
-			else if (y + height > onScreen.y + onScreen.height)
-				y = onScreen.y + onScreen.height - height;
-		}
-
-		setBounds(x, y, width, height);
-
-		int maximized = windowPrefs.getInt("maximized", 0);
-		setExtendedState((getExtendedState() & ~JFrame.MAXIMIZED_BOTH) | maximized);
-
-		addComponentListener(new ComponentAdapter()
-		{
-			@Override public void componentResized(ComponentEvent e)
-			{
-				if ((getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0)
-				{
-					windowPrefs.putInt("width", getWidth());
-					windowPrefs.putInt("height", getHeight());
-				}
-			}
-
-			@Override public void componentMoved(ComponentEvent e)
-			{
-				if ((getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0)
-				{
-					windowPrefs.putInt("x", getX());
-					windowPrefs.putInt("y", getY());
-				}
-			}
-		});
-
-		addWindowStateListener(new WindowStateListener()
-		{
-			@Override public void windowStateChanged(WindowEvent e)
-			{
-				windowPrefs.putInt("maximized", e.getNewState() & JFrame.MAXIMIZED_BOTH);
-			}
-		});
 	}
 
 	private void initMenu()

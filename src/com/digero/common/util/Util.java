@@ -292,18 +292,27 @@ public final class Util
 		int x = prefs.getInt("x", (mainScreen.width - width) / 2);
 		int y = prefs.getInt("y", (mainScreen.height - height) / 2);
 
+		Rectangle windowRect = new Rectangle(x, y, width, height);
+
 		// Handle the case where the window was last saved on
 		// a screen that is no longer connected
 		Rectangle onScreen = null;
+		int bestAreaOnscreen = 0;
 		for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices())
 		{
 			Rectangle monitorBounds = device.getDefaultConfiguration().getBounds();
-			if (monitorBounds.intersects(x, y, width, height))
+			Rectangle monitorIntersection = monitorBounds.intersection(windowRect);
+			if (!monitorIntersection.isEmpty())
 			{
-				onScreen = monitorBounds;
-				break;
+				int areaOnscreen = monitorIntersection.width * monitorIntersection.height;
+				if (areaOnscreen > bestAreaOnscreen)
+				{
+					bestAreaOnscreen = areaOnscreen;
+					onScreen = monitorBounds;
+				}
 			}
 		}
+
 		if (onScreen == null)
 		{
 			x = (mainScreen.width - width) / 2;
