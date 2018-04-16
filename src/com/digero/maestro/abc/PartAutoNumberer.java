@@ -16,59 +16,51 @@ public class PartAutoNumberer
 {
 	public static class Settings
 	{
-		private Map<LotroInstrument, Integer> firstNumber;
+		private Map<LotroInstrument, Integer> firstNumber = new HashMap<LotroInstrument, Integer>();
 		private boolean incrementByTen;
 
 		private Settings(Preferences prefs)
 		{
-			firstNumber = new HashMap<LotroInstrument, Integer>(LotroInstrument.values().length);
-			int i = 0;
-			for (LotroInstrument instrument : LotroInstrument.values())
-			{
-				if (instrument != LotroInstrument.BASIC_LUTE //
-						&& instrument != LotroInstrument.MISTY_MOUNTAIN_HARP //
-						&& instrument != LotroInstrument.LONELY_MOUNTAIN_FIDDLE //
-						&& instrument != LotroInstrument.SPRIGHTLY_FIDDLE //
-						&& instrument != LotroInstrument.STUDENT_FIDDLE //
-						&& instrument != LotroInstrument.PIBGORN //
-						&& instrument != LotroInstrument.MOOR_COWBELL)
-				{
-					i++;
-					int defaultValue = i;
-					if (instrument == LotroInstrument.LUTE_OF_AGES)
-						defaultValue = prefs.getInt("Lute", i); // Handle the name change Lute => Lute of Ages
+			incrementByTen = prefs.getBoolean("incrementByTen", true);
+			int x10 = incrementByTen ? 1 : 10;
 
-					firstNumber.put(instrument, prefs.getInt(instrument.toString(), defaultValue));
-				}
+			if (!prefs.getBoolean("newCowbellDefaults", false))
+			{
+				prefs.putBoolean("newCowbellDefaults", true);
+				prefs.remove(LotroInstrument.COWBELL.toString());
+				prefs.remove(LotroInstrument.MOOR_COWBELL.toString());
 			}
 
-			// Basic Lute defaults to the Lute of Ages number
-			firstNumber.put(LotroInstrument.BASIC_LUTE,
-					prefs.getInt(LotroInstrument.BASIC_LUTE.toString(), firstNumber.get(LotroInstrument.LUTE_OF_AGES)));
+			init(prefs, LotroInstrument.LUTE_OF_AGES, prefs.getInt("Lute", 1 * x10)); // Lute was renamed to Lute of Ages
+			init(prefs, LotroInstrument.BASIC_LUTE, LotroInstrument.LUTE_OF_AGES);
+			init(prefs, LotroInstrument.HARP, 2 * x10);
+			init(prefs, LotroInstrument.MISTY_MOUNTAIN_HARP, LotroInstrument.HARP);
+			init(prefs, LotroInstrument.THEORBO, 3 * x10);
+			init(prefs, LotroInstrument.FLUTE, 4 * x10);
+			init(prefs, LotroInstrument.CLARINET, 5 * x10);
+			init(prefs, LotroInstrument.HORN, 6 * x10);
+			init(prefs, LotroInstrument.BAGPIPE, 7 * x10);
+			init(prefs, LotroInstrument.PIBGORN, LotroInstrument.BAGPIPE);
+			init(prefs, LotroInstrument.DRUMS, 8 * x10);
+			init(prefs, LotroInstrument.COWBELL, LotroInstrument.DRUMS);
+			init(prefs, LotroInstrument.MOOR_COWBELL, LotroInstrument.DRUMS);
+			init(prefs, LotroInstrument.BASIC_FIDDLE, 9 * x10);
+			init(prefs, LotroInstrument.STUDENT_FIDDLE, LotroInstrument.BASIC_FIDDLE);
+			init(prefs, LotroInstrument.LONELY_MOUNTAIN_FIDDLE, LotroInstrument.BASIC_FIDDLE);
+			init(prefs, LotroInstrument.SPRIGHTLY_FIDDLE, LotroInstrument.BASIC_FIDDLE);
+			init(prefs, LotroInstrument.TRAVELLERS_TRUSTY_FIDDLE, LotroInstrument.BASIC_FIDDLE);
 
-			// Misty Mountain Harp defaults to the Harp number
-			int harpFirstNumber = firstNumber.get(LotroInstrument.HARP);
-			firstNumber.put(LotroInstrument.MISTY_MOUNTAIN_HARP,
-					prefs.getInt(LotroInstrument.MISTY_MOUNTAIN_HARP.toString(), harpFirstNumber));
+			assert (firstNumber.size() == LotroInstrument.values().length);
+		}
 
-			// Fiddles all default to the Basic Fiddle number
-			int fiddleFirstNumber = firstNumber.get(LotroInstrument.BASIC_FIDDLE);
-			firstNumber.put(LotroInstrument.LONELY_MOUNTAIN_FIDDLE,
-					prefs.getInt(LotroInstrument.LONELY_MOUNTAIN_FIDDLE.toString(), fiddleFirstNumber));
-			firstNumber.put(LotroInstrument.SPRIGHTLY_FIDDLE,
-					prefs.getInt(LotroInstrument.SPRIGHTLY_FIDDLE.toString(), fiddleFirstNumber));
-			firstNumber.put(LotroInstrument.STUDENT_FIDDLE,
-					prefs.getInt(LotroInstrument.STUDENT_FIDDLE.toString(), fiddleFirstNumber));
+		private void init(Preferences prefs, LotroInstrument instrument, int defaultValue)
+		{
+			firstNumber.put(instrument, prefs.getInt(instrument.toString(), defaultValue));
+		}
 
-			// Pibgorn defaults to the Bagpipe number
-			firstNumber.put(LotroInstrument.PIBGORN,
-					prefs.getInt(LotroInstrument.PIBGORN.toString(), firstNumber.get(LotroInstrument.BAGPIPE)));
-
-			// Moor cowbell defaults to the cowbell number
-			firstNumber.put(LotroInstrument.MOOR_COWBELL,
-					prefs.getInt(LotroInstrument.MOOR_COWBELL.toString(), firstNumber.get(LotroInstrument.COWBELL)));
-
-			incrementByTen = prefs.getBoolean("incrementByTen", true);
+		private void init(Preferences prefs, LotroInstrument instruments, LotroInstrument copyDefaultFrom)
+		{
+			init(prefs, instruments, firstNumber.get(copyDefaultFrom));
 		}
 
 		private void save(Preferences prefs)

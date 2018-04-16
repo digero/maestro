@@ -43,6 +43,7 @@ public class GenerateSoundFontInfo
 			case BASIC_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
 			case SPRIGHTLY_FIDDLE:
+			case TRAVELLERS_TRUSTY_FIDDLE:
 			case FLUTE:
 			case CLARINET:
 			case HORN:

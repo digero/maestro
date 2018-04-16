@@ -44,6 +44,7 @@ public class PanGenerator
 	{
 		switch (instrument)
 		{
+			case TRAVELLERS_TRUSTY_FIDDLE:
 			case BASIC_LUTE:
 				instrument = LotroInstrument.LUTE_OF_AGES;
 				break;
@@ -106,6 +107,7 @@ public class PanGenerator
 				return CENTER + sign * 25;
 			case BASIC_LUTE:
 			case LUTE_OF_AGES:
+			case TRAVELLERS_TRUSTY_FIDDLE:
 				return CENTER + sign * 35;
 			case CLARINET:
 				return CENTER + sign * 45;

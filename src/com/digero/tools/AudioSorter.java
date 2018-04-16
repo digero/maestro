@@ -51,7 +51,7 @@ public class AudioSorter
 		File source = new File("F:\\Games\\LOTRO\\u22\\wav\\found");
 		File target = new File("F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted");
 
-		sortFolder("basic_fiddles_combined", source, target);
+		sortFolder("travellers_fiddle", source, target);
 //		sortFolder("basic_fiddle", source, target);
 //		sortFolder("basic_fiddle2", source, target);
 //		sortFolder("lonely_mountain_fiddle", source, target);
@@ -65,7 +65,7 @@ public class AudioSorter
 		String sourceRoot = "F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted";
 		String targetRoot = sourceRoot;
 
-		copyToFinalNames(sourceRoot, targetRoot, "lonely_fiddle", false);
+		copyToFinalNames(sourceRoot, targetRoot, "travellers_fiddle", false);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,
