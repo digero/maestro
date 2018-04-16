@@ -148,7 +148,8 @@ public class HighlightAbcNotesFrame extends JFrame
 
 		pack();
 
-		Util.initWinBounds(this, Preferences.userNodeForPackage(HighlightAbcNotesFrame.class), getWidth(), getHeight());
+		Preferences prefs = Preferences.userNodeForPackage(HighlightAbcNotesFrame.class).node("HighlightAbcNotesFrame");
+		Util.initWinBounds(this, prefs.node("window"), getWidth(), getHeight());
 	}
 
 	public void addDropListener(DropTargetListener listener)
