@@ -195,7 +195,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		mainWindow.openSongFromCommandLine(new String[] { cmdLine });
 	}
 
-	private SequencerWrapper sequencer;
+	private final SequencerWrapper sequencer;
 	private boolean useLotroInstruments = true;
 
 	private FileFilterDropListener dropListener;
@@ -229,7 +229,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 	private HighlightAbcNotesFrame abcViewFrame;
 
-	private Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
+	private final Map<Integer, LotroInstrument> instrumentOverrideMap = new HashMap<Integer, LotroInstrument>();
 	private List<FileAndData> abcData;
 	private AbcInfo abcInfo = new AbcInfo();
 
@@ -366,6 +366,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		{
 			JOptionPane.showMessageDialog(this, e.getMessage(), "MIDI error", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
+
+			// This will never be hit, but convinces the compiler that 
+			// the sequencer field will never be uninitialized
+			throw new RuntimeException();
 		}
 
 		content = new JPanel(new TableLayout(//
@@ -378,10 +382,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		titleLabel.setFont(f.deriveFont(Font.BOLD, 16));
 		titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
-		trackListPanel = new TrackListPanel();
+		trackListPanel = new TrackListPanel(sequencer, instrumentOverrideMap);
 		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		trackListScroller.getVerticalScrollBar().setUnitIncrement(TRACKLIST_ROWHEIGHT);
+		trackListScroller.getVerticalScrollBar().setUnitIncrement(TrackListPanel.TRACKLIST_ROWHEIGHT);
 		trackListScroller.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Color.GRAY));
 
 		JPanel controlPanel = new JPanel(new TableLayout(//
@@ -1245,7 +1249,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 
 		updateWindowTitle();
-		trackListPanel.songChanged();
+		trackListPanel.songChanged(abcInfo);
 		updateButtonStates();
 		updateTitleLabel();
 
@@ -1347,7 +1351,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		}
 
 		updateWindowTitle();
-		trackListPanel.songChanged();
+		trackListPanel.songChanged(abcInfo);
 		updateButtonStates();
 		updateTitleLabel();
 
@@ -1835,22 +1839,28 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 	//
 	// Track list
 	//
-	private static final int TRACKLIST_ROWHEIGHT = 18;
 
-	private class TrackListPanel extends JPanel
+	private static class TrackListPanel extends JPanel
 	{
+		public static final int TRACKLIST_ROWHEIGHT = 18;
+		private static final Object TRACK_INDEX_KEY = new Object();
+
+		private final SequencerWrapper sequencer;
+		private final Map<Integer, LotroInstrument> instrumentOverrideMap;
+		private AbcInfo abcInfo;
+
 		private TableLayout layout;
-
-		private Object trackIndexKey = new Object();
-		LotroInstrument[] sortedInstruments = LotroInstrument.values();
-
+		private LotroInstrument[] sortedInstruments = LotroInstrument.values();
 		private JCheckBox[] trackCheckBoxes = null;
 
 		private boolean showFullPartName = false;
 
-		public TrackListPanel()
+		public TrackListPanel(SequencerWrapper sequencer, Map<Integer, LotroInstrument> instrumentOverrideMap)
 		{
 			super(new TableLayout(new double[] { 0, FILL, PREFERRED, PREFERRED, 0 }, new double[] { 0, 0 }));
+
+			this.sequencer = sequencer;
+			this.instrumentOverrideMap = instrumentOverrideMap;
 
 			Arrays.sort(sortedInstruments, new Comparator<LotroInstrument>()
 			{
@@ -1892,11 +1902,16 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			repaint();
 		}
 
-		public void songChanged()
+		public void songChanged(AbcInfo abcInfo)
 		{
 			clear();
 			if (sequencer.getSequence() == null)
+			{
+				this.abcInfo = null;
 				return;
+			}
+
+			this.abcInfo = abcInfo;
 
 			Track[] tracks = sequencer.getSequence().getTracks();
 			trackCheckBoxes = new JCheckBox[tracks.length];
@@ -1937,7 +1952,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					JCheckBox checkBox = new JCheckBox(getCheckBoxText(i));
 					trackCheckBoxes[i] = checkBox;
 					checkBox.setToolTipText(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartFullName(i));
-					checkBox.putClientProperty(trackIndexKey, i);
+					checkBox.putClientProperty(TRACK_INDEX_KEY, i);
 					checkBox.setBackground(getBackground());
 					checkBox.setSelected(!sequencer.getTrackMute(i));
 					checkBox.addActionListener(trackMuteListener);
@@ -1945,14 +1960,14 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 					JToggleButton soloButton = new JToggleButton("S");
 					soloButton.setMargin(new Insets(3, 4, 3, 3));
 					soloButton.setToolTipText("Play only this part (Solo)");
-					soloButton.putClientProperty(trackIndexKey, i);
+					soloButton.putClientProperty(TRACK_INDEX_KEY, i);
 					soloButton.setBackground(getBackground());
 					soloButton.setSelected(sequencer.getTrackSolo(i));
 					soloButton.addActionListener(trackSoloListener);
 
 					JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(sortedInstruments);
 					comboBox.setMaximumRowCount(sortedInstruments.length);
-					comboBox.putClientProperty(trackIndexKey, i);
+					comboBox.putClientProperty(TRACK_INDEX_KEY, i);
 					comboBox.setBackground(getBackground());
 					comboBox.setSelectedItem(instrument);
 					comboBox.addActionListener(instrumentChangeListener);
@@ -1997,7 +2012,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			@Override public void actionPerformed(ActionEvent e)
 			{
 				JCheckBox checkBox = (JCheckBox) e.getSource();
-				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
+				int i = (Integer) checkBox.getClientProperty(TRACK_INDEX_KEY);
 				sequencer.setTrackMute(i, !checkBox.isSelected());
 			}
 		};
@@ -2007,7 +2022,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			@Override public void actionPerformed(ActionEvent e)
 			{
 				JToggleButton checkBox = (JToggleButton) e.getSource();
-				int i = (Integer) checkBox.getClientProperty(trackIndexKey);
+				int i = (Integer) checkBox.getClientProperty(TRACK_INDEX_KEY);
 				sequencer.setTrackSolo(i, checkBox.isSelected());
 			}
 		};
@@ -2017,9 +2032,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			@Override public void actionPerformed(ActionEvent e)
 			{
 				JComboBox<?> comboBox = (JComboBox<?>) e.getSource();
-				int i = (Integer) comboBox.getClientProperty(trackIndexKey);
-				instrumentOverrideMap.put(i, (LotroInstrument) comboBox.getSelectedItem());
-				refreshSequence();
+				int i = (Integer) comboBox.getClientProperty(TRACK_INDEX_KEY);
+				LotroInstrument instrument = (LotroInstrument) comboBox.getSelectedItem();
+				instrumentOverrideMap.put(i, instrument);
+				AbcToMidi.updateInstrumentRealtime(sequencer, i, instrument);
 			}
 		};
 	}

@@ -67,6 +67,18 @@ public class MidiFactory implements IMidiConstants
 		}
 	}
 
+	public static void modifyProgramChangeMessage(ShortMessage msg, int patch)
+	{
+		try
+		{
+			msg.setMessage(ShortMessage.PROGRAM_CHANGE, msg.getChannel(), patch, 0);
+		}
+		catch (InvalidMidiDataException e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static MidiEvent createNoteOnEvent(int id, int channel, long ticks)
 	{
 		return createNoteOnEventEx(id, channel, 112, ticks);

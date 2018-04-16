@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
+import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
@@ -26,6 +27,7 @@ import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.PanGenerator;
+import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.LotroParseException;
 import com.digero.common.util.ParseException;
 import com.sun.media.sound.MidiUtils;
@@ -852,6 +854,61 @@ public class AbcToMidi
 			tracks[0].add(MidiFactory.createKeySignatureEvent(abcInfo.getKeySignature(), 0));
 
 		return seq;
+	}
+
+	public static void updateInstrumentRealtime(SequencerWrapper sequencer, int trackIndex, LotroInstrument instrument)
+	{
+		Sequence sequence = sequencer.getSequence();
+		if (sequence == null)
+			return;
+
+		Track[] tracks = sequencer.getSequence().getTracks();
+		if (tracks == null || trackIndex < 0 || trackIndex >= tracks.length)
+			return;
+
+		Track track = tracks[trackIndex];
+
+		// Try to find the existing program change event
+		ShortMessage programChange = null;
+		for (int j = 0; j < track.size(); j++)
+		{
+			MidiEvent evt = track.get(j);
+			if (evt.getMessage() instanceof ShortMessage)
+			{
+				ShortMessage m = (ShortMessage) evt.getMessage();
+				if (m.getCommand() == ShortMessage.PROGRAM_CHANGE)
+				{
+					programChange = m;
+					break;
+				}
+			}
+		}
+
+		if (programChange == null)
+			return;
+
+		// Update the program change event and resend it to the sequencer's receiver
+		MidiFactory.modifyProgramChangeMessage(programChange, instrument.midiProgramId);
+
+		Receiver receiver = sequencer.getReceiver();
+		if (receiver != null)
+		{
+			receiver.send(programChange, -1);
+
+			// Turn off any currently-playing notes
+			ShortMessage noteOff = new ShortMessage();
+			for (int i = MidiConstants.LOWEST_NOTE_ID; i <= MidiConstants.HIGHEST_NOTE_ID; i++)
+			{
+				try
+				{
+					noteOff.setMessage(ShortMessage.NOTE_OFF, programChange.getChannel(), i, 0);
+					receiver.send(noteOff, -1);
+				}
+				catch (InvalidMidiDataException e)
+				{
+				}
+			}
+		}
 	}
 
 	private static int getTrackChannel(int trackNumber)
