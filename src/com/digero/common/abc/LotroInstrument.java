@@ -104,7 +104,7 @@ public enum LotroInstrument
 
 	public static LotroInstrument parseInstrument(String string) throws IllegalArgumentException
 	{
-		string = string.toUpperCase().replaceAll("[\\s_]", "");
+		string = string.toUpperCase().replaceAll("[\\s_']", "");
 
 		if (string.equals("LUTE"))
 			return DEFAULT_LUTE;
