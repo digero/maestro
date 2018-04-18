@@ -45,6 +45,7 @@ public class PartAutoNumberer
 			init(prefs, LotroInstrument.COWBELL, LotroInstrument.DRUMS);
 			init(prefs, LotroInstrument.MOOR_COWBELL, LotroInstrument.DRUMS);
 			init(prefs, LotroInstrument.BASIC_FIDDLE, 9 * x10);
+			init(prefs, LotroInstrument.BARDIC_FIDDLE, LotroInstrument.BASIC_FIDDLE);
 			init(prefs, LotroInstrument.STUDENT_FIDDLE, LotroInstrument.BASIC_FIDDLE);
 			init(prefs, LotroInstrument.LONELY_MOUNTAIN_FIDDLE, LotroInstrument.BASIC_FIDDLE);
 			init(prefs, LotroInstrument.SPRIGHTLY_FIDDLE, LotroInstrument.BASIC_FIDDLE);

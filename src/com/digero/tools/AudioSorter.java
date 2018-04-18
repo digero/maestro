@@ -65,7 +65,7 @@ public class AudioSorter
 		String sourceRoot = "F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted";
 		String targetRoot = sourceRoot;
 
-		copyToFinalNames(sourceRoot, targetRoot, "travellers_fiddle", false);
+		copyToFinalNames(sourceRoot, targetRoot, "bardic_fiddle", false);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,

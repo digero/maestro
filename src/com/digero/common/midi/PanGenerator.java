@@ -57,6 +57,7 @@ public class PanGenerator
 				break;
 			case STUDENT_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
+			case BARDIC_FIDDLE:
 				instrument = LotroInstrument.BASIC_FIDDLE;
 				break;
 			//$CASES-OMITTED$
@@ -82,6 +83,7 @@ public class PanGenerator
 
 		switch (instrument)
 		{
+			case BARDIC_FIDDLE:
 			case BASIC_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
 			case STUDENT_FIDDLE:

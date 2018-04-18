@@ -36,6 +36,7 @@ public class GenerateSoundFontInfo
 			case LUTE_OF_AGES:
 			case BASIC_LUTE:
 			case HARP:
+			case BARDIC_FIDDLE:
 				return 1;
 
 			case MISTY_MOUNTAIN_HARP:

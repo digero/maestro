@@ -38,10 +38,11 @@ public enum LotroInstrument
 	BASIC_LUTE               ( "Basic Lute",                false,   25,      0,      false,   -19.0f),
 	HARP                     ( "Harp",                      false,   46,      0,      false,     6.0f),
 	MISTY_MOUNTAIN_HARP      ( "Misty Mountain Harp",       false,   27,      0,      false,   -12.5f),
-	BASIC_FIDDLE             ( "Basic Fiddle",               true,   40,      1,      false,     0.0f),
+	BARDIC_FIDDLE            ( "Bardic Fiddle",              true,   40,      1,      false,     0.0f),
+	BASIC_FIDDLE             ( "Basic Fiddle",               true,   41,      1,      false,     0.0f),
 	LONELY_MOUNTAIN_FIDDLE   ( "Lonely Mountain Fiddle",     true,   51,      1,      false,     0.0f),
 	SPRIGHTLY_FIDDLE         ( "Sprightly Fiddle",          false,  110,      1,      false,     0.0f),
-	STUDENT_FIDDLE           ( "Student's Fiddle",           true,   41,      1,      false,     0.0f),
+	STUDENT_FIDDLE           ( "Student's Fiddle",           true,  120,      1,      false,     0.0f),
 	TRAVELLERS_TRUSTY_FIDDLE ( "Traveller's Trusty Fiddle", false,   45,      1,      false,     0.0f),
 	THEORBO                  ( "Theorbo",                   false,   32,     -1,      false,   -12.0f), // -12.2f
 	FLUTE                    ( "Flute",                      true,   73,      2,      false,    -0.5f), //  -4.2f
@@ -55,7 +56,7 @@ public enum LotroInstrument
 // @formatter:on
 
 	public static final LotroInstrument DEFAULT_LUTE = LUTE_OF_AGES;
-	public static final LotroInstrument DEFAULT_FIDDLE = BASIC_FIDDLE;
+	public static final LotroInstrument DEFAULT_FIDDLE = BARDIC_FIDDLE;
 	public static final LotroInstrument DEFAULT_INSTRUMENT = LUTE_OF_AGES;
 
 	public final Note lowestPlayable;
@@ -157,7 +158,8 @@ public enum LotroInstrument
 			addNicknames(LotroInstrument.LUTE_OF_AGES, "Lute of Ages", "Age Lute", "LuteA", "LOA", "Guitar");
 			addNicknames(LotroInstrument.DEFAULT_LUTE, "Lute");
 			addNicknames(LotroInstrument.MISTY_MOUNTAIN_HARP, "Misty Mountain Harp", "Misty Harp", "MM Harp", "MMH");
-			addNicknames(LotroInstrument.BASIC_FIDDLE, "Basic Fiddle", "B Fiddle", "Violin");
+			addNicknames(LotroInstrument.BASIC_FIDDLE, "Basic Fiddle");
+			addNicknames(LotroInstrument.BARDIC_FIDDLE, "Bardic Fiddle", "B Fiddle", "Violin");
 			addNicknames(LotroInstrument.LONELY_MOUNTAIN_FIDDLE, "Lonely (Mountain)? Fiddle", "LM Fiddle");
 			addNicknames(LotroInstrument.SPRIGHTLY_FIDDLE, "Sprightly Fiddle");
 			addNicknames(LotroInstrument.STUDENT_FIDDLE, "Student'?s? Fiddle");
