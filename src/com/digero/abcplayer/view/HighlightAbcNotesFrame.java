@@ -758,7 +758,7 @@ public class HighlightAbcNotesFrame extends JFrame
 			try
 			{
 				Rectangle rect = textArea.modelToView(scrollToIndexNextUpdate);
-				Point scrollPt = (rect != null) ? new Point(rect.x, rect.y) : new Point(0, 0);
+				Point scrollPt = (rect != null) ? new Point(0, rect.y) : new Point(0, 0);
 				textAreaScrollPane.getViewport().setViewPosition(scrollPt);
 			}
 			catch (BadLocationException e)
