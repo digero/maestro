@@ -281,11 +281,15 @@ public class AbcExporter
 
 				long endTick = ne.getTieEnd().getEndTick();
 
-				// Lengthen Lute, Harp, Drums, etc. to play the entire sound sample
-				if (useLotroInstruments && !part.getInstrument().isSustainable(ne.note.id))
+				// Lengthen to match the note lengths used in the game
+				if (useLotroInstruments)
 				{
-					endTick = qtm.microsToTick(qtm.tickToMicros(ne.getStartTick())
-							+ (int) (TimingInfo.ONE_SECOND_MICROS * qtm.getExportTempoFactor()));
+					boolean sustainable = part.getInstrument().isSustainable(ne.note.id);
+					double extraSeconds = sustainable ? AbcConstants.SUSTAINED_NOTE_HOLD_SECONDS
+							: AbcConstants.NON_SUSTAINED_NOTE_HOLD_SECONDS;
+
+					endTick = qtm.microsToTick(qtm.tickToMicros(endTick)
+							+ (int) (extraSeconds * TimingInfo.ONE_SECOND_MICROS * qtm.getExportTempoFactor()));
 				}
 
 				if (endTick != ne.getEndTick())

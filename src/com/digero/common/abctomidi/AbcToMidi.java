@@ -230,11 +230,15 @@ public class AbcToMidi
 								accidentals.clear();
 								noteOffEvents.clear();
 
+								if (trackNumber > 0)
+									abcInfo.setPartEndLine(trackNumber, lineNumberForRegions - 1);
+
 								info.newPart(Integer.parseInt(value));
 								trackNumber++;
 								partStartLine = lineNumber;
 								chordStartTick = 0;
 								abcInfo.setPartNumber(trackNumber, info.getPartNumber());
+								abcInfo.setPartStartLine(trackNumber, lineNumberForRegions);
 								track = null; // Will create a new track after the header is done
 								if (instrumentOverrideMap != null && instrumentOverrideMap.containsKey(trackNumber))
 								{
@@ -777,15 +781,15 @@ public class AbcToMidi
 											m.start());
 								}
 
-								// Stringed instruments, drums, and woodwind breath sounds always play the 
-								// sound sample in its entirety. Since Gervill doesn't support the SoundFont 
-								// extension that specifies this, we have to increase the note length.
-								// One second should do the trick.
+								// Lengthen to match the note lengths used in the game
 								double noteEndTickTmp = noteEndTick;
-								if (useLotroInstruments && !info.getInstrument().isSustainable(lotroNoteId))
+								if (useLotroInstruments)
 								{
-									noteEndTickTmp = Math.max(noteEndTick, chordStartTick
-											+ AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN);
+									boolean sustainable = info.getInstrument().isSustainable(lotroNoteId);
+									double extraSeconds = sustainable ? AbcConstants.SUSTAINED_NOTE_HOLD_SECONDS
+											: AbcConstants.NON_SUSTAINED_NOTE_HOLD_SECONDS;
+
+									noteEndTickTmp += extraSeconds * AbcConstants.ONE_SECOND_MICROS * PPQN / MPQN;
 								}
 								MidiEvent noteOff = MidiFactory.createNoteOffEventEx(noteId, channel, info
 										.getDynamics().getVol(useLotroInstruments), Math.round(noteEndTickTmp));
@@ -822,6 +826,8 @@ public class AbcToMidi
 			}
 		}
 
+		abcInfo.setPartEndLine(trackNumber, lineNumberForRegions);
+
 		PanGenerator pan = null;
 		if (stereo && trackNumber > 1)
 			pan = new PanGenerator();
@@ -856,6 +862,7 @@ public class AbcToMidi
 		return seq;
 	}
 
+	@Deprecated// This doesn't work if changing between sustained and non-sustained instruments
 	public static void updateInstrumentRealtime(SequencerWrapper sequencer, int trackIndex, LotroInstrument instrument)
 	{
 		Sequence sequence = sequencer.getSequence();

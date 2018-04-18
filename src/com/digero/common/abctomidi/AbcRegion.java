@@ -55,6 +55,11 @@ public class AbcRegion implements Comparable<AbcRegion>
 		return note;
 	}
 
+	public boolean isChord()
+	{
+		return note == null;
+	}
+
 	public int getTrackNumber()
 	{
 		return trackNumber;

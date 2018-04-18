@@ -52,14 +52,18 @@ public class StandardInstrumentInfo extends InstrumentInfo
 			if (++i == usedSamples.size())
 				highKey = highestNoteId;
 
-			boolean isLooped = sample.key.lotroInstrument == LotroInstrument.BAGPIPE
+			LotroInstrument instrument = sample.key.lotroInstrument;
+			boolean isLooped = instrument == LotroInstrument.BAGPIPE
 					&& sample.key.noteId <= AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID;
+
+			int releaseTime = SoundFontUtil.secondsToTimecents(AbcConstants.NOTE_RELEASE_SECONDS);
 
 			out.println("        Sample=" + sample.name);
 			out.println("            Z_LowKey=" + lowKey);
 			out.println("            Z_HighKey=" + highKey);
 			out.println("            Z_LowVelocity=0");
 			out.println("            Z_HighVelocity=127");
+			out.println("            Z_releaseVolEnv=" + releaseTime);
 			if (isLooped)
 				out.println("            Z_sampleModes=1");
 			out.println();

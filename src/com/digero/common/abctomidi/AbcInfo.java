@@ -26,6 +26,8 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		private String name = null;
 		private String rawName = null;
 		private boolean nameIsFromExtendedInfo = false;
+		private int startLine = 0;
+		private int endLine = 0;
 	}
 
 	private boolean empty = true;
@@ -199,6 +201,24 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		return metadata.get(Character.toUpperCase(key));
 	}
 
+	public int getPartStartLine(int trackIndex)
+	{
+		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
+		if (info == null)
+			return 0;
+
+		return info.startLine;
+	}
+
+	public int getPartEndLine(int trackIndex)
+	{
+		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
+		if (info == null)
+			return 0;
+
+		return info.endLine;
+	}
+
 	void setMetadata(char key, String value)
 	{
 		this.empty = false;
@@ -275,6 +295,24 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 		}
 	}
 
+	void setPartStartLine(int trackIndex, int startLine)
+	{
+		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
+		if (info == null)
+			partInfoByIndex.put(trackIndex, info = new PartInfo());
+
+		info.startLine = startLine;
+	}
+
+	void setPartEndLine(int trackIndex, int endLine)
+	{
+		AbcInfo.PartInfo info = partInfoByIndex.get(trackIndex);
+		if (info == null)
+			partInfoByIndex.put(trackIndex, info = new PartInfo());
+
+		info.endLine = endLine;
+	}
+
 	void addBar(long chordStartTick)
 	{
 		if (!bars.containsKey(chordStartTick))
@@ -315,9 +353,6 @@ public class AbcInfo implements AbcConstants, IBarNumberCache
 
 	public NavigableSet<AbcRegion> getRegions()
 	{
-		if (regions == null)
-			return regions;
-
 		return regions;
 	}
 
