@@ -2,6 +2,9 @@ package com.digero.abcplayer.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -9,27 +12,37 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JViewport;
+import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.TextUI;
 import javax.swing.text.BadLocationException;
@@ -42,6 +55,7 @@ import javax.swing.text.Position;
 import javax.swing.text.View;
 
 import com.digero.abcplayer.AbcPlayer;
+import com.digero.common.abctomidi.AbcInfo;
 import com.digero.common.abctomidi.AbcRegion;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.SequencerEvent;
@@ -55,9 +69,11 @@ import com.digero.common.view.ColorTable;
 public class HighlightAbcNotesFrame extends JFrame
 {
 	private SequencerWrapper sequencer;
-	private boolean scrollLock = true;
 
 	private NavigableSet<AbcRegion> regions = new TreeSet<AbcRegion>();
+	private int lineOffset = 0;
+	private boolean showFullPartName = false;
+	private Integer scrollToIndexNextUpdate = null;
 	private NavigableMap<Integer, AbcRegion> indexToRegion = null;
 	private Map<AbcRegion, Object> highlightedRegions = new HashMap<AbcRegion, Object>();
 	private Map<AbcRegion, Object> highlightedTiedRegions = new HashMap<AbcRegion, Object>();
@@ -73,10 +89,17 @@ public class HighlightAbcNotesFrame extends JFrame
 	private Highlighter.HighlightPainter inactiveRestPainter;
 
 	private JTextArea textArea;
+	private JTextArea gutterTextArea;
 	private JScrollPane textAreaScrollPane;
 
 	private boolean updatePending = false;
 	private boolean resetAllHighlightsNextUpdate = false;
+	private boolean focusTextAreaNextUpdate = true;
+	private int lastAutoScrollY = -1;
+	private boolean dragActive = false;
+
+	private JCheckBox autoScrollCheckBox;
+	private JComboBox<PartInfo> followTrackComboBox;
 
 	public HighlightAbcNotesFrame(SequencerWrapper seq)
 	{
@@ -127,7 +150,7 @@ public class HighlightAbcNotesFrame extends JFrame
 		chordPainter = new RestPainter(noteOnColor, 2, 2, 2, 2);
 
 		textArea = new JTextArea();
-		textArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+		textArea.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 		textArea.setEditable(false);
 		textArea.setLineWrap(false);
@@ -143,19 +166,137 @@ public class HighlightAbcNotesFrame extends JFrame
 		textArea.addMouseMotionListener(textAreaListener);
 		textArea.addKeyListener(textAreaListener);
 
-		textAreaScrollPane = new JScrollPane(textArea);
+		gutterTextArea = new JTextArea();
+		gutterTextArea.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createMatteBorder(0, 0, 0, 1, ColorTable.GRAPH_BORDER_OFF.get()), textArea.getBorder()));
+		gutterTextArea.setFont(textArea.getFont());
+		gutterTextArea.setEditable(false);
+		gutterTextArea.setFocusable(false);
+		gutterTextArea.setLineWrap(false);
+		gutterTextArea.setColumns(4);
+		gutterTextArea.setRows(textArea.getRows());
+		gutterTextArea.setCaret(new NullCaret());
+		gutterTextArea.setBackground(ColorTable.GRAPH_BACKGROUND_ENABLED.get());
+		gutterTextArea.setForeground(ColorTable.NOTE_OFF.get());
+		gutterTextArea.setDisabledTextColor(ColorTable.NOTE_OFF.get());
+
+		textAreaScrollPane = new JScrollPane(new TextAreaContainer(textArea, gutterTextArea));
+		setBackground(textArea.getBackground());
 		content.add(textAreaScrollPane, BorderLayout.CENTER);
+
+		JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+		toolBar.add(new JLabel("Part: "));
+
+		followTrackComboBox = new JComboBox<PartInfo>();
+		followTrackComboBox.setEnabled(false);
+		followTrackComboBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				PartInfo part = (PartInfo) followTrackComboBox.getSelectedItem();
+				if (part != null)
+					scrollToLineNumber(part.trackStartLine);
+
+				update();
+			}
+		});
+		toolBar.add(followTrackComboBox);
+
+		autoScrollCheckBox = new JCheckBox("Auto scroll");
+		autoScrollCheckBox.setSelected(true);
+		autoScrollCheckBox.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				lastAutoScrollY = -1;
+				update();
+			}
+		});
+		toolBar.add(autoScrollCheckBox);
+
+		content.add(toolBar, BorderLayout.NORTH);
 
 		pack();
 
 		Preferences prefs = Preferences.userNodeForPackage(HighlightAbcNotesFrame.class).node("HighlightAbcNotesFrame");
-		Util.initWinBounds(this, prefs.node("window"), getWidth(), getHeight());
+		Util.initWinBounds(this, prefs.node("window"), 800, 600);
+	}
+
+	private static class TextAreaContainer extends JPanel implements Scrollable
+	{
+		private JTextArea textArea;
+		private JTextArea gutter;
+
+		public TextAreaContainer(JTextArea textArea, JTextArea gutter)
+		{
+			super(new BorderLayout());
+			this.textArea = textArea;
+			this.gutter = gutter;
+			add(textArea, BorderLayout.CENTER);
+			add(gutter, BorderLayout.WEST);
+		}
+
+		@Override public Dimension getPreferredSize()
+		{
+			Dimension a = textArea.getPreferredSize();
+			Dimension b = gutter.getPreferredSize();
+			return new Dimension(a.width + b.width, Math.max(a.height, b.height));
+		}
+
+		@Override public Dimension getPreferredScrollableViewportSize()
+		{
+			return getPreferredSize();
+		}
+
+		@Override public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction)
+		{
+			return textArea.getScrollableUnitIncrement(visibleRect, orientation, direction);
+		}
+
+		@Override public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction)
+		{
+			return textArea.getScrollableBlockIncrement(visibleRect, orientation, direction);
+		}
+
+		@Override public boolean getScrollableTracksViewportWidth()
+		{
+			Container parent = SwingUtilities.getUnwrappedParent(this);
+			return (parent instanceof JViewport) ? (parent.getWidth() > getPreferredSize().width) : false;
+		}
+
+		@Override public boolean getScrollableTracksViewportHeight()
+		{
+			Container parent = SwingUtilities.getUnwrappedParent(this);
+			return (parent instanceof JViewport) ? (parent.getHeight() > textArea.getPreferredSize().height) : false;
+		}
+	}
+
+	/** For use in followTrackComboBox */
+	private static class PartInfo
+	{
+		public final String name;
+		public final int trackNumber;
+		public final int trackStartLine;
+
+		public PartInfo(String name, int trackNumber, int trackStartLine)
+		{
+			this.name = name;
+			this.trackNumber = trackNumber;
+			this.trackStartLine = trackStartLine;
+		}
+
+		@Override public String toString()
+		{
+			return name;
+		}
 	}
 
 	public void addDropListener(DropTargetListener listener)
 	{
 		new DropTarget(this, listener);
 		new DropTarget(textArea, listener);
+		new DropTarget(gutterTextArea, listener);
 	}
 
 	private static class RestPainter extends LayeredHighlighter.LayerPainter
@@ -255,10 +396,10 @@ public class HighlightAbcNotesFrame extends JFrame
 	private class TextAreaInputListener extends MouseAdapter implements KeyListener
 	{
 		private static final int DRAG_THRESHOLD = 25;
-		private boolean dragActive = false;
 
 		@Override public void mousePressed(MouseEvent e)
 		{
+			textArea.requestFocusInWindow();
 			if (SwingUtilities.isLeftMouseButton(e))
 			{
 				handleMouseEvent(e.getPoint());
@@ -295,8 +436,42 @@ public class HighlightAbcNotesFrame extends JFrame
 
 		@Override public void keyPressed(KeyEvent e)
 		{
-			if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-				endDrag(false);
+			int key = e.getKeyCode();
+			switch (key)
+			{
+				case KeyEvent.VK_ESCAPE:
+					endDrag(false);
+					break;
+
+				case KeyEvent.VK_UP:
+				case KeyEvent.VK_DOWN:
+				case KeyEvent.VK_LEFT:
+				case KeyEvent.VK_RIGHT:
+				case KeyEvent.VK_PAGE_UP:
+				case KeyEvent.VK_PAGE_DOWN:
+					boolean horz = (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT);
+					boolean back = (key == KeyEvent.VK_UP || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_PAGE_UP);
+					boolean page = (key == KeyEvent.VK_PAGE_UP || key == KeyEvent.VK_PAGE_DOWN);
+					scroll(horz, back, page);
+					break;
+			}
+		}
+
+		private void scroll(boolean horz, boolean backwards, boolean page)
+		{
+			JScrollBar bar = horz ? textAreaScrollPane.getHorizontalScrollBar() : textAreaScrollPane
+					.getVerticalScrollBar();
+
+			int dir = backwards ? -1 : 1;
+			int incr = page ? bar.getBlockIncrement(dir) : bar.getUnitIncrement(dir);
+
+			Point pt = textAreaScrollPane.getViewport().getViewPosition();
+			if (horz)
+				pt.x = Util.clamp(pt.x + incr * dir, 0, textArea.getHeight());
+			else
+				pt.y = Util.clamp(pt.y + incr * dir, 0, textArea.getHeight());
+
+			textAreaScrollPane.getViewport().setViewPosition(pt);
 		}
 
 		@Override public void keyReleased(KeyEvent e)
@@ -318,12 +493,15 @@ public class HighlightAbcNotesFrame extends JFrame
 
 		private void handleMouseEvent(Point pt)
 		{
+			if (regions == null)
+				return;
+
 			if (indexToRegion == null)
 			{
 				indexToRegion = new TreeMap<Integer, AbcRegion>();
 				for (AbcRegion region : regions)
 				{
-					indexToRegion.put(lineStartIndex[region.getLine()] + region.getEndIndex(), region);
+					indexToRegion.put(lineStartIndex[getLine(region)] + region.getEndIndex(), region);
 				}
 			}
 
@@ -353,7 +531,8 @@ public class HighlightAbcNotesFrame extends JFrame
 			{
 				if (e != null)
 				{
-					int line = e.getValue().getLine();
+					int line = getLine(e.getValue());
+
 					Rectangle lineEndRect = textArea.modelToView(lineStartIndex[line + 1] - 1);
 					int lineEndX = lineEndRect.x + lineEndRect.width;
 
@@ -384,37 +563,146 @@ public class HighlightAbcNotesFrame extends JFrame
 		highlightedTiedRegions.clear();
 	}
 
-	public void setLinesAndRegions(List<String> lines, NavigableSet<AbcRegion> regions, boolean retainScrollPosition)
+	public void clearLinesAndRegions()
+	{
+		List<String> emptyLines = Collections.emptyList();
+		setLinesAndRegions(emptyLines, 0, null);
+	}
+
+	public void setLinesAndRegions(List<String> lines, int lineOffset, AbcInfo abcInfo)
 	{
 		clearAllHighlights();
 
-		lineStartIndex = new int[lines.size() + 1];
-		StringBuilder text = new StringBuilder();
-		for (int i = 0; i < lines.size(); i++)
+		// Init text area
 		{
-			lineStartIndex[i] = text.length();
-			text.append(lines.get(i)).append("\r\n");
+			int maxLine = lines.size() + lineOffset + 1;
+			int gutterWidth = (maxLine < 1000) ? 3 : (int) Math.ceil(Math.log10(maxLine));
+			gutterTextArea.setColumns(gutterWidth);
+			String gutterFormatString = "%" + gutterWidth + "d\r\n";
+
+			lineStartIndex = new int[lines.size() + 1];
+			StringBuilder text = new StringBuilder();
+			StringBuilder gutterText = new StringBuilder();
+			for (int i = 0; i < lines.size(); i++)
+			{
+				lineStartIndex[i] = text.length();
+				text.append(lines.get(i)).append("\r\n");
+				gutterText.append(String.format(gutterFormatString, i + lineOffset + 1));
+			}
+
+			// Trim trailing newline
+			if (text.length() > "\r\n".length())
+			{
+				text.setLength(text.length() - "\r\n".length());
+				gutterText.setLength(gutterText.length() - "\r\n".length());
+			}
+
+			lineStartIndex[lines.size()] = text.length();
+			textArea.setText(text.toString());
+			gutterTextArea.setText(gutterText.toString());
 		}
-		lineStartIndex[lines.size()] = text.length();
-		textArea.setText(text.toString());
 
-		if (!retainScrollPosition)
-			textAreaScrollPane.getViewport().setViewPosition(new Point(0, 0));
+		// Init regions
+		{
+			NavigableSet<AbcRegion> regions = (abcInfo != null) ? abcInfo.getRegions() : null;
+			if (regions == null)
+				regions = new TreeSet<AbcRegion>();
 
-		this.regions = regions;
-		this.indexToRegion = null;
+			// Filter out regions that are not in the view
+			boolean hasRegionsOutOfRange = false;
+			for (AbcRegion region : regions)
+			{
+				int line = region.getLine() - lineOffset;
+				if (line < 0 || line >= lines.size())
+				{
+					hasRegionsOutOfRange = true;
+					break;
+				}
+			}
 
+			if (hasRegionsOutOfRange)
+			{
+				TreeSet<AbcRegion> regionsInRange = new TreeSet<AbcRegion>();
+				for (AbcRegion region : regions)
+				{
+					int line = region.getLine() - lineOffset;
+					if (line >= 0 && line < lines.size())
+						regionsInRange.add(region);
+				}
+
+				regions = regionsInRange;
+			}
+
+			this.regions = regions;
+			this.lineOffset = lineOffset;
+		}
+
+		// Init track list in the combo box
+		{
+			followTrackComboBox.removeAllItems();
+			if (abcInfo != null)
+			{
+				SortedSet<Integer> tracksInView = new TreeSet<Integer>();
+				for (AbcRegion region : regions)
+					tracksInView.add(region.getTrackNumber());
+
+				for (int i : tracksInView)
+				{
+					String name = abcInfo.getPartNumber(i) + ". "
+							+ (showFullPartName ? abcInfo.getPartFullName(i) : abcInfo.getPartName(i));
+					followTrackComboBox.addItem(new PartInfo(name, i, abcInfo.getPartStartLine(i)));
+				}
+			}
+			followTrackComboBox.setEnabled(followTrackComboBox.getItemCount() > 0);
+		}
+
+		focusTextAreaNextUpdate = true;
+		lastAutoScrollY = -1;
+		scrollToIndexNextUpdate = null;
+		indexToRegion = null;
 		update();
 	}
 
-	public boolean isScrollLock()
+	private int getLine(AbcRegion region)
 	{
-		return scrollLock;
+		return region.getLine() - lineOffset;
 	}
 
-	public void setScrollLock(boolean scrollLock)
+	public void scrollToLineNumber(int line)
 	{
-		this.scrollLock = scrollLock;
+		line -= lineOffset;
+		if (line >= 0 && line < lineStartIndex.length)
+		{
+			scrollToIndexNextUpdate = lineStartIndex[line];
+			update();
+		}
+		else
+		{
+			scrollToIndexNextUpdate = null;
+		}
+	}
+
+	public int getFollowedTrackNumber()
+	{
+		PartInfo part = (PartInfo) followTrackComboBox.getSelectedItem();
+		return (part != null) ? part.trackNumber : -1;
+	}
+
+	public void setFollowedTrackNumber(int trackNumber)
+	{
+		for (int i = 0; i < followTrackComboBox.getItemCount(); i++)
+		{
+			if (trackNumber == followTrackComboBox.getItemAt(i).trackNumber)
+			{
+				followTrackComboBox.setSelectedIndex(i);
+				return;
+			}
+		}
+	}
+
+	public void setShowFullPartName(boolean showFullPartName)
+	{
+		this.showFullPartName = showFullPartName;
 	}
 
 	private boolean isRegionOn(AbcRegion region, long tick)
@@ -425,9 +713,9 @@ public class HighlightAbcNotesFrame extends JFrame
 	private Highlighter.HighlightPainter getPainter(AbcRegion region)
 	{
 		boolean active = sequencer.isTrackActive(region.getTrackNumber());
-		if (region.getNote() == null)
+		if (region.isChord())
 			return chordPainter;
-		if (region.getNote() == Note.REST /* || region.getNote() == null */)
+		if (region.getNote() == Note.REST)
 			return active ? restPainter : inactiveRestPainter;
 		if (region.getTiesFrom() == null)
 			return active ? noteOnPainter : inactiveNoteOnPainter;
@@ -457,6 +745,26 @@ public class HighlightAbcNotesFrame extends JFrame
 		{
 			clearAllHighlights();
 			resetAllHighlightsNextUpdate = false;
+		}
+
+		if (focusTextAreaNextUpdate)
+		{
+			textArea.requestFocusInWindow();
+			focusTextAreaNextUpdate = false;
+		}
+
+		if (scrollToIndexNextUpdate != null)
+		{
+			try
+			{
+				Rectangle rect = textArea.modelToView(scrollToIndexNextUpdate);
+				Point scrollPt = (rect != null) ? new Point(rect.x, rect.y) : new Point(0, 0);
+				textAreaScrollPane.getViewport().setViewPosition(scrollPt);
+			}
+			catch (BadLocationException e)
+			{
+			}
+			scrollToIndexNextUpdate = null;
 		}
 
 		long tick = sequencer.getThumbTick();
@@ -497,7 +805,8 @@ public class HighlightAbcNotesFrame extends JFrame
 		try
 		{
 			// Add highlighted regions
-			int maxEnd = -1;
+			int endOfFollowedTrack = -1;
+			int followedTrackNumber = getFollowedTrackNumber();
 			for (AbcRegion region : regions)
 			{
 				if (region.getStartTick() > tick)
@@ -505,10 +814,11 @@ public class HighlightAbcNotesFrame extends JFrame
 
 				if (isRegionOn(region, tick))
 				{
-					int lineStart = lineStartIndex[region.getLine()];
+					int lineStart = lineStartIndex[getLine(region)];
 					int end = lineStart + region.getEndIndex();
-					if (end > maxEnd)
-						maxEnd = end;
+
+					if (end > endOfFollowedTrack && region.getTrackNumber() == followedTrackNumber)
+						endOfFollowedTrack = end;
 
 					if (!highlightedRegions.containsKey(region))
 					{
@@ -531,7 +841,7 @@ public class HighlightAbcNotesFrame extends JFrame
 					if (highlightedTiedRegions.containsKey(t))
 						continue;
 
-					int lineStart = lineStartIndex[t.getLine()];
+					int lineStart = lineStartIndex[getLine(t)];
 					int start = lineStart + t.getStartIndex();
 					int end = lineStart + t.getEndIndex();
 					Object tag = highlighter.addHighlight(start, end, getPainter(t));
@@ -542,7 +852,7 @@ public class HighlightAbcNotesFrame extends JFrame
 					if (highlightedTiedRegions.containsKey(t))
 						continue;
 
-					int lineStart = lineStartIndex[t.getLine()];
+					int lineStart = lineStartIndex[getLine(t)];
 					int start = lineStart + t.getStartIndex();
 					int end = lineStart + t.getEndIndex();
 					Object tag = highlighter.addHighlight(start, end, getPainter(t));
@@ -551,11 +861,20 @@ public class HighlightAbcNotesFrame extends JFrame
 			}
 
 			// Scroll to the end
-			if (!scrollLock && maxEnd >= 0)
+			if (endOfFollowedTrack >= 0 && autoScrollCheckBox.isSelected())
 			{
-				Rectangle rect = textArea.modelToView(maxEnd);
-				if (rect != null)
-					textArea.scrollRectToVisible(rect);
+				Rectangle rect = textArea.modelToView(endOfFollowedTrack);
+				if (rect != null && rect.y != lastAutoScrollY)
+				{
+					lastAutoScrollY = rect.y;
+					if (!dragActive)
+					{
+						final int marginLines = 4;
+						rect.y -= rect.height * marginLines;
+						rect.height *= (2 * marginLines + 1);
+						textArea.scrollRectToVisible(rect);
+					}
+				}
 			}
 		}
 		catch (BadLocationException e)

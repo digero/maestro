@@ -1,52 +1,94 @@
 package com.digero.abcplayer.view;
 
 import info.clearthought.layout.TableLayout;
+import info.clearthought.layout.TableLayoutConstants;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 
-import com.digero.abcplayer.AbcPlayer;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcInfo;
-import com.digero.common.abctomidi.AbcToMidi;
+import com.digero.common.abctomidi.AbcRegion;
+import com.digero.common.midi.SequencerEvent;
+import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
+import com.digero.common.util.Listener;
 
-public class TrackListPanel extends JPanel
+public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, TableLayoutConstants
 {
 	public static final int TRACKLIST_ROWHEIGHT = 18;
 	private static final Object TRACK_INDEX_KEY = new Object();
 
 	private final SequencerWrapper sequencer;
-	private final Map<Integer, LotroInstrument> instrumentOverrideMap;
+	private final TrackListPanelCallback abcPlayer;
 	private AbcInfo abcInfo;
 
 	private TableLayout layout;
 	private LotroInstrument[] sortedInstruments = LotroInstrument.values();
-	private JCheckBox[] trackCheckBoxes = null;
+	private TrackControls[] trackControls = null;
+
+	private static class TrackControls
+	{
+		public TrackControls(JCheckBox checkBox, JLabel lineNumberLabel, JToggleButton soloButton,
+				JComboBox<LotroInstrument> instrumentComboBox)
+		{
+			this.checkBox = checkBox;
+			this.lineNumberLabel = lineNumberLabel;
+			this.soloButton = soloButton;
+			this.instrumentComboBox = instrumentComboBox;
+		}
+
+		public final JCheckBox checkBox;
+		public final JLabel lineNumberLabel;
+		public final JToggleButton soloButton;
+		public final JComboBox<LotroInstrument> instrumentComboBox;
+		public NavigableMap<Long, Integer> tickToLineNumber;
+	}
 
 	private boolean showFullPartName = false;
+	private boolean showLineNumbers = true;
+	private boolean showSoloButtons = true;
+	private boolean showInstrumentComboBoxes = true;
+	private boolean updatePending = false;
 
-	public TrackListPanel(SequencerWrapper sequencer, Map<Integer, LotroInstrument> instrumentOverrideMap)
+	private static final int HGAP = 4;
+	private static final int CHECKBOX_COLUMN = 1;
+	private static final int LINE_NUMBER_COLUMN = 3;
+	private static final int SOLO_BUTTON_COLUMN = 5;
+	private static final int INSTRUMENT_COLUMN = 7;
+
+	public TrackListPanel(SequencerWrapper sequencer, TrackListPanelCallback abcPlayer)
 	{
-		super(new TableLayout(new double[] { 0, AbcPlayer.FILL, AbcPlayer.PREFERRED, AbcPlayer.PREFERRED, 0 },
+		super(new TableLayout(new double[] { HGAP, FILL, HGAP, PREFERRED, HGAP, PREFERRED, HGAP, PREFERRED, HGAP },
 				new double[] { 0, 0 }));
 
 		this.sequencer = sequencer;
-		this.instrumentOverrideMap = instrumentOverrideMap;
+		this.abcPlayer = abcPlayer;
+
+		sequencer.addChangeListener(this);
 
 		Arrays.sort(sortedInstruments, new Comparator<LotroInstrument>()
 		{
@@ -58,7 +100,7 @@ public class TrackListPanel extends JPanel
 
 		layout = (TableLayout) getLayout();
 		layout.setVGap(4);
-		layout.setHGap(4);
+		layout.setHGap(0);
 
 		setBackground(Color.WHITE);
 	}
@@ -78,7 +120,7 @@ public class TrackListPanel extends JPanel
 				((JComboBox) c).removeActionListener(instrumentChangeListener);
 			}
 		}
-		trackCheckBoxes = null;
+		trackControls = null;
 		removeAll();
 		for (int i = layout.getNumRow() - 2; i >= 1; i--)
 		{
@@ -100,7 +142,7 @@ public class TrackListPanel extends JPanel
 		this.abcInfo = abcInfo;
 
 		Track[] tracks = sequencer.getSequence().getTracks();
-		trackCheckBoxes = new JCheckBox[tracks.length];
+		trackControls = new TrackControls[tracks.length];
 
 		for (int i = 0; i < tracks.length; i++)
 		{
@@ -136,14 +178,22 @@ public class TrackListPanel extends JPanel
 			if (hasNotes)
 			{
 				JCheckBox checkBox = new JCheckBox(getCheckBoxText(i));
-				trackCheckBoxes[i] = checkBox;
 				checkBox.setToolTipText(abcInfo.getPartNumber(i) + ". " + abcInfo.getPartFullName(i));
 				checkBox.putClientProperty(TRACK_INDEX_KEY, i);
 				checkBox.setBackground(getBackground());
 				checkBox.setSelected(!sequencer.getTrackMute(i));
 				checkBox.addActionListener(trackMuteListener);
 
+				JLabel lineNumberLabel = new JLabel();
+				lineNumberLabel.setVisible(showLineNumbers);
+				lineNumberLabel.putClientProperty(TRACK_INDEX_KEY, i);
+				lineNumberLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				lineNumberLabel.addMouseListener(viewAbcForTrackListener);
+				lineNumberLabel.setToolTipText("<html>Line number<br>Click to view ABC text at this line</html>");
+				lineNumberLabel.setBackground(getBackground());
+
 				JToggleButton soloButton = new JToggleButton("S");
+				soloButton.setVisible(showSoloButtons);
 				soloButton.setMargin(new Insets(3, 4, 3, 3));
 				soloButton.setToolTipText("Play only this part (Solo)");
 				soloButton.putClientProperty(TRACK_INDEX_KEY, i);
@@ -152,17 +202,21 @@ public class TrackListPanel extends JPanel
 				soloButton.addActionListener(trackSoloListener);
 
 				JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(sortedInstruments);
+				comboBox.setVisible(showInstrumentComboBoxes);
 				comboBox.setMaximumRowCount(sortedInstruments.length);
 				comboBox.putClientProperty(TRACK_INDEX_KEY, i);
 				comboBox.setBackground(getBackground());
 				comboBox.setSelectedItem(instrument);
 				comboBox.addActionListener(instrumentChangeListener);
 
+				trackControls[i] = new TrackControls(checkBox, lineNumberLabel, soloButton, comboBox);
+
 				int r = layout.getNumRow() - 1;
 				layout.insertRow(r, TRACKLIST_ROWHEIGHT);
-				add(checkBox, "1, " + r);
-				add(soloButton, "2, " + r);
-				add(comboBox, "3, " + r);
+				add(checkBox, CHECKBOX_COLUMN + ", " + r);
+				add(lineNumberLabel, LINE_NUMBER_COLUMN + ", " + r + ", r, c");
+				add(soloButton, SOLO_BUTTON_COLUMN + ", " + r);
+				add(comboBox, INSTRUMENT_COLUMN + ", " + r);
 			}
 		}
 
@@ -176,12 +230,72 @@ public class TrackListPanel extends JPanel
 		{
 			this.showFullPartName = showFullPartName;
 
-			if (trackCheckBoxes != null)
+			if (trackControls != null)
 			{
-				for (int i = 0; i < trackCheckBoxes.length; i++)
+				for (int i = 0; i < trackControls.length; i++)
 				{
-					if (trackCheckBoxes[i] != null)
-						trackCheckBoxes[i].setText(getCheckBoxText(i));
+					if (trackControls[i] != null)
+						trackControls[i].checkBox.setText(getCheckBoxText(i));
+				}
+			}
+		}
+	}
+
+	public void setShowLineNumbers(boolean showLineNumbers)
+	{
+		if (this.showLineNumbers != showLineNumbers)
+		{
+			this.showLineNumbers = showLineNumbers;
+
+			layout.setColumn(LINE_NUMBER_COLUMN, showLineNumbers ? PREFERRED : 0);
+			layout.setColumn(LINE_NUMBER_COLUMN + 1, showLineNumbers ? HGAP : 0);
+
+			if (trackControls != null)
+			{
+				for (int i = 0; i < trackControls.length; i++)
+				{
+					if (trackControls[i] != null)
+						trackControls[i].lineNumberLabel.setVisible(showLineNumbers);
+				}
+			}
+		}
+	}
+
+	public void setShowSoloButtons(boolean showSoloButtons)
+	{
+		if (this.showSoloButtons != showSoloButtons)
+		{
+			this.showSoloButtons = showSoloButtons;
+
+			layout.setColumn(SOLO_BUTTON_COLUMN, showSoloButtons ? PREFERRED : 0);
+			layout.setColumn(SOLO_BUTTON_COLUMN + 1, showSoloButtons ? HGAP : 0);
+
+			if (trackControls != null)
+			{
+				for (int i = 0; i < trackControls.length; i++)
+				{
+					if (trackControls[i] != null)
+						trackControls[i].soloButton.setVisible(showSoloButtons);
+				}
+			}
+		}
+	}
+
+	public void setShowInstrumentComboBoxes(boolean showInstrumentComboBoxes)
+	{
+		if (this.showInstrumentComboBoxes != showInstrumentComboBoxes)
+		{
+			this.showInstrumentComboBoxes = showInstrumentComboBoxes;
+
+			layout.setColumn(INSTRUMENT_COLUMN, showInstrumentComboBoxes ? PREFERRED : 0);
+			layout.setColumn(INSTRUMENT_COLUMN + 1, showInstrumentComboBoxes ? HGAP : 0);
+
+			if (trackControls != null)
+			{
+				for (int i = 0; i < trackControls.length; i++)
+				{
+					if (trackControls[i] != null)
+						trackControls[i].instrumentComboBox.setVisible(showInstrumentComboBoxes);
 				}
 			}
 		}
@@ -213,15 +327,87 @@ public class TrackListPanel extends JPanel
 		}
 	};
 
+	private MouseListener viewAbcForTrackListener = new MouseAdapter()
+	{
+		@Override public void mouseClicked(MouseEvent e)
+		{
+			if (e.getButton() == MouseEvent.BUTTON1)
+			{
+				JComponent control = (JComponent) e.getSource();
+				int i = (Integer) control.getClientProperty(TRACK_INDEX_KEY);
+				abcPlayer.showHighlightPanelForTrack(i);
+			}
+		}
+	};
+
 	private ActionListener instrumentChangeListener = new ActionListener()
 	{
 		@Override public void actionPerformed(ActionEvent e)
 		{
 			JComboBox<?> comboBox = (JComboBox<?>) e.getSource();
 			int i = (Integer) comboBox.getClientProperty(TRACK_INDEX_KEY);
-			LotroInstrument instrument = (LotroInstrument) comboBox.getSelectedItem();
-			instrumentOverrideMap.put(i, instrument);
-			AbcToMidi.updateInstrumentRealtime(sequencer, i, instrument);
+			abcPlayer.setTrackInstrumentOverride(i, (LotroInstrument) comboBox.getSelectedItem());
 		}
 	};
+
+	@Override public void onEvent(SequencerEvent evt)
+	{
+		SequencerProperty p = evt.getProperty();
+		if (p.isInMask(SequencerProperty.THUMB_POSITION_MASK | SequencerProperty.LENGTH.mask
+				| SequencerProperty.TEMPO.mask))
+		{
+			update();
+		}
+	}
+
+	private void update()
+	{
+		if (updatePending || !isVisible())
+			return;
+
+		updatePending = true;
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			@Override public void run()
+			{
+				updatePending = false;
+				updateCore();
+			}
+		});
+	}
+
+	private void updateCore()
+	{
+		if (trackControls == null)
+			return;
+
+		for (int i = 0; i < trackControls.length; i++)
+		{
+			TrackControls info = trackControls[i];
+			if (info == null)
+				continue;
+
+			if (info.tickToLineNumber == null)
+			{
+				info.tickToLineNumber = new TreeMap<Long, Integer>();
+				int prevLine = -1;
+				for (AbcRegion region : abcInfo.getRegions())
+				{
+					if (region.getTrackNumber() == i)
+					{
+						int line = region.getLine();
+						if (line != prevLine)
+						{
+							info.tickToLineNumber.put(region.getStartTick(), region.getLine());
+							prevLine = line;
+						}
+					}
+				}
+			}
+
+			Entry<Long, Integer> entry = info.tickToLineNumber.floorEntry(sequencer.getThumbTick());
+			int lineNumber = (entry != null) ? (entry.getValue() + 1) : 0;
+			info.lineNumberLabel.setText("<html><a href='.'>" + lineNumber + "</a></html>");
+		}
+	}
 }

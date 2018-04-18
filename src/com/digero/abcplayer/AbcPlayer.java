@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -68,9 +67,9 @@ import javax.swing.filechooser.FileFilter;
 
 import com.digero.abcplayer.view.HighlightAbcNotesFrame;
 import com.digero.abcplayer.view.TrackListPanel;
+import com.digero.abcplayer.view.TrackListPanelCallback;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.abctomidi.AbcInfo;
-import com.digero.common.abctomidi.AbcRegion;
 import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.icons.IconLoader;
@@ -94,7 +93,7 @@ import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
 
-public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants
+public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, TrackListPanelCallback
 {
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
 	public static final String APP_NAME = "ABC Player";
@@ -367,7 +366,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		titleLabel.setFont(f.deriveFont(Font.BOLD, 16));
 		titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
-		trackListPanel = new TrackListPanel(sequencer, instrumentOverrideMap);
+		trackListPanel = new TrackListPanel(sequencer, this);
 		JScrollPane trackListScroller = new JScrollPane(trackListPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		trackListScroller.getVerticalScrollBar().setUnitIncrement(TrackListPanel.TRACKLIST_ROWHEIGHT);
@@ -464,6 +463,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		Util.initWinBounds(this, prefs.node("window"), 450, 282);
 	}
 
+	@Override public void setTrackInstrumentOverride(int trackIndex, LotroInstrument instrument)
+	{
+		instrumentOverrideMap.put(trackIndex, instrument);
+		refreshSequence();
+	}
+
+	@Override public void showHighlightPanelForTrack(int trackIndex)
+	{
+		updateAbcView(/* showIfHidden = */true, /* retainScrollPosition = */false);
+
+		abcViewFrame.scrollToLineNumber(abcInfo.getPartStartLine(trackIndex));
+		abcViewFrame.setFollowedTrackNumber(trackIndex);
+	}
+
 	private void updateAbcView(boolean showIfHidden, boolean retainScrollPosition)
 	{
 		boolean hasAbcData = (abcData != null && abcInfo != null);
@@ -481,6 +494,7 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			abcViewFrame.setTitle(getTitle());
 			abcViewFrame.setIconImages(getIconImages());
 			abcViewFrame.addDropListener(dropListener);
+			abcViewFrame.setShowFullPartName(showFullPartNameMenuItem.isSelected());
 			abcViewFrame.addWindowListener(new WindowAdapter()
 			{
 				@Override public void windowOpened(WindowEvent e)
@@ -505,7 +519,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 
 		if (!hasAbcData)
 		{
-			abcViewFrame.setLinesAndRegions(new ArrayList<String>(), new TreeSet<AbcRegion>(), false);
+			abcViewFrame.setFollowedTrackNumber(-1);
+			abcViewFrame.clearLinesAndRegions();
 		}
 		else
 		{
@@ -513,11 +528,20 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			for (FileAndData entry : abcData)
 				lines.addAll(entry.lines);
 
-			abcViewFrame.setLinesAndRegions(lines, abcInfo.getRegions(), retainScrollPosition);
+			final int startLine = 0;
+			abcViewFrame.setLinesAndRegions(lines, startLine, abcInfo);
+
+			if (!retainScrollPosition)
+				abcViewFrame.scrollToLineNumber(startLine);
 		}
 
-		if (!isVisible && showIfHidden)
-			abcViewFrame.setVisible(true);
+		if (showIfHidden)
+		{
+			if (!isVisible)
+				abcViewFrame.setVisible(true);
+			
+			abcViewFrame.toFront();
+		}
 	}
 
 	private void updateTitleLabel()
@@ -755,15 +779,60 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 			}
 		});
 
+		toolsMenu.addSeparator();
+
 		toolsMenu.add(showFullPartNameMenuItem = new JCheckBoxMenuItem("Show full part names"));
 		showFullPartNameMenuItem.setSelected(prefs.getBoolean("showFullPartNameMenuItem", false));
 		trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
+		if (abcViewFrame != null)
+			abcViewFrame.setShowFullPartName(showFullPartNameMenuItem.isSelected());
 		showFullPartNameMenuItem.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
 			{
 				prefs.putBoolean("showFullPartNameMenuItem", showFullPartNameMenuItem.isSelected());
 				trackListPanel.setShowFullPartName(showFullPartNameMenuItem.isSelected());
+				if (abcViewFrame != null)
+					abcViewFrame.setShowFullPartName(showFullPartNameMenuItem.isSelected());
+			}
+		});
+
+		final JCheckBoxMenuItem showLineNumbersMenuItem = new JCheckBoxMenuItem("Show line numbers");
+		toolsMenu.add(showLineNumbersMenuItem);
+		showLineNumbersMenuItem.setSelected(prefs.getBoolean("showLineNumbersMenuItem", true));
+		trackListPanel.setShowLineNumbers(showLineNumbersMenuItem.isSelected());
+		showLineNumbersMenuItem.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				prefs.putBoolean("showLineNumbersMenuItem", showLineNumbersMenuItem.isSelected());
+				trackListPanel.setShowLineNumbers(showLineNumbersMenuItem.isSelected());
+			}
+		});
+
+		final JCheckBoxMenuItem showSoloButtonsMenuItem = new JCheckBoxMenuItem("Show track solo buttons");
+		toolsMenu.add(showSoloButtonsMenuItem);
+		showSoloButtonsMenuItem.setSelected(prefs.getBoolean("showSoloButtonsMenuItem", true));
+		trackListPanel.setShowSoloButtons(showSoloButtonsMenuItem.isSelected());
+		showSoloButtonsMenuItem.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				prefs.putBoolean("showSoloButtonsMenuItem", showSoloButtonsMenuItem.isSelected());
+				trackListPanel.setShowSoloButtons(showSoloButtonsMenuItem.isSelected());
+			}
+		});
+
+		final JCheckBoxMenuItem showInstrumentComboBoxesMenuItem = new JCheckBoxMenuItem("Show instrument pickers");
+		toolsMenu.add(showInstrumentComboBoxesMenuItem);
+		showInstrumentComboBoxesMenuItem.setSelected(prefs.getBoolean("showInstrumentComboBoxesMenuItem", true));
+		trackListPanel.setShowInstrumentComboBoxes(showInstrumentComboBoxesMenuItem.isSelected());
+		showInstrumentComboBoxesMenuItem.addActionListener(new ActionListener()
+		{
+			@Override public void actionPerformed(ActionEvent e)
+			{
+				prefs.putBoolean("showInstrumentComboBoxesMenuItem", showInstrumentComboBoxesMenuItem.isSelected());
+				trackListPanel.setShowInstrumentComboBoxes(showInstrumentComboBoxesMenuItem.isSelected());
 			}
 		});
 
@@ -783,12 +852,10 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		abcViewMenu.setMnemonic(KeyEvent.VK_A);
 
 		abcViewMenu.add(showAbcViewMenuItem = new JCheckBoxMenuItem("Show ABC text"));
-		showAbcViewMenuItem.setSelected(prefs.getBoolean("showAbcViewMenuItem", false));
 		showAbcViewMenuItem.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
 			{
-				prefs.putBoolean("showAbcViewMenuItem", showAbcViewMenuItem.isSelected());
 				if (showAbcViewMenuItem.isSelected())
 				{
 					updateAbcView(/* showIfHidden = */true, /* retainScrollPosition = */false);
@@ -799,7 +866,6 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 				}
 			}
 		});
-		updateAbcView(/* showIfHidden = */showAbcViewMenuItem.isSelected(), /* retainScrollPosition = */false);
 	}
 
 	private boolean getAbcDataFromClipboard(ArrayList<String> data, boolean checkContents)
@@ -1140,6 +1206,8 @@ public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiCons
 		this.abcData = data;
 		this.abcInfo = info;
 		this.instrumentOverrideMap.clear();
+		if (abcViewFrame != null)
+			abcViewFrame.clearLinesAndRegions();
 		stop();
 
 		try
