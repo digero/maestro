@@ -48,24 +48,22 @@ public class AudioSorter
 
 	public static void sortMain() throws Exception
 	{
-		File source = new File("F:\\Games\\LOTRO\\u22\\wav\\found");
-		File target = new File("F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted");
+		File source = new File("F:\\Games\\LOTRO\\u23\\wav\\instruments");
+		File target = new File("F:\\Games\\LOTRO\\u23\\wav\\instruments_sorted");
 
-		sortFolder("travellers_fiddle", source, target);
-//		sortFolder("basic_fiddle", source, target);
-//		sortFolder("basic_fiddle2", source, target);
-//		sortFolder("lonely_mountain_fiddle", source, target);
-//		sortFolder("misty_mountain_harp", source, target);
-//		sortFolder("pluck", source, target);
-//		sortFolder("sprightly_fiddle", source, target);
+		sortFolder("basic_bassoon", source, target);
+		sortFolder("brusque_bassoon", source, target);
+		sortFolder("lonely_mountain_bassoon", source, target);
 	}
 
 	public static void copyToFinalNamesMain() throws Exception
 	{
-		String sourceRoot = "F:\\Games\\LOTRO\\u22\\wav\\instruments_sorted";
+		String sourceRoot = "F:\\Games\\LOTRO\\u23\\wav\\instruments_sorted";
 		String targetRoot = sourceRoot;
 
-		copyToFinalNames(sourceRoot, targetRoot, "bardic_fiddle", false);
+		copyToFinalNames(sourceRoot, targetRoot, "basic_bassoon", false);
+		copyToFinalNames(sourceRoot, targetRoot, "brusque_bassoon", false);
+		copyToFinalNames(sourceRoot, targetRoot, "lonely_mountain_bassoon", false);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,
