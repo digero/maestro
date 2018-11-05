@@ -165,7 +165,7 @@ public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, 
 					{
 						for (LotroInstrument inst : LotroInstrument.values())
 						{
-							if (m.getData1() == inst.midiProgramId)
+							if (m.getData1() == inst.midi.id())
 							{
 								instrument = inst;
 								break;

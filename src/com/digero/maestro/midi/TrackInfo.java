@@ -18,14 +18,14 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.MidiInstrument;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.TimeSignature;
 import com.digero.maestro.abc.TimingInfo;
 
-public class TrackInfo implements IMidiConstants
+public class TrackInfo implements MidiConstants
 {
 	private SequenceInfo sequenceInfo;
 
@@ -241,7 +241,7 @@ public class TrackInfo implements IMidiConstants
 		this.timeSignature = timeSignature;
 		this.keySignature = keySignature;
 		this.instruments = new HashSet<Integer>();
-		this.instruments.add(instrument.midiProgramId);
+		this.instruments.add(instrument.midi.id());
 		this.noteEvents = noteEvents;
 		this.notesInUse = new TreeSet<Integer>();
 
@@ -351,7 +351,7 @@ public class TrackInfo implements IMidiConstants
 		if (instruments.size() == 0)
 		{
 			if (hasEvents())
-				return MidiConstants.getInstrumentName(0);
+				return MidiInstrument.PIANO.name;
 			else
 				return "<None>";
 		}
@@ -365,7 +365,7 @@ public class TrackInfo implements IMidiConstants
 			else
 				first = false;
 
-			names += MidiConstants.getInstrumentName(i);
+			names += MidiInstrument.fromId(i).name;
 		}
 
 		return names;

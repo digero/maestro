@@ -67,8 +67,6 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 	private GroupLayout.Group trackListVGroup;
 	private GroupLayout.Group trackListHGroup;
 
-	private LotroInstrument lastSelectedInstrument = null;
-
 	private boolean initialized = false;
 
 	public PartPanel(NoteFilterSequencerWrapper sequencer, PartAutoNumberer partAutoNumberer,
@@ -136,10 +134,8 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 				{
 					LotroInstrument newInstrument = (LotroInstrument) instrumentComboBox.getSelectedItem();
 					PartPanel.this.partAutoNumberer.setInstrument(abcPart, newInstrument);
-					String title = abcPart.getTitle();
-					title = title.replace(lastSelectedInstrument.toString(), newInstrument.toString());
-					nameTextField.setText(title);
-					lastSelectedInstrument = newInstrument;
+					abcPart.replaceTitleInstrument(newInstrument);
+					nameTextField.setText(abcPart.getTitle());
 					updateTracksVisible();
 				}
 			}
@@ -233,7 +229,6 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 			numberSpinner.setValue(0);
 			nameTextField.setText("");
 			instrumentComboBox.setSelectedIndex(0);
-			lastSelectedInstrument = null;
 
 			clearTrackListPanel();
 		}
@@ -247,7 +242,6 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 			nameTextField.setText(abcPart.getTitle());
 			instrumentComboBox.setModel(new DefaultComboBoxModel<LotroInstrument>(abcPart.getSupportedInstruments()));
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
-			lastSelectedInstrument = abcPart.getInstrument();
 
 			clearTrackListPanel();
 

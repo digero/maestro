@@ -18,7 +18,7 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.MidiDrum;
 import com.digero.common.midi.Note;
 import com.digero.common.midi.NoteFilterSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
@@ -97,7 +97,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		String title = trackInfo.getTrackNumber() + ". " + trackInfo.getName();
 		String instr;
 		if (info.isDrumTrack())
-			instr = MidiConstants.getDrumName(drumId);
+			instr = MidiDrum.fromId(drumId).name;
 		else
 		{
 			instr = Note.fromId(drumNoteId).abc;

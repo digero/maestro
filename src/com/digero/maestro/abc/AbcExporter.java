@@ -16,7 +16,6 @@ import com.digero.common.abc.AbcConstants;
 import com.digero.common.abc.AbcField;
 import com.digero.common.abc.Dynamics;
 import com.digero.common.abc.LotroInstrument;
-import com.digero.common.midi.IMidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.MidiFactory;
@@ -31,7 +30,7 @@ import com.digero.maestro.midi.NoteEvent;
 public class AbcExporter
 {
 	// Max parts for MIDI preview
-	private static final int MAX_PARTS = IMidiConstants.CHANNEL_COUNT - 2; // Track 0 is reserved for metadata, and Track 9 is reserved for drums
+	private static final int MAX_PARTS = MidiConstants.CHANNEL_COUNT - 2; // Track 0 is reserved for metadata, and Track 9 is reserved for drums
 
 	private final List<AbcPart> parts;
 	private final AbcMetadataSource metadata;
@@ -233,7 +232,7 @@ public class AbcExporter
 		Track track = out.createTrack();
 
 		track.add(MidiFactory.createTrackNameEvent(part.getTitle()));
-		track.add(MidiFactory.createProgramChangeEvent(part.getInstrument().midiProgramId, channel, 0));
+		track.add(MidiFactory.createProgramChangeEvent(part.getInstrument().midi.id(), channel, 0));
 		if (useLotroInstruments)
 		{
 			track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));

@@ -340,7 +340,7 @@ public class AbcToMidi
 									partStartLine);
 						}
 						track = seq.createTrack();
-						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midiProgramId, channel, 0));
+						track.add(MidiFactory.createProgramChangeEvent(info.getInstrument().midi.id(), channel, 0));
 						if (useLotroInstruments)
 						{
 							track.add(MidiFactory.createChannelVolumeEvent(MidiConstants.MAX_VOLUME, channel, 1));
@@ -895,7 +895,7 @@ public class AbcToMidi
 			return;
 
 		// Update the program change event and resend it to the sequencer's receiver
-		MidiFactory.modifyProgramChangeMessage(programChange, instrument.midiProgramId);
+		MidiFactory.modifyProgramChangeMessage(programChange, instrument.midi.id());
 
 		Receiver receiver = sequencer.getReceiver();
 		if (receiver != null)

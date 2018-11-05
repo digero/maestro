@@ -9,7 +9,7 @@ import javax.sound.midi.ShortMessage;
 
 import com.digero.common.util.ICompileConstants;
 
-public class NoteFilterTransceiver implements Transceiver, IMidiConstants, ICompileConstants
+public class NoteFilterTransceiver implements Transceiver, MidiConstants, ICompileConstants
 {
 	private Receiver receiver = null;
 	private boolean hasAbcPart = false;

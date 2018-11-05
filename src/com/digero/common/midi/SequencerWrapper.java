@@ -21,7 +21,7 @@ import com.digero.common.util.Listener;
 import com.digero.common.util.ListenerList;
 import com.sun.media.sound.MidiUtils;
 
-public class SequencerWrapper implements IMidiConstants, ITempoCache, IDiscardable
+public class SequencerWrapper implements MidiConstants, ITempoCache, IDiscardable
 {
 	public static final int UPDATE_FREQUENCY_MILLIS = 25;
 	public static final long UPDATE_FREQUENCY_MICROS = UPDATE_FREQUENCY_MILLIS * 1000;

@@ -8,7 +8,7 @@ import com.digero.common.abc.Accidental;
 /**
  * Representation of a MIDI key signature.
  */
-public class KeySignature implements IMidiConstants
+public class KeySignature implements MidiConstants
 {
 	public static final KeySignature C_MAJOR = new KeySignature(0, true);
 

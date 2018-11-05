@@ -8,7 +8,7 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-public class VolumeTransceiver implements Transceiver, IMidiConstants
+public class VolumeTransceiver implements Transceiver, MidiConstants
 {
 	private static final int UNSET_CHANNEL_VOLUME = -1;
 

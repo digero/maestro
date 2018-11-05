@@ -22,6 +22,7 @@ import org.w3c.dom.Element;
 
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.MidiDrum;
 import com.digero.common.midi.Note;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.ParseException;
@@ -200,22 +201,20 @@ public class DrumNoteMap implements IDiscardable
 		out.println("% Comments begin with %");
 		out.println();
 
-		int maxDrumLen = MidiConstants.getDrumName(MidiConstants.LOWEST_DRUM_ID - 1).length();
-		for (int i = MidiConstants.LOWEST_DRUM_ID; i <= MidiConstants.HIGHEST_DRUM_ID; i++)
+		int maxDrumLen = MidiDrum.INVALID.name.length();
+		for (MidiDrum drum : MidiDrum.values())
 		{
-			String drumName = MidiConstants.getDrumName(i);
-			if (maxDrumLen < drumName.length())
-				maxDrumLen = drumName.length();
+			if (maxDrumLen < drum.name.length())
+				maxDrumLen = drum.name.length();
 		}
 
 		for (int midiNoteId = 0; midiNoteId < map.length; midiNoteId++)
 		{
+			MidiDrum drum = MidiDrum.fromId(midiNoteId);
+
 			// Only write non-drum IDs if they actually have a mapping
-			if ((midiNoteId < MidiConstants.LOWEST_DRUM_ID || midiNoteId > MidiConstants.HIGHEST_DRUM_ID)
-					&& map[midiNoteId] == DISABLED_NOTE_ID)
-			{
+			if (drum == MidiDrum.INVALID && map[midiNoteId] == DISABLED_NOTE_ID)
 				continue;
-			}
 
 			Note note = Note.fromId(map[midiNoteId]);
 			if (note == null)
@@ -225,8 +224,8 @@ public class DrumNoteMap implements IDiscardable
 			if (lotroDrum == null)
 				lotroDrum = LotroDrumInfo.DISABLED;
 
-			String drumName = MidiConstants.getDrumName(midiNoteId);
-			if (drumName.equals("Unknown"))
+			String drumName = drum.name;
+			if (drumName.equals(MidiDrum.INVALID.name))
 				drumName = "(" + drumName + ")";
 
 			out.format("%2d => %2d  %% %-" + maxDrumLen + "s => %s", midiNoteId, note.id, drumName,

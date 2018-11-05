@@ -73,7 +73,7 @@ import com.digero.common.abctomidi.AbcInfo;
 import com.digero.common.abctomidi.AbcToMidi;
 import com.digero.common.abctomidi.FileAndData;
 import com.digero.common.icons.IconLoader;
-import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
@@ -93,7 +93,7 @@ import com.digero.common.view.SongPositionBar;
 import com.digero.common.view.SongPositionLabel;
 import com.digero.common.view.TempoBar;
 
-public class AbcPlayer extends JFrame implements TableLayoutConstants, IMidiConstants, TrackListPanelCallback
+public class AbcPlayer extends JFrame implements TableLayoutConstants, MidiConstants, TrackListPanelCallback
 {
 	private static final ExtensionFileFilter ABC_FILE_FILTER = new ExtensionFileFilter("ABC Files", "abc", "txt");
 	public static final String APP_NAME = "ABC Player";

@@ -22,7 +22,7 @@ public class PresetInfo implements Comparable<PresetInfo>
 
 	public void print(PrintStream out)
 	{
-		print(out, lotroInstrument.toString(), lotroInstrument.midiProgramId);
+		print(out, lotroInstrument.toString(), lotroInstrument.midi.id());
 	}
 
 	public void print(PrintStream out, String name, int programId)

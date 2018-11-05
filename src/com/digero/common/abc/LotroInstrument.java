@@ -24,35 +24,37 @@ package com.digero.common.abc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.digero.common.midi.MidiInstrument;
 import com.digero.common.midi.Note;
 import com.digero.common.util.Pair;
 
 // @formatter:off
 public enum LotroInstrument
 {
-	//                         friendlyName               sustain  midi  octave  percussion  dBAdjust
-	LUTE_OF_AGES             ( "Lute of Ages",              false,   24,      0,      false,     0.0f),
-	BASIC_LUTE               ( "Basic Lute",                false,   25,      0,      false,   -19.0f),
-	HARP                     ( "Harp",                      false,   46,      0,      false,     6.0f),
-	MISTY_MOUNTAIN_HARP      ( "Misty Mountain Harp",       false,   27,      0,      false,   -12.5f),
-	BARDIC_FIDDLE            ( "Bardic Fiddle",              true,   40,      1,      false,     0.0f),
-	BASIC_FIDDLE             ( "Basic Fiddle",               true,   41,      1,      false,     0.0f),
-	LONELY_MOUNTAIN_FIDDLE   ( "Lonely Mountain Fiddle",     true,   51,      1,      false,     0.0f),
-	SPRIGHTLY_FIDDLE         ( "Sprightly Fiddle",          false,  110,      1,      false,     0.0f),
-	STUDENT_FIDDLE           ( "Student's Fiddle",           true,  120,      1,      false,     0.0f),
-	TRAVELLERS_TRUSTY_FIDDLE ( "Traveller's Trusty Fiddle", false,   45,      1,      false,     0.0f),
-	THEORBO                  ( "Theorbo",                   false,   32,     -1,      false,   -12.0f), // -12.2f
-	FLUTE                    ( "Flute",                      true,   73,      2,      false,    -0.5f), //  -4.2f
-	CLARINET                 ( "Clarinet",                   true,   71,      1,      false,    -2.5f), //  -2.9f
-	HORN                     ( "Horn",                       true,   69,      0,      false,     0.0f), //  -1.7f
-	BAGPIPE                  ( "Bagpipe",                    true,  109,      1,      false,    -3.2f),
-	PIBGORN                  ( "Pibgorn",                    true,   84,      2,      false,    -3.5f),
-	DRUMS                    ( "Drums",                     false,  118,      0,       true,     0.0f),
-	COWBELL                  ( "Cowbell",                   false,  115,      0,       true,     0.0f),
-	MOOR_COWBELL             ( "Moor Cowbell",              false,  114,      0,       true,     0.0f);
+	//                         friendlyName               sustain  midi                             octave  percussion  dBAdjust
+	LUTE_OF_AGES             ( "Lute of Ages",              false, MidiInstrument.NYLON_GUITAR,         0,      false,     0.0f),
+	BASIC_LUTE               ( "Basic Lute",                false, MidiInstrument.STEEL_STRING_GUITAR,  0,      false,   -19.0f),
+	HARP                     ( "Harp",                      false, MidiInstrument.ORCHESTRA_HARP,       0,      false,     6.0f),
+	MISTY_MOUNTAIN_HARP      ( "Misty Mountain Harp",       false, MidiInstrument.CLEAN_ELEC_GUITAR,    0,      false,   -12.5f),
+	BARDIC_FIDDLE            ( "Bardic Fiddle",              true, MidiInstrument.VIOLIN,               1,      false,     0.0f),
+	BASIC_FIDDLE             ( "Basic Fiddle",               true, MidiInstrument.VIOLA,                1,      false,     0.0f),
+	LONELY_MOUNTAIN_FIDDLE   ( "Lonely Mountain Fiddle",     true, MidiInstrument.SYNTH_STRING_2,       1,      false,     0.0f),
+	SPRIGHTLY_FIDDLE         ( "Sprightly Fiddle",          false, MidiInstrument.FIDDLE,               1,      false,     0.0f),
+	STUDENT_FIDDLE           ( "Student's Fiddle",           true, MidiInstrument.GUITAR_FRET_NOISE,    1,      false,     0.0f),
+	TRAVELLERS_TRUSTY_FIDDLE ( "Traveller's Trusty Fiddle", false, MidiInstrument.PIZZICATO_STRINGS,    1,      false,     0.0f),
+	THEORBO                  ( "Theorbo",                   false, MidiInstrument.ACOUSTIC_BASS,       -1,      false,   -12.0f), // -12.2f
+	FLUTE                    ( "Flute",                      true, MidiInstrument.FLUTE,                2,      false,    -0.5f), //  -4.2f
+	CLARINET                 ( "Clarinet",                   true, MidiInstrument.CLARINET,             1,      false,    -2.5f), //  -2.9f
+	HORN                     ( "Horn",                       true, MidiInstrument.ENGLISH_HORN,         0,      false,     0.0f), //  -1.7f
+	BAGPIPE                  ( "Bagpipe",                    true, MidiInstrument.BAG_PIPE,             1,      false,    -3.2f),
+	PIBGORN                  ( "Pibgorn",                    true, MidiInstrument.CHARANG,              2,      false,    -3.5f),
+	DRUMS                    ( "Drums",                     false, MidiInstrument.SYNTH_DRUM,           0,       true,     0.0f),
+	COWBELL                  ( "Cowbell",                   false, MidiInstrument.WOODBLOCK,            0,       true,     0.0f),
+	MOOR_COWBELL             ( "Moor Cowbell",              false, MidiInstrument.STEEL_DRUMS,          0,       true,     0.0f);
 // @formatter:on
 
 	public static final LotroInstrument DEFAULT_LUTE = LUTE_OF_AGES;
@@ -64,25 +66,25 @@ public enum LotroInstrument
 	public final String friendlyName;
 	public final boolean sustainable;
 	public final boolean isPercussion;
-	public final int midiProgramId;
+	public final MidiInstrument midi;
 	public final int octaveDelta;
 	public final float dBVolumeAdjust;
 
-	private LotroInstrument(String friendlyName, boolean sustainable, int midiProgramId, int octaveDelta,
+	private LotroInstrument(String friendlyName, boolean sustainable, MidiInstrument midiInstrument, int octaveDelta,
 			boolean isPercussion, float dBVolumeAdjust)
 	{
-		this(friendlyName, sustainable, midiProgramId, octaveDelta, isPercussion, dBVolumeAdjust, Note.MIN_PLAYABLE,
+		this(friendlyName, sustainable, midiInstrument, octaveDelta, isPercussion, dBVolumeAdjust, Note.MIN_PLAYABLE,
 				Note.MAX_PLAYABLE);
 	}
 
-	private LotroInstrument(String friendlyName, boolean sustainable, int midiProgramId, int octaveDelta,
+	private LotroInstrument(String friendlyName, boolean sustainable, MidiInstrument midiInstrument, int octaveDelta,
 			boolean isPercussion, float dBVolumeAdjust, Note lowestPlayable, Note highestPlayable)
 	{
 		this.lowestPlayable = lowestPlayable;
 		this.highestPlayable = highestPlayable;
 		this.friendlyName = friendlyName;
 		this.sustainable = sustainable;
-		this.midiProgramId = midiProgramId;
+		this.midi = midiInstrument;
 		this.octaveDelta = octaveDelta;
 		this.isPercussion = isPercussion;
 		this.dBVolumeAdjust = dBVolumeAdjust;
@@ -150,7 +152,7 @@ public enum LotroInstrument
 		instrumentNicknames.add(new Pair<Pattern, LotroInstrument>(makeInstrumentRegex(nicknames), instrument));
 	}
 
-	public static LotroInstrument findInstrumentName(String str, LotroInstrument defaultInstrument)
+	public static Pair<LotroInstrument, MatchResult> matchInstrument(String str)
 	{
 		if (instrumentNicknames.size() == 0)
 		{
@@ -165,7 +167,6 @@ public enum LotroInstrument
 			addNicknames(LotroInstrument.STUDENT_FIDDLE, "Student'?s? Fiddle");
 			addNicknames(LotroInstrument.TRAVELLERS_TRUSTY_FIDDLE, "Travell?er'?s? (Trusty)? Fiddle", "Trusty Fiddle",
 					"TT Fiddle");
-			addNicknames(LotroInstrument.DEFAULT_FIDDLE, "Fiddle");
 			addNicknames(LotroInstrument.HARP, "Basic Harp");
 			addNicknames(LotroInstrument.THEORBO, "Theo", "Bass");
 			addNicknames(LotroInstrument.DRUMS, "Drum");
@@ -175,8 +176,9 @@ public enum LotroInstrument
 
 		for (Pair<Pattern, LotroInstrument> patternAndInstrument : instrumentNicknames)
 		{
-			if (patternAndInstrument.first.matcher(str).find())
-				return patternAndInstrument.second;
+			Matcher m = patternAndInstrument.first.matcher(str);
+			if (m.find())
+				return new Pair<LotroInstrument, MatchResult>(patternAndInstrument.second, m.toMatchResult());
 		}
 
 		if (instrumentsRegex == null)
@@ -184,8 +186,17 @@ public enum LotroInstrument
 
 		Matcher m = instrumentsRegex.matcher(str);
 		if (m.find())
-			return LotroInstrument.parseInstrument(m.group(1));
+		{
+			LotroInstrument instrument = LotroInstrument.parseInstrument(m.group(1));
+			return new Pair<LotroInstrument, MatchResult>(instrument, m.toMatchResult());
+		}
 
-		return defaultInstrument;
+		return null;
+	}
+
+	public static LotroInstrument findInstrumentName(String str, LotroInstrument defaultInstrument)
+	{
+		Pair<LotroInstrument, MatchResult> result = matchInstrument(str);
+		return (result != null) ? result.first : defaultInstrument;
 	}
 }

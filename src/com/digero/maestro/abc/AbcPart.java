@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.SortedSet;
 import java.util.prefs.Preferences;
+import java.util.regex.MatchResult;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -16,10 +17,12 @@ import org.w3c.dom.Element;
 import com.digero.common.abc.LotroInstrument;
 import com.digero.common.midi.ITempoCache;
 import com.digero.common.midi.MidiConstants;
+import com.digero.common.midi.MidiDrum;
 import com.digero.common.midi.Note;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Listener;
 import com.digero.common.util.ListenerList;
+import com.digero.common.util.Pair;
 import com.digero.common.util.ParseException;
 import com.digero.common.util.Version;
 import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
@@ -412,6 +415,24 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 		}
 	}
 
+	public void replaceTitleInstrument(LotroInstrument replacement)
+	{
+		Pair<LotroInstrument, MatchResult> result = LotroInstrument.matchInstrument(title);
+		if (result == null)
+		{
+			// No instrument currently in title
+			if (title.isEmpty())
+				setTitle(replacement.toString());
+			else
+				setTitle(replacement + " " + title);
+		}
+		else
+		{
+			MatchResult m = result.second;
+			setTitle(title.substring(0, m.start()) + replacement + title.substring(m.end()));
+		}
+	}
+
 	public LotroInstrument[] getSupportedInstruments()
 	{
 		//return LotroInstrument.getNonDrumInstruments();
@@ -632,7 +653,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 		if (enabledSet == null || enabledSet[track] == null)
 		{
-			return !isCowbellPart() || (drumId == MidiConstants.COWBELL_DRUM_ID)
+			return !isCowbellPart() || (drumId == MidiDrum.COWBELL.id())
 					|| !abcSong.getSequenceInfo().getTrackInfo(track).isDrumTrack();
 		}
 
@@ -663,8 +684,8 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				if (isCowbellPart())
 				{
 					SortedSet<Integer> notesInUse = abcSong.getSequenceInfo().getTrackInfo(track).getNotesInUse();
-					if (notesInUse.contains(MidiConstants.COWBELL_DRUM_ID))
-						enabledSet[track].set(MidiConstants.COWBELL_DRUM_ID, true);
+					if (notesInUse.contains(MidiDrum.COWBELL.id()))
+						enabledSet[track].set(MidiDrum.COWBELL.id(), true);
 				}
 				else
 				{

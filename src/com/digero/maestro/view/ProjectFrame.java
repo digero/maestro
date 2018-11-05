@@ -70,7 +70,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.digero.common.icons.IconLoader;
-import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.LotroSequencerWrapper;
 import com.digero.common.midi.NoteFilterSequencerWrapper;
@@ -369,7 +369,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			}
 		});
 
-		tempoSpinner = new JSpinner(new SpinnerNumberModel(IMidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */,
+		tempoSpinner = new JSpinner(new SpinnerNumberModel(MidiConstants.DEFAULT_TEMPO_BPM /* value */, 8 /* min */,
 				960 /* max */, 1 /* step */));
 		tempoSpinner.setToolTipText("<html>Tempo in beats per minute.<br><br>"
 				+ "This number represents the <b>Main Tempo</b>, which is the tempo that covers<br>"
@@ -408,7 +408,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 			{
 				if (abcSong == null)
 				{
-					tempoSpinner.setValue(IMidiConstants.DEFAULT_TEMPO_BPM);
+					tempoSpinner.setValue(MidiConstants.DEFAULT_TEMPO_BPM);
 				}
 				else
 				{
@@ -1462,7 +1462,7 @@ public class ProjectFrame extends JFrame implements TableLayoutConstants, ICompi
 		songTitleField.setText("");
 		composerField.setText("");
 		transposeSpinner.setValue(0);
-		tempoSpinner.setValue(IMidiConstants.DEFAULT_TEMPO_BPM);
+		tempoSpinner.setValue(MidiConstants.DEFAULT_TEMPO_BPM);
 		keySignatureField.setValue(KeySignature.C_MAJOR);
 		timeSignatureField.setValue(TimeSignature.FOUR_FOUR);
 		tripletCheckBox.setSelected(false);

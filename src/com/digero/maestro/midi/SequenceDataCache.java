@@ -15,14 +15,14 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 import com.digero.common.midi.IBarNumberCache;
-import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.ITempoCache;
 import com.digero.common.midi.TimeSignature;
 import com.digero.common.util.Util;
 import com.digero.maestro.abc.TimingInfo;
 import com.sun.media.sound.MidiUtils;
 
-public class SequenceDataCache implements IMidiConstants, ITempoCache, IBarNumberCache
+public class SequenceDataCache implements MidiConstants, ITempoCache, IBarNumberCache
 {
 	private final int tickResolution;
 	private final float divisionType;

@@ -21,7 +21,7 @@ public class CowbellInfo extends InstrumentInfo
 		out.println("    InstrumentName=" + lotroInstrument);
 		out.println();
 
-		Random rand = new Random(lotroInstrument.midiProgramId);
+		Random rand = new Random(lotroInstrument.midi.id());
 		for (int id = lowestNoteId; id <= highestNoteId; id++)
 		{
 			out.println("        Sample=" + sample.name);

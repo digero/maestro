@@ -155,7 +155,7 @@ public class AbcSong implements IDiscardable, AbcMetadataSource
 			Set<Integer> midiInstruments = trackInfo.getInstruments();
 			for (LotroInstrument lotroInst : LotroInstrument.values())
 			{
-				if (midiInstruments.contains(lotroInst.midiProgramId))
+				if (midiInstruments.contains(lotroInst.midi.id()))
 				{
 					newPart.setInstrument(lotroInst);
 					break;

@@ -17,7 +17,7 @@ import javax.sound.midi.Track;
 
 import com.digero.common.abctomidi.AbcInfo;
 import com.digero.common.abctomidi.AbcToMidi;
-import com.digero.common.midi.IMidiConstants;
+import com.digero.common.midi.MidiConstants;
 import com.digero.common.midi.KeySignature;
 import com.digero.common.midi.MidiFactory;
 import com.digero.common.midi.TimeSignature;
@@ -32,7 +32,7 @@ import com.sun.media.sound.MidiUtils;
 /**
  * Container for a MIDI sequence. If necessary, converts type 0 MIDI files to type 1.
  */
-public class SequenceInfo implements IMidiConstants
+public class SequenceInfo implements MidiConstants
 {
 	private final Sequence sequence;
 	private final SequenceDataCache sequenceCache;
