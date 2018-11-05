@@ -44,24 +44,38 @@ public class PanGenerator
 	{
 		switch (instrument)
 		{
+			case LUTE_OF_AGES:
 			case TRAVELLERS_TRUSTY_FIDDLE:
 			case BASIC_LUTE:
 				instrument = LotroInstrument.LUTE_OF_AGES;
 				break;
+			case HARP:
 			case SPRIGHTLY_FIDDLE:
 			case MISTY_MOUNTAIN_HARP:
 				instrument = LotroInstrument.HARP;
 				break;
+			case COWBELL:
 			case MOOR_COWBELL:
 				instrument = LotroInstrument.COWBELL;
 				break;
+			case BASIC_FIDDLE:
 			case STUDENT_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
 			case BARDIC_FIDDLE:
 				instrument = LotroInstrument.BASIC_FIDDLE;
 				break;
-			//$CASES-OMITTED$
-			default:
+			case BASIC_BASSOON:
+			case LONELY_MOUNTAIN_BASSOON:
+			case BRUSQUE_BASSOON:
+				instrument = LotroInstrument.BASIC_BASSOON;
+				break;
+			case BAGPIPE:
+			case CLARINET:
+			case DRUMS:
+			case FLUTE:
+			case HORN:
+			case PIBGORN:
+			case THEORBO:
 				break;
 		}
 
@@ -113,6 +127,10 @@ public class PanGenerator
 				return CENTER + sign * 35;
 			case CLARINET:
 				return CENTER + sign * 45;
+			case BASIC_BASSOON:
+			case LONELY_MOUNTAIN_BASSOON:
+			case BRUSQUE_BASSOON:
+				return CENTER + sign * 50;
 		}
 
 		return CENTER;

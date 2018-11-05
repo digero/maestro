@@ -37,6 +37,7 @@ public class GenerateSoundFontInfo
 			case BASIC_LUTE:
 			case HARP:
 			case BARDIC_FIDDLE:
+			case BRUSQUE_BASSOON:
 				return 1;
 
 			case MISTY_MOUNTAIN_HARP:
@@ -48,6 +49,8 @@ public class GenerateSoundFontInfo
 			case FLUTE:
 			case CLARINET:
 			case HORN:
+			case BASIC_BASSOON:
+			case LONELY_MOUNTAIN_BASSOON:
 				return 2;
 
 			case BAGPIPE:

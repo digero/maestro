@@ -1,9 +1,8 @@
 package com.digero.tools.soundfont;
 
 import java.io.PrintStream;
-import java.util.Collections;
 import java.util.Map;
-import java.util.SortedSet;
+import java.util.NavigableSet;
 import java.util.TreeSet;
 
 import com.digero.common.abc.AbcConstants;
@@ -12,9 +11,7 @@ import com.digero.tools.soundfont.SampleInfo.Key;
 
 public class StandardInstrumentInfo extends InstrumentInfo
 {
-	public final SortedSet<SampleInfo> usedSamples;
-	private final int notesBelowSample;
-	private final int notesAboveSample;
+	public final NavigableSet<SampleInfo> usedSamples;
 
 	public StandardInstrumentInfo(LotroInstrument lotroInstrument, int notesPerSample, Map<Key, SampleInfo> samples)
 	{
@@ -27,15 +24,18 @@ public class StandardInstrumentInfo extends InstrumentInfo
 	{
 		super(lotroInstrument, name, lowestNoteId, highestNoteId);
 
-		this.notesBelowSample = (notesPerSample - 1) / 2;
-		this.notesAboveSample = (notesPerSample - 1) - notesBelowSample;
+		this.usedSamples = new TreeSet<SampleInfo>();
+		int startId = lowestNoteId + (notesPerSample - 1) / 2;
 
-		SortedSet<SampleInfo> usedSamples = new TreeSet<SampleInfo>();
-		int startId = lowestNoteId + notesBelowSample;
-		for (int id = startId; id <= highestNoteId; id += notesPerSample)
-			usedSamples.add(samples.get(new Key(lotroInstrument, id)));
-
-		this.usedSamples = Collections.unmodifiableSortedSet(usedSamples);
+		for (int id = startId; id <= highestNoteId; id++)
+		{
+			SampleInfo sample = samples.get(new Key(lotroInstrument, id));
+			if (sample != null)
+			{
+				usedSamples.add(sample);
+				id += notesPerSample - 1;
+			}
+		}
 	}
 
 	@Override public void print(PrintStream out)
@@ -44,13 +44,14 @@ public class StandardInstrumentInfo extends InstrumentInfo
 		out.println("    InstrumentName=" + name);
 		out.println();
 
-		int i = 0;
+		int prevHighKey = lowestNoteId - 1;
 		for (SampleInfo sample : usedSamples)
 		{
-			int lowKey = sample.key.noteId - notesBelowSample;
-			int highKey = sample.key.noteId + notesAboveSample;
-			if (++i == usedSamples.size())
-				highKey = highestNoteId;
+			SampleInfo next = usedSamples.higher(sample);
+
+			int lowKey = prevHighKey + 1;
+			int highKey = (next == null) ? highestNoteId : (sample.key.noteId + next.key.noteId) / 2;
+			prevHighKey = highKey;
 
 			LotroInstrument instrument = sample.key.lotroInstrument;
 			boolean isLooped = instrument == LotroInstrument.BAGPIPE

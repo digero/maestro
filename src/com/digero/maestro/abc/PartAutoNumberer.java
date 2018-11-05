@@ -41,6 +41,9 @@ public class PartAutoNumberer
 			init(prefs, LotroInstrument.HORN, 6 * x10);
 			init(prefs, LotroInstrument.BAGPIPE, 7 * x10);
 			init(prefs, LotroInstrument.PIBGORN, LotroInstrument.BAGPIPE);
+			init(prefs, LotroInstrument.BASIC_BASSOON, LotroInstrument.BAGPIPE);
+			init(prefs, LotroInstrument.LONELY_MOUNTAIN_BASSOON, LotroInstrument.BAGPIPE);
+			init(prefs, LotroInstrument.BRUSQUE_BASSOON, LotroInstrument.BAGPIPE);
 			init(prefs, LotroInstrument.DRUMS, 8 * x10);
 			init(prefs, LotroInstrument.COWBELL, LotroInstrument.DRUMS);
 			init(prefs, LotroInstrument.MOOR_COWBELL, LotroInstrument.DRUMS);

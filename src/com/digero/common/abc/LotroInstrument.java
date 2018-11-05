@@ -50,6 +50,9 @@ public enum LotroInstrument
 	FLUTE                    ( "Flute",                      true, MidiInstrument.FLUTE,                2,      false,    -0.5f), //  -4.2f
 	CLARINET                 ( "Clarinet",                   true, MidiInstrument.CLARINET,             1,      false,    -2.5f), //  -2.9f
 	HORN                     ( "Horn",                       true, MidiInstrument.ENGLISH_HORN,         0,      false,     0.0f), //  -1.7f
+	BASIC_BASSOON            ( "Basic Bassoon",              true, MidiInstrument.BASSOON,              0,      false,     0.0f),
+	BRUSQUE_BASSOON          ( "Brusque Bassoon",            true, MidiInstrument.BARI_SAX,             0,      false,     0.0f), // TODO
+	LONELY_MOUNTAIN_BASSOON  ( "Lonely Mountain Bassoon",    true, MidiInstrument.TENOR_SAX,            0,      false,     0.0f), // TODO MidiInstrument
 	BAGPIPE                  ( "Bagpipe",                    true, MidiInstrument.BAG_PIPE,             1,      false,    -3.2f),
 	PIBGORN                  ( "Pibgorn",                    true, MidiInstrument.CHARANG,              2,      false,    -3.5f),
 	DRUMS                    ( "Drums",                     false, MidiInstrument.SYNTH_DRUM,           0,       true,     0.0f),
@@ -124,6 +127,9 @@ public enum LotroInstrument
 		if (string.equals("TRAVELLERSFIDDLE"))
 			return TRAVELLERS_TRUSTY_FIDDLE;
 
+		if (string.equals("LONELYBASSOON"))
+			return LONELY_MOUNTAIN_BASSOON;
+
 		for (LotroInstrument i : values())
 		{
 			if (i.name().replace("_", "").equals(string))
@@ -167,6 +173,9 @@ public enum LotroInstrument
 			addNicknames(LotroInstrument.STUDENT_FIDDLE, "Student'?s? Fiddle");
 			addNicknames(LotroInstrument.TRAVELLERS_TRUSTY_FIDDLE, "Travell?er'?s? (Trusty)? Fiddle", "Trusty Fiddle",
 					"TT Fiddle");
+			addNicknames(LotroInstrument.BASIC_BASSOON, "Basic Bassoon");
+			addNicknames(LotroInstrument.LONELY_MOUNTAIN_BASSOON, "Lonely (Mountain)? Bassoon", "LM Bassoon");
+			addNicknames(LotroInstrument.BRUSQUE_BASSOON, "Brusque Bassoon");
 			addNicknames(LotroInstrument.HARP, "Basic Harp");
 			addNicknames(LotroInstrument.THEORBO, "Theo", "Bass");
 			addNicknames(LotroInstrument.DRUMS, "Drum");

@@ -276,6 +276,108 @@
         FineTune=0
         Type=1
 
+    SampleName=basic_bassoon_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_69
+        SampleRate=44100
+        Key=69
+        FineTune=0
+        Type=1
+
+    SampleName=basic_bassoon_71
+        SampleRate=44100
+        Key=71
+        FineTune=0
+        Type=1
+
     SampleName=basic_fiddle_36
         SampleRate=44100
         Key=36
@@ -609,6 +711,144 @@
     SampleName=basic_lute_72
         SampleRate=44100
         Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_37
+        SampleRate=44100
+        Key=37
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_39
+        SampleRate=44100
+        Key=39
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_43
+        SampleRate=44100
+        Key=43
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_45
+        SampleRate=44100
+        Key=45
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_47
+        SampleRate=44100
+        Key=47
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_51
+        SampleRate=44100
+        Key=51
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_54
+        SampleRate=44100
+        Key=54
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_56
+        SampleRate=44100
+        Key=56
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_58
+        SampleRate=44100
+        Key=58
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_59
+        SampleRate=44100
+        Key=59
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_65
+        SampleRate=44100
+        Key=65
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_67
+        SampleRate=44100
+        Key=67
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=brusque_bassoon_70
+        SampleRate=44100
+        Key=70
         FineTune=0
         Type=1
 
@@ -1401,6 +1641,108 @@
     SampleName=horn_72
         SampleRate=44100
         Key=72
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_36
+        SampleRate=44100
+        Key=36
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_38
+        SampleRate=44100
+        Key=38
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_40
+        SampleRate=44100
+        Key=40
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_42
+        SampleRate=44100
+        Key=42
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_44
+        SampleRate=44100
+        Key=44
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_46
+        SampleRate=44100
+        Key=46
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_48
+        SampleRate=44100
+        Key=48
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_50
+        SampleRate=44100
+        Key=50
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_52
+        SampleRate=44100
+        Key=52
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_55
+        SampleRate=44100
+        Key=55
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_57
+        SampleRate=44100
+        Key=57
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_60
+        SampleRate=44100
+        Key=60
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_62
+        SampleRate=44100
+        Key=62
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_64
+        SampleRate=44100
+        Key=64
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_66
+        SampleRate=44100
+        Key=66
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_68
+        SampleRate=44100
+        Key=68
+        FineTune=0
+        Type=1
+
+    SampleName=lonely_bassoon_71
+        SampleRate=44100
+        Key=71
         FineTune=0
         Type=1
 
@@ -2617,6 +2959,128 @@
             Z_releaseVolEnv=-1200
 
 
+    InstrumentName=Basic Bassoon
+
+        Sample=basic_bassoon_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_54
+            Z_LowKey=54
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_57
+            Z_LowKey=56
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_59
+            Z_LowKey=59
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_62
+            Z_LowKey=61
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_64
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_67
+            Z_LowKey=66
+            Z_HighKey=68
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_69
+            Z_LowKey=69
+            Z_HighKey=70
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=basic_bassoon_71
+            Z_LowKey=71
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+
     InstrumentName=Basic Fiddle
 
         Sample=basic_fiddle_36
@@ -3009,6 +3473,170 @@
 
         Sample=basic_lute_72
             Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+
+    InstrumentName=Brusque Bassoon
+
+        Sample=brusque_bassoon_37
+            Z_LowKey=36
+            Z_HighKey=38
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_39
+            Z_LowKey=39
+            Z_HighKey=40
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_42
+            Z_LowKey=41
+            Z_HighKey=42
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_43
+            Z_LowKey=43
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_44
+            Z_LowKey=44
+            Z_HighKey=44
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_45
+            Z_LowKey=45
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_46
+            Z_LowKey=46
+            Z_HighKey=46
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_47
+            Z_LowKey=47
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_50
+            Z_LowKey=50
+            Z_HighKey=50
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_51
+            Z_LowKey=51
+            Z_HighKey=52
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_54
+            Z_LowKey=53
+            Z_HighKey=55
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_56
+            Z_LowKey=56
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_57
+            Z_LowKey=57
+            Z_HighKey=57
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_58
+            Z_LowKey=58
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_59
+            Z_LowKey=59
+            Z_HighKey=60
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_62
+            Z_LowKey=61
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_64
+            Z_LowKey=64
+            Z_HighKey=64
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_65
+            Z_LowKey=65
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_66
+            Z_LowKey=66
+            Z_HighKey=66
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_67
+            Z_LowKey=67
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_68
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=brusque_bassoon_70
+            Z_LowKey=70
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -4238,6 +4866,128 @@
 
         Sample=horn_72
             Z_LowKey=72
+            Z_HighKey=72
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+
+    InstrumentName=Lonely Mountain Bassoon
+
+        Sample=lonely_bassoon_36
+            Z_LowKey=36
+            Z_HighKey=37
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_38
+            Z_LowKey=38
+            Z_HighKey=39
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_40
+            Z_LowKey=40
+            Z_HighKey=41
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_42
+            Z_LowKey=42
+            Z_HighKey=43
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_44
+            Z_LowKey=44
+            Z_HighKey=45
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_46
+            Z_LowKey=46
+            Z_HighKey=47
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_48
+            Z_LowKey=48
+            Z_HighKey=49
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_50
+            Z_LowKey=50
+            Z_HighKey=51
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_52
+            Z_LowKey=52
+            Z_HighKey=53
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_55
+            Z_LowKey=54
+            Z_HighKey=56
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_57
+            Z_LowKey=57
+            Z_HighKey=58
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_60
+            Z_LowKey=59
+            Z_HighKey=61
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_62
+            Z_LowKey=62
+            Z_HighKey=63
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_64
+            Z_LowKey=64
+            Z_HighKey=65
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_66
+            Z_LowKey=66
+            Z_HighKey=67
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_68
+            Z_LowKey=68
+            Z_HighKey=69
+            Z_LowVelocity=0
+            Z_HighVelocity=127
+            Z_releaseVolEnv=-1200
+
+        Sample=lonely_bassoon_71
+            Z_LowKey=70
             Z_HighKey=72
             Z_LowVelocity=0
             Z_HighVelocity=127
@@ -5612,6 +6362,17 @@
             L_HighVelocity=127
 
 
+    PresetName=Basic Bassoon
+        Bank=0
+        Program=70
+
+        Instrument=Basic Bassoon
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
     PresetName=Basic Fiddle
         Bank=0
         Program=41
@@ -5633,6 +6394,17 @@
             L_LowVelocity=0
             L_HighVelocity=127
             L_initialAttenuation=190
+
+
+    PresetName=Brusque Bassoon
+        Bank=0
+        Program=67
+
+        Instrument=Brusque Bassoon
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
 
 
     PresetName=Clarinet
@@ -5698,6 +6470,17 @@
         Program=69
 
         Instrument=Horn
+            L_LowKey=36
+            L_HighKey=72
+            L_LowVelocity=0
+            L_HighVelocity=127
+
+
+    PresetName=Lonely Mountain Bassoon
+        Bank=0
+        Program=66
+
+        Instrument=Lonely Mountain Bassoon
             L_LowKey=36
             L_HighKey=72
             L_LowVelocity=0
