@@ -34,18 +34,18 @@ public class GenerateSoundFontInfo
 				return 1;
 
 			case LUTE_OF_AGES:
-			case BASIC_LUTE:
 			case HARP:
-			case BARDIC_FIDDLE:
+			case MISTY_MOUNTAIN_HARP:
+			case TRAVELLERS_TRUSTY_FIDDLE:
 			case BRUSQUE_BASSOON:
 				return 1;
 
-			case MISTY_MOUNTAIN_HARP:
+			case BASIC_LUTE:
 			case THEORBO:
 			case BASIC_FIDDLE:
+			case BARDIC_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
 			case SPRIGHTLY_FIDDLE:
-			case TRAVELLERS_TRUSTY_FIDDLE:
 			case FLUTE:
 			case CLARINET:
 			case HORN:

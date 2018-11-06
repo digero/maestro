@@ -121,7 +121,7 @@ public enum MidiInstrument
 	TAIKO_DRUM("Taiko Drum"), // 116
 	MELODIC_TOM("Melodic Tom"), // 117
 	SYNTH_DRUM("Synth Drum"), // 118
-	REVRSE_CYMBAL("Revrse Cymbal"), // 119
+	REVERSE_CYMBAL("Reverse Cymbal"), // 119
 	GUITAR_FRET_NOISE("Guitar Fret Noise"), // 120
 	BREATH_NOISE("Breath Noise"), // 121
 	SEA_SHORE("Sea Shore"), // 122

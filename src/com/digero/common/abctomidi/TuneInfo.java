@@ -20,6 +20,7 @@ class TuneInfo
 	private NavigableMap<Long, Integer> curPartTempoMap = new TreeMap<Long, Integer>(); // Tick -> BPM
 	private NavigableMap<Long, Integer> allPartsTempoMap = new TreeMap<Long, Integer>(); // Tick -> BPM
 	private LotroInstrument instrument;
+	private boolean instrumentSet;
 	private Dynamics dynamics;
 	private boolean compoundMeter;
 	private int meterNumerator;
@@ -36,6 +37,7 @@ class TuneInfo
 		ppqn = 8 * AbcToMidi.DEFAULT_NOTE_TICKS / meterDenominator;
 		primaryTempoBPM = 120;
 		instrument = LotroInstrument.DEFAULT_INSTRUMENT;
+		instrumentSet = false;
 		dynamics = Dynamics.mf;
 		compoundMeter = false;
 	}
@@ -44,6 +46,7 @@ class TuneInfo
 	{
 		this.partNumber = partNumber;
 		instrument = LotroInstrument.DEFAULT_INSTRUMENT;
+		instrumentSet = false;
 		dynamics = Dynamics.mf;
 		title = "";
 		titleIsFromExtendedInfo = false;
@@ -198,6 +201,12 @@ class TuneInfo
 	public void setInstrument(LotroInstrument instrument)
 	{
 		this.instrument = instrument;
+		this.instrumentSet = true;
+	}
+
+	public boolean isInstrumentSet()
+	{
+		return instrumentSet;
 	}
 
 	public void setDynamics(String str)

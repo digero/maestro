@@ -51,8 +51,8 @@ public enum LotroInstrument
 	CLARINET                 ( "Clarinet",                   true, MidiInstrument.CLARINET,             1,      false,    -2.5f), //  -2.9f
 	HORN                     ( "Horn",                       true, MidiInstrument.ENGLISH_HORN,         0,      false,     0.0f), //  -1.7f
 	BASIC_BASSOON            ( "Basic Bassoon",              true, MidiInstrument.BASSOON,              0,      false,     0.0f),
-	BRUSQUE_BASSOON          ( "Brusque Bassoon",            true, MidiInstrument.BARI_SAX,             0,      false,     0.0f), // TODO
-	LONELY_MOUNTAIN_BASSOON  ( "Lonely Mountain Bassoon",    true, MidiInstrument.TENOR_SAX,            0,      false,     0.0f), // TODO MidiInstrument
+	BRUSQUE_BASSOON          ( "Brusque Bassoon",           false, MidiInstrument.OBOE,                 0,      false,     0.0f),
+	LONELY_MOUNTAIN_BASSOON  ( "Lonely Mountain Bassoon",    true, MidiInstrument.SYNTH_BRASS_2,        0,      false,     0.0f),
 	BAGPIPE                  ( "Bagpipe",                    true, MidiInstrument.BAG_PIPE,             1,      false,    -3.2f),
 	PIBGORN                  ( "Pibgorn",                    true, MidiInstrument.CHARANG,              2,      false,    -3.5f),
 	DRUMS                    ( "Drums",                     false, MidiInstrument.SYNTH_DRUM,           0,       true,     0.0f),
@@ -62,6 +62,7 @@ public enum LotroInstrument
 
 	public static final LotroInstrument DEFAULT_LUTE = LUTE_OF_AGES;
 	public static final LotroInstrument DEFAULT_FIDDLE = BARDIC_FIDDLE;
+	public static final LotroInstrument DEFAULT_BASSOON = BASIC_BASSOON;
 	public static final LotroInstrument DEFAULT_INSTRUMENT = LUTE_OF_AGES;
 
 	public final Note lowestPlayable;
@@ -173,9 +174,11 @@ public enum LotroInstrument
 			addNicknames(LotroInstrument.STUDENT_FIDDLE, "Student'?s? Fiddle");
 			addNicknames(LotroInstrument.TRAVELLERS_TRUSTY_FIDDLE, "Travell?er'?s? (Trusty)? Fiddle", "Trusty Fiddle",
 					"TT Fiddle");
+			addNicknames(LotroInstrument.DEFAULT_FIDDLE, "^Fiddle$");
 			addNicknames(LotroInstrument.BASIC_BASSOON, "Basic Bassoon");
 			addNicknames(LotroInstrument.LONELY_MOUNTAIN_BASSOON, "Lonely (Mountain)? Bassoon", "LM Bassoon");
 			addNicknames(LotroInstrument.BRUSQUE_BASSOON, "Brusque Bassoon");
+			addNicknames(LotroInstrument.DEFAULT_BASSOON, "^Bassoon$");
 			addNicknames(LotroInstrument.HARP, "Basic Harp");
 			addNicknames(LotroInstrument.THEORBO, "Theo", "Bass");
 			addNicknames(LotroInstrument.DRUMS, "Drum");
