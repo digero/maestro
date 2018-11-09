@@ -6575,14 +6575,14 @@
             L_HighKey=47
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=32
+            L_initialAttenuation=15
 
         Instrument=Bagpipe
             L_LowKey=48
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=32
+            L_initialAttenuation=15
 
 
     PresetName=Bardic Fiddle
@@ -6594,6 +6594,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65476
 
 
     PresetName=Basic Bassoon
@@ -6605,6 +6606,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65486
 
 
     PresetName=Basic Fiddle
@@ -6616,6 +6618,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65491
 
 
     PresetName=Basic Lute
@@ -6639,6 +6642,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65486
 
 
     PresetName=Clarinet
@@ -6650,7 +6654,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=25
+            L_initialAttenuation=20
 
 
     PresetName=Cowbell
@@ -6684,7 +6688,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
-            L_initialAttenuation=5
+            L_initialAttenuation=35
 
 
     PresetName=Harp
@@ -6708,6 +6712,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=20
 
 
     PresetName=Lonely Mountain Bassoon
@@ -6719,6 +6724,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65486
 
 
     PresetName=Lonely Mountain Fiddle
@@ -6730,6 +6736,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65521
 
 
     PresetName=Lute of Ages
@@ -6798,6 +6805,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=100
 
 
     PresetName=Student's Fiddle
@@ -6838,6 +6846,7 @@
             L_HighKey=72
             L_LowVelocity=0
             L_HighVelocity=127
+            L_initialAttenuation=65521
 
 
 [Info]

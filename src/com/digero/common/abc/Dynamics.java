@@ -5,14 +5,14 @@ import com.digero.common.util.Util;
 
 public enum Dynamics
 {
-	pppp(4, 60), //
-	ppp(16, 60), //
+	pppp(4, 57), //
+	ppp(16, 61), //
 	pp(32, 75), //
 	p(48, 87), //
 	mp(64, 97), //
 	mf(80, 106), //
 	f(96, 115), //
-	ff(112, 124), //
+	ff(112, 123), //
 	fff(127, 127), //
 	ffff(144, 127);
 
