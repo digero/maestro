@@ -28,6 +28,7 @@ public enum LotroInstrumentGroup
 			case BASIC_HARP:
 			case MISTY_MOUNTAIN_HARP:
 			case BASIC_THEORBO:
+			case TRAVELLERS_TRUSTY_FIDDLE:
 			default:
 				return LotroInstrumentGroup.PLUCKED_STRINGS;
 
@@ -36,7 +37,6 @@ public enum LotroInstrumentGroup
 			case LONELY_MOUNTAIN_FIDDLE:
 			case SPRIGHTLY_FIDDLE:
 			case STUDENT_FIDDLE:
-			case TRAVELLERS_TRUSTY_FIDDLE:
 				return LotroInstrumentGroup.BOWED_STRINGS;
 
 			case BASIC_FLUTE:
