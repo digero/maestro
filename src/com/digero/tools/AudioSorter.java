@@ -48,22 +48,22 @@ public class AudioSorter
 
 	public static void sortMain() throws Exception
 	{
-		File source = new File("F:\\Games\\LOTRO\\u23\\wav\\instruments");
-		File target = new File("F:\\Games\\LOTRO\\u23\\wav\\instruments_sorted");
+		File source = new File("F:\\Games\\LOTRO\\u23a\\wav\\instruments");
+		File target = new File("F:\\Games\\LOTRO\\u23a\\wav\\instruments_sorted");
 
 		sortFolder("basic_bassoon", source, target);
 		sortFolder("brusque_bassoon", source, target);
-		sortFolder("lonely_mountain_bassoon", source, target);
+		sortFolder("lonely_bassoon", source, target);
 	}
 
 	public static void copyToFinalNamesMain() throws Exception
 	{
-		String sourceRoot = "F:\\Games\\LOTRO\\u23\\wav\\instruments_sorted";
+		String sourceRoot = "F:\\Games\\LOTRO\\u23a\\wav\\instruments_sorted";
 		String targetRoot = sourceRoot;
 
 		copyToFinalNames(sourceRoot, targetRoot, "basic_bassoon", false);
 		copyToFinalNames(sourceRoot, targetRoot, "brusque_bassoon", false);
-		copyToFinalNames(sourceRoot, targetRoot, "lonely_mountain_bassoon", false);
+		copyToFinalNames(sourceRoot, targetRoot, "lonely_bassoon", false);
 	}
 
 	private static void copyToFinalNames(final String sourceRoot, final String targetRoot, final String instrumentName,
@@ -127,7 +127,7 @@ public class AudioSorter
 		int compressionFactor = 1;
 		try
 		{
-			int octaveDelta = LotroInstrument.parseInstrument(sourceFolder.getName()).octaveDelta;
+			int octaveDelta = LotroInstrument.findInstrumentName(sourceFolder.getName(), null).octaveDelta;
 			compressionFactor = (octaveDelta <= 0) ? 1 : 2;
 		}
 		catch (IllegalArgumentException e)
@@ -158,19 +158,6 @@ public class AudioSorter
 		}
 	}
 
-	private static void printMain() throws Exception
-	{
-		File audioRoot = new File("C:/Users/Ben/workspace/maestro/audio/LotroInstruments/");
-		print(audioRoot, "lute");
-		print(audioRoot, "harp");
-		print(audioRoot, "theorbo");
-		print(audioRoot, "flute");
-		print(audioRoot, "clarinet");
-		print(audioRoot, "horn");
-		print(audioRoot, "bagpipe");
-		print(audioRoot, "pibgorn");
-	}
-
 	private static void print(File directory, String instrument) throws IOException
 	{
 		File outputRoot = new File("F:\\Games\\LOTRO\\u16\\fft");
@@ -185,7 +172,7 @@ public class AudioSorter
 				if (!wavFile.exists())
 					continue;
 
-				int octaveDelta = LotroInstrument.parseInstrument(instrument).octaveDelta;
+				int octaveDelta = LotroInstrument.findInstrumentName(instrument, null).octaveDelta;
 //				if (octaveDelta < 0)
 //					octaveDelta = 0;
 				int compressionFactor = (octaveDelta <= 0) ? 1 : 2;
@@ -422,7 +409,7 @@ public class AudioSorter
 
 		g.setColor(ColorTable.CONTROLS_TEXT.get());
 
-		String name = LotroInstrument.parseInstrument(instrument) + " " + Note.fromId(noteId).getDisplayName();
+		String name = LotroInstrument.findInstrumentName(instrument, null) + " " + Note.fromId(noteId).getDisplayName();
 
 		g.drawString(name, 0, 20);
 //		Rectangle2D nameRect = g.getFontMetrics().getStringBounds(name, g);

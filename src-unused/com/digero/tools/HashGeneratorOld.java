@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -19,7 +18,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,7 +26,7 @@ import javax.xml.bind.DatatypeConverter;
 import com.digero.common.util.ExtensionFileFilter;
 import com.digero.common.util.Util;
 
-public class HashGenerator
+public class HashGeneratorOld
 {
 	private static final String cachedHashesFileName = "_hashes.txt";
 
@@ -40,10 +38,6 @@ public class HashGenerator
 //		new File("F:\\Games\\LOTRO\\u23\\ogg\\h.txt").delete();
 //		String[] args_tmp = new String[] { "GENERATE_HASHES", "F:\\Games\\LOTRO\\u23\\ogg",
 //			"F:\\Games\\LOTRO\\u23\\ogg\\h.txt" };
-//		run(args_tmp);
-
-//		String[] args_tmp = new String[] { "MOVE_INCLUDE_DIR", "F:\\Games\\LOTRO\\u22\\ogg\\instruments",
-//			"F:\\Games\\LOTRO\\u23a\\ogg\\extracted", "F:\\Games\\LOTRO\\u23a\\ogg\\instruments_previous" };
 //		run(args_tmp);
 	}
 
@@ -86,7 +80,7 @@ public class HashGenerator
 					return -1;
 				}
 
-				outputHashListToFile(generateHashes(new File(args[1]), true), new File(args[2]), true);
+				outputHashListToFile(generateHashes(new File(args[1]), true), new File(args[2]));
 			}
 			else if (action.equals("MOVE_EXCLUDE_DIR") || action.equals("MOVE_INCLUDE_DIR"))
 			{
@@ -133,43 +127,29 @@ public class HashGenerator
 		return 0;
 	}
 
-	private static <K, V> HashMap<V, K> valueToKey(Map<K, V> source)
-	{
-		HashMap<V, K> target = new HashMap<V, K>(source.size());
-		for (Map.Entry<K, V> entry : source.entrySet())
-		{
-			target.put(entry.getValue(), entry.getKey());
-		}
-		return target;
-	}
-
 	private static void moveDir(boolean include, File truthDirectory, File sourceDirectory, File targetDirectory)
 			throws IOException
 	{
-		if (!sourceDirectory.exists())
-			throw new IOException("Source directory does not exist: " + sourceDirectory.getAbsolutePath());
-
 		if (!targetDirectory.exists())
 			targetDirectory.mkdirs();
 
-		Map<Hash, File> truthHashes;
-		if (truthDirectory.exists())
-			truthHashes = valueToKey(generateHashes(truthDirectory, /* recursive = */true));
-		else if (include)
-			truthHashes = Collections.emptyMap();
-		else
-			return;
+		Map<Hash, File> truthHashes = generateHashes(truthDirectory, /* recursive = */true);
+		Map<Hash, File> sourceHashes = generateHashes(sourceDirectory, /* recursive = */false);
+		Map<Hash, File> targetHashes = new HashMap<Hash, File>();
 
-		Map<File, Hash> sourceHashes = generateHashes(sourceDirectory, /* recursive = */true);
-		Map<File, Hash> targetHashes = new HashMap<File, Hash>();
+		File cachedHashesFile = new File(targetDirectory, cachedHashesFileName);
+		if (cachedHashesFile.exists())
+			targetHashes = inputHashListFromFile(cachedHashesFile);
+
+		final String match = include ? "match" : "don't match";
 
 		System.out.println("Moving from \"" + sourceDirectory.getAbsolutePath() + "\" to \""
-				+ targetDirectory.getAbsolutePath() + "\" if they " + (include ? "exist" : "don't exist") + " in \""
+				+ targetDirectory.getAbsolutePath() + "\" if they " + match + " files in \""
 				+ truthDirectory.getAbsolutePath() + "\"");
 		int movedCount = 0;
-		for (Map.Entry<File, Hash> entry : sourceHashes.entrySet())
+		for (Map.Entry<Hash, File> entry : sourceHashes.entrySet())
 		{
-			File truthFile = truthHashes.get(entry.getValue());
+			File truthFile = truthHashes.get(entry.getKey());
 			boolean isInList = (truthFile != null);
 			if (include == isInList)
 			{
@@ -179,80 +159,59 @@ public class HashGenerator
 				if (!subDirectory.exists())
 					subDirectory.mkdirs();
 
-				File sourceFile = entry.getKey();
+				File sourceFile = entry.getValue();
 				File targetFile = new File(subDirectory, sourceFile.getName());
 
-				boolean renameSuccess = false;
-				for (int retry = 0; retry < 20; retry++)
-				{
-					if (sourceFile.renameTo(targetFile))
-					{
-						renameSuccess = true;
-						if (retry > 0)
-						{
-							System.out.println("Renamed target file when moving \"" + sourceFile + "\" to \""
-									+ targetFile + "\"");
-						}
-						break;
-					}
-
-					String retryName = sourceFile.getName();
-					int dot = retryName.lastIndexOf('.');
-					if (dot < 0)
-						dot = retryName.length();
-
-					retryName = retryName.substring(0, dot) + "-" + retry + retryName.substring(dot);
-					targetFile = new File(subDirectory, retryName);
-				}
-
-				if (!renameSuccess)
-					System.out.println("Failed to move \"" + sourceFile + "\" to \"" + targetFile + "\"");
-
+				sourceFile.renameTo(targetFile);
 				movedCount++;
 
-				targetHashes.put(targetFile, entry.getValue());
+				targetHashes.put(entry.getKey(), targetFile);
 			}
 		}
 		System.out.println("Moved " + movedCount + " files");
 
-		appendHashListToFile(targetHashes, new File(targetDirectory, cachedHashesFileName), false);
+		outputHashListToFile(targetHashes, cachedHashesFile);
 	}
 
 	private static void move(boolean include, File existingHashFile, File sourceDirectory, File targetDirectory)
 			throws IOException
 	{
-		Set<Hash> existingHashes = new HashSet<Hash>(inputHashListFromFile(existingHashFile, true).values());
-		Map<File, Hash> sourceHashes = generateHashes(sourceDirectory, /* recursive = */true);
-		Map<File, Hash> targetHashes = new HashMap<File, Hash>();
+		Map<Hash, File> existingHashes = inputHashListFromFile(existingHashFile);
+		Map<Hash, File> sourceHashes = generateHashes(sourceDirectory, /* recursive = */false);
+		Map<Hash, File> targetHashes = new HashMap<Hash, File>();
 
-		for (Map.Entry<File, Hash> entry : sourceHashes.entrySet())
+		File cachedHashesFile = new File(targetDirectory, cachedHashesFileName);
+		if (cachedHashesFile.exists())
+			targetHashes = inputHashListFromFile(cachedHashesFile);
+
+		for (Map.Entry<Hash, File> entry : sourceHashes.entrySet())
 		{
-			boolean isInList = existingHashes.contains(entry.getValue());
+			boolean isInList = existingHashes.containsKey(entry.getKey());
 			if (include == isInList)
 			{
-				File sourceFile = entry.getKey();
+				File sourceFile = entry.getValue();
 				File targetFile = new File(targetDirectory, sourceFile.getName());
 				sourceFile.renameTo(targetFile);
 
-				targetHashes.put(targetFile, entry.getValue());
+				targetHashes.put(entry.getKey(), targetFile);
 			}
 		}
 
-		appendHashListToFile(targetHashes, new File(targetDirectory, cachedHashesFileName), false);
+		outputHashListToFile(targetHashes, cachedHashesFile);
 	}
 
 	private static void list(boolean include, File existingHashFile, File sourceDirectory) throws IOException
 	{
-		Set<Hash> existingHashes = new HashSet<Hash>(inputHashListFromFile(existingHashFile, true).values());
-		Map<File, Hash> sourceHashes = generateHashes(sourceDirectory, true);
+		Map<Hash, File> existingHashes = inputHashListFromFile(existingHashFile);
+		Map<Hash, File> sourceHashes = generateHashes(sourceDirectory, false);
 
 		System.out.println("Listing files " + (include ? "included" : "not included") + " in hash file: ");
-		for (Map.Entry<File, Hash> entry : sourceHashes.entrySet())
+		for (Map.Entry<Hash, File> entry : sourceHashes.entrySet())
 		{
-			boolean isInList = existingHashes.contains(entry.getKey());
+			boolean isInList = existingHashes.containsKey(entry.getKey());
 			if (include == isInList)
 			{
-				System.out.println(entry.getKey().getAbsolutePath());
+				System.out.println(entry.getValue().getAbsolutePath());
 			}
 		}
 	}
@@ -279,18 +238,18 @@ public class HashGenerator
 		return files;
 	}
 
-	public static Map<File, Hash> generateHashes(File directory, boolean recursive) throws IOException
+	public static Map<Hash, File> generateHashes(File directory, boolean recursive) throws IOException
 	{
 		List<File> allFiles = listFiles(directory, recursive);
 
-		ConcurrentHashMap<File, Hash> hashes = new ConcurrentHashMap<File, Hash>();
+		ConcurrentHashMap<Hash, File> hashes = new ConcurrentHashMap<Hash, File>();
 		File cachedHashesFile = new File(directory, cachedHashesFileName);
 		if (cachedHashesFile.exists())
-			hashes.putAll(inputHashListFromFile(cachedHashesFile, false));
+			hashes = new ConcurrentHashMap<Hash, File>(inputHashListFromFile(cachedHashesFile));
 
 		// Only hash the files we don't have a cached hash for
 		List<File> filesToHash = new ArrayList<File>(allFiles);
-		filesToHash.removeAll(hashes.keySet());
+		filesToHash.removeAll(new HashSet<File>(hashes.values()));
 
 		HashTask.State state = new HashTask.State(directory, filesToHash, hashes);
 
@@ -300,30 +259,32 @@ public class HashGenerator
 		}
 		else
 		{
-			try
+			Thread[] threads = new Thread[8];
+			for (int i = 0; i < threads.length; i++)
 			{
-				Thread[] threads = new Thread[8];
-				for (int i = 0; i < threads.length; i++)
-					threads[i] = new Thread(new HashTask(state));
-
-				for (Thread thread : threads)
-					thread.start();
-
-				for (Thread thread : threads)
-					thread.join();
+				threads[i] = new Thread(new HashTask(state));
+				threads[i].start();
 			}
-			catch (InterruptedException e)
+
+			for (int i = 0; i < threads.length; i++)
 			{
-				throw new RuntimeException(e);
+				try
+				{
+					threads[i].join();
+				}
+				catch (InterruptedException e)
+				{
+					throw new RuntimeException(e);
+				}
 			}
 		}
 
 		// Write out the cached hashes to the fiel
-		outputHashListToFile(hashes, cachedHashesFile, false);
+		outputHashListToFile(hashes, cachedHashesFile);
 
 		// Remove any extra hashes that were read from cachedHashesFile
 		// but aren't for the files we care about
-		hashes.keySet().retainAll(new HashSet<File>(allFiles));
+		hashes.values().retainAll(new HashSet<File>(allFiles));
 
 		return hashes;
 	}
@@ -334,13 +295,13 @@ public class HashGenerator
 		{
 			private final File directory;
 			private final List<File> files;
-			private final ConcurrentHashMap<File, Hash> hashes;
+			private final ConcurrentHashMap<Hash, File> hashes;
 
 			private final long startMillis = System.currentTimeMillis();
 			private final AtomicInteger index = new AtomicInteger(-1);
 			private final AtomicInteger lastPrintedCount = new AtomicInteger(-1);
 
-			public State(File directory, List<File> files, ConcurrentHashMap<File, Hash> hashes)
+			public State(File directory, List<File> files, ConcurrentHashMap<Hash, File> hashes)
 			{
 				this.directory = directory;
 				this.files = Collections.unmodifiableList(files);
@@ -374,8 +335,20 @@ public class HashGenerator
 			for (int i = s.index.incrementAndGet(); i < count; i = s.index.incrementAndGet())
 			{
 				File file = s.files.get(i);
-				s.hashes.put(file, hasher.hashFile(file));
+
+				File prevFile = s.hashes.put(hasher.hashFile(file), file);
+
 				printStatus(i);
+
+				if (prevFile != null && !fileContentEquals(prevFile, file))
+				{
+					synchronized (System.out)
+					{
+						System.out.println("WARNING Duplicate Hashes:");
+						System.out.println("    " + prevFile.getAbsolutePath());
+						System.out.println("    " + file.getAbsolutePath());
+					}
+				}
 			}
 		}
 
@@ -406,30 +379,23 @@ public class HashGenerator
 		}
 	}
 
-	private static void outputHashListToFile(Map<File, Hash> hashes, File outputFile, boolean verbose)
-			throws IOException
+	private static void outputHashListToFile(Map<Hash, File> hashes, File outputFile) throws IOException
 	{
-		if (hashes.isEmpty())
-		{
-			Files.deleteIfExists(outputFile.toPath());
-			return;
-		}
-
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile)))
 		{
-			for (Map.Entry<File, Hash> entry : hashes.entrySet())
+			for (Map.Entry<Hash, File> entry : hashes.entrySet())
 			{
-				writer.write(entry.getValue() + "\t" + entry.getKey().getAbsolutePath() + "\r\n");
+				writer.write(entry.getKey() + "\t" + entry.getValue().getAbsolutePath() + "\r\n");
 			}
 		}
 
-		if (verbose)
+		if (!outputFile.getName().equals(cachedHashesFileName))
 			System.out.println("Wrote " + hashes.size() + " hashes to: " + outputFile.getAbsolutePath());
 	}
 
-	private static HashMap<File, Hash> inputHashListFromFile(File hashListFile, boolean verbose) throws IOException
+	private static Map<Hash, File> inputHashListFromFile(File hashListFile) throws IOException
 	{
-		HashMap<File, Hash> hashes = new HashMap<File, Hash>();
+		Map<Hash, File> hashes = new HashMap<Hash, File>();
 		try (BufferedReader reader = new BufferedReader(new FileReader(hashListFile)))
 		{
 			String line;
@@ -439,30 +405,14 @@ public class HashGenerator
 				if (tab <= 0)
 					continue;
 
-				hashes.put(new File(line.substring(tab + 1)), new Hash(line.substring(0, tab)));
+				hashes.put(new Hash(line.substring(0, tab)), new File(line.substring(tab + 1)));
 			}
 		}
 
-		if (verbose)
+		if (!hashListFile.getName().equals(cachedHashesFileName))
 			System.out.println("Read " + hashes.size() + " hashes from: " + hashListFile.getAbsolutePath());
 
 		return hashes;
-	}
-
-	private static void appendHashListToFile(Map<File, Hash> hashes, File outputFile, boolean verbose)
-			throws IOException
-	{
-		Map<File, Hash> output;
-		if (outputFile.exists())
-		{
-			output = inputHashListFromFile(outputFile, false);
-			output.putAll(hashes);
-		}
-		else
-		{
-			output = hashes;
-		}
-		outputHashListToFile(output, outputFile, verbose);
 	}
 
 	private static class Hasher

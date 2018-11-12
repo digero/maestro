@@ -3,43 +3,57 @@
 	<property name="bin" location="../bin" />
 	<property name="tools" location="../distribute/tools" />
 	<property name="audio_root" location="F:/Games/LOTRO" />
-	<property name="source_dat" location="C:/Games/Turbine/The Lord of the Rings Online/client_sound.dat" />
+	<property name="lotro_root" location="C:/Games/Turbine/The Lord of the Rings Online" />
 
-	<property name="cur_version" value="u23" />
-	<property name="prev_version" value="u22" />
-	<property name="prev_version_exclude" value="u16" />
+	<property name="source_dat1" value="client_sound" />
+	<property name="source_dat2" value="client_sound_aux_1" />
+
+	<property name="cur_version" value="u23a" />
+	<property name="prev_version" value="u23" />
 	<property name="excluded_dir_name" value="known_not_instruments" />
 	<property name="instrument_dir_name" value="instruments" />
 	<property name="instrument_prev_dir_name" value="instruments_previous" />
-	<property name="extract_dir_name" value="extracted" />
 
-	<property name="exclude_reference_dir" location="${audio_root}/${prev_version_exclude}/ogg/${excluded_dir_name}" />
+	<property name="exclude_reference_dir" location="${audio_root}/${prev_version}/ogg/${excluded_dir_name}" />
 	<property name="instrument_reference_dir" location="${audio_root}/${prev_version}/ogg/${instrument_dir_name}" />
 	<property name="instrument_prev_reference_dir" location="${audio_root}/${prev_version}/ogg/${instrument_prev_dir_name}" />
 
 	<property name="target_dir" location="${audio_root}/${cur_version}/ogg" />
-
+	
+	<property name="extract_dir" location="${target_dir}/extracted" />
+	<property name="extract_dir1" location="${extract_dir}/${source_dat1}" />
+	<property name="extract_dir2" location="${extract_dir}/${source_dat2}" />
+	
 	<property name="hashlist_dir" location="${target_dir}/hashes" />
 	<property name="exclude_hashes_file" location="${hashlist_dir}/exclude_hashes.txt" />
 	<property name="instrument_hashes_file" location="${hashlist_dir}/instrument_hashes.txt" />
 	<property name="instrument_prev_hashes_file" location="${hashlist_dir}/instrument_previous_hashes.txt" />
-	
-	<property name="excluded_dir" location="${target_dir}/${excluded_dir_name}" />
+
+	<property name="excluded_dir1" location="${target_dir}/${excluded_dir_name}/${source_dat1}" />
+	<property name="excluded_dir2" location="${target_dir}/${excluded_dir_name}/${source_dat2}" />
 	<property name="instruments_previous_dir" location="${target_dir}/instruments_previous" />
 
 
 	<target name="Extract">
-		<mkdir dir="${target_dir}" />
+		<mkdir dir="${extract_dir}" />
 		<exec executable="${tools}/AudioRipWin.exe" failonerror="true">
-			<arg value='"${source_dat}"' />
+			<arg value='"${lotro_root}/${source_dat1}.dat"' />
 			<arg value="-ogg" />
 			<arg value="-o" />
-			<arg value='"${target_dir}"' />
+			<arg value='"${extract_dir}"' />
 		</exec>
-		<move file="${target_dir}/AUDIORIP_000_[client_sound.dat]" tofile="${target_dir}/${extract_dir_name}" />
+		<move file="${extract_dir}/AUDIORIP_000_[${source_dat1}.dat]" tofile="${extract_dir1}" />
+		
+		<exec executable="${tools}/AudioRipWin.exe" failonerror="true">
+			<arg value='"${lotro_root}/${source_dat2}.datx"' />
+			<arg value="-ogg" />
+			<arg value="-o" />
+			<arg value='"${extract_dir}"' />
+		</exec>
+		<move file="${extract_dir}/AUDIORIP_000_[${source_dat2}.datx]" tofile="${extract_dir2}" />
 	</target>
 
-	<target name="GenerateHashes.CheckUpToDate">
+	<!--<target name="GenerateHashes.CheckUpToDate">
 		<condition property="GenerateHashes.UpToDate">
 			<and>
 				<uptodate targetfile="${exclude_hashes_file}">
@@ -72,74 +86,40 @@
 			<arg value="${instrument_prev_reference_dir}" />
 			<arg value="${instrument_prev_hashes_file}" />
 		</java>
-	</target>
+	</target>-->
 
 	<target name="MoveFiles">
-		<mkdir dir="${excluded_dir}" />
+		<mkdir dir="${excluded_dir1}" />
 		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
 			<arg value="MOVE_INCLUDE_DIR" />
 			<arg value="${exclude_reference_dir}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-			<arg value="${excluded_dir}" />
+			<arg value="${extract_dir1}" />
+			<arg value="${excluded_dir1}" />
 		</java>
+		<mkdir dir="${excluded_dir2}" />
+		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
+			<arg value="MOVE_INCLUDE_DIR" />
+			<arg value="${exclude_reference_dir}" />
+			<arg value="${extract_dir2}" />
+			<arg value="${excluded_dir2}" />
+		</java>
+		
 		<mkdir dir="${instruments_previous_dir}" />
 		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
 			<arg value="MOVE_INCLUDE_DIR" />
 			<arg value="${instrument_reference_dir}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
+			<arg value="${extract_dir}" />
 			<arg value="${instruments_previous_dir}" />
 		</java>
 		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
 			<arg value="MOVE_INCLUDE_DIR" />
 			<arg value="${instrument_prev_reference_dir}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
+			<arg value="${extract_dir}" />
 			<arg value="${instruments_previous_dir}" />
 		</java>
 	</target>
-
-	<!--<target name="MoveFiles" depends="GenerateHashes">
-		<mkdir dir="${excluded_dir}" />
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="MOVE_INCLUDE" />
-			<arg value="${exclude_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-			<arg value="${excluded_dir}" />
-		</java>
-		<mkdir dir="${instruments_previous_dir}" />
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="MOVE_INCLUDE" />
-			<arg value="${instrument_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-			<arg value="${instruments_previous_dir}" />
-		</java>
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="MOVE_INCLUDE" />
-			<arg value="${instrument_prev_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-			<arg value="${instruments_previous_dir}" />
-		</java>
-	</target>-->
-
-	<target name="ListMatches" depends="GenerateHashes">
-		<echo>Excluded matches:</echo>
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="LIST_INCLUDE" />
-			<arg value="${exclude_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-		</java>
-		<echo>Already known matches:</echo>
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="LIST_INCLUDE" />
-			<arg value="${instrument_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-		</java>
-		<java classname="com.digero.tools.HashGenerator" classpath="${bin}">
-			<arg value="LIST_INCLUDE" />
-			<arg value="${instrument_prev_hashes_file}" />
-			<arg value="${target_dir}/${extract_dir_name}" />
-		</java>
-	</target>
-
+	
+	<target name="ExtractAndMove" depends="Extract,MoveFiles" />
 	<target name="Done" depends="MoveFiles" />
 
 	<extension-point name="AntTest" description="Run any targets that are labeled as extensionOf='AntTest'" />
