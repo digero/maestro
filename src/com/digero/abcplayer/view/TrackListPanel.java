@@ -12,8 +12,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -36,6 +34,7 @@ import com.digero.common.midi.SequencerEvent;
 import com.digero.common.midi.SequencerEvent.SequencerProperty;
 import com.digero.common.midi.SequencerWrapper;
 import com.digero.common.util.Listener;
+import com.digero.common.view.InstrumentComboBox;
 
 public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, TableLayoutConstants
 {
@@ -47,7 +46,6 @@ public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, 
 	private AbcInfo abcInfo;
 
 	private TableLayout layout;
-	private LotroInstrument[] sortedInstruments = LotroInstrument.values();
 	private TrackControls[] trackControls = null;
 
 	private static class TrackControls
@@ -89,14 +87,6 @@ public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, 
 		this.abcPlayer = abcPlayer;
 
 		sequencer.addChangeListener(this);
-
-		Arrays.sort(sortedInstruments, new Comparator<LotroInstrument>()
-		{
-			@Override public int compare(LotroInstrument a, LotroInstrument b)
-			{
-				return a.toString().compareTo(b.toString());
-			}
-		});
 
 		layout = (TableLayout) getLayout();
 		layout.setVGap(4);
@@ -201,9 +191,8 @@ public class TrackListPanel extends JPanel implements Listener<SequencerEvent>, 
 				soloButton.setSelected(sequencer.getTrackSolo(i));
 				soloButton.addActionListener(trackSoloListener);
 
-				JComboBox<LotroInstrument> comboBox = new JComboBox<LotroInstrument>(sortedInstruments);
+				JComboBox<LotroInstrument> comboBox = new InstrumentComboBox();
 				comboBox.setVisible(showInstrumentComboBoxes);
-				comboBox.setMaximumRowCount(sortedInstruments.length);
 				comboBox.putClientProperty(TRACK_INDEX_KEY, i);
 				comboBox.setBackground(getBackground());
 				comboBox.setSelectedItem(instrument);

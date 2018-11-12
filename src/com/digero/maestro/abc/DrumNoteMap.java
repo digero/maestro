@@ -158,7 +158,7 @@ public class DrumNoteMap implements IDiscardable
 			byte[] failsafe = null;
 			for (int i = 0; i < map.length; i++)
 			{
-				if (map[i] != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(map[i]))
+				if (map[i] != DISABLED_NOTE_ID && !LotroInstrument.BASIC_DRUM.isPlayable(map[i]))
 				{
 					if (failsafe == null)
 					{
@@ -302,7 +302,7 @@ public class DrumNoteMap implements IDiscardable
 			{
 				throw new ParseException("MIDI note is invalid", inputFileName, lineNumber);
 			}
-			if (lotroNote != DISABLED_NOTE_ID && !LotroInstrument.DRUMS.isPlayable(lotroNote))
+			if (lotroNote != DISABLED_NOTE_ID && !LotroInstrument.BASIC_DRUM.isPlayable(lotroNote))
 			{
 				throw new ParseException("ABC note is invalid", inputFileName, lineNumber);
 			}
@@ -357,7 +357,7 @@ public class DrumNoteMap implements IDiscardable
 		{
 			int midiId = SaveUtil.parseValue(noteEle, "@id", DISABLED_NOTE_ID);
 			byte lotroId = SaveUtil.parseValue(noteEle, "@lotroId", DISABLED_NOTE_ID);
-			if (midiId >= 0 && midiId < map.length && LotroInstrument.DRUMS.isPlayable(lotroId))
+			if (midiId >= 0 && midiId < map.length && LotroInstrument.BASIC_DRUM.isPlayable(lotroId))
 				map[midiId] = lotroId;
 		}
 	}

@@ -697,7 +697,7 @@ public class AbcToMidi
 							else if (enableLotroErrors && lotroNoteId > Note.MAX_PLAYABLE.id)
 								throw new LotroParseException("Note is too high", fileName, lineNumber, m.start());
 
-							if (info.getInstrument() == LotroInstrument.COWBELL
+							if (info.getInstrument() == LotroInstrument.BASIC_COWBELL
 									|| info.getInstrument() == LotroInstrument.MOOR_COWBELL)
 							{
 								if (useLotroInstruments)
@@ -712,7 +712,7 @@ public class AbcToMidi
 								}
 								else
 								{
-									noteId = (info.getInstrument() == LotroInstrument.COWBELL) ? 76 : 71;
+									noteId = (info.getInstrument() == LotroInstrument.BASIC_COWBELL) ? 76 : 71;
 									lotroNoteId = AbcConstants.COWBELL_NOTE_ID;
 								}
 							}

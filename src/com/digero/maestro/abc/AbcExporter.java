@@ -836,7 +836,7 @@ public class AbcExporter
 			// Bagpipe notes up to B2 can sustain indefinitey; don't break them
 			if (ne.getEndTick() > maxNoteEndTick
 					&& ne.note != Note.REST
-					&& !(part.getInstrument() == LotroInstrument.BAGPIPE && ne.note.id <= AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID))
+					&& !(part.getInstrument() == LotroInstrument.BASIC_BAGPIPE && ne.note.id <= AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID))
 			{
 				// Align with a bar boundary if it extends across 1 or more full bars.
 				long endBarTick = qtm.tickToBarStartTick(maxNoteEndTick);

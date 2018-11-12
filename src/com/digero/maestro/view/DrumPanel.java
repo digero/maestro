@@ -299,7 +299,7 @@ public class DrumPanel extends JPanel implements IDiscardable, TableLayoutConsta
 		noteGraph.setShowingAbcNotesOn(noteActive);
 		checkBox.setEnabled(trackEnabled);
 		drumComboBox.setEnabled(trackEnabled);
-		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.DRUMS);
+		drumComboBox.setVisible(abcPart.getInstrument() == LotroInstrument.BASIC_DRUM);
 
 		if (!noteActive)
 		{

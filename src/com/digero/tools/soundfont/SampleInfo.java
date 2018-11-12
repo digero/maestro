@@ -56,7 +56,7 @@ public class SampleInfo implements Comparable<SampleInfo>
 	public final String name;
 	public final float sampleRate;
 
-	private static final Pattern FILE_NAME_REGEX = Pattern.compile("(([a-z_]+)(_([0-9][0-9]).*)?)\\.wav",
+	private static final Pattern FILE_NAME_REGEX = Pattern.compile("(([a-z_]+)(_([0-9][0-9]))?)\\.wav",
 			Pattern.CASE_INSENSITIVE);
 	private static final int FILE_NAME_GROUP = 1;
 	private static final int FILE_INSTRUMENT_GROUP = 2;
@@ -76,10 +76,13 @@ public class SampleInfo implements Comparable<SampleInfo>
 
 		this.name = matcher.group(FILE_NAME_GROUP);
 
-		LotroInstrument lotroInstrument = LotroInstrument.parseInstrument(matcher.group(FILE_INSTRUMENT_GROUP));
+		String instrumentName = matcher.group(FILE_INSTRUMENT_GROUP);
+		LotroInstrument lotroInstrument = LotroInstrument.findInstrumentName(instrumentName, null);
+		if (lotroInstrument == null)
+			throw new IOException("Could not find instrument for sample: " + file.getName());
 
 		int noteId;
-		if (lotroInstrument == LotroInstrument.COWBELL || lotroInstrument == LotroInstrument.MOOR_COWBELL)
+		if (lotroInstrument == LotroInstrument.BASIC_COWBELL || lotroInstrument == LotroInstrument.MOOR_COWBELL)
 			noteId = AbcConstants.COWBELL_NOTE_ID;
 		else
 			noteId = Integer.parseInt(matcher.group(FILE_NOTEID_GROUP));

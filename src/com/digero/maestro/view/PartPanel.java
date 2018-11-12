@@ -12,7 +12,6 @@ import java.awt.event.ActionListener;
 import java.text.ParseException;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -36,6 +35,7 @@ import com.digero.common.util.ICompileConstants;
 import com.digero.common.util.IDiscardable;
 import com.digero.common.util.Listener;
 import com.digero.common.view.ColorTable;
+import com.digero.common.view.InstrumentComboBox;
 import com.digero.maestro.abc.AbcPart;
 import com.digero.maestro.abc.AbcPartEvent;
 import com.digero.maestro.abc.AbcPartEvent.AbcPartProperty;
@@ -124,8 +124,7 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 			}
 		});
 
-		instrumentComboBox = new JComboBox<LotroInstrument>();
-		instrumentComboBox.setMaximumRowCount(LotroInstrument.values().length);
+		instrumentComboBox = new InstrumentComboBox();
 		instrumentComboBox.addActionListener(new ActionListener()
 		{
 			@Override public void actionPerformed(ActionEvent e)
@@ -224,11 +223,10 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 			numberSpinner.setEnabled(false);
 			nameTextField.setEnabled(false);
 			instrumentComboBox.setEnabled(false);
-			instrumentComboBox.setModel(new DefaultComboBoxModel<LotroInstrument>(LotroInstrument.values()));
 
 			numberSpinner.setValue(0);
 			nameTextField.setText("");
-			instrumentComboBox.setSelectedIndex(0);
+			instrumentComboBox.setSelectedItem(LotroInstrument.DEFAULT_INSTRUMENT);
 
 			clearTrackListPanel();
 		}
@@ -240,7 +238,6 @@ public class PartPanel extends JPanel implements ICompileConstants, TableLayoutC
 
 			numberSpinner.setValue(abcPart.getPartNumber());
 			nameTextField.setText(abcPart.getTitle());
-			instrumentComboBox.setModel(new DefaultComboBoxModel<LotroInstrument>(abcPart.getSupportedInstruments()));
 			instrumentComboBox.setSelectedItem(abcPart.getInstrument());
 
 			clearTrackListPanel();

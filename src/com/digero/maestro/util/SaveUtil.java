@@ -144,14 +144,11 @@ public class SaveUtil
 		if (node == null)
 			return defaultValue;
 
-		try
-		{
-			return LotroInstrument.parseInstrument(node.getTextContent());
-		}
-		catch (IllegalArgumentException e)
-		{
-			throw invalidValueException(node, e.getMessage());
-		}
+		LotroInstrument instrument = LotroInstrument.findInstrumentName(node.getTextContent(), null);
+		if (instrument == null)
+			throw invalidValueException(node, "Could not parse instrument name: " + node.getTextContent());
+
+		return instrument;
 	}
 
 	public static Version parseValue(Node parent, String xpath, Version defaultValue) throws ParseException,

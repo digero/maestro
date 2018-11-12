@@ -17,7 +17,13 @@
 		<delete dir="${build}" />
 	</target>
 
-	<target name="PreBuild">
+	<target name="RunTests">
+		<java classname="com.digero.test.TestMain" classpath="${bin}" fork="yes" failonerror="yes">
+			<jvmarg value="-ea" /> <!-- Enable Asserts -->
+		</java>
+	</target>
+
+	<target name="PreBuild" depends="RunTests">
 		<mkdir dir="${build}" />
 		<delete file="${build}/*.log" />
 		<copy file="../TableLayout.jar" todir="${build}" />

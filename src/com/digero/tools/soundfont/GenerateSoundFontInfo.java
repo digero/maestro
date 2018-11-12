@@ -30,37 +30,37 @@ public class GenerateSoundFontInfo
 	{
 		switch (lotroInstrument)
 		{
-			case DRUMS:
+			case BASIC_DRUM:
 				return 1;
 
 			case LUTE_OF_AGES:
-			case HARP:
+			case BASIC_HARP:
 			case MISTY_MOUNTAIN_HARP:
 			case TRAVELLERS_TRUSTY_FIDDLE:
 			case BRUSQUE_BASSOON:
 				return 1;
 
 			case BASIC_LUTE:
-			case THEORBO:
+			case BASIC_THEORBO:
 			case BASIC_FIDDLE:
 			case BARDIC_FIDDLE:
 			case LONELY_MOUNTAIN_FIDDLE:
 			case SPRIGHTLY_FIDDLE:
-			case FLUTE:
-			case CLARINET:
-			case HORN:
+			case BASIC_FLUTE:
+			case BASIC_CLARINET:
+			case BASIC_HORN:
 			case BASIC_BASSOON:
 			case LONELY_MOUNTAIN_BASSOON:
 				return 2;
 
-			case BAGPIPE:
+			case BASIC_BAGPIPE:
 				return 4;
 
-			case PIBGORN:
+			case BASIC_PIBGORN:
 				return 6;
 
 			case STUDENT_FIDDLE:
-			case COWBELL:
+			case BASIC_COWBELL:
 			case MOOR_COWBELL:
 			default:
 				throw new RuntimeException();
@@ -86,7 +86,7 @@ public class GenerateSoundFontInfo
 			SampleInfo sample = new SampleInfo(file);
 			samples.put(sample.key, sample);
 
-			if (cowbellSample == null || sample.key.lotroInstrument == LotroInstrument.COWBELL)
+			if (cowbellSample == null || sample.key.lotroInstrument == LotroInstrument.BASIC_COWBELL)
 				cowbellSample = sample;
 
 			if (moorCowbellSample == null || sample.key.lotroInstrument == LotroInstrument.MOOR_COWBELL)
@@ -100,16 +100,16 @@ public class GenerateSoundFontInfo
 
 		for (LotroInstrument li : LotroInstrument.values())
 		{
-			if (li == LotroInstrument.COWBELL || li == LotroInstrument.MOOR_COWBELL)
+			if (li == LotroInstrument.BASIC_COWBELL || li == LotroInstrument.MOOR_COWBELL)
 			{
-				SampleInfo sample = (li == LotroInstrument.COWBELL) ? cowbellSample : moorCowbellSample;
+				SampleInfo sample = (li == LotroInstrument.BASIC_COWBELL) ? cowbellSample : moorCowbellSample;
 				CowbellInfo info = new CowbellInfo(sample);
 				instruments.add(info);
 				usedSamples.add(sample);
 
 				presets.add(new PresetInfo(info));
 			}
-			else if (li == LotroInstrument.BAGPIPE)
+			else if (li == LotroInstrument.BASIC_BAGPIPE)
 			{
 				StandardInstrumentInfo drones = new StandardInstrumentInfo(li, li + " Drones", li.lowestPlayable.id,
 						AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID, getNotesPerSample(li), samples);

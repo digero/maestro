@@ -27,26 +27,26 @@ public class PartAutoNumberer
 			if (!prefs.getBoolean("newCowbellDefaults", false))
 			{
 				prefs.putBoolean("newCowbellDefaults", true);
-				prefs.remove(LotroInstrument.COWBELL.toString());
-				prefs.remove(LotroInstrument.MOOR_COWBELL.toString());
+				prefs.remove(prefsKey(LotroInstrument.BASIC_COWBELL));
+				prefs.remove(prefsKey(LotroInstrument.MOOR_COWBELL));
 			}
 
 			init(prefs, LotroInstrument.LUTE_OF_AGES, prefs.getInt("Lute", 1 * x10)); // Lute was renamed to Lute of Ages
 			init(prefs, LotroInstrument.BASIC_LUTE, LotroInstrument.LUTE_OF_AGES);
-			init(prefs, LotroInstrument.HARP, 2 * x10);
-			init(prefs, LotroInstrument.MISTY_MOUNTAIN_HARP, LotroInstrument.HARP);
-			init(prefs, LotroInstrument.THEORBO, 3 * x10);
-			init(prefs, LotroInstrument.FLUTE, 4 * x10);
-			init(prefs, LotroInstrument.CLARINET, 5 * x10);
-			init(prefs, LotroInstrument.HORN, 6 * x10);
-			init(prefs, LotroInstrument.BAGPIPE, 7 * x10);
-			init(prefs, LotroInstrument.PIBGORN, LotroInstrument.BAGPIPE);
-			init(prefs, LotroInstrument.BASIC_BASSOON, LotroInstrument.BAGPIPE);
-			init(prefs, LotroInstrument.LONELY_MOUNTAIN_BASSOON, LotroInstrument.BAGPIPE);
-			init(prefs, LotroInstrument.BRUSQUE_BASSOON, LotroInstrument.BAGPIPE);
-			init(prefs, LotroInstrument.DRUMS, 8 * x10);
-			init(prefs, LotroInstrument.COWBELL, LotroInstrument.DRUMS);
-			init(prefs, LotroInstrument.MOOR_COWBELL, LotroInstrument.DRUMS);
+			init(prefs, LotroInstrument.BASIC_HARP, 2 * x10);
+			init(prefs, LotroInstrument.MISTY_MOUNTAIN_HARP, LotroInstrument.BASIC_HARP);
+			init(prefs, LotroInstrument.BASIC_THEORBO, 3 * x10);
+			init(prefs, LotroInstrument.BASIC_FLUTE, 4 * x10);
+			init(prefs, LotroInstrument.BASIC_CLARINET, 5 * x10);
+			init(prefs, LotroInstrument.BASIC_HORN, 6 * x10);
+			init(prefs, LotroInstrument.BASIC_BAGPIPE, 7 * x10);
+			init(prefs, LotroInstrument.BASIC_PIBGORN, LotroInstrument.BASIC_BAGPIPE);
+			init(prefs, LotroInstrument.BASIC_BASSOON, LotroInstrument.BASIC_BAGPIPE);
+			init(prefs, LotroInstrument.LONELY_MOUNTAIN_BASSOON, LotroInstrument.BASIC_BAGPIPE);
+			init(prefs, LotroInstrument.BRUSQUE_BASSOON, LotroInstrument.BASIC_BAGPIPE);
+			init(prefs, LotroInstrument.BASIC_DRUM, 8 * x10);
+			init(prefs, LotroInstrument.BASIC_COWBELL, LotroInstrument.BASIC_DRUM);
+			init(prefs, LotroInstrument.MOOR_COWBELL, LotroInstrument.BASIC_DRUM);
 			init(prefs, LotroInstrument.BASIC_FIDDLE, 9 * x10);
 			init(prefs, LotroInstrument.BARDIC_FIDDLE, LotroInstrument.BASIC_FIDDLE);
 			init(prefs, LotroInstrument.STUDENT_FIDDLE, LotroInstrument.BASIC_FIDDLE);
@@ -57,9 +57,47 @@ public class PartAutoNumberer
 			assert (firstNumber.size() == LotroInstrument.values().length);
 		}
 
+		/**
+		 * @return the original name of the instrument before it was renamed, which can be used a
+		 *         stable prefs key even if the instrument is renamed.
+		 */
+		public String prefsKey(LotroInstrument instrument)
+		{
+			// @formatter:off
+			switch (instrument)
+			{
+				case LUTE_OF_AGES:             return "Lute of Ages";
+				case BASIC_LUTE:               return "Basic Lute";
+				case BASIC_HARP:               return "Harp";
+				case MISTY_MOUNTAIN_HARP:      return "Misty Mountain Harp";
+				case BARDIC_FIDDLE:            return "Bardic Fiddle";
+				case BASIC_FIDDLE:             return "Basic Fiddle";
+				case LONELY_MOUNTAIN_FIDDLE:   return "Lonely Mountain Fiddle";
+				case SPRIGHTLY_FIDDLE:         return "Sprightly Fiddle";
+				case STUDENT_FIDDLE:           return "Student's Fiddle";
+				case TRAVELLERS_TRUSTY_FIDDLE: return "Traveller's Trusty Fiddle";
+				case BASIC_THEORBO:            return "Theorbo";
+				case BASIC_FLUTE:              return "Flute";
+				case BASIC_CLARINET:           return "Clarinet";
+				case BASIC_HORN:               return "Horn";
+				case BASIC_BASSOON:            return "Basic Bassoon";
+				case BRUSQUE_BASSOON:          return "Brusque Bassoon";
+				case LONELY_MOUNTAIN_BASSOON:  return "Lonely Mountain Bassoon";
+				case BASIC_BAGPIPE:            return "Bagpipe";
+				case BASIC_PIBGORN:            return "Pibgorn";
+				case BASIC_DRUM:               return "Drums";
+				case BASIC_COWBELL:            return "Cowbell";
+				case MOOR_COWBELL:             return "Moor Cowbell";
+			}
+			// @formatter:on
+
+			assert false; // Missing case statement
+			return instrument.toString();
+		}
+
 		private void init(Preferences prefs, LotroInstrument instrument, int defaultValue)
 		{
-			firstNumber.put(instrument, prefs.getInt(instrument.toString(), defaultValue));
+			firstNumber.put(instrument, prefs.getInt(prefsKey(instrument), defaultValue));
 		}
 
 		private void init(Preferences prefs, LotroInstrument instruments, LotroInstrument copyDefaultFrom)
@@ -71,7 +109,7 @@ public class PartAutoNumberer
 		{
 			for (Entry<LotroInstrument, Integer> entry : firstNumber.entrySet())
 			{
-				prefs.putInt(entry.getKey().toString(), entry.getValue());
+				prefs.putInt(prefsKey(entry.getKey()), entry.getValue());
 			}
 			prefs.putBoolean("incrementByTen", incrementByTen);
 		}

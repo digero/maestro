@@ -54,7 +54,7 @@ public class StandardInstrumentInfo extends InstrumentInfo
 			prevHighKey = highKey;
 
 			LotroInstrument instrument = sample.key.lotroInstrument;
-			boolean isLooped = instrument == LotroInstrument.BAGPIPE
+			boolean isLooped = instrument == LotroInstrument.BASIC_BAGPIPE
 					&& sample.key.noteId <= AbcConstants.BAGPIPE_LAST_DRONE_NOTE_ID;
 
 			int releaseTime = SoundFontUtil.secondsToTimecents(AbcConstants.NOTE_RELEASE_SECONDS);

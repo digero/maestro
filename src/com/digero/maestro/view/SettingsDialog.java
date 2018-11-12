@@ -488,7 +488,7 @@ public class SettingsDialog extends JDialog implements TableLayoutConstants
 
 		@Override public LotroInstrument getInstrument()
 		{
-			return LotroInstrument.FLUTE;
+			return LotroInstrument.BASIC_FLUTE;
 		}
 
 		@Override public int getPartNumber()

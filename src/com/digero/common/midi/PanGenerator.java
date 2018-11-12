@@ -49,14 +49,14 @@ public class PanGenerator
 			case BASIC_LUTE:
 				instrument = LotroInstrument.LUTE_OF_AGES;
 				break;
-			case HARP:
+			case BASIC_HARP:
 			case SPRIGHTLY_FIDDLE:
 			case MISTY_MOUNTAIN_HARP:
-				instrument = LotroInstrument.HARP;
+				instrument = LotroInstrument.BASIC_HARP;
 				break;
-			case COWBELL:
+			case BASIC_COWBELL:
 			case MOOR_COWBELL:
-				instrument = LotroInstrument.COWBELL;
+				instrument = LotroInstrument.BASIC_COWBELL;
 				break;
 			case BASIC_FIDDLE:
 			case STUDENT_FIDDLE:
@@ -69,13 +69,13 @@ public class PanGenerator
 			case BRUSQUE_BASSOON:
 				instrument = LotroInstrument.BASIC_BASSOON;
 				break;
-			case BAGPIPE:
-			case CLARINET:
-			case DRUMS:
-			case FLUTE:
-			case HORN:
-			case PIBGORN:
-			case THEORBO:
+			case BASIC_BAGPIPE:
+			case BASIC_CLARINET:
+			case BASIC_DRUM:
+			case BASIC_FLUTE:
+			case BASIC_HORN:
+			case BASIC_PIBGORN:
+			case BASIC_THEORBO:
 				break;
 		}
 
@@ -102,30 +102,30 @@ public class PanGenerator
 			case LONELY_MOUNTAIN_FIDDLE:
 			case STUDENT_FIDDLE:
 				return CENTER + sign * -50;
-			case HARP:
+			case BASIC_HARP:
 			case MISTY_MOUNTAIN_HARP:
 			case SPRIGHTLY_FIDDLE:
 				return CENTER + sign * -45;
-			case FLUTE:
+			case BASIC_FLUTE:
 				return CENTER + sign * -40;
-			case BAGPIPE:
+			case BASIC_BAGPIPE:
 				return CENTER + sign * -30;
-			case THEORBO:
+			case BASIC_THEORBO:
 				return CENTER + sign * -25;
-			case COWBELL:
+			case BASIC_COWBELL:
 			case MOOR_COWBELL:
 				return CENTER + sign * -15;
-			case DRUMS:
+			case BASIC_DRUM:
 				return CENTER + sign * 15;
-			case PIBGORN:
+			case BASIC_PIBGORN:
 				return CENTER + sign * 20;
-			case HORN:
+			case BASIC_HORN:
 				return CENTER + sign * 25;
 			case BASIC_LUTE:
 			case LUTE_OF_AGES:
 			case TRAVELLERS_TRUSTY_FIDDLE:
 				return CENTER + sign * 35;
-			case CLARINET:
+			case BASIC_CLARINET:
 				return CENTER + sign * 45;
 			case BASIC_BASSOON:
 			case LONELY_MOUNTAIN_BASSOON:

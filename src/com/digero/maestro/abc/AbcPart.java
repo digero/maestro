@@ -287,7 +287,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 				return null;
 
 			int dstNote;
-			if (instrument == LotroInstrument.COWBELL)
+			if (instrument == LotroInstrument.BASIC_COWBELL)
 				dstNote = Note.G2.id; // "Tom High 1"
 			else if (instrument == LotroInstrument.MOOR_COWBELL)
 				dstNote = Note.A2.id; // "Tom High 2"
@@ -431,12 +431,6 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 			MatchResult m = result.second;
 			setTitle(title.substring(0, m.start()) + replacement + title.substring(m.end()));
 		}
-	}
-
-	public LotroInstrument[] getSupportedInstruments()
-	{
-		//return LotroInstrument.getNonDrumInstruments();
-		return LotroInstrument.values();
 	}
 
 	@Override public LotroInstrument getInstrument()
@@ -588,7 +582,7 @@ public class AbcPart implements AbcPartMetadataSource, NumberedAbcPart, IDiscard
 
 	public boolean isCowbellPart()
 	{
-		return instrument == LotroInstrument.COWBELL || instrument == LotroInstrument.MOOR_COWBELL;
+		return instrument == LotroInstrument.BASIC_COWBELL || instrument == LotroInstrument.MOOR_COWBELL;
 	}
 
 	public boolean isDrumTrack(int track)
